@@ -21,7 +21,7 @@
           <ng-template pTemplate="body" let-appointment>
             <tr class="group-appointments-section__row" (click)="openAttendance(appointment)">
               <td>{{ appointment.date | hrDate }}</td>
-              <td>{{ appointment.startTime.slice(0, 5) }}</td>
+              <td>{{ appointment.startTime?.slice(0, 5) ?? '—' }}</td>
               <td>{{ appointment.locationName }}</td>
               <td>{{ appointment.trainerName || '—' }}</td>
               <td>{{ occupancyLabel(appointment) }}</td>
@@ -51,7 +51,7 @@
           <ng-template pTemplate="body" let-appointment>
             <tr class="group-appointments-section__row" (click)="openAttendance(appointment)">
               <td>{{ appointment.date | hrDate }}</td>
-              <td>{{ appointment.startTime.slice(0, 5) }}</td>
+              <td>{{ appointment.startTime?.slice(0, 5) ?? '—' }}</td>
               <td>{{ appointment.locationName }}</td>
               <td>{{ appointment.trainerName || '—' }}</td>
               <td>{{ appointment.attendanceCount }}</td>
