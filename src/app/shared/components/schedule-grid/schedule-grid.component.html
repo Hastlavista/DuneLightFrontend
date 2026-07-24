@@ -1,0 +1,58 @@
+<div class="schedule-grid">
+  <div class="schedule-grid__scroll">
+    <div class="schedule-grid__header">
+      <div class="schedule-grid__corner"></div>
+      @for (column of columns(); track column.id) {
+        <div class="schedule-grid__col-header" [style.width.px]="columnWidthPx()">
+          <span class="schedule-grid__col-header-label">{{ column.label }}</span>
+          @if (column.subLabel) {
+            <span class="schedule-grid__col-header-sub">{{ column.subLabel }}</span>
+          }
+        </div>
+      }
+    </div>
+
+    <div class="schedule-grid__body">
+      <div class="schedule-grid__hour-axis" [style.height.px]="totalHeightPx()">
+        @for (hour of hours(); track hour) {
+          <div class="schedule-grid__hour-row" [style.height.px]="rowHeightPx()">
+            <span class="schedule-grid__hour-label">{{ hourLabel(hour) }}</span>
+          </div>
+        }
+      </div>
+
+      @for (column of columns(); track column.id) {
+        <div
+          class="schedule-grid__col-body"
+          [style.width.px]="columnWidthPx()"
+          [style.height.px]="totalHeightPx()"
+          (click)="onColumnClick(column, $event)"
+        >
+          @for (hour of hours(); track hour) {
+            <div class="schedule-grid__hour-line" [style.height.px]="rowHeightPx()"></div>
+          }
+
+          @for (cell of cellsForColumn(column.id); track cell.id) {
+            <div
+              class="schedule-grid__cell"
+              [class.schedule-grid__cell--cancelled]="cell.cancelled"
+              [style.top.px]="cell.topPx"
+              [style.height.px]="cell.heightPx"
+              [style.left.%]="cell.leftPercent"
+              [style.width.%]="cell.widthPercent"
+              [style.borderColor]="cell.colorHex"
+              [style.background]="cellBackground(cell.colorHex)"
+              (click)="onCellClick(cell, $event)"
+            >
+              @if (cell.locationColorHex) {
+                <span class="schedule-grid__cell-loc" [style.background]="cell.locationColorHex"></span>
+              }
+              <span class="schedule-grid__cell-title">{{ cell.title }}</span>
+              <span class="schedule-grid__cell-subtitle">{{ cell.subtitle }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+</div>

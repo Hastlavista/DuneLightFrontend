@@ -1,0 +1,72 @@
+.appointment-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  min-width: 22rem;
+
+  &__status {
+    margin-bottom: 0.25rem;
+  }
+
+  &__row {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  &__label {
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--clay-2);
+  }
+
+  &__loading {
+    padding: 1.5rem 0;
+    text-align: center;
+    color: var(--olive-gold);
+  }
+
+  &__error {
+    font-size: 0.78rem;
+    color: var(--red);
+  }
+
+  &__hint {
+    font-size: 0.78rem;
+    color: var(--clay-2);
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    margin-top: 0.25rem;
+  }
+
+  &__actions-spacer {
+    flex: 1;
+  }
+
+  &__packages {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__package-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+  }
+
+  &__return-entry-row {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    font-size: 0.85rem;
+  }
+}

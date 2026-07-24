@@ -51,6 +51,8 @@
     "INACTIVE_TYPE": "Odabrani tip je neaktivan.",
     "PRICE_OVERLAP": "Ova stavka cjenika preklapa se s postojećom za isto razdoblje.",
     "CLIENT_ANONYMIZED": "Klijent je anonimiziran (GDPR) te se ne može uređivati.",
+    "APPOINTMENT_OVERLAP": "Termin se preklapa s postojećom obavezom trenera ili klijenta.",
+    "RECURRING_CONFLICT": "Neki termini u nizu se sudaraju s postojećim obavezama. Provjerite označene datume.",
 
     "UNKNOWN": "Došlo je do greške. Pokušajte ponovno."
   },
@@ -681,6 +683,123 @@
         "SESSION_PACKAGE": "Paket na ulaske",
         "SINGLE_PAID": "Pojedinačno plaćeno"
       }
+    }
+  },
+  "SCHEDULE": {
+    "VIEW_DAY": "Dan",
+    "VIEW_WEEK": "Tjedan",
+    "SELECT_TRAINER": "Odaberite trenera",
+    "SELECT_TRAINER_HINT": "Odaberite trenera za prikaz tjednog rasporeda.",
+    "NO_TRAINERS": "Nema aktivnih trenera za odabranu lokaciju.",
+    "PREV_DAY": "Prethodni dan",
+    "NEXT_DAY": "Sljedeći dan",
+    "PREV_WEEK": "Prethodni tjedan",
+    "NEXT_WEEK": "Sljedeći tjedan",
+    "TODAY": "Danas",
+    "FILTER_STATUS_ALL": "Svi statusi",
+    "FILTER_CATEGORY_ALL": "Sve kategorije",
+    "FILTER_SERVICE_ALL": "Sve usluge",
+    "STATUS": {
+      "SCHEDULED": "Zakazano",
+      "COMPLETED": "Završeno",
+      "CANCELLED": "Otkazano",
+      "NO_SHOW": "Nije se pojavio/la"
+    },
+    "CELL": {
+      "PLUS_MORE": "(+{{count}})",
+      "ATTENDANCE_PAST": "{{count}} prisutnih"
+    },
+    "DETAIL": {
+      "TITLE": "Detalji termina",
+      "LOADING": "Učitavanje...",
+      "SERVICE": "Usluga",
+      "TRAINER": "Trener",
+      "LOCATION": "Lokacija",
+      "WHEN": "Vrijeme",
+      "CLIENTS": "Klijenti",
+      "PRICE": "Cijena",
+      "PAID": "Plaćeno",
+      "UNPAID": "Nije plaćeno",
+      "NOTE": "Napomena",
+      "NOT_MOVABLE_HINT": "Otkazani termini i termini na kojima se klijent nije pojavio ne mogu se premjestiti.",
+      "ERRORS": {
+        "STARTS_AT_REQUIRED": "Datum i vrijeme su obavezni.",
+        "TRAINER_REQUIRED": "Trener je obavezan.",
+        "LOCATION_REQUIRED": "Lokacija je obavezna."
+      }
+    },
+    "NEW_APPOINTMENT_BUTTON": "Novi termin",
+    "PAYMENT_METHOD": {
+      "CASH": "Gotovina",
+      "CARD": "Kartica",
+      "BANK_TRANSFER": "Transakcija",
+      "PACKAGE": "Paket"
+    },
+    "RECURRENCE_TYPE": {
+      "DAILY": "Dnevno",
+      "WEEKLY": "Tjedno"
+    },
+    "RECURRING_CONFLICT_REASONS": {
+      "EXISTING_APPOINTMENT": "Već postoji termin u to vrijeme",
+      "ROSTER_ABSENCE": "Zaposlenik je odsutan (godišnji/bolovanje)"
+    },
+    "FIELD_PAYMENT_METHOD": "Način plaćanja",
+    "FIELD_PAYMENT_METHOD_PLACEHOLDER": "Odaberite način plaćanja",
+    "NO_ELIGIBLE_PACKAGE": "Klijent nema dostupan paket za ovu uslugu.",
+    "NEW_APPOINTMENT": {
+      "TITLE": "Novi termin",
+      "FIELD_CLIENTS": "Klijenti",
+      "FIELD_CLIENTS_PLACEHOLDER": "Pretraži klijenta...",
+      "NO_RESULTS": "Nema pronađenih klijenata.",
+      "FIELD_SERVICE": "Usluga",
+      "FIELD_SERVICE_PLACEHOLDER": "Odaberite uslugu",
+      "DURATION_HINT": "Trajanje: {{minutes}} min",
+      "FIELD_TRAINER": "Trener",
+      "FIELD_LOCATION": "Lokacija",
+      "FIELD_STARTS_AT": "Datum i vrijeme",
+      "FIELD_NOTE": "Napomena",
+      "FIELD_AMOUNT": "Cijena",
+      "AMOUNT_HINT": "Prazno = cijena se automatski razrješuje iz cjenika.",
+      "RECURRING_TOGGLE": "Ponavljajući termin",
+      "FIELD_RECURRENCE_TYPE": "Periodičnost",
+      "FIELD_END_DATE": "Datum kraja",
+      "SCHEDULE_BUTTON": "Zakaži",
+      "COMPLETE_BUTTON": "Upiši odrađeno",
+      "SCHEDULE_RECURRING_BUTTON": "Zakaži niz",
+      "SCHEDULED": "Termin je zakazan.",
+      "COMPLETED": "Termin je upisan kao odrađen.",
+      "RECURRING_CREATED": "Niz termina je uspješno zakazan ({{count}}).",
+      "CONFLICT_TITLE": "Sljedeći termini se sudaraju:",
+      "ERRORS": {
+        "CLIENTS_REQUIRED": "Odaberite barem jednog klijenta.",
+        "SERVICE_REQUIRED": "Usluga je obavezna.",
+        "TRAINER_REQUIRED": "Trener je obavezan.",
+        "LOCATION_REQUIRED": "Lokacija je obavezna.",
+        "STARTS_AT_REQUIRED": "Datum i vrijeme su obavezni.",
+        "PAYMENT_METHOD_REQUIRED": "Način plaćanja je obavezan.",
+        "END_DATE_REQUIRED": "Datum kraja je obavezan.",
+        "RECURRENCE_TYPE_REQUIRED": "Periodičnost je obavezna."
+      }
+    },
+    "BILL": {
+      "BUTTON": "Naplati",
+      "TITLE": "Naplata termina",
+      "CONFIRM_BUTTON": "Potvrdi naplatu",
+      "COMPLETED": "Termin je naplaćen."
+    },
+    "CANCEL": {
+      "BUTTON": "Otkaži",
+      "CONFIRM_TITLE": "Sigurno otkazati termin?",
+      "RETURN_ENTRY_LABEL": "Vrati ulazak",
+      "CONFIRM_BUTTON": "Otkaži termin",
+      "CANCELLED": "Termin je otkazan."
+    },
+    "NO_SHOW": {
+      "BUTTON": "Nije došao",
+      "CONFIRM_TITLE": "Označiti da klijent nije došao?",
+      "RETURN_ENTRY_LABEL": "Vrati ulazak",
+      "CONFIRM_BUTTON": "Označi",
+      "MARKED": "Termin je označen kao \"nije došao\"."
     }
   },
   "AUTH": {

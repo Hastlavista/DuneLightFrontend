@@ -1,0 +1,220 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [dismissableMask]="true"
+  [style]="{ width: '34rem' }"
+  [header]="'SCHEDULE.NEW_APPOINTMENT.TITLE' | translate"
+  (onShow)="onDialogShow()"
+  (onHide)="onCancel()"
+>
+  @if (dialogShown()) {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="dl-form" novalidate>
+      <div class="dl-form__field">
+        <label for="new-appt-clients">{{ 'SCHEDULE.NEW_APPOINTMENT.FIELD_CLIENTS' | translate }}</label>
+        <p-autoComplete
+          inputId="new-appt-clients"
+          fluid
+          [multiple]="true"
+          [ngModel]="selectedClients()"
+          [ngModelOptions]="{ standalone: true }"
+          (ngModelChange)="onSelectedClientsChange($event)"
+          [suggestions]="clientResults()"
+          optionLabel="name"
+          [placeholder]="'SCHEDULE.NEW_APPOINTMENT.FIELD_CLIENTS_PLACEHOLDER' | translate"
+          [emptyMessage]="'SCHEDULE.NEW_APPOINTMENT.NO_RESULTS' | translate"
+          (completeMethod)="onClientSearch($event)"
+          appendTo="body"
+        />
+        @if (attemptedSubmit() && selectedClients().length === 0) {
+          <span class="dl-form__error">{{ 'SCHEDULE.NEW_APPOINTMENT.ERRORS.CLIENTS_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="new-appt-service">{{ 'SCHEDULE.NEW_APPOINTMENT.FIELD_SERVICE' | translate }}</label>
+        <p-select
+          id="new-appt-service"
+          fluid
+          appendTo="body"
+          formControlName="serviceId"
+          [options]="services()"
+          optionLabel="name"
+          optionValue="id"
+          [placeholder]="'SCHEDULE.NEW_APPOINTMENT.FIELD_SERVICE_PLACEHOLDER' | translate"
+        />
+        @if (form.controls.serviceId.invalid && form.controls.serviceId.touched) {
+          <span class="dl-form__error">{{ 'SCHEDULE.NEW_APPOINTMENT.ERRORS.SERVICE_REQUIRED' | translate }}</span>
+        } @else if (serviceDurationMinutes(form.controls.serviceId.value); as minutes) {
+          <span class="dl-form__hint">{{ 'SCHEDULE.NEW_APPOINTMENT.DURATION_HINT' | translate: { minutes: minutes } }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="new-appt-trainer">{{ 'SCHEDULE.NEW_APPOINTMENT.FIELD_TRAINER' | translate }}</label>
+        <p-select
+          id="new-appt-trainer"
+          fluid
+          appendTo="body"
+          formControlName="employeeId"
+          [options]="employeeOptions()"
+          optionLabel="label"
+          optionValue="value"
+        />
+        @if (form.controls.employeeId.invalid && form.controls.employeeId.touched) {
+          <span class="dl-form__error">{{ 'SCHEDULE.NEW_APPOINTMENT.ERRORS.TRAINER_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="new-appt-location">{{ 'SCHEDULE.NEW_APPOINTMENT.FIELD_LOCATION' | translate }}</label>
+        <p-select
+          id="new-appt-location"
+          fluid
+          appendTo="body"
+          formControlName="locationId"
+          [options]="locations()"
+          optionLabel="name"
+          optionValue="id"
+        />
+        @if (form.controls.locationId.invalid && form.controls.locationId.touched) {
+          <span class="dl-form__error">{{ 'SCHEDULE.NEW_APPOINTMENT.ERRORS.LOCATION_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="new-appt-starts-at">{{ 'SCHEDULE.NEW_APPOINTMENT.FIELD_STARTS_AT' | translate }}</label>
+        <p-datepicker
+          id="new-appt-starts-at"
+          fluid
+          appendTo="body"
+          formControlName="startsAt"
+          [showTime]="true"
+          hourFormat="24"
+          dateFormat="dd.mm.yy"
+          [showIcon]="true"
+        />
+        @if (form.controls.startsAt.invalid && form.controls.startsAt.touched) {
+          <span class="dl-form__error">{{ 'SCHEDULE.NEW_APPOINTMENT.ERRORS.STARTS_AT_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="new-appt-note">{{ 'SCHEDULE.NEW_APPOINTMENT.FIELD_NOTE' | translate }}</label>
+        <textarea id="new-appt-note" pTextarea fluid rows="2" formControlName="note"></textarea>
+      </div>
+
+      <label class="dl-form__field dl-form__field--checkbox">
+        <p-toggleswitch [ngModel]="isRecurring()" [ngModelOptions]="{ standalone: true }" (ngModelChange)="onRecurringToggle($event)" />
+        <span>{{ 'SCHEDULE.NEW_APPOINTMENT.RECURRING_TOGGLE' | translate }}</span>
+      </label>
+
+      @if (isRecurring()) {
+        <div class="dl-form__row">
+          <div class="dl-form__field">
+            <label for="new-appt-recurrence-type">{{ 'SCHEDULE.NEW_APPOINTMENT.FIELD_RECURRENCE_TYPE' | translate }}</label>
+            <p-select
+              id="new-appt-recurrence-type"
+              fluid
+              appendTo="body"
+              formControlName="recurrenceType"
+              [options]="recurrenceTypeOptions()"
+              optionLabel="label"
+              optionValue="value"
+            />
+            @if (attemptedSubmit() && !form.controls.recurrenceType.value) {
+              <span class="dl-form__error">{{ 'SCHEDULE.NEW_APPOINTMENT.ERRORS.RECURRENCE_TYPE_REQUIRED' | translate }}</span>
+            }
+          </div>
+
+          <div class="dl-form__field">
+            <label for="new-appt-end-date">{{ 'SCHEDULE.NEW_APPOINTMENT.FIELD_END_DATE' | translate }}</label>
+            <p-datepicker id="new-appt-end-date" fluid appendTo="body" formControlName="endDate" dateFormat="dd.mm.yy" [showIcon]="true" />
+            @if (attemptedSubmit() && !form.controls.endDate.value) {
+              <span class="dl-form__error">{{ 'SCHEDULE.NEW_APPOINTMENT.ERRORS.END_DATE_REQUIRED' | translate }}</span>
+            }
+          </div>
+        </div>
+
+        @if (recurringConflicts(); as conflicts) {
+          <div class="new-appointment-dialog__conflicts">
+            <strong>{{ 'SCHEDULE.NEW_APPOINTMENT.CONFLICT_TITLE' | translate }}</strong>
+            <ul>
+              @for (conflict of conflicts; track conflict.date + conflict.reason) {
+                <li>{{ conflictDateLabel(conflict.date) }} — {{ recurringConflictReasonTranslationKey(conflict.reason) | translate }}</li>
+              }
+            </ul>
+          </div>
+        }
+      } @else {
+        <div class="dl-form__field">
+          <label for="new-appt-amount">{{ 'SCHEDULE.NEW_APPOINTMENT.FIELD_AMOUNT' | translate }}</label>
+          <p-inputnumber id="new-appt-amount" fluid formControlName="amount" mode="currency" currency="EUR" locale="hr-HR" />
+          <span class="dl-form__hint">{{ 'SCHEDULE.NEW_APPOINTMENT.AMOUNT_HINT' | translate }}</span>
+        </div>
+
+        <label class="dl-form__field dl-form__field--checkbox">
+          <p-toggleswitch [ngModel]="completeNow()" [ngModelOptions]="{ standalone: true }" (ngModelChange)="onCompleteNowToggle($event)" />
+          <span>{{ 'SCHEDULE.NEW_APPOINTMENT.COMPLETE_BUTTON' | translate }}</span>
+        </label>
+
+        @if (completeNow()) {
+          <div class="dl-form__field">
+            <label for="new-appt-payment-method">{{ 'SCHEDULE.FIELD_PAYMENT_METHOD' | translate }}</label>
+            <p-select
+              id="new-appt-payment-method"
+              fluid
+              appendTo="body"
+              formControlName="paymentMethod"
+              [options]="paymentMethodOptions()"
+              optionLabel="label"
+              optionValue="value"
+              [placeholder]="'SCHEDULE.FIELD_PAYMENT_METHOD_PLACEHOLDER' | translate"
+            />
+            @if (attemptedSubmit() && !form.controls.paymentMethod.value) {
+              <span class="dl-form__error">{{ 'SCHEDULE.NEW_APPOINTMENT.ERRORS.PAYMENT_METHOD_REQUIRED' | translate }}</span>
+            }
+          </div>
+
+          @if (form.controls.paymentMethod.value === 'Package') {
+            <div class="new-appointment-dialog__packages">
+              @for (client of selectedClients(); track client.clientId) {
+                <div class="new-appointment-dialog__package-row">
+                  <span>{{ client.name }}</span>
+                  @if (packageRow(client.clientId).loading) {
+                    <span class="dl-form__hint">…</span>
+                  } @else if (packageRow(client.clientId).eligible?.length === 0) {
+                    <span class="dl-form__error">{{ 'SCHEDULE.NO_ELIGIBLE_PACKAGE' | translate }}</span>
+                  } @else if ((packageRow(client.clientId).eligible?.length ?? 0) > 1) {
+                    <app-eligible-package-select
+                      [packages]="packageRow(client.clientId).eligible!"
+                      [serviceId]="form.controls.serviceId.value"
+                      (packageSelected)="onPackageChosen(client.clientId, $event)"
+                    />
+                  } @else {
+                    <span>{{ packageRow(client.clientId).eligible?.[0]?.packageName }}</span>
+                  }
+                </div>
+              }
+            </div>
+          }
+        }
+      }
+
+      <div class="dl-form__actions">
+        <p-button type="button" [text]="true" severity="secondary" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" />
+        @if (isRecurring()) {
+          <p-button type="submit" [label]="'SCHEDULE.NEW_APPOINTMENT.SCHEDULE_RECURRING_BUTTON' | translate" [loading]="saving()" />
+        } @else if (completeNow()) {
+          <p-button
+            type="submit"
+            [label]="'SCHEDULE.NEW_APPOINTMENT.COMPLETE_BUTTON' | translate"
+            [loading]="saving()"
+            [disabled]="!canConfirmComplete()"
+          />
+        } @else {
+          <p-button type="submit" [label]="'SCHEDULE.NEW_APPOINTMENT.SCHEDULE_BUTTON' | translate" [loading]="saving()" />
+        }
+      </div>
+    </form>
+  }
+</p-dialog>

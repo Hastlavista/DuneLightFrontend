@@ -1,0 +1,140 @@
+:host {
+  --schedule-axis-width: 3.5rem;
+  display: block;
+}
+
+.schedule-grid {
+  &__scroll {
+    overflow-x: auto;
+    border: 1px solid var(--sand);
+    border-radius: var(--radius-card);
+    background: var(--paper-2);
+  }
+
+  &__header {
+    display: flex;
+    border-bottom: 1px solid var(--sand-deep);
+  }
+
+  &__corner {
+    flex: 0 0 var(--schedule-axis-width);
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--paper-2);
+    border-right: 1px solid var(--sand-deep);
+  }
+
+  &__col-header {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.1rem;
+    padding: 0.5rem 0.25rem;
+    border-right: 1px solid var(--sand);
+    text-align: center;
+  }
+
+  &__col-header-label {
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
+
+  &__col-header-sub {
+    font-size: 0.72rem;
+    color: var(--clay-2);
+  }
+
+  &__body {
+    display: flex;
+    position: relative;
+  }
+
+  &__hour-axis {
+    flex: 0 0 var(--schedule-axis-width);
+    position: sticky;
+    left: 0;
+    z-index: 1;
+    background: var(--paper-2);
+    border-right: 1px solid var(--sand-deep);
+  }
+
+  &__hour-row {
+    box-sizing: border-box;
+    border-bottom: 1px dashed var(--sand);
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+  }
+
+  &__hour-label {
+    font-size: 0.7rem;
+    color: var(--clay-2);
+    padding: 0.15rem 0.35rem 0 0;
+  }
+
+  &__col-body {
+    position: relative;
+    flex: 0 0 auto;
+    border-right: 1px solid var(--sand);
+    cursor: pointer;
+  }
+
+  &__hour-line {
+    box-sizing: border-box;
+    border-bottom: 1px dashed var(--sand);
+  }
+
+  &__cell {
+    position: absolute;
+    box-sizing: border-box;
+    overflow: hidden;
+    inset-inline: 1px;
+    border: 1.5px solid var(--gold);
+    background: var(--paper);
+    border-radius: 6px;
+    box-shadow: var(--shadow-soft);
+    padding: 0.15rem 0.4rem;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 0.05rem;
+
+    &--cancelled {
+      opacity: 0.55;
+    }
+
+    &--cancelled &-title,
+    &--cancelled &-subtitle {
+      text-decoration: line-through;
+    }
+  }
+
+  &__cell-title {
+    font-weight: 600;
+    font-size: 0.76rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__cell-subtitle {
+    color: var(--clay-2);
+    font-size: 0.68rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__cell-loc {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    border: 1px solid var(--paper);
+  }
+}

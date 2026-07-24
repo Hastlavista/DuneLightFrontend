@@ -1,0 +1,20 @@
+<div class="schedule-week-grid">
+  <div class="schedule-week-grid__nav">
+    <p-button icon="pi pi-chevron-left" [text]="true" [ariaLabel]="'SCHEDULE.PREV_WEEK' | translate" (onClick)="goPrevWeek()" />
+    <span class="schedule-week-grid__range">{{ rangeLabel() }}</span>
+    <p-button icon="pi pi-chevron-right" [text]="true" [ariaLabel]="'SCHEDULE.NEXT_WEEK' | translate" (onClick)="goNextWeek()" />
+    <p-button [label]="'SCHEDULE.TODAY' | translate" [text]="true" (onClick)="goToday()" />
+  </div>
+
+  @if (!employeeId()) {
+    <div class="schedule-week-grid__empty">{{ 'SCHEDULE.SELECT_TRAINER_HINT' | translate }}</div>
+  } @else {
+    <app-schedule-grid
+      [columns]="columns()"
+      [cells]="gridCells()"
+      [columnWidthPx]="columnWidthPx"
+      (cellClick)="onCellClick($event)"
+      (emptySlotClick)="onEmptySlotClick($event)"
+    />
+  }
+</div>

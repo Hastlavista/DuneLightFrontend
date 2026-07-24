@@ -1,0 +1,17 @@
+.schedule-day-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 2rem 0;
+    color: var(--olive-gold);
+  }
+}

@@ -1,0 +1,101 @@
+<div class="schedule-page">
+  <div class="dl-card schedule-page__toolbar">
+    <div class="schedule-page__view-toggle">
+      <p-button [outlined]="viewMode() !== 'day'" [label]="'SCHEDULE.VIEW_DAY' | translate" (onClick)="setViewMode('day')" />
+      <p-button [outlined]="viewMode() !== 'week'" [label]="'SCHEDULE.VIEW_WEEK' | translate" (onClick)="setViewMode('week')" />
+    </div>
+
+    @if (viewMode() === 'week') {
+      <p-select
+        class="schedule-page__filter"
+        [options]="trainerOptions()"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="selectedTrainerId()"
+        (ngModelChange)="selectedTrainerId.set($event)"
+        [placeholder]="'SCHEDULE.SELECT_TRAINER' | translate"
+      />
+    }
+
+    <p-select
+      class="schedule-page__filter"
+      [options]="statusFilterOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="statusFilter()"
+      (ngModelChange)="statusFilter.set($event)"
+    />
+    <p-select
+      class="schedule-page__filter"
+      [options]="serviceCategoryFilterOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="serviceCategoryFilter()"
+      (ngModelChange)="serviceCategoryFilter.set($event)"
+    />
+    <p-select
+      class="schedule-page__filter"
+      [options]="serviceFilterOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="serviceFilter()"
+      (ngModelChange)="serviceFilter.set($event)"
+    />
+
+    <p-button
+      class="schedule-page__new-appointment"
+      icon="pi pi-plus"
+      [label]="'SCHEDULE.NEW_APPOINTMENT_BUTTON' | translate"
+      (onClick)="openNewAppointment()"
+    />
+  </div>
+
+  <app-schedule-legend [categories]="activeServiceCategories()" />
+
+  @if (viewMode() === 'day') {
+    <app-admin-schedule-day-grid
+      #dayGrid
+      [employees]="activeEmployees()"
+      [statusFilter]="statusFilter()"
+      [serviceCategoryFilter]="serviceCategoryFilter()"
+      [serviceFilter]="serviceFilter()"
+      (appointmentClicked)="onAppointmentClicked($event)"
+      (emptySlotClick)="onEmptySlotClick($event)"
+    />
+  } @else {
+    <app-schedule-week-grid
+      #weekGrid
+      [employeeId]="selectedTrainerId()"
+      [statusFilter]="statusFilter()"
+      [serviceCategoryFilter]="serviceCategoryFilter()"
+      [serviceFilter]="serviceFilter()"
+      (appointmentClicked)="onAppointmentClicked($event)"
+      (emptySlotClick)="onEmptySlotClick($event)"
+    />
+  }
+</div>
+
+<app-appointment-detail-dialog
+  [(visible)]="detailVisible"
+  [appointmentId]="detailAppointmentId()"
+  [employees]="viewMode() === 'day' ? activeEmployees() : []"
+  [locations]="activeLocations()"
+  [allowEmployeeChange]="viewMode() === 'day'"
+  (saved)="refreshActiveGrid()"
+/>
+
+<app-group-attendance-dialog
+  [visible]="attendanceDialogVisible()"
+  (visibleChange)="onAttendanceVisibleChange($event)"
+  [group]="attendanceGroup()"
+  [appointment]="attendanceAppointment()"
+/>
+
+<app-new-appointment-dialog
+  [(visible)]="newAppointmentVisible"
+  [employees]="activeEmployees()"
+  [locations]="activeLocations()"
+  [services]="activeServices()"
+  [initial]="newAppointmentInitial()"
+  (created)="refreshActiveGrid()"
+/>
