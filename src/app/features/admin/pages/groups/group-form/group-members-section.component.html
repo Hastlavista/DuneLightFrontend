@@ -1,0 +1,50 @@
+<section class="dl-card group-members-section">
+  <div class="group-members-section__header">
+    <h3>{{ 'GROUPS.MEMBERS.TITLE' | translate }}</h3>
+    <p-button
+      icon="pi pi-plus"
+      [label]="'GROUPS.MEMBERS.ADD_BUTTON' | translate"
+      (onClick)="openAddDialog()"
+    />
+  </div>
+
+  <p-table [value]="activeMembers()" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>{{ 'GROUPS.MEMBERS.COL_NAME' | translate }}</th>
+        <th>{{ 'GROUPS.MEMBERS.COL_JOINED_AT' | translate }}</th>
+        <th class="group-members-section__actions-col"></th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-member>
+      <tr>
+        <td>{{ member.clientName }}</td>
+        <td>{{ member.joinedAt | hrDate }}</td>
+        <td class="group-members-section__actions">
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'GROUPS.MEMBERS.REMOVE' | translate"
+            [title]="'GROUPS.MEMBERS.REMOVE' | translate"
+            (onClick)="confirmRemove(member)"
+          />
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="3" class="group-members-section__empty">{{ 'GROUPS.MEMBERS.EMPTY' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</section>
+
+<app-add-group-member-dialog
+  [(visible)]="addDialogVisible"
+  [group]="group()"
+  (changed)="onMemberAdded()"
+/>

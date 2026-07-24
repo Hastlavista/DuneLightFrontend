@@ -1,0 +1,129 @@
+<div class="dl-card price-list-page">
+  <app-list-toolbar
+    [newLabelKey]="'CATALOG.PRICING.NEW'"
+    [search]="search()"
+    [showInactive]="showInactive()"
+    (searchChange)="onSearchChange($event)"
+    (showInactiveChange)="onShowInactiveChange($event)"
+    (create)="openCreate()"
+  >
+    <p-select
+      class="price-list-page__filter"
+      [options]="subjectTypeFilterOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="subjectTypeFilter()"
+      (ngModelChange)="onSubjectTypeFilterChange($event)"
+    />
+    <p-select
+      class="price-list-page__filter"
+      [options]="locationFilterOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="locationFilter()"
+      (ngModelChange)="onLocationFilterChange($event)"
+    />
+  </app-list-toolbar>
+
+  <p-table
+    #dt
+    [value]="items()"
+    [lazy]="true"
+    (onLazyLoad)="onLazyLoad($event)"
+    [paginator]="true"
+    [rows]="rows()"
+    [totalRecords]="totalCount()"
+    [loading]="loading()"
+    [rowsPerPageOptions]="[20, 50, 100, 200]"
+    dataKey="id"
+    responsiveLayout="scroll"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>{{ 'CATALOG.PRICING.COL_SUBJECT' | translate }}</th>
+        <th>{{ 'CATALOG.PRICING.COL_LOCATION' | translate }}</th>
+        <th>{{ 'CATALOG.PRICING.COL_PRICE' | translate }}</th>
+        <th>{{ 'CATALOG.PRICING.COL_VALID_FROM' | translate }}</th>
+        <th>{{ 'CATALOG.PRICING.COL_VALID_TO' | translate }}</th>
+        <th>{{ 'COMMON.COL_STATUS' | translate }}</th>
+        <th class="price-list-page__actions-col"></th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-item>
+      <tr [class.price-list-page__row--inactive]="!item.isActive">
+        <td>
+          {{ subjectName(item) }}
+          <span class="price-list-page__subject-badge">
+            ({{
+              (item.subjectType === 'Service'
+                ? 'CATALOG.PRICING.SUBJECT_TYPE.SERVICE'
+                : 'CATALOG.PRICING.SUBJECT_TYPE.PACKAGE'
+              ) | translate
+            }})
+          </span>
+        </td>
+        <td>{{ item.locationName ?? ('CATALOG.PRICING.ALL_LOCATIONS' | translate) }}</td>
+        <td>{{ item.price | eurCurrency }}</td>
+        <td>{{ item.validFrom | hrDate }}</td>
+        <td>{{ item.validTo ? (item.validTo | hrDate) : ('CATALOG.PRICING.UNLIMITED' | translate) }}</td>
+        <td><app-status-tag [active]="item.isActive" /></td>
+        <td class="price-list-page__actions">
+          <p-button
+            icon="pi pi-pencil"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'COMMON.EDIT' | translate"
+            [title]="'COMMON.EDIT' | translate"
+            (onClick)="openEdit(item)"
+          />
+          @if (item.isActive) {
+            <p-button
+              icon="pi pi-eye-slash"
+              severity="warn"
+              [text]="true"
+              [rounded]="true"
+              [ariaLabel]="'COMMON.DEACTIVATE' | translate"
+              [title]="'COMMON.DEACTIVATE' | translate"
+              (onClick)="confirmDeactivate(item)"
+            />
+          } @else {
+            <p-button
+              icon="pi pi-eye"
+              severity="success"
+              [text]="true"
+              [rounded]="true"
+              [ariaLabel]="'COMMON.ACTIVATE' | translate"
+              [title]="'COMMON.ACTIVATE' | translate"
+              (onClick)="activate(item)"
+            />
+          }
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'COMMON.DELETE' | translate"
+            [title]="'COMMON.DELETE' | translate"
+            (onClick)="confirmDelete(item)"
+          />
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="7" class="price-list-page__empty">{{ 'CATALOG.PRICING.EMPTY' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<app-price-list-item-form-dialog
+  [(visible)]="dialogVisible"
+  [item]="editingItem()"
+  [activeServices]="activeServices()"
+  [activePackages]="activePackages()"
+  [activeLocations]="activeLocations()"
+  (saved)="onSaved()"
+/>

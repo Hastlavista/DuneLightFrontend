@@ -1,0 +1,57 @@
+.pricing-effective {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+
+  &__view,
+  &__resolve {
+    padding: 1.25rem;
+
+    h2 {
+      margin-top: 0;
+    }
+  }
+
+  &__controls {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    align-items: flex-end;
+    margin-bottom: 1.25rem;
+  }
+
+  &__hint {
+    color: var(--olive-gold);
+  }
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--sand);
+    }
+  }
+
+  &__subject-badge {
+    color: var(--olive-gold);
+    font-size: 0.85rem;
+    margin-left: 0.25rem;
+  }
+
+  &__result {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-top: 1rem;
+  }
+
+  &__result-price {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--clay);
+  }
+}

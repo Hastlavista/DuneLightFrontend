@@ -1,0 +1,26 @@
+.client-packages-tab {
+  padding: 0.5rem 0 1rem;
+
+  &__toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    h3 {
+      margin: 0;
+    }
+  }
+
+  &__service-entries {
+    margin: 0;
+    padding-left: 1rem;
+    font-size: 0.85rem;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 2rem 0;
+    color: var(--olive-gold);
+  }
+}

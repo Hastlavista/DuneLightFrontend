@@ -1,0 +1,42 @@
+.group-form-page {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  &__slots-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__slot-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__slot-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__slot-day {
+    flex: 1;
+    max-width: 14rem;
+  }
+}

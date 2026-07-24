@@ -1,0 +1,24 @@
+.anonymize-dialog {
+  &__lead {
+    margin: 0;
+  }
+
+  &__list {
+    margin: 0;
+    padding-left: 1.25rem;
+    color: var(--clay-2);
+    font-size: 0.9rem;
+  }
+
+  &__warning {
+    margin: 0;
+    font-weight: 600;
+    color: var(--red);
+  }
+
+  &__hint {
+    margin: 0;
+    font-size: 0.85rem;
+    color: var(--clay-2);
+  }
+}

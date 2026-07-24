@@ -1,0 +1,69 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '40rem' }"
+  [header]="'GROUPS.MEMBERS.ADD_TITLE' | translate"
+>
+  <div class="add-group-member-dialog">
+    <p-iconfield class="add-group-member-dialog__search">
+      <p-inputicon class="pi pi-search" />
+      <input
+        type="text"
+        pInputText
+        fluid
+        [ngModel]="search()"
+        (ngModelChange)="onSearchInput($event)"
+        [placeholder]="'GROUPS.MEMBERS.ADD_PLACEHOLDER' | translate"
+      />
+    </p-iconfield>
+
+    <p-table
+      #dt
+      [value]="visibleItems()"
+      [lazy]="true"
+      [lazyLoadOnInit]="false"
+      (onLazyLoad)="onLazyLoad($event)"
+      [paginator]="true"
+      [rows]="rows()"
+      [totalRecords]="totalCount()"
+      [loading]="loading()"
+      dataKey="id"
+      responsiveLayout="scroll"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>{{ 'CLIENTS.COL_MEMBER_NUMBER' | translate }}</th>
+          <th>{{ 'CLIENTS.COL_NAME' | translate }}</th>
+          <th>{{ 'CLIENTS.COL_PHONE' | translate }}</th>
+          <th class="add-group-member-dialog__actions-col"></th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-client>
+        <tr class="add-group-member-dialog__row" (click)="addClient(client)">
+          <td>{{ client.memberNumber }}</td>
+          <td>{{ client.firstName }} {{ client.lastName }}</td>
+          <td>{{ client.phone }}</td>
+          <td class="add-group-member-dialog__actions">
+            <p-button
+              icon="pi pi-plus"
+              [text]="true"
+              [rounded]="true"
+              [loading]="addingClientId() === client.id"
+              [disabled]="!!addingClientId()"
+              [ariaLabel]="'GROUPS.MEMBERS.ADD_ROW' | translate"
+              [title]="'GROUPS.MEMBERS.ADD_ROW' | translate"
+              (onClick)="addClient(client, $event)"
+            />
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="4" class="add-group-member-dialog__empty">{{ 'GROUPS.MEMBERS.NO_RESULTS' | translate }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </div>
+</p-dialog>

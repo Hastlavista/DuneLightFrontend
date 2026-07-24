@@ -1,0 +1,43 @@
+.client-list-page {
+  padding: 1.25rem;
+
+  &__filter {
+    min-width: 12rem;
+  }
+
+  &__actions-col {
+    width: 12rem;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+  }
+
+  &__row--inactive {
+    opacity: 0.55;
+  }
+
+  &__tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  &__tag-chip {
+    display: inline-block;
+    padding: 0.1rem 0.5rem;
+    border-radius: 999px;
+    font-size: 0.78rem;
+    color: var(--clay);
+    border: 1px solid var(--sand-deep);
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 2rem 0;
+    color: var(--olive-gold);
+  }
+}

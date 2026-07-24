@@ -1,0 +1,14 @@
+<p-tabs value="items">
+  <p-tablist>
+    <p-tab value="items">{{ 'CATALOG.PRICING.ITEMS_TAB_LABEL' | translate }}</p-tab>
+    <p-tab value="effective">{{ 'CATALOG.PRICING.EFFECTIVE_TAB_LABEL' | translate }}</p-tab>
+  </p-tablist>
+  <p-tabpanels>
+    <p-tabpanel value="items">
+      <app-admin-price-list-items />
+    </p-tabpanel>
+    <p-tabpanel value="effective">
+      <app-admin-effective-price-list />
+    </p-tabpanel>
+  </p-tabpanels>
+</p-tabs>

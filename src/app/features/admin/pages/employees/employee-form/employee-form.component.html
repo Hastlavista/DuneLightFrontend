@@ -1,0 +1,270 @@
+<div class="dl-card employee-form-page">
+  <div class="employee-form-page__header">
+    <h2>{{ (isEditMode() ? 'EMPLOYEES.EDIT_TITLE' : 'EMPLOYEES.NEW_TITLE') | translate }}</h2>
+    <p-button
+      [text]="true"
+      severity="secondary"
+      icon="pi pi-arrow-left"
+      [label]="'EMPLOYEES.BACK_TO_LIST' | translate"
+      (onClick)="onCancel()"
+    />
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+    <section class="employee-form-page__section">
+      <h3>{{ 'EMPLOYEES.SECTION_PERSONAL' | translate }}</h3>
+
+      <div class="dl-form__row">
+        <div class="dl-form__field">
+          <label for="employee-first-name">{{ 'EMPLOYEES.FIELD_FIRST_NAME' | translate }}</label>
+          <input id="employee-first-name" type="text" pInputText fluid formControlName="firstName" maxlength="255" />
+          @if (form.controls.firstName.invalid && form.controls.firstName.touched) {
+            <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.FIRST_NAME_REQUIRED' | translate }}</span>
+          }
+        </div>
+
+        <div class="dl-form__field">
+          <label for="employee-last-name">{{ 'EMPLOYEES.FIELD_LAST_NAME' | translate }}</label>
+          <input id="employee-last-name" type="text" pInputText fluid formControlName="lastName" maxlength="255" />
+          @if (form.controls.lastName.invalid && form.controls.lastName.touched) {
+            <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.LAST_NAME_REQUIRED' | translate }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="dl-form__row">
+        <div class="dl-form__field">
+          <label for="employee-phone">{{ 'EMPLOYEES.FIELD_PHONE' | translate }}</label>
+          <input id="employee-phone" type="text" pInputText fluid formControlName="phone" />
+        </div>
+
+        <div class="dl-form__field">
+          <label for="employee-email">{{ 'EMPLOYEES.FIELD_EMAIL' | translate }}</label>
+          <input id="employee-email" type="email" pInputText fluid formControlName="email" />
+          @if (form.controls.email.invalid && form.controls.email.touched) {
+            <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.EMAIL_INVALID' | translate }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="dl-form__row">
+        <div class="dl-form__field">
+          <label for="employee-date-of-birth">{{ 'EMPLOYEES.FIELD_DATE_OF_BIRTH' | translate }}</label>
+          <p-datepicker
+            id="employee-date-of-birth"
+            fluid
+            appendTo="body"
+            formControlName="dateOfBirth"
+            dateFormat="dd.mm.yy"
+            [showIcon]="true"
+          />
+        </div>
+
+        <div class="dl-form__field">
+          <label for="employee-oib">{{ 'EMPLOYEES.FIELD_OIB' | translate }}</label>
+          <input id="employee-oib" type="text" pInputText fluid formControlName="oib" maxlength="11" />
+          @if (form.controls.oib.invalid && form.controls.oib.touched) {
+            <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.OIB_INVALID' | translate }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="dl-form__field">
+        <label for="employee-address">{{ 'EMPLOYEES.FIELD_ADDRESS' | translate }}</label>
+        <input id="employee-address" type="text" pInputText fluid formControlName="address" />
+      </div>
+
+      <div class="dl-form__field">
+        <label for="employee-note">{{ 'EMPLOYEES.FIELD_NOTE' | translate }}</label>
+        <textarea id="employee-note" pTextarea fluid rows="2" formControlName="note"></textarea>
+      </div>
+    </section>
+
+    <section class="employee-form-page__section">
+      <h3>{{ 'EMPLOYEES.SECTION_EMPLOYMENT' | translate }}</h3>
+
+      <div class="dl-form__row">
+        <div class="dl-form__field">
+          <label for="employee-employment-start">{{ 'EMPLOYEES.FIELD_EMPLOYMENT_START' | translate }}</label>
+          <p-datepicker
+            id="employee-employment-start"
+            fluid
+            appendTo="body"
+            formControlName="employmentStartDate"
+            dateFormat="dd.mm.yy"
+            [showIcon]="true"
+          />
+          @if (form.controls.employmentStartDate.invalid && form.controls.employmentStartDate.touched) {
+            <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.EMPLOYMENT_START_REQUIRED' | translate }}</span>
+          }
+        </div>
+
+        <div class="dl-form__field">
+          <label for="employee-employment-end">{{ 'EMPLOYEES.FIELD_EMPLOYMENT_END' | translate }}</label>
+          <p-datepicker
+            id="employee-employment-end"
+            fluid
+            appendTo="body"
+            formControlName="employmentEndDate"
+            dateFormat="dd.mm.yy"
+            [showIcon]="true"
+          />
+          @if (form.errors?.['employmentEndBeforeStart'] && form.controls.employmentEndDate.touched) {
+            <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.EMPLOYMENT_END_BEFORE_START' | translate }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="dl-form__field">
+        <label for="employee-engagement-type">{{ 'EMPLOYEES.FIELD_ENGAGEMENT_TYPE' | translate }}</label>
+        <p-select
+          id="employee-engagement-type"
+          fluid
+          appendTo="body"
+          formControlName="engagementTypeId"
+          [options]="engagementTypeOptions()"
+          optionLabel="name"
+          optionValue="id"
+          [placeholder]="'EMPLOYEES.FIELD_ENGAGEMENT_TYPE_PLACEHOLDER' | translate"
+        />
+        @if (form.controls.engagementTypeId.invalid && form.controls.engagementTypeId.touched) {
+          <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.ENGAGEMENT_TYPE_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="employee-compensation-note">{{ 'EMPLOYEES.FIELD_COMPENSATION_NOTE' | translate }}</label>
+        <textarea
+          id="employee-compensation-note"
+          pTextarea
+          fluid
+          rows="2"
+          formControlName="compensationNote"
+        ></textarea>
+        <span class="dl-form__hint">{{ 'EMPLOYEES.COMPENSATION_NOTE_HINT' | translate }}</span>
+      </div>
+    </section>
+
+    <section class="employee-form-page__section">
+      <h3>{{ 'EMPLOYEES.SECTION_DISPLAY' | translate }}</h3>
+
+      <div class="dl-form__row">
+        <div class="dl-form__field">
+          <label for="employee-color">{{ 'EMPLOYEES.FIELD_COLOR' | translate }}</label>
+          <p-colorpicker id="employee-color" formControlName="colorHex" appendTo="body" />
+        </div>
+
+        <div class="dl-form__field">
+          <label for="employee-sort-order">{{ 'EMPLOYEES.FIELD_SORT_ORDER' | translate }}</label>
+          <p-inputnumber id="employee-sort-order" fluid formControlName="sortOrder" [showButtons]="true" />
+        </div>
+      </div>
+    </section>
+
+    <section class="employee-form-page__section">
+      <h3>{{ 'EMPLOYEES.SECTION_LOCATIONS' | translate }}</h3>
+
+      <div class="dl-form__field">
+        <label for="employee-locations">{{ 'EMPLOYEES.FIELD_LOCATIONS' | translate }}</label>
+        <p-multiselect
+          id="employee-locations"
+          fluid
+          appendTo="body"
+          display="chip"
+          formControlName="locationIds"
+          [options]="locationOptions()"
+          optionLabel="name"
+          optionValue="id"
+          [placeholder]="'EMPLOYEES.FIELD_LOCATIONS_PLACEHOLDER' | translate"
+        />
+        @if (form.controls.locationIds.invalid && form.controls.locationIds.touched) {
+          <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.LOCATIONS_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="employee-primary-location">{{ 'EMPLOYEES.FIELD_PRIMARY_LOCATION' | translate }}</label>
+        <p-select
+          id="employee-primary-location"
+          fluid
+          appendTo="body"
+          formControlName="primaryLocationId"
+          [options]="primaryLocationOptions()"
+          optionLabel="name"
+          optionValue="id"
+          [placeholder]="'EMPLOYEES.FIELD_PRIMARY_LOCATION_PLACEHOLDER' | translate"
+        />
+        @if (form.errors?.['primaryNotSelected'] && form.controls.primaryLocationId.touched) {
+          <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.PRIMARY_LOCATION_REQUIRED' | translate }}</span>
+        }
+      </div>
+    </section>
+
+    <section class="employee-form-page__section">
+      <h3>{{ 'EMPLOYEES.SECTION_SERVICES' | translate }}</h3>
+
+      <div class="dl-form__field">
+        <label for="employee-services">{{ 'EMPLOYEES.FIELD_SERVICES' | translate }}</label>
+        <p-multiselect
+          id="employee-services"
+          fluid
+          appendTo="body"
+          display="chip"
+          formControlName="serviceIds"
+          [options]="serviceOptions()"
+          optionLabel="name"
+          optionValue="id"
+          [placeholder]="'EMPLOYEES.FIELD_SERVICES_PLACEHOLDER' | translate"
+        />
+        <span class="dl-form__hint">{{ 'EMPLOYEES.SERVICES_EMPTY_HINT' | translate }}</span>
+      </div>
+    </section>
+
+    @if (!isEditMode()) {
+      <section class="employee-form-page__section">
+        <h3>{{ 'EMPLOYEES.SECTION_LOGIN' | translate }}</h3>
+
+        <div class="dl-form__row">
+          <div class="dl-form__field">
+            <label for="employee-password">{{ 'EMPLOYEES.FIELD_PASSWORD' | translate }}</label>
+            <p-password
+              inputId="employee-password"
+              formControlName="password"
+              autocomplete="new-password"
+              [feedback]="true"
+              [toggleMask]="true"
+              [fluid]="true"
+            />
+            @if (form.controls.password.invalid && form.controls.password.touched) {
+              <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.PASSWORD_REQUIRED' | translate }}</span>
+            }
+          </div>
+
+          <div class="dl-form__field">
+            <label for="employee-role">{{ 'EMPLOYEES.FIELD_ROLE' | translate }}</label>
+            <p-select
+              id="employee-role"
+              fluid
+              appendTo="body"
+              formControlName="role"
+              [options]="roleOptions()"
+              optionLabel="label"
+              optionValue="value"
+            />
+          </div>
+        </div>
+      </section>
+    }
+
+    <div class="dl-form__actions">
+      <p-button
+        type="button"
+        [text]="true"
+        severity="secondary"
+        [label]="'COMMON.CANCEL' | translate"
+        (onClick)="onCancel()"
+      />
+      <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+    </div>
+  </form>
+</div>

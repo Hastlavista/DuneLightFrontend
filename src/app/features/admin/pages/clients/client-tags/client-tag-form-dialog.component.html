@@ -1,0 +1,40 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '28rem' }"
+  [header]="(isEditMode() ? 'CLIENTS.TAGS.EDIT_TITLE' : 'CLIENTS.TAGS.NEW_TITLE') | translate"
+  (onShow)="onDialogShow()"
+>
+  @if (dialogShown()) {
+  <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+    <div class="dl-form__field">
+      <label for="client-tag-name">{{ 'CLIENTS.TAGS.FIELD_NAME' | translate }}</label>
+      <input id="client-tag-name" type="text" pInputText fluid formControlName="name" maxlength="255" />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <span class="dl-form__error">{{ 'CLIENTS.TAGS.ERRORS.NAME_REQUIRED' | translate }}</span>
+      }
+    </div>
+
+    <div class="dl-form__field">
+      <label for="client-tag-color">{{ 'CLIENTS.TAGS.FIELD_COLOR' | translate }}</label>
+      <p-colorpicker id="client-tag-color" formControlName="colorHex" appendTo="body" />
+    </div>
+
+    <div class="dl-form__field">
+      <label for="client-tag-sort-order">{{ 'CLIENTS.TAGS.FIELD_SORT_ORDER' | translate }}</label>
+      <p-inputnumber id="client-tag-sort-order" fluid formControlName="sortOrder" [showButtons]="true" />
+    </div>
+
+    <div class="dl-form__actions">
+      <p-button
+        type="button"
+        [text]="true"
+        severity="secondary"
+        [label]="'COMMON.CANCEL' | translate"
+        (onClick)="onCancel()"
+      />
+      <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+    </div>
+  </form>
+  }
+</p-dialog>

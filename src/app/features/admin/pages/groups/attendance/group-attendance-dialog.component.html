@@ -1,0 +1,125 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '40rem' }"
+  [header]="'GROUPS.ATTENDANCE.TITLE' | translate"
+  (onShow)="onDialogShow()"
+>
+  @if (dialogShown() && appointment(); as appointment) {
+    <div class="group-attendance-dialog">
+      <p class="dl-form__hint">{{ subtitle(appointment) }}</p>
+
+      <section class="group-attendance-dialog__section">
+        <h4>{{ 'GROUPS.ATTENDANCE.EXPECTED_SECTION' | translate }}</h4>
+        <p-table [value]="expectedRows()" dataKey="clientId" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>{{ 'GROUPS.ATTENDANCE.COL_NAME' | translate }}</th>
+              <th>{{ 'GROUPS.ATTENDANCE.COL_ATTENDED' | translate }}</th>
+              <th>{{ 'GROUPS.ATTENDANCE.COL_COVERAGE' | translate }}</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td>{{ row.clientName }}</td>
+              <td>
+                <p-checkbox
+                  [binary]="true"
+                  [ngModel]="row.attended"
+                  [disabled]="row.saving"
+                  (onChange)="onToggleAttended(row, $event.checked)"
+                />
+              </td>
+              <td>
+                @if (row.attended && row.coverageType) {
+                  {{ coverageTypeTranslationKey(row.coverageType) | translate }}
+                } @else if (row.eligiblePackages && row.eligiblePackages.length > 1) {
+                  <app-eligible-package-select
+                    [packages]="row.eligiblePackages"
+                    [serviceId]="group()!.serviceId"
+                    (packageSelected)="onPackageChosen(row, $event)"
+                  />
+                } @else {
+                  —
+                }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="3" class="group-attendance-dialog__empty">
+                {{ 'GROUPS.ATTENDANCE.EMPTY_EXPECTED' | translate }}
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </section>
+
+      <section class="group-attendance-dialog__section">
+        <h4>{{ 'GROUPS.ATTENDANCE.RECORDED_SECTION' | translate }}</h4>
+        <p-table [value]="recordedRows()" dataKey="clientId" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>{{ 'GROUPS.ATTENDANCE.COL_NAME' | translate }}</th>
+              <th>{{ 'GROUPS.ATTENDANCE.COL_ATTENDED' | translate }}</th>
+              <th>{{ 'GROUPS.ATTENDANCE.COL_COVERAGE' | translate }}</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-row>
+            <tr>
+              <td>
+                {{ row.clientName }}
+                @if (!row.isMember) {
+                  <span class="group-attendance-dialog__guest-badge">{{ 'GROUPS.ATTENDANCE.GUEST_BADGE' | translate }}</span>
+                }
+              </td>
+              <td>
+                <p-checkbox
+                  [binary]="true"
+                  [ngModel]="row.attended"
+                  [disabled]="row.saving"
+                  (onChange)="onToggleAttended(row, $event.checked)"
+                />
+              </td>
+              <td>
+                @if (row.attended && row.coverageType) {
+                  {{ coverageTypeTranslationKey(row.coverageType) | translate }}
+                } @else if (row.eligiblePackages && row.eligiblePackages.length > 1) {
+                  <app-eligible-package-select
+                    [packages]="row.eligiblePackages"
+                    [serviceId]="group()!.serviceId"
+                    (packageSelected)="onPackageChosen(row, $event)"
+                  />
+                } @else {
+                  —
+                }
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="3" class="group-attendance-dialog__empty">
+                {{ 'GROUPS.ATTENDANCE.EMPTY_RECORDED' | translate }}
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </section>
+
+      <section class="group-attendance-dialog__section">
+        <h4>{{ 'GROUPS.ATTENDANCE.ADD_GUEST' | translate }}</h4>
+        <p-autoComplete
+          class="group-attendance-dialog__guest-search"
+          [(ngModel)]="selectedGuestOption"
+          [suggestions]="guestResults()"
+          optionLabel="name"
+          [placeholder]="'GROUPS.ATTENDANCE.ADD_GUEST_PLACEHOLDER' | translate"
+          [emptyMessage]="'GROUPS.ATTENDANCE.NO_RESULTS' | translate"
+          (completeMethod)="onGuestSearch($event)"
+          (onSelect)="onGuestSelected($event)"
+          appendTo="body"
+        />
+      </section>
+    </div>
+  }
+</p-dialog>

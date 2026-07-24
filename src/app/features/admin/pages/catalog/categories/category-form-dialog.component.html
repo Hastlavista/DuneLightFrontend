@@ -1,0 +1,71 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '34rem' }"
+  [header]="(isEditMode() ? 'CATALOG.CATEGORIES.EDIT_TITLE' : 'CATALOG.CATEGORIES.NEW_TITLE') | translate"
+  (onShow)="onDialogShow()"
+>
+  @if (dialogShown()) {
+  <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+    <div class="dl-form__field">
+      <label for="category-name">{{ 'CATALOG.CATEGORIES.FIELD_NAME' | translate }}</label>
+      <input id="category-name" type="text" pInputText fluid formControlName="name" maxlength="255" />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <span class="dl-form__error">{{ 'CATALOG.CATEGORIES.ERRORS.NAME_REQUIRED' | translate }}</span>
+      }
+    </div>
+
+    <div class="dl-form__field">
+      <label for="category-execution-mode">{{ 'CATALOG.CATEGORIES.FIELD_EXECUTION_MODE' | translate }}</label>
+      <p-select
+        id="category-execution-mode"
+        fluid
+        formControlName="executionMode"
+        [options]="executionModeOptions()"
+        optionLabel="label"
+        optionValue="value"
+      />
+    </div>
+
+    <div class="dl-form__field">
+      <label for="category-color">{{ 'CATALOG.CATEGORIES.FIELD_COLOR' | translate }}</label>
+      <p-colorpicker id="category-color" formControlName="colorHex" appendTo="body" />
+    </div>
+
+    <div class="dl-form__row">
+      <div class="dl-form__field dl-form__field--checkbox">
+        <p-checkbox inputId="category-requires-client" formControlName="requiresClient" [binary]="true" />
+        <label for="category-requires-client">{{ 'CATALOG.CATEGORIES.FIELD_REQUIRES_CLIENT' | translate }}</label>
+      </div>
+
+      <div class="dl-form__field dl-form__field--checkbox">
+        <p-checkbox inputId="category-counts-toward-revenue" formControlName="countsTowardRevenue" [binary]="true" />
+        <label for="category-counts-toward-revenue">
+          {{ 'CATALOG.CATEGORIES.FIELD_COUNTS_TOWARD_REVENUE' | translate }}
+        </label>
+      </div>
+    </div>
+
+    <div class="dl-form__field">
+      <label for="category-description">{{ 'CATALOG.CATEGORIES.FIELD_DESCRIPTION' | translate }}</label>
+      <textarea id="category-description" pTextarea fluid rows="3" formControlName="description"></textarea>
+    </div>
+
+    <div class="dl-form__field">
+      <label for="category-sort-order">{{ 'CATALOG.CATEGORIES.FIELD_SORT_ORDER' | translate }}</label>
+      <p-inputnumber id="category-sort-order" fluid formControlName="sortOrder" [showButtons]="true" />
+    </div>
+
+    <div class="dl-form__actions">
+      <p-button
+        type="button"
+        [text]="true"
+        severity="secondary"
+        [label]="'COMMON.CANCEL' | translate"
+        (onClick)="onCancel()"
+      />
+      <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+    </div>
+  </form>
+  }
+</p-dialog>

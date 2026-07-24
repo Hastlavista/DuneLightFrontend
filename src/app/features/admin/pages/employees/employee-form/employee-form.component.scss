@@ -1,0 +1,29 @@
+.employee-form-page {
+  padding: 1.25rem;
+  max-width: 48rem;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+
+    h2 {
+      margin: 0;
+    }
+  }
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 1.25rem;
+
+    h3 {
+      margin: 0;
+      font-size: 0.95rem;
+      color: var(--clay-2);
+      border-bottom: 1px solid var(--sand);
+      padding-bottom: 0.5rem;
+    }
+  }
+}

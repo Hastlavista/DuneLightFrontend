@@ -1,0 +1,30 @@
+.add-group-member-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-width: 32rem;
+
+  &__search {
+    width: 100%;
+  }
+
+  &__row {
+    cursor: pointer;
+  }
+
+  &__actions-col {
+    width: 4rem;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 1.5rem 0;
+    color: var(--olive-gold);
+  }
+}

@@ -1,0 +1,50 @@
+<section class="dl-card group-slots-section">
+  <div class="group-slots-section__header">
+    <h3>{{ 'GROUPS.SLOTS.TITLE' | translate }}</h3>
+    <p-button icon="pi pi-plus" size="small" [text]="true" [label]="'GROUPS.SLOTS.ADD' | translate" (onClick)="openCreate()" />
+  </div>
+
+  <p-table [value]="activeSlots()" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>{{ 'GROUPS.SLOTS.FIELD_DAY' | translate }}</th>
+        <th>{{ 'GROUPS.SLOTS.FIELD_START_TIME' | translate }}</th>
+        <th class="group-slots-section__actions-col"></th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-slot>
+      <tr>
+        <td>{{ dayOfWeekTranslationKey(slot.dayOfWeek) | translate }}</td>
+        <td>{{ slot.startTime.slice(0, 5) }}</td>
+        <td class="group-slots-section__actions">
+          <p-button
+            icon="pi pi-pencil"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'COMMON.EDIT' | translate"
+            [title]="'COMMON.EDIT' | translate"
+            (onClick)="openEdit(slot)"
+          />
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'GROUPS.SLOTS.REMOVE' | translate"
+            [title]="'GROUPS.SLOTS.REMOVE' | translate"
+            (onClick)="confirmRemove(slot)"
+          />
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="3" class="group-slots-section__empty">{{ 'GROUPS.SLOTS.EMPTY' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</section>
+
+<app-group-slot-form-dialog [(visible)]="dialogVisible" [groupId]="group().id" [slot]="editingSlot()" (saved)="onSaved()" />

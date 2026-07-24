@@ -1,0 +1,53 @@
+<div class="client-packages-tab">
+  <div class="client-packages-tab__toolbar">
+    <h3>{{ 'CLIENTS.PACKAGES.TITLE' | translate }}</h3>
+    <p-button icon="pi pi-plus" [label]="'CLIENTS.PACKAGES.ISSUE_BUTTON' | translate" (onClick)="openIssueDialog()" />
+  </div>
+
+  <p-table [value]="items()" [loading]="loading()" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>{{ 'CLIENTS.PACKAGES.COL_PACKAGE' | translate }}</th>
+        <th>{{ 'CLIENTS.PACKAGES.COL_PURCHASE_DATE' | translate }}</th>
+        <th>{{ 'CLIENTS.PACKAGES.COL_PAID_PRICE' | translate }}</th>
+        <th>{{ 'CLIENTS.PACKAGES.COL_REMAINING' | translate }}</th>
+        <th>{{ 'CLIENTS.PACKAGES.COL_EXPIRY_DATE' | translate }}</th>
+        <th>{{ 'CLIENTS.PACKAGES.COL_STATUS' | translate }}</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-pkg>
+      <tr>
+        <td>{{ pkg.packageName }}</td>
+        <td>{{ pkg.purchaseDate | hrDate }}</td>
+        <td>{{ pkg.paidPrice | eurCurrency }}</td>
+        <td>
+          @if (pkg.entryMode === 'SharedPool') {
+            {{ sharedPoolLabel(pkg) }}
+          } @else {
+            <ul class="client-packages-tab__service-entries">
+              @for (entry of pkg.serviceEntries; track entry.serviceId) {
+                <li>{{ entry.serviceName }}: {{ serviceEntryLabel(entry) }}</li>
+              }
+            </ul>
+          }
+        </td>
+        <td>{{ pkg.expiryDate ? (pkg.expiryDate | hrDate) : '—' }}</td>
+        <td>
+          <p-tag
+            [severity]="clientPackageStatusSeverity(pkg.status)"
+            [value]="clientPackageStatusTranslationKey(pkg.status) | translate"
+          />
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="6" class="client-packages-tab__empty">{{ 'CLIENTS.PACKAGES.EMPTY' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<app-issue-package-dialog [(visible)]="issueDialogVisible" [clientId]="clientId()" (issued)="onIssued()" />

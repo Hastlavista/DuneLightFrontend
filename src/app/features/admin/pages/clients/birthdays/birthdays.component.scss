@@ -1,0 +1,44 @@
+.birthdays-page {
+  padding: 1.25rem;
+
+  &__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  &__quick-ranges {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  &__custom-range {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__custom-range-sep {
+    color: var(--olive-gold);
+  }
+
+  &__actions-col {
+    width: 4rem;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 2rem 0;
+    color: var(--olive-gold);
+  }
+}

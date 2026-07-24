@@ -1,0 +1,122 @@
+:root {
+  color-scheme: light;
+
+  /* Palette - "sunset / dunes" */
+  --paper: #fbf6e7;
+  --paper-2: #f3e9ce;
+  --sand: #e4d3a7;
+  --sand-deep: #c9b487;
+  --clay: #6c3c37;
+  --clay-2: #7c5647;
+  --gold: #eeac00;
+  --ochre: #aa6900;
+  --olive-gold: #8f7a45;
+  --emerald: #006e58;
+  --red: #c32624;
+
+  --font-heading: 'Spectral', serif;
+  --font-body: 'Instrument Sans', sans-serif;
+
+  --shadow-soft: 0 1px 3px 0 rgba(108, 60, 55, 0.12), 0 1px 2px -1px rgba(108, 60, 55, 0.1);
+  --shadow-card: 0 4px 14px -4px rgba(108, 60, 55, 0.18);
+  --radius-card: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--clay);
+  font-family: var(--font-body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  font-weight: 600;
+  color: var(--clay);
+  margin: 0 0 0.5em;
+}
+
+a {
+  color: inherit;
+}
+
+/* Base card - foundation for every future screen */
+.dl-card {
+  background: var(--paper-2);
+  border: 1px solid var(--sand);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-soft);
+}
+
+/* Base form layout - foundation for every future modal/create-edit form
+   (see admin catalog Lokacije/Kategorije for the reference implementation). */
+.dl-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.dl-form__field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+
+  label {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--clay-2);
+  }
+
+  &--checkbox {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.625rem;
+
+    label {
+      font-weight: 400;
+    }
+  }
+}
+
+.dl-form__error {
+  font-size: 0.78rem;
+  color: var(--red);
+}
+
+.dl-form__hint {
+  font-size: 0.78rem;
+  color: var(--clay-2);
+}
+
+.dl-form__row {
+  display: flex;
+  gap: 1rem;
+
+  .dl-form__field {
+    flex: 1;
+  }
+}
+
+.dl-form__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 0.25rem;
+}

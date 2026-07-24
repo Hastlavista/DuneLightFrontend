@@ -1,0 +1,29 @@
+.groups-page {
+  padding: 1.25rem;
+
+  &__actions-col {
+    width: 10rem;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+  }
+
+  &__row--inactive {
+    opacity: 0.55;
+  }
+
+  &__capacity--over {
+    color: var(--red);
+    font-weight: 600;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 2rem 0;
+    color: var(--olive-gold);
+  }
+}

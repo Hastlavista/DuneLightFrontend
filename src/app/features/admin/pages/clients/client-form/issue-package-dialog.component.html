@@ -1,0 +1,76 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '32rem' }"
+  [header]="'CLIENTS.PACKAGES.ISSUE_TITLE' | translate"
+  (onShow)="onDialogShow()"
+>
+  @if (dialogShown()) {
+  <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+    <div class="dl-form__field">
+      <label for="issue-package-id">{{ 'CLIENTS.PACKAGES.FIELD_PACKAGE' | translate }}</label>
+      <p-select
+        id="issue-package-id"
+        fluid
+        appendTo="body"
+        formControlName="packageId"
+        [options]="activePackages()"
+        optionLabel="name"
+        optionValue="id"
+        [placeholder]="'CLIENTS.PACKAGES.FIELD_PACKAGE_PLACEHOLDER' | translate"
+      />
+      @if (form.controls.packageId.invalid && form.controls.packageId.touched) {
+        <span class="dl-form__error">{{ 'CLIENTS.PACKAGES.ERRORS.PACKAGE_REQUIRED' | translate }}</span>
+      }
+    </div>
+
+    <div class="dl-form__field">
+      <label for="issue-location-id">{{ 'CLIENTS.PACKAGES.FIELD_LOCATION' | translate }}</label>
+      <p-select
+        id="issue-location-id"
+        fluid
+        appendTo="body"
+        [showClear]="true"
+        formControlName="locationId"
+        [options]="activeLocations()"
+        optionLabel="name"
+        optionValue="id"
+        [placeholder]="'CLIENTS.PACKAGES.FIELD_LOCATION_PLACEHOLDER' | translate"
+      />
+      <span class="dl-form__hint">{{ 'CLIENTS.PACKAGES.LOCATION_HINT' | translate }}</span>
+    </div>
+
+    <div class="dl-form__row">
+      <div class="dl-form__field">
+        <label for="issue-purchase-date">{{ 'CLIENTS.PACKAGES.FIELD_PURCHASE_DATE' | translate }}</label>
+        <p-datepicker
+          id="issue-purchase-date"
+          fluid
+          appendTo="body"
+          [showIcon]="true"
+          [showClear]="true"
+          formControlName="purchaseDate"
+          dateFormat="dd.mm.yy"
+        />
+      </div>
+
+      <div class="dl-form__field">
+        <label for="issue-paid-price">{{ 'CLIENTS.PACKAGES.FIELD_PAID_PRICE' | translate }}</label>
+        <p-inputnumber id="issue-paid-price" fluid formControlName="paidPrice" mode="currency" currency="EUR" locale="hr-HR" />
+        <span class="dl-form__hint">{{ 'CLIENTS.PACKAGES.PAID_PRICE_HINT' | translate }}</span>
+      </div>
+    </div>
+
+    <div class="dl-form__actions">
+      <p-button
+        type="button"
+        [text]="true"
+        severity="secondary"
+        [label]="'COMMON.CANCEL' | translate"
+        (onClick)="onCancel()"
+      />
+      <p-button type="submit" [label]="'CLIENTS.PACKAGES.ISSUE_BUTTON' | translate" [loading]="saving()" />
+    </div>
+  </form>
+  }
+</p-dialog>

@@ -1,0 +1,24 @@
+.locations-page {
+  padding: 1.25rem;
+
+  &__actions-col {
+    width: 8rem;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+  }
+
+  &__row--inactive {
+    opacity: 0.55;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 2rem 0;
+    color: var(--olive-gold);
+  }
+}

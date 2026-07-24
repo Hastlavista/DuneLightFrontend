@@ -1,0 +1,58 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '32rem' }"
+  [header]="'CLIENTS.ANONYMIZE_TITLE' | translate"
+>
+  @if (client(); as client) {
+    <div class="dl-form anonymize-dialog">
+      <p class="anonymize-dialog__lead">
+        {{ 'CLIENTS.ANONYMIZE_LEAD' | translate: { name: client.firstName + ' ' + client.lastName } }}
+      </p>
+
+      <ul class="anonymize-dialog__list">
+        <li>{{ 'CLIENTS.ANONYMIZE_LIST_NAME' | translate }}</li>
+        <li>{{ 'CLIENTS.ANONYMIZE_LIST_CONTACT' | translate }}</li>
+        <li>{{ 'CLIENTS.ANONYMIZE_LIST_NOTES' | translate }}</li>
+        <li>{{ 'CLIENTS.ANONYMIZE_LIST_GDPR' | translate }}</li>
+        <li>{{ 'CLIENTS.ANONYMIZE_LIST_ASSIGNMENTS' | translate }}</li>
+        <li>{{ 'CLIENTS.ANONYMIZE_LIST_TAGS' | translate }}</li>
+      </ul>
+
+      <p class="anonymize-dialog__warning">{{ 'CLIENTS.ANONYMIZE_IRREVERSIBLE' | translate }}</p>
+      <p class="anonymize-dialog__hint">{{ 'CLIENTS.ANONYMIZE_PREFER_DEACTIVATE' | translate }}</p>
+
+      <div class="dl-form__field">
+        <label for="anonymize-confirm-text">
+          {{ 'CLIENTS.ANONYMIZE_CONFIRM_LABEL' | translate: { word: 'ANONIMIZIRAJ' } }}
+        </label>
+        <input
+          id="anonymize-confirm-text"
+          type="text"
+          pInputText
+          fluid
+          [ngModel]="confirmText()"
+          (ngModelChange)="confirmText.set($event)"
+        />
+      </div>
+
+      <div class="dl-form__actions">
+        <p-button
+          type="button"
+          [text]="true"
+          severity="secondary"
+          [label]="'COMMON.CANCEL' | translate"
+          (onClick)="onCancel()"
+        />
+        <p-button
+          type="button"
+          severity="danger"
+          [label]="'CLIENTS.ANONYMIZE_CONFIRM_BUTTON' | translate"
+          [disabled]="!canConfirm()"
+          [loading]="saving()"
+          (onClick)="onConfirm()"
+        />
+      </div>
+    </div>
+  }
+</p-dialog>

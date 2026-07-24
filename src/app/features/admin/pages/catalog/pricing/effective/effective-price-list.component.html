@@ -1,0 +1,141 @@
+<div class="pricing-effective">
+  <div class="dl-card pricing-effective__view">
+    <h2>{{ 'CATALOG.PRICING.EFFECTIVE_TITLE' | translate }}</h2>
+
+    <div class="pricing-effective__controls">
+      <div class="dl-form__field">
+        <label for="effective-location">{{ 'CATALOG.PRICING.FIELD_LOCATION' | translate }}</label>
+        <p-select
+          id="effective-location"
+          [options]="locationOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="effectiveLocationId()"
+          (ngModelChange)="onEffectiveLocationChange($event)"
+          [placeholder]="'CATALOG.PRICING.FIELD_LOCATION_PLACEHOLDER' | translate"
+        />
+      </div>
+      <div class="dl-form__field">
+        <label for="effective-date">{{ 'CATALOG.PRICING.FIELD_DATE' | translate }}</label>
+        <p-datepicker
+          id="effective-date"
+          dateFormat="dd.mm.yy"
+          [showIcon]="true"
+          [ngModel]="effectiveDate()"
+          (ngModelChange)="onEffectiveDateChange($event)"
+        />
+      </div>
+    </div>
+
+    @if (effectiveLoading()) {
+      <p class="pricing-effective__hint">{{ 'CATALOG.PRICING.LOADING' | translate }}</p>
+    } @else if (!effectiveLocationId()) {
+      <p class="pricing-effective__hint">{{ 'CATALOG.PRICING.SELECT_LOCATION_HINT' | translate }}</p>
+    } @else if (effectiveRows().length === 0) {
+      <p class="pricing-effective__hint">{{ 'CATALOG.PRICING.EFFECTIVE_EMPTY' | translate }}</p>
+    } @else {
+      <table class="pricing-effective__table">
+        <thead>
+          <tr>
+            <th>{{ 'CATALOG.PRICING.COL_SUBJECT' | translate }}</th>
+            <th>{{ 'CATALOG.PRICING.COL_PRICE' | translate }}</th>
+            <th>{{ 'CATALOG.PRICING.COL_SOURCE' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (row of effectiveRows(); track row.subjectId) {
+            <tr>
+              <td>
+                {{ row.subjectName }}
+                <span class="pricing-effective__subject-badge">
+                  ({{
+                    (row.subjectType === 'Service'
+                      ? 'CATALOG.PRICING.SUBJECT_TYPE.SERVICE'
+                      : 'CATALOG.PRICING.SUBJECT_TYPE.PACKAGE'
+                    ) | translate
+                  }})
+                </span>
+              </td>
+              <td>{{ row.price | eurCurrency }}</td>
+              <td><p-tag [severity]="sourceSeverity(row.source)" [value]="sourceLabel(row.source)" /></td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    }
+  </div>
+
+  <div class="dl-card pricing-effective__resolve">
+    <h2>{{ 'CATALOG.PRICING.RESOLVE_TITLE' | translate }}</h2>
+
+    <div class="pricing-effective__controls">
+      <div class="dl-form__field">
+        <label>{{ 'CATALOG.PRICING.FIELD_SUBJECT_TYPE' | translate }}</label>
+        <p-selectbutton
+          [options]="subjectTypeOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="resolveSubjectType()"
+          (ngModelChange)="onResolveSubjectTypeChange($event)"
+        />
+      </div>
+      <div class="dl-form__field">
+        <label for="resolve-subject">{{
+          (resolveSubjectType() === 'Service'
+            ? 'CATALOG.PRICING.FIELD_SERVICE'
+            : 'CATALOG.PRICING.FIELD_PACKAGE'
+          ) | translate
+        }}</label>
+        <p-select
+          id="resolve-subject"
+          [options]="resolveSubjectOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="resolveSubjectId()"
+          (ngModelChange)="onResolveSubjectChange($event)"
+          [placeholder]="
+            (resolveSubjectType() === 'Service'
+              ? 'CATALOG.PRICING.FIELD_SERVICE_PLACEHOLDER'
+              : 'CATALOG.PRICING.FIELD_PACKAGE_PLACEHOLDER'
+            ) | translate
+          "
+        />
+      </div>
+      <div class="dl-form__field">
+        <label for="resolve-location">{{ 'CATALOG.PRICING.FIELD_LOCATION' | translate }}</label>
+        <p-select
+          id="resolve-location"
+          [options]="locationOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="resolveLocationId()"
+          (ngModelChange)="onResolveLocationChange($event)"
+          [placeholder]="'CATALOG.PRICING.FIELD_LOCATION_PLACEHOLDER' | translate"
+        />
+      </div>
+      <div class="dl-form__field">
+        <label for="resolve-date">{{ 'CATALOG.PRICING.FIELD_DATE' | translate }}</label>
+        <p-datepicker
+          id="resolve-date"
+          dateFormat="dd.mm.yy"
+          [showIcon]="true"
+          [ngModel]="resolveDate()"
+          (ngModelChange)="onResolveDateChange($event)"
+        />
+      </div>
+      <p-button
+        [label]="'CATALOG.PRICING.CHECK_PRICE' | translate"
+        [loading]="resolving()"
+        [disabled]="!resolveSubjectId() || !resolveLocationId()"
+        (onClick)="onCheckPrice()"
+      />
+    </div>
+
+    @if (resolveResult(); as result) {
+      <div class="pricing-effective__result">
+        <span class="pricing-effective__result-price">{{ result.price | eurCurrency }}</span>
+        <p-tag [severity]="sourceSeverity(result.source)" [value]="sourceLabel(result.source)" />
+      </div>
+    }
+  </div>
+</div>

@@ -1,0 +1,56 @@
+.package-form-page {
+  padding: 1.25rem;
+  max-width: 48rem;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+
+    h2 {
+      margin: 0;
+    }
+  }
+
+  &__services {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  &__services-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--clay-2);
+    }
+  }
+
+  &__service-rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.625rem;
+  }
+
+  &__service-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.625rem;
+  }
+
+  &__service-select {
+    flex: 1;
+  }
+
+  &__entry-count {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    width: 10rem;
+  }
+}

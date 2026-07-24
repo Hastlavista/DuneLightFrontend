@@ -1,0 +1,39 @@
+<div class="sidebar" [class.sidebar--admin]="section() === 'admin'">
+  <div class="sidebar__brand">
+    <span class="sidebar__brand-mark">DL</span>
+    <span class="sidebar__brand-name">DuneLight</span>
+  </div>
+
+  <nav class="sidebar__nav">
+    @for (item of navItems(); track item.path) {
+      <a
+        class="sidebar__nav-item"
+        [routerLink]="[basePath(), item.path]"
+        routerLinkActive="sidebar__nav-item--active"
+        (click)="onNavigate()"
+      >
+        <i class="pi" [class]="item.icon"></i>
+        <span>{{ item.labelKey | translate }}</span>
+      </a>
+    }
+  </nav>
+
+  <div class="sidebar__user">
+    <div class="sidebar__avatar" [style.background]="avatarColor()">
+      {{ initials() }}
+    </div>
+    <div class="sidebar__user-info">
+      <span class="sidebar__user-name">{{ displayName() }}</span>
+      <span class="sidebar__user-role">{{ roleLabelKey() | translate }}</span>
+    </div>
+    <button
+      type="button"
+      class="sidebar__logout"
+      (click)="logout()"
+      [attr.aria-label]="'LAYOUT.SIDEBAR.LOGOUT' | translate"
+      [title]="'LAYOUT.SIDEBAR.LOGOUT' | translate"
+    >
+      <i class="pi pi-sign-out"></i>
+    </button>
+  </div>
+</div>

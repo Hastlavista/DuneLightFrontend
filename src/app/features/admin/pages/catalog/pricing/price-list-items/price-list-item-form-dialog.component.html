@@ -1,0 +1,140 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '32rem' }"
+  [header]="(isEditMode() ? 'CATALOG.PRICING.EDIT_TITLE' : 'CATALOG.PRICING.NEW_TITLE') | translate"
+  (onShow)="onDialogShow()"
+>
+  @if (dialogShown()) {
+  <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+    <div class="dl-form__field">
+      <label>{{ 'CATALOG.PRICING.FIELD_SUBJECT_TYPE' | translate }}</label>
+      <p-selectbutton
+        [options]="subjectTypeOptions()"
+        optionLabel="label"
+        optionValue="value"
+        formControlName="subjectType"
+      />
+      @if (isEditMode()) {
+        <span class="dl-form__hint">{{ 'CATALOG.PRICING.SUBJECT_LOCKED_HINT' | translate }}</span>
+      }
+    </div>
+
+    @if (form.controls.subjectType.value === 'Service') {
+      <div class="dl-form__field">
+        <label for="price-list-service">{{ 'CATALOG.PRICING.FIELD_SERVICE' | translate }}</label>
+        <p-select
+          id="price-list-service"
+          fluid
+          appendTo="body"
+          formControlName="serviceId"
+          [options]="activeServices()"
+          optionLabel="name"
+          optionValue="id"
+          [placeholder]="'CATALOG.PRICING.FIELD_SERVICE_PLACEHOLDER' | translate"
+        />
+        @if (form.errors?.['serviceRequired'] && form.controls.serviceId.touched) {
+          <span class="dl-form__error">{{
+            'CATALOG.PRICING.ERRORS.SERVICE_REQUIRED' | translate
+          }}</span>
+        }
+      </div>
+    } @else {
+      <div class="dl-form__field">
+        <label for="price-list-package">{{ 'CATALOG.PRICING.FIELD_PACKAGE' | translate }}</label>
+        <p-select
+          id="price-list-package"
+          fluid
+          appendTo="body"
+          formControlName="packageId"
+          [options]="activePackages()"
+          optionLabel="name"
+          optionValue="id"
+          [placeholder]="'CATALOG.PRICING.FIELD_PACKAGE_PLACEHOLDER' | translate"
+        />
+        @if (form.errors?.['packageRequired'] && form.controls.packageId.touched) {
+          <span class="dl-form__error">{{
+            'CATALOG.PRICING.ERRORS.PACKAGE_REQUIRED' | translate
+          }}</span>
+        }
+      </div>
+    }
+
+    <div class="dl-form__field">
+      <label for="price-list-location">{{ 'CATALOG.PRICING.FIELD_LOCATION' | translate }}</label>
+      <p-select
+        id="price-list-location"
+        fluid
+        appendTo="body"
+        formControlName="locationId"
+        [options]="locationOptions()"
+        optionLabel="label"
+        optionValue="value"
+      />
+    </div>
+
+    <div class="dl-form__field">
+      <label for="price-list-price">{{ 'CATALOG.PRICING.FIELD_PRICE' | translate }}</label>
+      <p-inputnumber
+        id="price-list-price"
+        fluid
+        formControlName="price"
+        mode="currency"
+        currency="EUR"
+        locale="hr-HR"
+        [minFractionDigits]="2"
+        [maxFractionDigits]="2"
+      />
+      @if (form.controls.price.invalid && form.controls.price.touched) {
+        <span class="dl-form__error">{{ 'CATALOG.PRICING.ERRORS.PRICE_INVALID' | translate }}</span>
+      }
+    </div>
+
+    <div class="dl-form__row">
+      <div class="dl-form__field">
+        <label for="price-list-valid-from">{{
+          'CATALOG.PRICING.FIELD_VALID_FROM' | translate
+        }}</label>
+        <p-datepicker
+          id="price-list-valid-from"
+          fluid
+          appendTo="body"
+          formControlName="validFrom"
+          dateFormat="dd.mm.yy"
+          [showIcon]="true"
+        />
+        @if (form.controls.validFrom.invalid && form.controls.validFrom.touched) {
+          <span class="dl-form__error">{{
+            'CATALOG.PRICING.ERRORS.VALID_FROM_REQUIRED' | translate
+          }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="price-list-valid-to">{{ 'CATALOG.PRICING.FIELD_VALID_TO' | translate }}</label>
+        <p-datepicker
+          id="price-list-valid-to"
+          fluid
+          appendTo="body"
+          formControlName="validTo"
+          dateFormat="dd.mm.yy"
+          [showIcon]="true"
+          [showClear]="true"
+          [placeholder]="'CATALOG.PRICING.FIELD_VALID_TO_PLACEHOLDER' | translate"
+        />
+      </div>
+    </div>
+
+    <div class="dl-form__actions">
+      <p-button
+        type="button"
+        [text]="true"
+        severity="secondary"
+        [label]="'COMMON.CANCEL' | translate"
+        (onClick)="onCancel()"
+      />
+      <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+    </div>
+  </form>
+  }
+</p-dialog>

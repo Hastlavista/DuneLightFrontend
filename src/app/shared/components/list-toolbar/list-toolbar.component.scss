@@ -1,0 +1,29 @@
+.list-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  &__search {
+    flex: 1 1 16rem;
+    min-width: 12rem;
+  }
+
+  &__extra {
+    display: contents;
+  }
+
+  &__switch {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--clay-2);
+    font-size: 0.9rem;
+    white-space: nowrap;
+  }
+
+  &__new {
+    margin-left: auto;
+  }
+}

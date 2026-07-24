@@ -1,0 +1,37 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '28rem' }"
+  [header]="(isEditMode() ? 'EMPLOYEES.ENGAGEMENT_TYPES.EDIT_TITLE' : 'EMPLOYEES.ENGAGEMENT_TYPES.NEW_TITLE') | translate"
+  (onShow)="onDialogShow()"
+>
+  @if (dialogShown()) {
+  <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+    <div class="dl-form__field">
+      <label for="engagement-type-name">{{ 'EMPLOYEES.ENGAGEMENT_TYPES.FIELD_NAME' | translate }}</label>
+      <input id="engagement-type-name" type="text" pInputText fluid formControlName="name" maxlength="255" />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <span class="dl-form__error">{{ 'EMPLOYEES.ENGAGEMENT_TYPES.ERRORS.NAME_REQUIRED' | translate }}</span>
+      }
+    </div>
+
+    <div class="dl-form__field">
+      <label for="engagement-type-sort-order">
+        {{ 'EMPLOYEES.ENGAGEMENT_TYPES.FIELD_SORT_ORDER' | translate }}
+      </label>
+      <p-inputnumber id="engagement-type-sort-order" fluid formControlName="sortOrder" [showButtons]="true" />
+    </div>
+
+    <div class="dl-form__actions">
+      <p-button
+        type="button"
+        [text]="true"
+        severity="secondary"
+        [label]="'COMMON.CANCEL' | translate"
+        (onClick)="onCancel()"
+      />
+      <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+    </div>
+  </form>
+  }
+</p-dialog>

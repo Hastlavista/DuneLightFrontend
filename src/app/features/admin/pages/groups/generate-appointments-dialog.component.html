@@ -1,0 +1,70 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '28rem' }"
+  [header]="'GROUPS.GENERATE.TITLE' | translate"
+  (onShow)="onDialogShow()"
+>
+  @if (dialogShown()) {
+    <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+      <div class="dl-form__field">
+        <label for="generate-group">{{ 'GROUPS.GENERATE.FIELD_GROUP' | translate }}</label>
+        <p-select
+          id="generate-group"
+          fluid
+          appendTo="body"
+          formControlName="groupId"
+          [options]="groupOptions()"
+          optionLabel="label"
+          optionValue="value"
+        />
+      </div>
+
+      <div class="dl-form__row">
+        <div class="dl-form__field">
+          <label for="generate-from-date">{{ 'GROUPS.GENERATE.FIELD_FROM_DATE' | translate }}</label>
+          <p-datepicker
+            id="generate-from-date"
+            fluid
+            appendTo="body"
+            formControlName="fromDate"
+            dateFormat="dd.mm.yy"
+            [showIcon]="true"
+          />
+          @if (form.controls.fromDate.invalid && form.controls.fromDate.touched) {
+            <span class="dl-form__error">{{ 'GROUPS.GENERATE.ERRORS.FROM_DATE_REQUIRED' | translate }}</span>
+          }
+        </div>
+
+        <div class="dl-form__field">
+          <label for="generate-to-date">{{ 'GROUPS.GENERATE.FIELD_TO_DATE' | translate }}</label>
+          <p-datepicker
+            id="generate-to-date"
+            fluid
+            appendTo="body"
+            formControlName="toDate"
+            dateFormat="dd.mm.yy"
+            [showIcon]="true"
+          />
+          @if (form.controls.toDate.invalid && form.controls.toDate.touched) {
+            <span class="dl-form__error">{{ 'GROUPS.GENERATE.ERRORS.TO_DATE_REQUIRED' | translate }}</span>
+          }
+          @if (form.errors?.['toBeforeFrom'] && form.controls.toDate.touched) {
+            <span class="dl-form__error">{{ 'GROUPS.GENERATE.ERRORS.TO_BEFORE_FROM' | translate }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="dl-form__actions">
+        <p-button
+          type="button"
+          [text]="true"
+          severity="secondary"
+          [label]="'COMMON.CANCEL' | translate"
+          (onClick)="onCancel()"
+        />
+        <p-button type="submit" [label]="'GROUPS.GENERATE.SUBMIT' | translate" [loading]="saving()" />
+      </div>
+    </form>
+  }
+</p-dialog>

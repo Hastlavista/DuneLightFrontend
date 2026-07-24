@@ -1,0 +1,55 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '24rem' }"
+  [header]="(isEditMode() ? 'GROUPS.SLOTS.EDIT_TITLE' : 'GROUPS.SLOTS.NEW_TITLE') | translate"
+  (onShow)="onDialogShow()"
+>
+  @if (dialogShown()) {
+    <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+      <div class="dl-form__field">
+        <label for="slot-day">{{ 'GROUPS.SLOTS.FIELD_DAY' | translate }}</label>
+        <p-select
+          id="slot-day"
+          fluid
+          appendTo="body"
+          formControlName="dayOfWeek"
+          [options]="dayOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [placeholder]="'GROUPS.SLOTS.FIELD_DAY_PLACEHOLDER' | translate"
+        />
+        @if (form.controls.dayOfWeek.invalid && form.controls.dayOfWeek.touched) {
+          <span class="dl-form__error">{{ 'GROUPS.SLOTS.ERRORS.DAY_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="slot-start-time">{{ 'GROUPS.SLOTS.FIELD_START_TIME' | translate }}</label>
+        <p-datepicker
+          id="slot-start-time"
+          fluid
+          appendTo="body"
+          formControlName="startTime"
+          [timeOnly]="true"
+          hourFormat="24"
+          [showIcon]="true"
+        />
+        @if (form.controls.startTime.invalid && form.controls.startTime.touched) {
+          <span class="dl-form__error">{{ 'GROUPS.SLOTS.ERRORS.START_TIME_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <div class="dl-form__actions">
+        <p-button
+          type="button"
+          [text]="true"
+          severity="secondary"
+          [label]="'COMMON.CANCEL' | translate"
+          (onClick)="onCancel()"
+        />
+        <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+      </div>
+    </form>
+  }
+</p-dialog>

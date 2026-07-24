@@ -1,0 +1,52 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '32rem' }"
+  [header]="(isEditMode() ? 'CATALOG.LOCATIONS.EDIT_TITLE' : 'CATALOG.LOCATIONS.NEW_TITLE') | translate"
+>
+  <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+    <div class="dl-form__field">
+      <label for="location-name">{{ 'CATALOG.LOCATIONS.FIELD_NAME' | translate }}</label>
+      <input id="location-name" type="text" pInputText fluid formControlName="name" maxlength="255" />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <span class="dl-form__error">{{ 'CATALOG.LOCATIONS.ERRORS.NAME_REQUIRED' | translate }}</span>
+      }
+    </div>
+
+    <div class="dl-form__field">
+      <label for="location-address">{{ 'CATALOG.LOCATIONS.FIELD_ADDRESS' | translate }}</label>
+      <input id="location-address" type="text" pInputText fluid formControlName="address" maxlength="500" />
+    </div>
+
+    <div class="dl-form__field">
+      <label for="location-phone">{{ 'CATALOG.LOCATIONS.FIELD_PHONE' | translate }}</label>
+      <input id="location-phone" type="text" pInputText fluid formControlName="phone" maxlength="50" />
+    </div>
+
+    <div class="dl-form__field">
+      <label for="location-color">{{ 'CATALOG.LOCATIONS.FIELD_COLOR' | translate }}</label>
+      <p-colorpicker id="location-color" formControlName="colorHex" appendTo="body" />
+    </div>
+
+    <div class="dl-form__field">
+      <label for="location-note">{{ 'CATALOG.LOCATIONS.FIELD_NOTE' | translate }}</label>
+      <textarea id="location-note" pTextarea fluid rows="3" formControlName="note"></textarea>
+    </div>
+
+    <div class="dl-form__field">
+      <label for="location-sort-order">{{ 'CATALOG.LOCATIONS.FIELD_SORT_ORDER' | translate }}</label>
+      <p-inputnumber id="location-sort-order" fluid formControlName="sortOrder" [showButtons]="true" />
+    </div>
+
+    <div class="dl-form__actions">
+      <p-button
+        type="button"
+        [text]="true"
+        severity="secondary"
+        [label]="'COMMON.CANCEL' | translate"
+        (onClick)="onCancel()"
+      />
+      <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+    </div>
+  </form>
+</p-dialog>

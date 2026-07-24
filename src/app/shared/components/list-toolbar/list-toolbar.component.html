@@ -1,0 +1,29 @@
+<div class="list-toolbar">
+  <p-iconfield class="list-toolbar__search">
+    <p-inputicon class="pi pi-search" />
+    <input
+      type="text"
+      pInputText
+      fluid
+      [ngModel]="search()"
+      (ngModelChange)="onSearchInput($event)"
+      [placeholder]="'COMMON.SEARCH_PLACEHOLDER' | translate"
+    />
+  </p-iconfield>
+
+  <div class="list-toolbar__extra">
+    <ng-content />
+  </div>
+
+  <label class="list-toolbar__switch">
+    <p-toggleswitch [ngModel]="showInactive()" (ngModelChange)="showInactiveChange.emit($event)" />
+    <span>{{ 'COMMON.SHOW_INACTIVE' | translate }}</span>
+  </label>
+
+  <p-button
+    class="list-toolbar__new"
+    icon="pi pi-plus"
+    [label]="newLabelKey() | translate"
+    (onClick)="create.emit()"
+  />
+</div>

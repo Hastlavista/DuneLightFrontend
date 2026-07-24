@@ -1,0 +1,120 @@
+<div class="dl-card packages-page">
+  <app-list-toolbar
+    [newLabelKey]="'CATALOG.PACKAGES.NEW'"
+    [search]="search()"
+    [showInactive]="showInactive()"
+    (searchChange)="onSearchChange($event)"
+    (showInactiveChange)="onShowInactiveChange($event)"
+    (create)="openCreate()"
+  />
+
+  <p-table
+    #dt
+    [value]="items()"
+    [lazy]="true"
+    (onLazyLoad)="onLazyLoad($event)"
+    [paginator]="true"
+    [rows]="rows()"
+    [totalRecords]="totalCount()"
+    [loading]="loading()"
+    [rowsPerPageOptions]="[20, 50, 100, 200]"
+    dataKey="id"
+    responsiveLayout="scroll"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>{{ 'CATALOG.PACKAGES.COL_NAME' | translate }}</th>
+        <th>{{ 'CATALOG.PACKAGES.COL_ENTRY_MODE' | translate }}</th>
+        <th>{{ 'CATALOG.PACKAGES.COL_ENTRIES' | translate }}</th>
+        <th>{{ 'CATALOG.PACKAGES.COL_VALIDITY' | translate }}</th>
+        <th>{{ 'CATALOG.PACKAGES.COL_SERVICE_COUNT' | translate }}</th>
+        <th>{{ 'CATALOG.PACKAGES.COL_PRICE' | translate }}</th>
+        <th>{{ 'COMMON.COL_STATUS' | translate }}</th>
+        <th class="packages-page__actions-col"></th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-pkg>
+      <tr [class.packages-page__row--inactive]="!pkg.isActive">
+        <td>{{ pkg.name }}</td>
+        <td>{{ entryModeTranslationKey(pkg.entryMode) | translate }}</td>
+        <td>
+          @if (pkg.entryMode === 'SharedPool') {
+            @if (pkg.totalEntryCount != null) {
+              {{ pkg.totalEntryCount }}
+            } @else {
+              {{ 'CATALOG.PACKAGES.ENTRIES_UNLIMITED' | translate }}
+            }
+          } @else {
+            {{ 'CATALOG.PACKAGES.ENTRIES_PER_SERVICE' | translate }}
+          }
+        </td>
+        <td>
+          @switch (pkg.validityType) {
+            @case ('DayCount') {
+              {{ 'CATALOG.PACKAGES.VALIDITY_DAY_COUNT_SUMMARY' | translate: { days: pkg.validityDays } }}
+            }
+            @case ('EndOfMonth') {
+              {{ 'CATALOG.PACKAGES.VALIDITY_END_OF_MONTH_SUMMARY' | translate }}
+            }
+            @case ('FixedDate') {
+              {{
+                'CATALOG.PACKAGES.VALIDITY_FIXED_DATE_SUMMARY'
+                  | translate: { date: pkg.validityFixedDate | hrDate }
+              }}
+            }
+          }
+        </td>
+        <td>{{ pkg.services.length }}</td>
+        <td>{{ pkg.defaultPrice | eurCurrency }}</td>
+        <td><app-status-tag [active]="pkg.isActive" /></td>
+        <td class="packages-page__actions">
+          <p-button
+            icon="pi pi-pencil"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'COMMON.EDIT' | translate"
+            [title]="'COMMON.EDIT' | translate"
+            (onClick)="openEdit(pkg)"
+          />
+          @if (pkg.isActive) {
+            <p-button
+              icon="pi pi-eye-slash"
+              severity="warn"
+              [text]="true"
+              [rounded]="true"
+              [ariaLabel]="'COMMON.DEACTIVATE' | translate"
+              [title]="'COMMON.DEACTIVATE' | translate"
+              (onClick)="confirmDeactivate(pkg)"
+            />
+          } @else {
+            <p-button
+              icon="pi pi-eye"
+              severity="success"
+              [text]="true"
+              [rounded]="true"
+              [ariaLabel]="'COMMON.ACTIVATE' | translate"
+              [title]="'COMMON.ACTIVATE' | translate"
+              (onClick)="activate(pkg)"
+            />
+          }
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'COMMON.DELETE' | translate"
+            [title]="'COMMON.DELETE' | translate"
+            (onClick)="confirmDelete(pkg)"
+          />
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="8" class="packages-page__empty">{{ 'CATALOG.PACKAGES.EMPTY' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

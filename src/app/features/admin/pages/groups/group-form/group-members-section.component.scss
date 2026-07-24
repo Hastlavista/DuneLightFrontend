@@ -1,0 +1,29 @@
+.group-members-section {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  &__actions-col {
+    width: 4rem;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 1.5rem 0;
+    color: var(--olive-gold);
+  }
+}

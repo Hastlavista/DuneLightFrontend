@@ -1,0 +1,141 @@
+<div class="dl-card employee-list-page">
+  <app-list-toolbar
+    [newLabelKey]="'EMPLOYEES.NEW'"
+    [search]="search()"
+    [showInactive]="showInactive()"
+    (searchChange)="onSearchChange($event)"
+    (showInactiveChange)="onShowInactiveChange($event)"
+    (create)="openCreate()"
+  >
+    <p-select
+      class="employee-list-page__filter"
+      [options]="locationFilterOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="locationFilter()"
+      (ngModelChange)="onLocationFilterChange($event)"
+    />
+    <p-select
+      class="employee-list-page__filter"
+      [options]="engagementTypeFilterOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="engagementTypeFilter()"
+      (ngModelChange)="onEngagementTypeFilterChange($event)"
+    />
+    <p-select
+      class="employee-list-page__filter"
+      [options]="roleFilterOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="roleFilter()"
+      (ngModelChange)="onRoleFilterChange($event)"
+    />
+  </app-list-toolbar>
+
+  <p-table
+    #dt
+    [value]="items()"
+    [lazy]="true"
+    (onLazyLoad)="onLazyLoad($event)"
+    [paginator]="true"
+    [rows]="rows()"
+    [totalRecords]="totalCount()"
+    [loading]="loading()"
+    [rowsPerPageOptions]="[20, 50, 100, 200]"
+    dataKey="id"
+    responsiveLayout="scroll"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>{{ 'EMPLOYEES.COL_NAME' | translate }}</th>
+        <th>{{ 'EMPLOYEES.COL_ROLE' | translate }}</th>
+        <th>{{ 'EMPLOYEES.COL_ENGAGEMENT_TYPE' | translate }}</th>
+        <th>{{ 'EMPLOYEES.COL_LOCATIONS' | translate }}</th>
+        <th>{{ 'EMPLOYEES.COL_COLOR' | translate }}</th>
+        <th>{{ 'COMMON.COL_STATUS' | translate }}</th>
+        <th class="employee-list-page__actions-col"></th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-employee>
+      <tr [class.employee-list-page__row--inactive]="!employee.isActive">
+        <td>{{ fullName(employee) }}</td>
+        <td>{{ employee.role ? (roleTranslationKey(employee.role) | translate) : '—' }}</td>
+        <td>{{ employee.engagementTypeName }}</td>
+        <td>
+          @for (location of employee.locations; track location.locationId) {
+            <span
+              class="employee-list-page__location"
+              [class.employee-list-page__location--primary]="location.isPrimary"
+            >
+              {{ location.locationName }}@if (!$last) {, }
+            </span>
+          }
+        </td>
+        <td><app-color-swatch [colorHex]="employee.colorHex" /></td>
+        <td><app-status-tag [active]="employee.isActive" /></td>
+        <td class="employee-list-page__actions">
+          <p-button
+            icon="pi pi-pencil"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'COMMON.EDIT' | translate"
+            [title]="'COMMON.EDIT' | translate"
+            (onClick)="openEdit(employee)"
+          />
+          <p-button
+            icon="pi pi-user-edit"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'EMPLOYEES.CHANGE_ROLE' | translate"
+            [title]="'EMPLOYEES.CHANGE_ROLE' | translate"
+            (onClick)="openRoleChange(employee)"
+          />
+          @if (employee.isActive) {
+            <p-button
+              icon="pi pi-eye-slash"
+              severity="warn"
+              [text]="true"
+              [rounded]="true"
+              [ariaLabel]="'COMMON.DEACTIVATE' | translate"
+              [title]="'COMMON.DEACTIVATE' | translate"
+              (onClick)="confirmDeactivate(employee)"
+            />
+          } @else {
+            <p-button
+              icon="pi pi-eye"
+              severity="success"
+              [text]="true"
+              [rounded]="true"
+              [ariaLabel]="'COMMON.ACTIVATE' | translate"
+              [title]="'COMMON.ACTIVATE' | translate"
+              (onClick)="activate(employee)"
+            />
+          }
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'COMMON.DELETE' | translate"
+            [title]="'COMMON.DELETE' | translate"
+            (onClick)="confirmDelete(employee)"
+          />
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="7" class="employee-list-page__empty">{{ 'EMPLOYEES.EMPTY' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<app-role-change-dialog
+  [(visible)]="roleChangeDialogVisible"
+  [employee]="roleChangeEmployee()"
+  (saved)="onRoleChanged()"
+/>

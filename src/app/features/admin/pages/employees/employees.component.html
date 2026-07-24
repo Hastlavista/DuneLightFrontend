@@ -1,0 +1,14 @@
+<p-tabs [value]="initialTab">
+  <p-tablist>
+    <p-tab value="employees">{{ 'EMPLOYEES.TAB_LABEL' | translate }}</p-tab>
+    <p-tab value="engagement-types">{{ 'EMPLOYEES.ENGAGEMENT_TYPES.TAB_LABEL' | translate }}</p-tab>
+  </p-tablist>
+  <p-tabpanels>
+    <p-tabpanel value="employees">
+      <app-admin-employee-list />
+    </p-tabpanel>
+    <p-tabpanel value="engagement-types">
+      <app-admin-engagement-types />
+    </p-tabpanel>
+  </p-tabpanels>
+</p-tabs>

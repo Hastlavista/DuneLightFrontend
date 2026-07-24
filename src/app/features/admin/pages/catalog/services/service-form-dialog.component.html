@@ -1,0 +1,122 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '32rem' }"
+  [header]="
+    (isEditMode() ? 'CATALOG.SERVICES.EDIT_TITLE' : 'CATALOG.SERVICES.NEW_TITLE') | translate
+  "
+  (onShow)="onDialogShow()"
+>
+  @if (dialogShown()) {
+  <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+    <div class="dl-form__field">
+      <label for="service-name">{{ 'CATALOG.SERVICES.FIELD_NAME' | translate }}</label>
+      <input
+        id="service-name"
+        type="text"
+        pInputText
+        fluid
+        formControlName="name"
+        maxlength="255"
+      />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <span class="dl-form__error">{{
+          'CATALOG.SERVICES.ERRORS.NAME_REQUIRED' | translate
+        }}</span>
+      }
+    </div>
+
+    <div class="dl-form__field">
+      <label for="service-category">{{ 'CATALOG.SERVICES.FIELD_CATEGORY' | translate }}</label>
+      <p-select
+        id="service-category"
+        fluid
+        formControlName="serviceCategoryId"
+        [options]="categories()"
+        optionLabel="name"
+        optionValue="id"
+        [placeholder]="'CATALOG.SERVICES.FIELD_CATEGORY_PLACEHOLDER' | translate"
+      />
+      @if (form.controls.serviceCategoryId.invalid && form.controls.serviceCategoryId.touched) {
+        <span class="dl-form__error">{{
+          'CATALOG.SERVICES.ERRORS.CATEGORY_REQUIRED' | translate
+        }}</span>
+      }
+    </div>
+
+    <div class="dl-form__row">
+      <div class="dl-form__field">
+        <label for="service-duration">{{ 'CATALOG.SERVICES.FIELD_DURATION' | translate }}</label>
+        <p-inputnumber
+          id="service-duration"
+          fluid
+          formControlName="defaultDurationMinutes"
+          [showButtons]="true"
+          suffix=" min"
+        />
+        @if (
+          form.controls.defaultDurationMinutes.invalid &&
+          form.controls.defaultDurationMinutes.touched
+        ) {
+          <span class="dl-form__error">{{
+            'CATALOG.SERVICES.ERRORS.DURATION_INVALID' | translate
+          }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="service-price">{{ 'CATALOG.SERVICES.FIELD_PRICE' | translate }}</label>
+        <p-inputnumber
+          id="service-price"
+          fluid
+          formControlName="defaultPrice"
+          mode="currency"
+          currency="EUR"
+          locale="hr-HR"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+        />
+        @if (form.controls.defaultPrice.invalid && form.controls.defaultPrice.touched) {
+          <span class="dl-form__error">{{
+            'CATALOG.SERVICES.ERRORS.PRICE_INVALID' | translate
+          }}</span>
+        }
+      </div>
+    </div>
+
+    <div class="dl-form__field">
+      <label for="service-description">{{
+        'CATALOG.SERVICES.FIELD_DESCRIPTION' | translate
+      }}</label>
+      <textarea
+        id="service-description"
+        pTextarea
+        fluid
+        rows="3"
+        formControlName="description"
+      ></textarea>
+    </div>
+
+    <div class="dl-form__field">
+      <label for="service-sort-order">{{ 'CATALOG.SERVICES.FIELD_SORT_ORDER' | translate }}</label>
+      <p-inputnumber
+        id="service-sort-order"
+        fluid
+        formControlName="sortOrder"
+        [showButtons]="true"
+      />
+    </div>
+
+    <div class="dl-form__actions">
+      <p-button
+        type="button"
+        [text]="true"
+        severity="secondary"
+        [label]="'COMMON.CANCEL' | translate"
+        (onClick)="onCancel()"
+      />
+      <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+    </div>
+  </form>
+  }
+</p-dialog>

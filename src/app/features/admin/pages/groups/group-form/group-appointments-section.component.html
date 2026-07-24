@@ -1,0 +1,77 @@
+<section class="dl-card group-appointments-section">
+  <h3>{{ 'GROUPS.APPOINTMENTS.TITLE' | translate }}</h3>
+
+  <p-tabs value="upcoming">
+    <p-tablist>
+      <p-tab value="upcoming">{{ 'GROUPS.APPOINTMENTS.UPCOMING_TAB' | translate }}</p-tab>
+      <p-tab value="past">{{ 'GROUPS.APPOINTMENTS.PAST_TAB' | translate }}</p-tab>
+    </p-tablist>
+    <p-tabpanels>
+      <p-tabpanel value="upcoming">
+        <p-table [value]="group().upcomingAppointments" dataKey="id" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>{{ 'GROUPS.APPOINTMENTS.COL_DATE' | translate }}</th>
+              <th>{{ 'GROUPS.APPOINTMENTS.COL_TIME' | translate }}</th>
+              <th>{{ 'GROUPS.APPOINTMENTS.COL_LOCATION' | translate }}</th>
+              <th>{{ 'GROUPS.APPOINTMENTS.COL_TRAINER' | translate }}</th>
+              <th>{{ 'GROUPS.APPOINTMENTS.COL_OCCUPANCY' | translate }}</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-appointment>
+            <tr class="group-appointments-section__row" (click)="openAttendance(appointment)">
+              <td>{{ appointment.date | hrDate }}</td>
+              <td>{{ appointment.startTime.slice(0, 5) }}</td>
+              <td>{{ appointment.locationName }}</td>
+              <td>{{ appointment.trainerName || '—' }}</td>
+              <td>{{ occupancyLabel(appointment) }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="5" class="group-appointments-section__empty">
+                {{ 'GROUPS.APPOINTMENTS.EMPTY_UPCOMING' | translate }}
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabpanel>
+
+      <p-tabpanel value="past">
+        <p-table [value]="group().pastAppointments" dataKey="id" responsiveLayout="scroll">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>{{ 'GROUPS.APPOINTMENTS.COL_DATE' | translate }}</th>
+              <th>{{ 'GROUPS.APPOINTMENTS.COL_TIME' | translate }}</th>
+              <th>{{ 'GROUPS.APPOINTMENTS.COL_LOCATION' | translate }}</th>
+              <th>{{ 'GROUPS.APPOINTMENTS.COL_TRAINER' | translate }}</th>
+              <th>{{ 'GROUPS.APPOINTMENTS.COL_OCCUPANCY' | translate }}</th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-appointment>
+            <tr class="group-appointments-section__row" (click)="openAttendance(appointment)">
+              <td>{{ appointment.date | hrDate }}</td>
+              <td>{{ appointment.startTime.slice(0, 5) }}</td>
+              <td>{{ appointment.locationName }}</td>
+              <td>{{ appointment.trainerName || '—' }}</td>
+              <td>{{ appointment.attendanceCount }}</td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr>
+              <td colspan="5" class="group-appointments-section__empty">
+                {{ 'GROUPS.APPOINTMENTS.EMPTY_PAST' | translate }}
+              </td>
+            </tr>
+          </ng-template>
+        </p-table>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+</section>
+
+<app-group-attendance-dialog
+  [(visible)]="attendanceDialogVisible"
+  [group]="group()"
+  [appointment]="selectedAppointment()"
+/>

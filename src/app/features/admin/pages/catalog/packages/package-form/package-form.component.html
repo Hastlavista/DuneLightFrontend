@@ -1,0 +1,215 @@
+<div class="dl-card package-form-page">
+  <div class="package-form-page__header">
+    <h2>{{ (isEditMode() ? 'CATALOG.PACKAGES.EDIT_TITLE' : 'CATALOG.PACKAGES.NEW_TITLE') | translate }}</h2>
+    <p-button
+      [text]="true"
+      severity="secondary"
+      icon="pi pi-arrow-left"
+      [label]="'CATALOG.PACKAGES.BACK_TO_LIST' | translate"
+      (onClick)="onCancel()"
+    />
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+    <div class="dl-form__field">
+      <label for="package-name">{{ 'CATALOG.PACKAGES.FIELD_NAME' | translate }}</label>
+      <input id="package-name" type="text" pInputText fluid formControlName="name" maxlength="255" />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <span class="dl-form__error">{{ 'CATALOG.PACKAGES.ERRORS.NAME_REQUIRED' | translate }}</span>
+      }
+    </div>
+
+    <div class="dl-form__field">
+      <label for="package-description">{{ 'CATALOG.PACKAGES.FIELD_DESCRIPTION' | translate }}</label>
+      <textarea id="package-description" pTextarea fluid rows="3" formControlName="description"></textarea>
+    </div>
+
+    <div class="dl-form__row">
+      <div class="dl-form__field">
+        <label for="package-price">{{ 'CATALOG.PACKAGES.FIELD_PRICE' | translate }}</label>
+        <p-inputnumber
+          id="package-price"
+          fluid
+          formControlName="defaultPrice"
+          mode="currency"
+          currency="EUR"
+          locale="hr-HR"
+          [minFractionDigits]="2"
+          [maxFractionDigits]="2"
+        />
+        @if (form.controls.defaultPrice.invalid && form.controls.defaultPrice.touched) {
+          <span class="dl-form__error">{{ 'CATALOG.PACKAGES.ERRORS.PRICE_INVALID' | translate }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="package-sort-order">{{ 'CATALOG.PACKAGES.FIELD_SORT_ORDER' | translate }}</label>
+        <p-inputnumber id="package-sort-order" fluid formControlName="sortOrder" [showButtons]="true" />
+      </div>
+    </div>
+
+    <div class="dl-form__field">
+      <label>{{ 'CATALOG.PACKAGES.FIELD_ENTRY_MODE' | translate }}</label>
+      <p-selectbutton
+        [options]="entryModeOptions()"
+        optionLabel="label"
+        optionValue="value"
+        formControlName="entryMode"
+      />
+    </div>
+
+    @if (form.controls.entryMode.value === 'SharedPool') {
+      <div class="dl-form__row">
+        <div class="dl-form__field">
+          <label for="package-total-entry-count">
+            {{ 'CATALOG.PACKAGES.FIELD_TOTAL_ENTRY_COUNT' | translate }}
+          </label>
+          <p-inputnumber
+            id="package-total-entry-count"
+            fluid
+            formControlName="totalEntryCount"
+            [showButtons]="true"
+            [min]="1"
+          />
+          @if (form.controls.totalEntryCount.invalid && form.controls.totalEntryCount.touched) {
+            <span class="dl-form__error">
+              {{ 'CATALOG.PACKAGES.ERRORS.TOTAL_ENTRY_COUNT_REQUIRED' | translate }}
+            </span>
+          }
+        </div>
+
+        <div class="dl-form__field dl-form__field--checkbox">
+          <p-checkbox inputId="package-unlimited" formControlName="unlimited" [binary]="true" />
+          <label for="package-unlimited">{{ 'CATALOG.PACKAGES.FIELD_UNLIMITED' | translate }}</label>
+        </div>
+      </div>
+    }
+
+    <div class="dl-form__field">
+      <label>{{ 'CATALOG.PACKAGES.FIELD_VALIDITY_TYPE' | translate }}</label>
+      <p-selectbutton
+        [options]="validityTypeOptions()"
+        optionLabel="label"
+        optionValue="value"
+        formControlName="validityType"
+      />
+    </div>
+
+    @if (form.controls.validityType.value === 'DayCount') {
+      <div class="dl-form__field">
+        <label for="package-validity-days">{{ 'CATALOG.PACKAGES.FIELD_VALIDITY_DAYS' | translate }}</label>
+        <p-inputnumber
+          id="package-validity-days"
+          fluid
+          formControlName="validityDays"
+          [showButtons]="true"
+          [min]="1"
+          suffix=" dana"
+        />
+        @if (form.controls.validityDays.invalid && form.controls.validityDays.touched) {
+          <span class="dl-form__error">
+            {{ 'CATALOG.PACKAGES.ERRORS.VALIDITY_DAYS_REQUIRED' | translate }}
+          </span>
+        }
+      </div>
+    } @else if (form.controls.validityType.value === 'FixedDate') {
+      <div class="dl-form__field">
+        <label for="package-validity-fixed-date">
+          {{ 'CATALOG.PACKAGES.FIELD_VALIDITY_FIXED_DATE' | translate }}
+        </label>
+        <p-datepicker
+          id="package-validity-fixed-date"
+          fluid
+          appendTo="body"
+          formControlName="validityFixedDate"
+          dateFormat="dd.mm.yy"
+          [showIcon]="true"
+        />
+        @if (form.controls.validityFixedDate.invalid && form.controls.validityFixedDate.touched) {
+          <span class="dl-form__error">
+            {{ 'CATALOG.PACKAGES.ERRORS.VALIDITY_FIXED_DATE_REQUIRED' | translate }}
+          </span>
+        }
+      </div>
+    }
+
+    <div class="package-form-page__services">
+      <div class="package-form-page__services-header">
+        <label>{{ 'CATALOG.PACKAGES.SERVICES_SECTION_TITLE' | translate }}</label>
+        <p-button
+          type="button"
+          size="small"
+          [text]="true"
+          icon="pi pi-plus"
+          [label]="'CATALOG.PACKAGES.ADD_SERVICE' | translate"
+          [disabled]="!canAddService()"
+          (onClick)="addServiceRow()"
+        />
+      </div>
+
+      @if (servicesArray.errors?.['noServices'] && servicesArray.touched) {
+        <span class="dl-form__error">{{ 'CATALOG.PACKAGES.ERRORS.SERVICES_REQUIRED' | translate }}</span>
+      }
+      @if (servicesArray.errors?.['duplicateService']) {
+        <span class="dl-form__error">{{ 'CATALOG.PACKAGES.ERRORS.SERVICES_DUPLICATE' | translate }}</span>
+      }
+
+      <div formArrayName="services" class="package-form-page__service-rows">
+        @for (row of servicesArray.controls; track row; let i = $index) {
+          <div [formGroupName]="i" class="package-form-page__service-row">
+            <p-select
+              class="package-form-page__service-select"
+              fluid
+              appendTo="body"
+              formControlName="serviceId"
+              [options]="optionsForRow(i)"
+              optionLabel="name"
+              optionValue="id"
+              [placeholder]="'CATALOG.PACKAGES.FIELD_SERVICE_PLACEHOLDER' | translate"
+            />
+
+            @if (form.controls.entryMode.value === 'PerService') {
+              <div class="package-form-page__entry-count">
+                <p-inputnumber
+                  formControlName="entryCount"
+                  [showButtons]="true"
+                  [min]="1"
+                  [placeholder]="'CATALOG.PACKAGES.COL_ENTRY_COUNT' | translate"
+                />
+                @if (
+                  $any(row).controls.entryCount.invalid && $any(row).controls.entryCount.touched
+                ) {
+                  <span class="dl-form__error">
+                    {{ 'CATALOG.PACKAGES.ERRORS.ENTRY_COUNT_REQUIRED' | translate }}
+                  </span>
+                }
+              </div>
+            }
+
+            <p-button
+              type="button"
+              icon="pi pi-trash"
+              severity="danger"
+              [text]="true"
+              [rounded]="true"
+              [ariaLabel]="'CATALOG.PACKAGES.REMOVE_SERVICE' | translate"
+              [title]="'CATALOG.PACKAGES.REMOVE_SERVICE' | translate"
+              (onClick)="removeServiceRow(i)"
+            />
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="dl-form__actions">
+      <p-button
+        type="button"
+        [text]="true"
+        severity="secondary"
+        [label]="'COMMON.CANCEL' | translate"
+        (onClick)="onCancel()"
+      />
+      <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+    </div>
+  </form>
+</div>

@@ -1,0 +1,8 @@
+<p-select
+  appendTo="body"
+  [options]="options()"
+  optionLabel="label"
+  optionValue="id"
+  [placeholder]="'COMMON.SELECT_PACKAGE_PLACEHOLDER' | translate"
+  (onChange)="onChange($event.value)"
+/>

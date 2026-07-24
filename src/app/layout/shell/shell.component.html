@@ -1,0 +1,16 @@
+<div class="shell">
+  <aside class="shell__sidebar" [class.shell__sidebar--open]="sidebarOpen()">
+    <app-sidebar [section]="section()" (navigated)="closeSidebar()" />
+  </aside>
+
+  @if (sidebarOpen()) {
+    <div class="shell__scrim" (click)="closeSidebar()"></div>
+  }
+
+  <div class="shell__main">
+    <app-topbar [section]="section()" [titleKey]="pageTitleKey()" (menuToggle)="toggleSidebar()" />
+    <main class="shell__content">
+      <router-outlet />
+    </main>
+  </div>
+</div>

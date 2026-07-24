@@ -1,0 +1,18 @@
+<p-tabs [value]="initialTab">
+  <p-tablist>
+    <p-tab value="clients">{{ 'CLIENTS.TAB_LABEL' | translate }}</p-tab>
+    <p-tab value="tags">{{ 'CLIENTS.TAGS.TAB_LABEL' | translate }}</p-tab>
+    <p-tab value="birthdays">{{ 'CLIENTS.BIRTHDAYS.TAB_LABEL' | translate }}</p-tab>
+  </p-tablist>
+  <p-tabpanels>
+    <p-tabpanel value="clients">
+      <app-admin-client-list />
+    </p-tabpanel>
+    <p-tabpanel value="tags">
+      <app-admin-client-tags />
+    </p-tabpanel>
+    <p-tabpanel value="birthdays">
+      <app-admin-birthdays />
+    </p-tabpanel>
+  </p-tabpanels>
+</p-tabs>

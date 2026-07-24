@@ -1,0 +1,232 @@
+<div class="dl-card client-form-page">
+  <div class="client-form-page__header">
+    <h2>{{ (isEditMode() ? 'CLIENTS.EDIT_TITLE' : 'CLIENTS.NEW_TITLE') | translate }}</h2>
+    <p-button
+      [text]="true"
+      severity="secondary"
+      icon="pi pi-arrow-left"
+      [label]="'CLIENTS.BACK_TO_LIST' | translate"
+      (onClick)="onCancel()"
+    />
+  </div>
+
+  @if (isAnonymized()) {
+    <div class="client-form-page__anonymized-banner">
+      <i class="pi pi-ban"></i>
+      {{ 'CLIENTS.ANONYMIZED_BANNER' | translate }}
+    </div>
+  }
+
+  <p-tabs value="data">
+    <p-tablist>
+      <p-tab value="data">{{ 'CLIENTS.FORM_TAB_DATA' | translate }}</p-tab>
+      @if (isEditMode()) {
+        <p-tab value="packages">{{ 'CLIENTS.FORM_TAB_PACKAGES' | translate }}</p-tab>
+      }
+    </p-tablist>
+    <p-tabpanels>
+      <p-tabpanel value="data">
+        <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+          <section class="client-form-page__section">
+            <h3>{{ 'CLIENTS.SECTION_BASIC' | translate }}</h3>
+
+            <div class="dl-form__row">
+              <div class="dl-form__field">
+                <label for="client-member-number">{{ 'CLIENTS.FIELD_MEMBER_NUMBER' | translate }}</label>
+                <p-inputnumber
+                  id="client-member-number"
+                  fluid
+                  [useGrouping]="false"
+                  formControlName="memberNumber"
+                />
+                @if (form.controls.memberNumber.invalid && form.controls.memberNumber.touched) {
+                  <span class="dl-form__error">{{ 'CLIENTS.ERRORS.MEMBER_NUMBER_REQUIRED' | translate }}</span>
+                }
+              </div>
+
+              <div class="dl-form__field">
+                <label for="client-date-of-birth">{{ 'CLIENTS.FIELD_DATE_OF_BIRTH' | translate }}</label>
+                <p-datepicker
+                  id="client-date-of-birth"
+                  fluid
+                  appendTo="body"
+                  formControlName="dateOfBirth"
+                  dateFormat="dd.mm.yy"
+                  [showIcon]="true"
+                />
+                @if (form.controls.dateOfBirth.invalid && form.controls.dateOfBirth.touched) {
+                  <span class="dl-form__error">{{ 'CLIENTS.ERRORS.DATE_OF_BIRTH_FUTURE' | translate }}</span>
+                }
+              </div>
+            </div>
+
+            <div class="dl-form__row">
+              <div class="dl-form__field">
+                <label for="client-first-name">{{ 'CLIENTS.FIELD_FIRST_NAME' | translate }}</label>
+                <input id="client-first-name" type="text" pInputText fluid formControlName="firstName" maxlength="255" />
+                @if (form.controls.firstName.invalid && form.controls.firstName.touched) {
+                  <span class="dl-form__error">{{ 'CLIENTS.ERRORS.FIRST_NAME_REQUIRED' | translate }}</span>
+                }
+              </div>
+
+              <div class="dl-form__field">
+                <label for="client-last-name">{{ 'CLIENTS.FIELD_LAST_NAME' | translate }}</label>
+                <input id="client-last-name" type="text" pInputText fluid formControlName="lastName" maxlength="255" />
+                @if (form.controls.lastName.invalid && form.controls.lastName.touched) {
+                  <span class="dl-form__error">{{ 'CLIENTS.ERRORS.LAST_NAME_REQUIRED' | translate }}</span>
+                }
+              </div>
+            </div>
+
+            <div class="dl-form__field">
+              <label for="client-occupation">{{ 'CLIENTS.FIELD_OCCUPATION' | translate }}</label>
+              <input id="client-occupation" type="text" pInputText fluid formControlName="occupation" maxlength="255" />
+            </div>
+          </section>
+
+          <section class="client-form-page__section">
+            <h3>{{ 'CLIENTS.SECTION_CONTACT' | translate }}</h3>
+
+            <div class="dl-form__row">
+              <div class="dl-form__field">
+                <label for="client-phone">{{ 'CLIENTS.FIELD_PHONE' | translate }}</label>
+                <input id="client-phone" type="text" pInputText fluid formControlName="phone" maxlength="255" />
+              </div>
+
+              <div class="dl-form__field">
+                <label for="client-email">{{ 'CLIENTS.FIELD_EMAIL' | translate }}</label>
+                <input id="client-email" type="email" pInputText fluid formControlName="email" maxlength="255" />
+                @if (form.controls.email.invalid && form.controls.email.touched) {
+                  <span class="dl-form__error">{{ 'CLIENTS.ERRORS.EMAIL_INVALID' | translate }}</span>
+                }
+              </div>
+            </div>
+          </section>
+
+          <section class="client-form-page__section">
+            <h3>{{ 'CLIENTS.SECTION_NOTES' | translate }}</h3>
+
+            <div class="dl-form__field">
+              <label for="client-note">{{ 'CLIENTS.FIELD_NOTE' | translate }}</label>
+              <textarea id="client-note" pTextarea fluid rows="2" formControlName="note"></textarea>
+            </div>
+
+            <div class="dl-form__field client-form-page__health-note">
+              <label for="client-health-note">{{ 'CLIENTS.FIELD_HEALTH_NOTE' | translate }}</label>
+              <textarea id="client-health-note" pTextarea fluid rows="2" formControlName="healthNote"></textarea>
+              <span class="dl-form__hint">{{ 'CLIENTS.HEALTH_NOTE_HINT' | translate }}</span>
+            </div>
+          </section>
+
+          <section class="client-form-page__section">
+            <h3>{{ 'CLIENTS.SECTION_ASSIGNMENT' | translate }}</h3>
+
+            <div class="dl-form__row">
+              <div class="dl-form__field">
+                <label for="client-home-location">{{ 'CLIENTS.FIELD_HOME_LOCATION' | translate }}</label>
+                <p-select
+                  id="client-home-location"
+                  fluid
+                  appendTo="body"
+                  [showClear]="true"
+                  formControlName="homeLocationId"
+                  [options]="homeLocationOptions()"
+                  optionLabel="name"
+                  optionValue="id"
+                  [placeholder]="'CLIENTS.FIELD_HOME_LOCATION_PLACEHOLDER' | translate"
+                />
+              </div>
+
+              <div class="dl-form__field">
+                <label for="client-home-trainer">{{ 'CLIENTS.FIELD_HOME_TRAINER' | translate }}</label>
+                <p-select
+                  id="client-home-trainer"
+                  fluid
+                  appendTo="body"
+                  [showClear]="true"
+                  formControlName="homeTrainerId"
+                  [options]="homeTrainerOptions()"
+                  optionLabel="name"
+                  optionValue="id"
+                  [placeholder]="'CLIENTS.FIELD_HOME_TRAINER_PLACEHOLDER' | translate"
+                />
+                <span class="dl-form__hint">{{ 'CLIENTS.HOME_TRAINER_HINT' | translate }}</span>
+              </div>
+            </div>
+          </section>
+
+          <section class="client-form-page__section">
+            <h3>{{ 'CLIENTS.SECTION_TAGS' | translate }}</h3>
+
+            <div class="dl-form__field">
+              <label for="client-tags">{{ 'CLIENTS.FIELD_TAGS' | translate }}</label>
+              <p-multiselect
+                id="client-tags"
+                fluid
+                appendTo="body"
+                display="chip"
+                formControlName="tagIds"
+                [options]="tagOptions()"
+                optionLabel="name"
+                optionValue="id"
+                [placeholder]="'CLIENTS.FIELD_TAGS_PLACEHOLDER' | translate"
+              >
+                <ng-template let-tag pTemplate="item">
+                  <span class="client-form-page__tag-option">
+                    <app-color-swatch [colorHex]="tag.colorHex" />
+                    {{ tag.name }}
+                  </span>
+                </ng-template>
+              </p-multiselect>
+            </div>
+          </section>
+
+          <section class="client-form-page__section">
+            <h3>{{ 'CLIENTS.SECTION_GDPR' | translate }}</h3>
+
+            <div class="dl-form__row">
+              <div class="dl-form__field dl-form__field--checkbox">
+                <p-checkbox inputId="client-gdpr-given" formControlName="gdprConsentGiven" [binary]="true" />
+                <label for="client-gdpr-given">{{ 'CLIENTS.FIELD_GDPR_CONSENT_GIVEN' | translate }}</label>
+              </div>
+
+              <div class="dl-form__field">
+                <label for="client-gdpr-date">{{ 'CLIENTS.FIELD_GDPR_CONSENT_DATE' | translate }}</label>
+                <p-datepicker
+                  id="client-gdpr-date"
+                  fluid
+                  appendTo="body"
+                  formControlName="gdprConsentDate"
+                  dateFormat="dd.mm.yy"
+                  [showIcon]="true"
+                />
+                @if (form.errors?.['gdprDateRequired'] && form.controls.gdprConsentDate.touched) {
+                  <span class="dl-form__error">{{ 'CLIENTS.ERRORS.GDPR_DATE_REQUIRED' | translate }}</span>
+                }
+              </div>
+            </div>
+          </section>
+
+          @if (!isAnonymized()) {
+            <div class="dl-form__actions">
+              <p-button
+                type="button"
+                [text]="true"
+                severity="secondary"
+                [label]="'COMMON.CANCEL' | translate"
+                (onClick)="onCancel()"
+              />
+              <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+            </div>
+          }
+        </form>
+      </p-tabpanel>
+
+      @if (isEditMode()) {
+        <p-tabpanel value="packages">
+          <app-client-packages-tab [clientId]="editingId()!" />
+        </p-tabpanel>
+      }
+    </p-tabpanels>
+  </p-tabs>
+</div>

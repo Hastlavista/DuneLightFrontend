@@ -1,0 +1,31 @@
+.group-attendance-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  min-width: 32rem;
+
+  &__section {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  &__guest-badge {
+    margin-left: 0.5rem;
+    font-size: 0.75rem;
+    color: var(--olive-gold);
+    border: 1px solid var(--sand-deep);
+    border-radius: 4px;
+    padding: 0.05rem 0.4rem;
+  }
+
+  &__guest-search {
+    width: 100%;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 1rem 0;
+    color: var(--olive-gold);
+  }
+}

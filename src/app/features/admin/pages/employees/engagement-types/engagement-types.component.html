@@ -1,0 +1,91 @@
+<div class="dl-card engagement-types-page">
+  <app-list-toolbar
+    [newLabelKey]="'EMPLOYEES.ENGAGEMENT_TYPES.NEW'"
+    [search]="search()"
+    [showInactive]="showInactive()"
+    (searchChange)="onSearchChange($event)"
+    (showInactiveChange)="onShowInactiveChange($event)"
+    (create)="openCreate()"
+  />
+
+  <p-table
+    #dt
+    [value]="items()"
+    [lazy]="true"
+    (onLazyLoad)="onLazyLoad($event)"
+    [paginator]="true"
+    [rows]="rows()"
+    [totalRecords]="totalCount()"
+    [loading]="loading()"
+    [rowsPerPageOptions]="[20, 50, 100, 200]"
+    dataKey="id"
+    responsiveLayout="scroll"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>{{ 'EMPLOYEES.ENGAGEMENT_TYPES.COL_NAME' | translate }}</th>
+        <th>{{ 'EMPLOYEES.ENGAGEMENT_TYPES.COL_SORT_ORDER' | translate }}</th>
+        <th>{{ 'COMMON.COL_STATUS' | translate }}</th>
+        <th class="engagement-types-page__actions-col"></th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-type>
+      <tr [class.engagement-types-page__row--inactive]="!type.isActive">
+        <td>{{ type.name }}</td>
+        <td>{{ type.sortOrder }}</td>
+        <td><app-status-tag [active]="type.isActive" /></td>
+        <td class="engagement-types-page__actions">
+          <p-button
+            icon="pi pi-pencil"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'COMMON.EDIT' | translate"
+            [title]="'COMMON.EDIT' | translate"
+            (onClick)="openEdit(type)"
+          />
+          @if (type.isActive) {
+            <p-button
+              icon="pi pi-eye-slash"
+              severity="warn"
+              [text]="true"
+              [rounded]="true"
+              [ariaLabel]="'COMMON.DEACTIVATE' | translate"
+              [title]="'COMMON.DEACTIVATE' | translate"
+              (onClick)="confirmDeactivate(type)"
+            />
+          } @else {
+            <p-button
+              icon="pi pi-eye"
+              severity="success"
+              [text]="true"
+              [rounded]="true"
+              [ariaLabel]="'COMMON.ACTIVATE' | translate"
+              [title]="'COMMON.ACTIVATE' | translate"
+              (onClick)="activate(type)"
+            />
+          }
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'COMMON.DELETE' | translate"
+            [title]="'COMMON.DELETE' | translate"
+            (onClick)="confirmDelete(type)"
+          />
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="4" class="engagement-types-page__empty">
+          {{ 'EMPLOYEES.ENGAGEMENT_TYPES.EMPTY' | translate }}
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<app-engagement-type-form-dialog [(visible)]="dialogVisible" [engagementType]="editingType()" (saved)="onSaved()" />

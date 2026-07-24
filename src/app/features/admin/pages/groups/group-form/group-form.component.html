@@ -1,0 +1,160 @@
+<div class="dl-card group-form-page">
+  <div class="group-form-page__header">
+    <h2>{{ (isEditMode() ? 'GROUPS.EDIT_TITLE' : 'GROUPS.NEW_TITLE') | translate }}</h2>
+    <p-button
+      [text]="true"
+      severity="secondary"
+      icon="pi pi-arrow-left"
+      [label]="'GROUPS.BACK_TO_LIST' | translate"
+      (onClick)="onCancel()"
+    />
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+    <section class="group-form-page__section">
+      <h3>{{ 'GROUPS.SECTION_BASIC' | translate }}</h3>
+
+      <div class="dl-form__field">
+        <label for="group-name">{{ 'GROUPS.FIELD_NAME' | translate }}</label>
+        <input id="group-name" type="text" pInputText fluid formControlName="name" maxlength="255" />
+        @if (form.controls.name.invalid && form.controls.name.touched) {
+          <span class="dl-form__error">{{ 'GROUPS.ERRORS.NAME_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <div class="dl-form__row">
+        <div class="dl-form__field">
+          <label for="group-service">{{ 'GROUPS.FIELD_SERVICE' | translate }}</label>
+          <p-select
+            id="group-service"
+            fluid
+            appendTo="body"
+            formControlName="serviceId"
+            [options]="serviceOptions()"
+            optionLabel="name"
+            optionValue="id"
+            [placeholder]="'GROUPS.FIELD_SERVICE_PLACEHOLDER' | translate"
+          />
+          @if (form.controls.serviceId.invalid && form.controls.serviceId.touched) {
+            <span class="dl-form__error">{{ 'GROUPS.ERRORS.SERVICE_REQUIRED' | translate }}</span>
+          }
+        </div>
+
+        <div class="dl-form__field">
+          <label for="group-location">{{ 'GROUPS.FIELD_LOCATION' | translate }}</label>
+          <p-select
+            id="group-location"
+            fluid
+            appendTo="body"
+            formControlName="locationId"
+            [options]="locationOptions()"
+            optionLabel="name"
+            optionValue="id"
+            [placeholder]="'GROUPS.FIELD_LOCATION_PLACEHOLDER' | translate"
+          />
+          @if (form.controls.locationId.invalid && form.controls.locationId.touched) {
+            <span class="dl-form__error">{{ 'GROUPS.ERRORS.LOCATION_REQUIRED' | translate }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="dl-form__row">
+        <div class="dl-form__field">
+          <label for="group-capacity">{{ 'GROUPS.FIELD_CAPACITY' | translate }}</label>
+          <p-inputnumber id="group-capacity" fluid formControlName="capacity" [showButtons]="true" [min]="1" />
+          @if (form.controls.capacity.invalid && form.controls.capacity.touched) {
+            <span class="dl-form__error">{{ 'GROUPS.ERRORS.CAPACITY_INVALID' | translate }}</span>
+          }
+        </div>
+
+        <div class="dl-form__field">
+          <label for="group-trainer">{{ 'GROUPS.FIELD_TRAINER' | translate }}</label>
+          <p-select
+            id="group-trainer"
+            fluid
+            appendTo="body"
+            [showClear]="true"
+            formControlName="defaultTrainerId"
+            [options]="trainerOptions()"
+            optionLabel="name"
+            optionValue="id"
+            [placeholder]="'GROUPS.FIELD_TRAINER_PLACEHOLDER' | translate"
+          />
+        </div>
+      </div>
+
+      <div class="dl-form__field">
+        <label for="group-note">{{ 'GROUPS.FIELD_NOTE' | translate }}</label>
+        <textarea id="group-note" pTextarea fluid rows="2" formControlName="note"></textarea>
+      </div>
+    </section>
+
+    @if (!isEditMode()) {
+      <section class="group-form-page__section">
+        <div class="group-form-page__slots-header">
+          <h3>{{ 'GROUPS.SLOTS.TITLE' | translate }}</h3>
+          <p-button
+            type="button"
+            size="small"
+            [text]="true"
+            icon="pi pi-plus"
+            [label]="'GROUPS.SLOTS.ADD' | translate"
+            (onClick)="addSlotRow()"
+          />
+        </div>
+
+        @if (slotsArray.errors?.['noSlots'] && slotsArray.touched) {
+          <span class="dl-form__error">{{ 'GROUPS.ERRORS.SLOTS_REQUIRED' | translate }}</span>
+        }
+
+        <div formArrayName="slots" class="group-form-page__slot-rows">
+          @for (row of slotsArray.controls; track row; let i = $index) {
+            <div [formGroupName]="i" class="group-form-page__slot-row">
+              <p-select
+                class="group-form-page__slot-day"
+                fluid
+                appendTo="body"
+                formControlName="dayOfWeek"
+                [options]="dayOptions()"
+                optionLabel="label"
+                optionValue="value"
+              />
+              <p-datepicker formControlName="startTime" [timeOnly]="true" hourFormat="24" appendTo="body" />
+              @if ($any(row).controls.startTime.invalid && $any(row).controls.startTime.touched) {
+                <span class="dl-form__error">{{ 'GROUPS.SLOTS.ERRORS.START_TIME_REQUIRED' | translate }}</span>
+              }
+              <p-button
+                type="button"
+                icon="pi pi-trash"
+                severity="danger"
+                [text]="true"
+                [rounded]="true"
+                [ariaLabel]="'GROUPS.SLOTS.REMOVE' | translate"
+                [title]="'GROUPS.SLOTS.REMOVE' | translate"
+                [disabled]="slotsArray.length <= 1"
+                (onClick)="removeSlotRow(i)"
+              />
+            </div>
+          }
+        </div>
+      </section>
+    }
+
+    <div class="dl-form__actions">
+      <p-button
+        type="button"
+        [text]="true"
+        severity="secondary"
+        [label]="'COMMON.CANCEL' | translate"
+        (onClick)="onCancel()"
+      />
+      <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+    </div>
+  </form>
+
+  @if (isEditMode() && loadedGroup(); as group) {
+    <app-admin-group-slots-section [group]="group" (changed)="onChildChanged()" />
+    <app-admin-group-members-section [group]="group" (changed)="onChildChanged()" />
+    <app-admin-group-appointments-section [group]="group" />
+  }
+</div>

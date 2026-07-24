@@ -1,0 +1,157 @@
+<div class="dl-card client-list-page">
+  <app-list-toolbar
+    [newLabelKey]="'CLIENTS.NEW'"
+    [search]="search()"
+    [showInactive]="showInactive()"
+    (searchChange)="onSearchChange($event)"
+    (showInactiveChange)="onShowInactiveChange($event)"
+    (create)="openCreate()"
+  >
+    <p-select
+      class="client-list-page__filter"
+      [options]="tagFilterOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="tagFilter()"
+      (ngModelChange)="onTagFilterChange($event)"
+    />
+    <p-select
+      class="client-list-page__filter"
+      [options]="homeTrainerFilterOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="homeTrainerFilter()"
+      (ngModelChange)="onHomeTrainerFilterChange($event)"
+    />
+    <p-select
+      class="client-list-page__filter"
+      [options]="homeLocationFilterOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="homeLocationFilter()"
+      (ngModelChange)="onHomeLocationFilterChange($event)"
+    />
+  </app-list-toolbar>
+
+  <p-table
+    #dt
+    [value]="items()"
+    [lazy]="true"
+    (onLazyLoad)="onLazyLoad($event)"
+    [paginator]="true"
+    [rows]="rows()"
+    [totalRecords]="totalCount()"
+    [loading]="loading()"
+    [rowsPerPageOptions]="[20, 50, 100, 200]"
+    dataKey="id"
+    responsiveLayout="scroll"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>{{ 'CLIENTS.COL_MEMBER_NUMBER' | translate }}</th>
+        <th>{{ 'CLIENTS.COL_NAME' | translate }}</th>
+        <th>{{ 'CLIENTS.COL_PHONE' | translate }}</th>
+        <th>{{ 'CLIENTS.COL_EMAIL' | translate }}</th>
+        <th>{{ 'CLIENTS.COL_HOME_TRAINER' | translate }}</th>
+        <th>{{ 'CLIENTS.COL_HOME_LOCATION' | translate }}</th>
+        <th>{{ 'CLIENTS.COL_TAGS' | translate }}</th>
+        <th>{{ 'COMMON.COL_STATUS' | translate }}</th>
+        <th class="client-list-page__actions-col"></th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-client>
+      <tr [class.client-list-page__row--inactive]="!client.isActive">
+        <td>{{ client.memberNumber }}</td>
+        <td>{{ fullName(client) }}</td>
+        <td>{{ client.phone }}</td>
+        <td>{{ client.email }}</td>
+        <td>{{ client.homeTrainerName }}</td>
+        <td>{{ client.homeLocationName }}</td>
+        <td>
+          <div class="client-list-page__tags">
+            @for (tag of client.tags; track tag.tagId) {
+              <span class="client-list-page__tag-chip" [style.background]="tag.colorHex ?? 'var(--sand)'">
+                {{ tag.name }}
+              </span>
+            }
+          </div>
+        </td>
+        <td>
+          @if (client.isAnonymized) {
+            <p-tag severity="danger" [value]="'CLIENTS.ANONYMIZED_BADGE' | translate" />
+          } @else {
+            <app-status-tag [active]="client.isActive" />
+          }
+        </td>
+        <td class="client-list-page__actions">
+          <p-button
+            icon="pi pi-pencil"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'COMMON.EDIT' | translate"
+            [title]="'COMMON.EDIT' | translate"
+            (onClick)="openEdit(client)"
+          />
+          @if (!client.isAnonymized) {
+            @if (client.isActive) {
+              <p-button
+                icon="pi pi-eye-slash"
+                severity="warn"
+                [text]="true"
+                [rounded]="true"
+                [ariaLabel]="'COMMON.DEACTIVATE' | translate"
+                [title]="'COMMON.DEACTIVATE' | translate"
+                (onClick)="confirmDeactivate(client)"
+              />
+            } @else {
+              <p-button
+                icon="pi pi-eye"
+                severity="success"
+                [text]="true"
+                [rounded]="true"
+                [ariaLabel]="'COMMON.ACTIVATE' | translate"
+                [title]="'COMMON.ACTIVATE' | translate"
+                (onClick)="activate(client)"
+              />
+            }
+          }
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'COMMON.DELETE' | translate"
+            [title]="'COMMON.DELETE' | translate"
+            (onClick)="confirmDelete(client)"
+          />
+          @if (!client.isAnonymized) {
+            <p-button
+              icon="pi pi-ellipsis-v"
+              [text]="true"
+              [rounded]="true"
+              severity="secondary"
+              [ariaLabel]="'CLIENTS.MORE_ACTIONS' | translate"
+              [title]="'CLIENTS.MORE_ACTIONS' | translate"
+              (onClick)="openRowMenu($event, client)"
+            />
+          }
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="9" class="client-list-page__empty">{{ 'CLIENTS.EMPTY' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<p-menu #rowMenu [popup]="true" [model]="rowMenuItems()" />
+
+<app-anonymize-client-dialog
+  [(visible)]="anonymizeDialogVisible"
+  [client]="anonymizeClient()"
+  (anonymized)="onAnonymized()"
+/>
