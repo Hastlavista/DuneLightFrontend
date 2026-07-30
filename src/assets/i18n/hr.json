@@ -66,21 +66,22 @@
       "DASHBOARD": "Nadzorna ploča",
       "LOCATIONS": "Lokacije",
       "SCHEDULE": "Raspored",
-      "SHIFTS": "Smjene",
+      "SHIFTS": "Vrste rostera",
       "CLIENTS": "Klijenti",
       "EMPLOYEES": "Zaposlenici",
       "GROUPS": "Grupe",
       "SERVICES": "Usluge i cjenik",
       "FINANCE": "Financije",
-      "REPORTS": "Izvješća"
+      "REPORTS": "Izvješća",
+      "PROFILE": "Moj profil"
     },
     "TRAINER": {
       "MY_WEEK": "Moj tjedan",
-      "QUICK_ENTRY": "Brzi unos",
+      "TODAY_ALL": "Danas — svi",
       "MY_CLIENTS": "Moji klijenti",
       "MY_GROUPS": "Moje grupe",
-      "TODAY_ALL": "Danas — svi",
-      "MY_SHIFTS": "Moje smjene"
+      "MY_SHIFTS": "Roster",
+      "MY_PROFILE": "Moj profil"
     }
   },
   "LAYOUT": {
@@ -729,6 +730,7 @@
       }
     },
     "NEW_APPOINTMENT_BUTTON": "Novi termin",
+    "LOG_APPOINTMENT_BUTTON": "Upiši termin",
     "PAYMENT_METHOD": {
       "CASH": "Gotovina",
       "CARD": "Kartica",
@@ -802,6 +804,88 @@
       "MARKED": "Termin je označen kao \"nije došao\"."
     }
   },
+  "ROSTER": {
+    "TYPES": {
+      "TAB_LABEL": "Vrste rostera",
+      "NEW": "Nova vrsta rostera",
+      "NEW_TITLE": "Nova vrsta rostera",
+      "EDIT_TITLE": "Uredi vrstu rostera",
+      "COL_NAME": "Naziv",
+      "COL_COLOR": "Boja",
+      "COL_COUNTS_AS_WORK": "Broji se kao rad",
+      "COL_IS_ABSENCE": "Odsutnost",
+      "EMPTY": "Nema pronađenih vrsta rostera.",
+      "FIELD_NAME": "Naziv",
+      "FIELD_COLOR": "Boja",
+      "FIELD_COUNTS_AS_WORK": "Broji se kao rad",
+      "FIELD_IS_ABSENCE": "Odsutnost",
+      "FIELD_REQUIRES_TIME": "Zahtijeva vrijeme",
+      "REQUIRES_TIME_HINT": "Samo informativno - oblik zapisa (rad ili odsutnost) određuje isključivo polje \"Odsutnost\".",
+      "FIELD_SORT_ORDER": "Redoslijed prikaza",
+      "ERRORS": {
+        "NAME_REQUIRED": "Naziv je obavezan."
+      },
+      "CREATED": "Vrsta rostera je uspješno kreirana.",
+      "UPDATED": "Vrsta rostera je uspješno ažurirana.",
+      "ACTIVATED": "Vrsta rostera je aktivirana.",
+      "DEACTIVATED": "Vrsta rostera je deaktivirana.",
+      "DELETED": "Vrsta rostera je izbrisana.",
+      "CONFIRM_DEACTIVATE": "Jeste li sigurni da želite deaktivirati vrstu rostera \"{{name}}\"?",
+      "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati vrstu rostera \"{{name}}\"? Ova radnja je nepovratna."
+    },
+    "TEAM_MONTHLY": {
+      "TAB_LABEL": "Timski pregled",
+      "COL_EMPLOYEE": "Zaposlenik",
+      "COL_SUMMARY": "Ukupno",
+      "ALL_LOCATIONS": "Sve lokacije",
+      "ABSENCES_TOOLTIP_HEADER": "Odsutnosti:",
+      "EMPTY": "Nema aktivnih zaposlenika."
+    },
+    "PERSONAL": {
+      "TAB_LABEL": "Moj pregled",
+      "FIELD_EMPLOYEE": "Zaposlenik",
+      "FIELD_EMPLOYEE_PLACEHOLDER": "Odaberite zaposlenika",
+      "FIELD_FROM": "Od datuma",
+      "FIELD_TO": "Do datuma",
+      "APPLY_RANGE": "Primijeni",
+      "ADD": "Novi zapis",
+      "TOTAL_WORK_HOURS": "Ukupno sati",
+      "COL_TYPE": "Vrsta",
+      "COL_DATE": "Datum",
+      "COL_TIME": "Vrijeme",
+      "COL_NOTE": "Napomena",
+      "EMPTY": "Nema zapisa u odabranom razdoblju.",
+      "DELETED": "Zapis je izbrisan.",
+      "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati ovaj zapis? Ova radnja je nepovratna."
+    },
+    "ENTRY_FORM": {
+      "NEW_TITLE": "Novi zapis",
+      "EDIT_TITLE": "Uredi zapis",
+      "FIELD_EMPLOYEE": "Zaposlenik",
+      "FIELD_TYPE": "Vrsta",
+      "FIELD_TYPE_PLACEHOLDER": "Odaberite vrstu",
+      "FIELD_DATE": "Datum",
+      "FIELD_DATE_FROM": "Datum od",
+      "FIELD_DATE_TO": "Datum do",
+      "FIELD_DATE_TO_PLACEHOLDER": "Još traje",
+      "DATE_TO_OPEN_HINT": "Prazno \"do\" znači da odsutnost još traje.",
+      "FIELD_START_TIME": "Vrijeme od",
+      "FIELD_END_TIME": "Vrijeme do",
+      "FIELD_NOTE": "Napomena",
+      "ERRORS": {
+        "EMPLOYEE_REQUIRED": "Zaposlenik je obavezan.",
+        "TYPE_REQUIRED": "Vrsta je obavezna.",
+        "DATE_FROM_REQUIRED": "Datum je obavezan.",
+        "DATE_TO_BEFORE_FROM": "Datum \"do\" ne može biti prije datuma \"od\".",
+        "TIME_REQUIRED": "Vrijeme od i do su obavezni.",
+        "END_BEFORE_START": "Vrijeme do mora biti nakon vremena od."
+      },
+      "CREATED": "Zapis je uspješno spremljen.",
+      "UPDATED": "Zapis je uspješno ažuriran.",
+      "ADD_ANOTHER_HEADER": "Dodaj još jedan zapis?",
+      "ADD_ANOTHER_MESSAGE": "Zapis je spremljen. Želite li dodati još jedan zapis za isti dan (npr. drugu smjenu)?"
+    }
+  },
   "AUTH": {
     "LOGIN": {
       "ORGANIZATION": "Organizacija",
@@ -817,6 +901,24 @@
         "EMAIL_INVALID": "Unesite ispravan email.",
         "PASSWORD_REQUIRED": "Lozinka je obavezna."
       }
+    }
+  },
+  "PROFILE": {
+    "TITLE": "Moj profil",
+    "SECTION_INFO": "Podaci",
+    "FIELD_NAME": "Ime i prezime",
+    "FIELD_ROLE": "Uloga",
+    "FIELD_LOCATIONS": "Lokacije",
+    "SECTION_CHANGE_PASSWORD": "Promjena lozinke",
+    "FIELD_CURRENT_PASSWORD": "Trenutna lozinka",
+    "FIELD_NEW_PASSWORD": "Nova lozinka",
+    "FIELD_CONFIRM_PASSWORD": "Potvrda nove lozinke",
+    "SUBMIT": "Promijeni lozinku",
+    "SUCCESS": "Lozinka je uspješno promijenjena.",
+    "ERRORS": {
+      "CURRENT_PASSWORD_REQUIRED": "Trenutna lozinka je obavezna.",
+      "NEW_PASSWORD_MIN_LENGTH": "Nova lozinka mora imati najmanje 8 znakova.",
+      "PASSWORDS_DO_NOT_MATCH": "Lozinke se ne podudaraju."
     }
   }
 }

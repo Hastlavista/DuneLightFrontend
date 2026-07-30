@@ -59,8 +59,8 @@ export class AppointmentsService {
     return this.http.get<AppointmentDto>(`${this.resourceUrl}/${id}`);
   }
 
-  /** PATCH /api/appointments/{id}/move - the only endpoint the schedule grid's
-   * drag & drop uses (never the full PUT). Returns the full AppointmentDto with
+  /** PATCH /api/appointments/{id}/move - called from AppointmentDetailDialog's
+   * inline edit form (never the full PUT). Returns the full AppointmentDto with
    * `warnings` populated when the new slot overlaps another booking - that is
    * NOT an error, the move still succeeds; show the warnings as a non-blocking
    * toast (see NotificationService.showWarning). */

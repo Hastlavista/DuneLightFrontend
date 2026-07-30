@@ -94,47 +94,59 @@
             (onClick)="openEdit(client)"
           />
           @if (!client.isAnonymized) {
-            @if (client.isActive) {
-              <p-button
-                icon="pi pi-eye-slash"
-                severity="warn"
-                [text]="true"
-                [rounded]="true"
-                [ariaLabel]="'COMMON.DEACTIVATE' | translate"
-                [title]="'COMMON.DEACTIVATE' | translate"
-                (onClick)="confirmDeactivate(client)"
-              />
-            } @else {
-              <p-button
-                icon="pi pi-eye"
-                severity="success"
-                [text]="true"
-                [rounded]="true"
-                [ariaLabel]="'COMMON.ACTIVATE' | translate"
-                [title]="'COMMON.ACTIVATE' | translate"
-                (onClick)="activate(client)"
-              />
-            }
-          }
-          <p-button
-            icon="pi pi-trash"
-            severity="danger"
-            [text]="true"
-            [rounded]="true"
-            [ariaLabel]="'COMMON.DELETE' | translate"
-            [title]="'COMMON.DELETE' | translate"
-            (onClick)="confirmDelete(client)"
-          />
-          @if (!client.isAnonymized) {
             <p-button
-              icon="pi pi-ellipsis-v"
+              icon="pi pi-wallet"
               [text]="true"
               [rounded]="true"
-              severity="secondary"
-              [ariaLabel]="'CLIENTS.MORE_ACTIONS' | translate"
-              [title]="'CLIENTS.MORE_ACTIONS' | translate"
-              (onClick)="openRowMenu($event, client)"
+              [ariaLabel]="'CLIENTS.PACKAGES.ISSUE_BUTTON' | translate"
+              [title]="'CLIENTS.PACKAGES.ISSUE_BUTTON' | translate"
+              (onClick)="openIssuePackage(client)"
             />
+            @if (isAdmin()) {
+              @if (client.isActive) {
+                <p-button
+                  icon="pi pi-eye-slash"
+                  severity="warn"
+                  [text]="true"
+                  [rounded]="true"
+                  [ariaLabel]="'COMMON.DEACTIVATE' | translate"
+                  [title]="'COMMON.DEACTIVATE' | translate"
+                  (onClick)="confirmDeactivate(client)"
+                />
+              } @else {
+                <p-button
+                  icon="pi pi-eye"
+                  severity="success"
+                  [text]="true"
+                  [rounded]="true"
+                  [ariaLabel]="'COMMON.ACTIVATE' | translate"
+                  [title]="'COMMON.ACTIVATE' | translate"
+                  (onClick)="activate(client)"
+                />
+              }
+            }
+          }
+          @if (isAdmin()) {
+            <p-button
+              icon="pi pi-trash"
+              severity="danger"
+              [text]="true"
+              [rounded]="true"
+              [ariaLabel]="'COMMON.DELETE' | translate"
+              [title]="'COMMON.DELETE' | translate"
+              (onClick)="confirmDelete(client)"
+            />
+            @if (!client.isAnonymized) {
+              <p-button
+                icon="pi pi-ellipsis-v"
+                [text]="true"
+                [rounded]="true"
+                severity="secondary"
+                [ariaLabel]="'CLIENTS.MORE_ACTIONS' | translate"
+                [title]="'CLIENTS.MORE_ACTIONS' | translate"
+                (onClick)="openRowMenu($event, client)"
+              />
+            }
           }
         </td>
       </tr>
@@ -155,3 +167,5 @@
   [client]="anonymizeClient()"
   (anonymized)="onAnonymized()"
 />
+
+<app-issue-package-dialog [(visible)]="issuePackageDialogVisible" [clientId]="issuePackageClient()?.id ?? ''" />

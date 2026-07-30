@@ -5,11 +5,10 @@ import { Button } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
 import { finalize } from 'rxjs';
 import { AppointmentScheduleCellDto, AppointmentStatus } from '../../../../../core/models/appointment.model';
-import { EmployeeDto } from '../../../../../core/models/employee.model';
+import { EmployeeColumnEntry } from '../../../../../core/models/employee.model';
 import { LocationDto } from '../../../../../core/models/location.model';
 import { AppointmentsService } from '../../../../../core/services/appointments.service';
 import { LocationContextService } from '../../../../../core/services/location-context.service';
-import { LocationsService } from '../../../../../core/services/locations.service';
 import { toEndOfDayIso, toStartOfDayIso } from '../../../../../core/utils/date.util';
 import { toScheduleGridCell } from '../../../../../shared/components/schedule-grid/schedule-cell-view.util';
 import { startOfDay } from '../../../../../shared/components/schedule-grid/schedule-date.util';
@@ -20,7 +19,6 @@ import {
   ScheduleGridColumn,
 } from '../../../../../shared/components/schedule-grid/schedule-grid.models';
 
-const LOOKUP_PAGE_SIZE = 200;
 const DAY_COLUMN_WIDTH_PX = 170;
 
 /** Consumed by ScheduleComponent to open NewAppointmentDialogComponent
@@ -64,13 +62,16 @@ interface ScheduleFilters {
 export class ScheduleDayGridComponent {
   private readonly appointmentsService = inject(AppointmentsService);
   private readonly locationContext = inject(LocationContextService);
-  private readonly locationsService = inject(LocationsService);
   private readonly translate = inject(TranslateService);
 
-  readonly employees = input.required<EmployeeDto[]>();
+  readonly employees = input.required<EmployeeColumnEntry[]>();
   readonly statusFilter = input<AppointmentStatus | null>(null);
   readonly serviceCategoryFilter = input<string | null>(null);
   readonly serviceFilter = input<string | null>(null);
+  /** Fetched once by ScheduleComponent and shared with both grids - see
+   * MyShiftsComponent for the same "fetch once, pass down via @Input" pattern
+   * applied to Roster's team/personal tabs. */
+  readonly activeLocations = input<LocationDto[]>([]);
 
   readonly emptySlotClick = output<DayEmptySlotEvent>();
   readonly appointmentClicked = output<AppointmentScheduleCellDto>();
@@ -78,15 +79,16 @@ export class ScheduleDayGridComponent {
   readonly selectedDate = signal(startOfDay(new Date()));
   readonly loading = signal(false);
   private readonly rawCells = signal<AppointmentScheduleCellDto[]>([]);
-  private readonly locationColors = signal<Map<string, string | null>>(new Map());
-  readonly activeLocations = signal<LocationDto[]>([]);
+  private readonly locationColors = computed<Map<string, string | null>>(
+    () => new Map(this.activeLocations().map((location) => [location.id, location.colorHex])),
+  );
 
   readonly columnWidthPx = DAY_COLUMN_WIDTH_PX;
 
   readonly columns = computed<ScheduleGridColumn[]>(() => {
     const locationId = this.locationContext.selectedLocationId();
     return this.employees()
-      .filter((employee) => !locationId || employee.locations.some((link) => link.locationId === locationId))
+      .filter((employee) => !locationId || employee.locationIds.includes(locationId))
       .map((employee) => ({ id: employee.id, label: `${employee.firstName} ${employee.lastName}` }));
   });
 
@@ -99,7 +101,6 @@ export class ScheduleDayGridComponent {
   });
 
   constructor() {
-    this.loadLocationColors();
     effect(() => {
       const date = this.selectedDate();
       const filters: ScheduleFilters = {
@@ -167,15 +168,6 @@ export class ScheduleDayGridComponent {
       })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe((cells) => this.rawCells.set(cells));
-  }
-
-  private loadLocationColors(): void {
-    this.locationsService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => {
-        this.locationColors.set(new Map(result.items.map((location: LocationDto) => [location.id, location.colorHex])));
-        this.activeLocations.set(result.items);
-      });
   }
 
   private addDays(date: Date, days: number): Date {

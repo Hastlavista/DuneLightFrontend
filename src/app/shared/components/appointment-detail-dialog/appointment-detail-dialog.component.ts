@@ -22,7 +22,7 @@ import {
   paymentMethodTranslationKey,
 } from '../../../core/models/appointment.model';
 import { ClientPackageDto } from '../../../core/models/client-package.model';
-import { EmployeeDto } from '../../../core/models/employee.model';
+import { EmployeeSummary } from '../../../core/models/employee.model';
 import { LocationDto } from '../../../core/models/location.model';
 import { AppointmentsService } from '../../../core/services/appointments.service';
 import { ClientPackagesService } from '../../../core/services/client-packages.service';
@@ -99,7 +99,7 @@ export class AppointmentDetailDialogComponent {
 
   readonly visible = model(false);
   readonly appointmentId = input<string | null>(null);
-  readonly employees = input<EmployeeDto[]>([]);
+  readonly employees = input<EmployeeSummary[]>([]);
   readonly locations = input<LocationDto[]>([]);
   readonly allowEmployeeChange = input(false);
 

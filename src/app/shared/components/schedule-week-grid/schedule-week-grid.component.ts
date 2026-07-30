@@ -7,7 +7,6 @@ import { dayOfWeekShortTranslationKey } from '../../../core/models/group.model';
 import { LocationDto } from '../../../core/models/location.model';
 import { AppointmentsService } from '../../../core/services/appointments.service';
 import { LocationContextService } from '../../../core/services/location-context.service';
-import { LocationsService } from '../../../core/services/locations.service';
 import { toEndOfDayIso, toStartOfDayIso } from '../../../core/utils/date.util';
 import { toScheduleGridCell } from '../schedule-grid/schedule-cell-view.util';
 import {
@@ -22,7 +21,6 @@ import {
 import { ScheduleGridComponent } from '../schedule-grid/schedule-grid.component';
 import { ScheduleEmptySlotClickEvent, ScheduleGridCell, ScheduleGridColumn } from '../schedule-grid/schedule-grid.models';
 
-const LOOKUP_PAGE_SIZE = 200;
 const WEEK_COLUMN_WIDTH_PX = 140;
 
 /** Consumed by ScheduleComponent to open NewAppointmentDialogComponent
@@ -65,13 +63,16 @@ interface ScheduleFilters {
 export class ScheduleWeekGridComponent {
   private readonly appointmentsService = inject(AppointmentsService);
   private readonly locationContext = inject(LocationContextService);
-  private readonly locationsService = inject(LocationsService);
   private readonly translate = inject(TranslateService);
 
   readonly employeeId = input<string | null>(null);
   readonly statusFilter = input<AppointmentStatus | null>(null);
   readonly serviceCategoryFilter = input<string | null>(null);
   readonly serviceFilter = input<string | null>(null);
+  /** Fetched once by ScheduleComponent and shared with both grids - see
+   * MyShiftsComponent for the same "fetch once, pass down via @Input" pattern
+   * applied to Roster's team/personal tabs. */
+  readonly activeLocations = input<LocationDto[]>([]);
 
   readonly emptySlotClick = output<WeekEmptySlotEvent>();
   readonly appointmentClicked = output<AppointmentScheduleCellDto>();
@@ -79,8 +80,9 @@ export class ScheduleWeekGridComponent {
   readonly weekStart = signal(startOfWeek(new Date()));
   readonly loading = signal(false);
   private readonly rawCells = signal<AppointmentScheduleCellDto[]>([]);
-  private readonly locationColors = signal<Map<string, string | null>>(new Map());
-  readonly activeLocations = signal<LocationDto[]>([]);
+  private readonly locationColors = computed<Map<string, string | null>>(
+    () => new Map(this.activeLocations().map((location) => [location.id, location.colorHex])),
+  );
 
   readonly columnWidthPx = WEEK_COLUMN_WIDTH_PX;
   readonly rangeLabel = computed(() => weekRangeLabel(this.weekStart()));
@@ -111,7 +113,6 @@ export class ScheduleWeekGridComponent {
   });
 
   constructor() {
-    this.loadLocationColors();
     effect(() => {
       const employeeId = this.employeeId();
       const weekStart = this.weekStart();
@@ -186,14 +187,5 @@ export class ScheduleWeekGridComponent {
       })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe((cells) => this.rawCells.set(cells));
-  }
-
-  private loadLocationColors(): void {
-    this.locationsService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => {
-        this.locationColors.set(new Map(result.items.map((location: LocationDto) => [location.id, location.colorHex])));
-        this.activeLocations.set(result.items);
-      });
   }
 }

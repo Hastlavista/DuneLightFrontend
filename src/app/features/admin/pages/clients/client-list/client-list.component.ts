@@ -1,4 +1,4 @@
-import { Component, ViewChild, computed, inject, signal } from '@angular/core';
+import { Component, ViewChild, computed, inject, input, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -9,9 +9,10 @@ import { Select } from 'primeng/select';
 import { Tag } from 'primeng/tag';
 import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
+import { AuthService } from '../../../../../core/auth/auth.service';
 import { ClientTagDto } from '../../../../../core/models/client-tag.model';
 import { ClientDto } from '../../../../../core/models/client.model';
-import { EmployeeDto } from '../../../../../core/models/employee.model';
+import { EmployeeDirectoryDto } from '../../../../../core/models/employee.model';
 import { LocationDto } from '../../../../../core/models/location.model';
 import { ClientTagsService } from '../../../../../core/services/client-tags.service';
 import { ClientsService } from '../../../../../core/services/clients.service';
@@ -21,6 +22,7 @@ import { NotificationService } from '../../../../../core/services/notification.s
 import { translationReadySignal } from '../../../../../core/utils/translation-signal.util';
 import { ListToolbarComponent } from '../../../../../shared/components/list-toolbar/list-toolbar.component';
 import { StatusTagComponent } from '../../../../../shared/components/status-tag/status-tag.component';
+import { IssuePackageDialogComponent } from '../client-form/issue-package-dialog.component';
 import { AnonymizeClientDialogComponent } from './anonymize-client-dialog.component';
 
 const DEFAULT_PAGE_SIZE = 20;
@@ -45,6 +47,7 @@ interface FilterOption<T> {
     TranslatePipe,
     ListToolbarComponent,
     StatusTagComponent,
+    IssuePackageDialogComponent,
     AnonymizeClientDialogComponent,
   ],
   templateUrl: './client-list.component.html',
@@ -58,10 +61,26 @@ export class ClientListComponent {
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
+  private readonly authService = inject(AuthService);
   private readonly router = inject(Router);
 
   @ViewChild('dt') private table!: Table;
   @ViewChild('rowMenu') private rowMenu!: Menu;
+
+  /** Set by /app/my-clients (trainer's own client list) - sorts the logged-in
+   * trainer's clients first via GET's `mineFirst` param, without filtering out
+   * anyone else's - every trainer still sees every client, see MyClientsComponent. */
+  readonly mineFirst = input(false);
+
+  /** Deactivate/activate/delete/anonymize stay Admin-only wherever this list is
+   * mounted (admin Klijenti or /app/my-clients) - a trainer may still edit basic
+   * info and issue packages, per the Klijenti module contract. */
+  readonly isAdmin = computed(() => this.authService.currentRole() === 'Admin');
+
+  /** This component is reused verbatim at /app/my-clients (see MyClientsComponent) -
+   * resolved once from the current URL rather than an input, since it's a route
+   * concern, not something the host page should have to pass down. */
+  private readonly basePath = this.router.url.startsWith('/app') ? '/app/my-clients' : '/admin/clients';
 
   readonly items = signal<ClientDto[]>([]);
   readonly totalCount = signal(0);
@@ -75,7 +94,7 @@ export class ClientListComponent {
   readonly homeLocationFilter = signal<string | null>(null);
 
   readonly activeTags = signal<ClientTagDto[]>([]);
-  readonly activeEmployees = signal<EmployeeDto[]>([]);
+  readonly activeEmployees = signal<EmployeeDirectoryDto[]>([]);
   readonly activeLocations = signal<LocationDto[]>([]);
 
   private readonly translationsReady = translationReadySignal(this.translate);
@@ -124,6 +143,9 @@ export class ClientListComponent {
   readonly anonymizeDialogVisible = signal(false);
   readonly anonymizeClient = signal<ClientDto | null>(null);
 
+  readonly issuePackageDialogVisible = signal(false);
+  readonly issuePackageClient = signal<ClientDto | null>(null);
+
   constructor() {
     this.loadActiveTags();
     this.loadActiveEmployees();
@@ -168,11 +190,11 @@ export class ClientListComponent {
   }
 
   openCreate(): void {
-    this.router.navigate(['/admin/clients/new']);
+    this.router.navigate([this.basePath, 'new']);
   }
 
   openEdit(client: ClientDto): void {
-    this.router.navigate(['/admin/clients', client.id]);
+    this.router.navigate([this.basePath, client.id]);
   }
 
   openRowMenu(event: Event, client: ClientDto): void {
@@ -183,6 +205,14 @@ export class ClientListComponent {
   openAnonymize(client: ClientDto): void {
     this.anonymizeClient.set(client);
     this.anonymizeDialogVisible.set(true);
+  }
+
+  /** Quick "Izdaj paket" row action - opens the same dialog the client
+   * detail page's Paketi tab uses, with this row's client already fixed, so
+   * issuing a package doesn't require navigating away from the list at all. */
+  openIssuePackage(client: ClientDto): void {
+    this.issuePackageClient.set(client);
+    this.issuePackageDialogVisible.set(true);
   }
 
   onAnonymized(): void {
@@ -258,6 +288,7 @@ export class ClientListComponent {
             tagId: this.tagFilter(),
             homeTrainerId: this.homeTrainerFilter(),
             homeLocationId: this.homeLocationFilter(),
+            mineFirst: this.mineFirst() || undefined,
           },
         },
       )
@@ -274,10 +305,14 @@ export class ClientListComponent {
       .subscribe((result) => this.activeTags.set(result.items));
   }
 
+  /** GET /api/employees/directory, not getPage()/`/api/employees` - this list
+   * only feeds the "Matični trener" filter dropdown (name only), and this
+   * component is also reused at /app/my-clients (see MyClientsComponent),
+   * where the full endpoint 403s for Member/Reception. */
   private loadActiveEmployees(): void {
     this.employeesService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeEmployees.set(result.items));
+      .getDirectory(true, { suppressErrorToast: true })
+      .subscribe((result) => this.activeEmployees.set(result));
   }
 
   private loadActiveLocations(): void {

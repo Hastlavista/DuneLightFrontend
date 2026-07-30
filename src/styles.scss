@@ -105,6 +105,14 @@ a {
   color: var(--clay-2);
 }
 
+/* Plain read-only value for a locked form field (e.g. "Zaposlenik" when it
+   can't be changed) - deliberately NOT a disabled input/select, which looks
+   broken when it has no matching option to show a label for. */
+.dl-form__static-value {
+  padding: 0.5rem 0;
+  font-weight: 500;
+}
+
 .dl-form__row {
   display: flex;
   gap: 1rem;

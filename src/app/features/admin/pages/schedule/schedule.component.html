@@ -55,10 +55,11 @@
   @if (viewMode() === 'day') {
     <app-admin-schedule-day-grid
       #dayGrid
-      [employees]="activeEmployees()"
+      [employees]="employeeColumns()"
       [statusFilter]="statusFilter()"
       [serviceCategoryFilter]="serviceCategoryFilter()"
       [serviceFilter]="serviceFilter()"
+      [activeLocations]="activeLocations()"
       (appointmentClicked)="onAppointmentClicked($event)"
       (emptySlotClick)="onEmptySlotClick($event)"
     />
@@ -69,6 +70,7 @@
       [statusFilter]="statusFilter()"
       [serviceCategoryFilter]="serviceCategoryFilter()"
       [serviceFilter]="serviceFilter()"
+      [activeLocations]="activeLocations()"
       (appointmentClicked)="onAppointmentClicked($event)"
       (emptySlotClick)="onEmptySlotClick($event)"
     />

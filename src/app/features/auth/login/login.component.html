@@ -7,22 +7,6 @@
 
     <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form" novalidate>
       <div class="login-form__field">
-        <label for="organizationSlug">{{ 'AUTH.LOGIN.ORGANIZATION' | translate }}</label>
-        <input
-          id="organizationSlug"
-          type="text"
-          pInputText
-          formControlName="organizationSlug"
-          autocomplete="organization"
-          fluid
-          [placeholder]="'AUTH.LOGIN.ORGANIZATION_PLACEHOLDER' | translate"
-        />
-        @if (form.controls.organizationSlug.invalid && form.controls.organizationSlug.touched) {
-          <span class="login-form__error">{{ 'AUTH.LOGIN.ERRORS.ORGANIZATION_REQUIRED' | translate }}</span>
-        }
-      </div>
-
-      <div class="login-form__field">
         <label for="email">{{ 'AUTH.LOGIN.EMAIL' | translate }}</label>
         <input
           id="email"
@@ -53,6 +37,22 @@
         />
         @if (form.controls.password.invalid && form.controls.password.touched) {
           <span class="login-form__error">{{ 'AUTH.LOGIN.ERRORS.PASSWORD_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <div class="login-form__field">
+        <label for="organizationSlug">{{ 'AUTH.LOGIN.ORGANIZATION' | translate }}</label>
+        <input
+          id="organizationSlug"
+          type="text"
+          pInputText
+          formControlName="organizationSlug"
+          autocomplete="organization"
+          fluid
+          [placeholder]="'AUTH.LOGIN.ORGANIZATION_PLACEHOLDER' | translate"
+        />
+        @if (form.controls.organizationSlug.invalid && form.controls.organizationSlug.touched) {
+          <span class="login-form__error">{{ 'AUTH.LOGIN.ERRORS.ORGANIZATION_REQUIRED' | translate }}</span>
         }
       </div>
 

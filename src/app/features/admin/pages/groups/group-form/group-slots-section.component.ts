@@ -25,6 +25,11 @@ export class GroupSlotsSectionComponent {
   private readonly translate = inject(TranslateService);
 
   readonly group = input.required<GroupDto>();
+  /** Set by TrainerGroupDetailComponent - a trainer may view a group's slots
+   * but not manage them (Admin-only per the Grupe module contract), so this
+   * just hides the add/edit/remove actions rather than being a separate
+   * read-only component. */
+  readonly readOnly = input(false);
   readonly changed = output<void>();
 
   readonly dialogVisible = signal(false);

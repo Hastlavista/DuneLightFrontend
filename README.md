@@ -109,10 +109,13 @@ src/assets/i18n/hr.json      # Croatian UI text (see below)
   `/ChangePassword` is a normal business error (wrong password) and is left for the
   calling component to display inline — it does **not** log anyone out.
 - `GET /api/employees/me` is fetched once the shell mounts
-  (`CurrentEmployeeService`). A 404 (Owner/Admin without an Employee record yet) is
-  handled quietly — no toast, the user just doesn't get a trainer profile — via the
-  `SUPPRESS_ERROR_TOAST` HttpContext token, which any future "expected error" call can
-  reuse.
+  (`CurrentEmployeeService`) via the `SUPPRESS_ERROR_TOAST` HttpContext token, which
+  any future "expected error" call can reuse. A 404 means two different things
+  depending on role: for Admin it's handled quietly (Owner/Admin without an Employee
+  record yet, e.g. right after Register — no toast, the user just doesn't get a
+  trainer profile); for Member/Reception it means the Employee record backing an
+  already-logged-in session was deleted, so the session itself is invalid — that logs
+  the user out and redirects to `/login`, same as a 401 session-expiry.
 
 ### Roles
 

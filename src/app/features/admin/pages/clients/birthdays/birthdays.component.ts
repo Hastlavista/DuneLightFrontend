@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
-import { Table, TableModule } from 'primeng/table';
+import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { BirthdayDto } from '../../../../../core/models/client.model';
 import { ClientsService } from '../../../../../core/services/clients.service';

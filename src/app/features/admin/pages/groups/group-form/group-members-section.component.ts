@@ -30,6 +30,11 @@ export class GroupMembersSectionComponent {
   private readonly translate = inject(TranslateService);
 
   readonly group = input.required<GroupDetailDto>();
+  /** Set by TrainerGroupDetailComponent - a trainer may view a group's members
+   * but not manage them (Admin-only per the Grupe module contract), so this
+   * just hides the add/remove actions rather than being a separate read-only
+   * component. */
+  readonly readOnly = input(false);
   readonly changed = output<void>();
 
   readonly addDialogVisible = signal(false);

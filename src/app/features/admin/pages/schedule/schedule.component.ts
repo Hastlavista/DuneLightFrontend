@@ -4,7 +4,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
 import { APPOINTMENT_STATUSES, AppointmentScheduleCellDto, AppointmentStatus, appointmentStatusTranslationKey } from '../../../../core/models/appointment.model';
-import { EmployeeDto } from '../../../../core/models/employee.model';
+import { EmployeeColumnEntry, EmployeeDto } from '../../../../core/models/employee.model';
 import { GroupAppointmentCellDto, GroupDto } from '../../../../core/models/group.model';
 import { LocationDto } from '../../../../core/models/location.model';
 import { ServiceCategoryDto } from '../../../../core/models/service-category.model';
@@ -105,6 +105,19 @@ export class ScheduleComponent {
   readonly newAppointmentInitial = signal<NewAppointmentInitial | null>(null);
 
   private readonly translationsReady = translationReadySignal(this.translate);
+
+  /** ScheduleDayGridComponent's columns need per-location ids to filter by the
+   * globally-selected location, which EmployeeDto already carries directly
+   * (unlike the trainer-safe EmployeeDirectoryDto used by TodayComponent, see
+   * EmployeeColumnEntry's doc comment). */
+  readonly employeeColumns = computed<EmployeeColumnEntry[]>(() =>
+    this.activeEmployees().map((employee) => ({
+      id: employee.id,
+      firstName: employee.firstName,
+      lastName: employee.lastName,
+      locationIds: employee.locations.map((location) => location.locationId),
+    })),
+  );
 
   readonly trainerOptions = computed<FilterOption<string>[]>(() => {
     this.translationsReady();

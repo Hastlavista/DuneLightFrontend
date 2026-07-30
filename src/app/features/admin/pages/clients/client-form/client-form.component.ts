@@ -14,7 +14,7 @@ import { Textarea } from 'primeng/textarea';
 import { finalize } from 'rxjs';
 import { ClientTagDto } from '../../../../../core/models/client-tag.model';
 import { ClientDto, ClientUpsertRequest } from '../../../../../core/models/client.model';
-import { EmployeeDto } from '../../../../../core/models/employee.model';
+import { EmployeeDirectoryDto } from '../../../../../core/models/employee.model';
 import { LocationDto } from '../../../../../core/models/location.model';
 import { ClientTagsService } from '../../../../../core/services/client-tags.service';
 import { ClientsService } from '../../../../../core/services/clients.service';
@@ -105,11 +105,16 @@ export class ClientFormComponent {
   readonly loading = signal(false);
   readonly saving = signal(false);
 
+  /** This component is reused verbatim at /app/my-clients/:id (see
+   * trainer.routes.ts) - resolved once from the current URL rather than an
+   * input, since it's a route concern, not something the host page passes down. */
+  private readonly isTrainerContext = this.router.url.startsWith('/app');
+
   private readonly loadedClient = signal<ClientDto | null>(null);
   readonly isAnonymized = computed(() => this.loadedClient()?.isAnonymized ?? false);
 
   readonly activeLocations = signal<LocationDto[]>([]);
-  readonly activeEmployees = signal<EmployeeDto[]>([]);
+  readonly activeEmployees = signal<EmployeeDirectoryDto[]>([]);
   readonly activeTags = signal<ClientTagDto[]>([]);
 
   /** Home location/trainer/tags the client being edited already has, even if
@@ -256,10 +261,14 @@ export class ClientFormComponent {
       .subscribe((result) => this.activeLocations.set(result.items));
   }
 
+  /** GET /api/employees/directory, not getPage()/`/api/employees` - only feeds
+   * the "Matični trener" picker (name only), and this component is also reused
+   * at /app/my-clients/:id (see trainer.routes.ts), where the full endpoint
+   * 403s for Member/Reception. */
   private loadActiveEmployees(): void {
     this.employeesService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeEmployees.set(result.items));
+      .getDirectory(true, { suppressErrorToast: true })
+      .subscribe((result) => this.activeEmployees.set(result));
   }
 
   private loadActiveTags(): void {
@@ -319,6 +328,10 @@ export class ClientFormComponent {
   }
 
   private navigateBack(): void {
-    this.router.navigate(['/admin/clients'], { queryParams: { tab: 'clients' } });
+    if (this.isTrainerContext) {
+      this.router.navigate(['/app/my-clients']);
+    } else {
+      this.router.navigate(['/admin/clients'], { queryParams: { tab: 'clients' } });
+    }
   }
 }

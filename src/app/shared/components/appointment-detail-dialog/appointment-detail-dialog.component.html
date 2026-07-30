@@ -161,7 +161,7 @@
               [ngModelOptions]="{ standalone: true }"
               (onChange)="onToggleReturnEntry(client.clientId, $event.checked)"
             />
-            <span>{{ client.clientName }} — {{ 'SCHEDULE.CANCEL.RETURN_ENTRY_LABEL' | translate }}</span>
+            <span>{{ client.clientName }} — {{ (mode() === 'cancel' ? 'SCHEDULE.CANCEL.RETURN_ENTRY_LABEL' : 'SCHEDULE.NO_SHOW.RETURN_ENTRY_LABEL') | translate }}</span>
           </label>
         }
       }

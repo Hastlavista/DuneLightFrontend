@@ -92,4 +92,11 @@ export const ADMIN_ROUTES: Routes = [
     loadComponent: () => import('./pages/reports/reports.component').then((m) => m.ReportsComponent),
     data: { titleKey: 'NAV.ADMIN.REPORTS' },
   },
+  {
+    // Shared with trainer.routes.ts ('app/profile') - same component either way,
+    // see ProfileComponent.
+    path: 'profile',
+    loadComponent: () => import('../profile/profile.component').then((m) => m.ProfileComponent),
+    data: { titleKey: 'NAV.ADMIN.PROFILE' },
+  },
 ];

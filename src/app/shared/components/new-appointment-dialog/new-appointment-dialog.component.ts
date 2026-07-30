@@ -27,7 +27,7 @@ import {
 } from '../../../core/models/appointment.model';
 import { ClientDto } from '../../../core/models/client.model';
 import { ClientPackageDto } from '../../../core/models/client-package.model';
-import { EmployeeDto } from '../../../core/models/employee.model';
+import { EmployeeSummary } from '../../../core/models/employee.model';
 import { LocationDto } from '../../../core/models/location.model';
 import { ServiceDto } from '../../../core/models/service.model';
 import { AppointmentsService } from '../../../core/services/appointments.service';
@@ -126,7 +126,7 @@ export class NewAppointmentDialogComponent {
   private readonly translate = inject(TranslateService);
 
   readonly visible = model(false);
-  readonly employees = input<EmployeeDto[]>([]);
+  readonly employees = input<EmployeeSummary[]>([]);
   readonly locations = input<LocationDto[]>([]);
   readonly services = input<ServiceDto[]>([]);
   readonly initial = input<NewAppointmentInitial | null>(null);
