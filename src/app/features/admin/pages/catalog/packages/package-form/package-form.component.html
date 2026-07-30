@@ -171,6 +171,7 @@
             @if (form.controls.entryMode.value === 'PerService') {
               <div class="package-form-page__entry-count">
                 <p-inputnumber
+                  fluid
                   formControlName="entryCount"
                   [showButtons]="true"
                   [min]="1"

@@ -30,20 +30,16 @@ import {
   PackageValidityType,
   validityTypeTranslationKey,
 } from '../../../../../../core/models/package.model';
-import { ServiceDto } from '../../../../../../core/models/service.model';
+import { ActivePackagesStore } from '../../../../../../core/services/active-packages.store';
+import { ActiveServicesStore } from '../../../../../../core/services/active-services.store';
 import { NotificationService } from '../../../../../../core/services/notification.service';
 import { PackagesService } from '../../../../../../core/services/packages.service';
-import { ServicesService } from '../../../../../../core/services/services.service';
 import { toEndOfDayIso } from '../../../../../../core/utils/date.util';
 import { translationReadySignal } from '../../../../../../core/utils/translation-signal.util';
 
 /** Route param sentinel for create mode - see admin.routes.ts (single
  * 'services/packages/:id' route instead of a separate 'new' route). */
 const NEW_ID = 'new';
-
-/** pageSize max is 200 - fetches the full active set in one page for the service
- * picker (same pattern as Usluge/Cjenik - see catalog/services/services.component.ts). */
-const LOOKUP_PAGE_SIZE = 200;
 
 interface EntryModeOption {
   label: string;
@@ -95,7 +91,8 @@ function servicesArrayValidator(control: AbstractControl): ValidationErrors | nu
 export class PackageFormComponent {
   private readonly fb = inject(FormBuilder);
   private readonly packagesService = inject(PackagesService);
-  private readonly servicesService = inject(ServicesService);
+  private readonly activeServicesStore = inject(ActiveServicesStore);
+  private readonly activePackagesStore = inject(ActivePackagesStore);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
@@ -106,7 +103,9 @@ export class PackageFormComponent {
   readonly loading = signal(false);
   readonly saving = signal(false);
 
-  readonly activeServices = signal<ServiceDto[]>([]);
+  /** Shared with Usluge/Cjenik via ActiveServicesStore so a service created,
+   * activated, or deactivated there shows up here without a page reload. */
+  readonly activeServices = this.activeServicesStore.services;
   /** Services this package links to that are no longer active - kept visible in
    * the picker (with a badge) instead of silently dropped. Derived, not set
    * directly, so it stays correct regardless of whether the package or the
@@ -163,8 +162,6 @@ export class PackageFormComponent {
     const idParam = this.route.snapshot.paramMap.get('id');
     const id = idParam && idParam !== NEW_ID ? idParam : null;
     this.editingId.set(id);
-
-    this.loadActiveServices();
 
     if (id) {
       this.loadPackage(id);
@@ -246,6 +243,7 @@ export class PackageFormComponent {
         this.notifications.showSuccess(
           this.translate.instant(id ? 'CATALOG.PACKAGES.UPDATED' : 'CATALOG.PACKAGES.CREATED'),
         );
+        this.activePackagesStore.refresh();
         this.navigateBack();
       },
       error: () => {},
@@ -337,12 +335,6 @@ export class PackageFormComponent {
         entryCount: raw.entryMode === 'PerService' ? row['entryCount'] : null,
       })),
     };
-  }
-
-  private loadActiveServices(): void {
-    this.servicesService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeServices.set(result.items));
   }
 
   private loadPackage(id: string): void {

@@ -24,6 +24,14 @@ const DEFAULT_TAB = 'team';
  * Admin-only. Owns the one entry-form dialog both tabs share (mirrors
  * ScheduleComponent owning dialogs both grids open), plus the active
  * employees/roster-types/locations lookups the dialog and the two tabs need.
+ *
+ * "Moj pregled" is hidden when the viewer has no Employee profile - same
+ * reasoning as ShiftsComponent's hasEmployeeProfile: an Owner/Admin account
+ * without one (see CurrentEmployeeService's doc) has no personal roster to
+ * show, so the tab must not render a permanently-inert "+"/"Primijeni" (both
+ * silently no-op on a null currentEmployeeId - see PersonalRosterComponent).
+ * "Timski pregled" stays visible regardless - it degrades fine (the viewer
+ * just won't have their own row, since they have no Employee record).
  */
 @Component({
   selector: 'app-trainer-my-shifts',
@@ -58,6 +66,7 @@ export class MyShiftsComponent {
 
   readonly isAdmin = computed(() => this.currentEmployeeService.employee()?.role === 'Admin');
   readonly currentEmployeeId = computed(() => this.currentEmployeeService.employee()?.employeeId ?? null);
+  readonly hasEmployeeProfile = computed(() => this.currentEmployeeService.hasProfile());
 
   readonly dialogVisible = signal(false);
   readonly editingEntry = signal<RosterEntryDto | null>(null);

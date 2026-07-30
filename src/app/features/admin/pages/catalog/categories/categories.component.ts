@@ -5,6 +5,7 @@ import { Button } from 'primeng/button';
 import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { ServiceCategoryDto, executionModeTranslationKey } from '../../../../../core/models/service-category.model';
+import { ActiveServiceCategoriesStore } from '../../../../../core/services/active-service-categories.store';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { ServiceCategoriesService } from '../../../../../core/services/service-categories.service';
 import { ColorSwatchComponent } from '../../../../../shared/components/color-swatch/color-swatch.component';
@@ -30,6 +31,7 @@ const DEFAULT_PAGE_SIZE = 20;
 })
 export class CategoriesComponent {
   private readonly categoriesService = inject(ServiceCategoriesService);
+  private readonly activeCategoriesStore = inject(ActiveServiceCategoriesStore);
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
@@ -79,6 +81,7 @@ export class CategoriesComponent {
 
   onSaved(): void {
     this.fetch(this.table?.first ?? 0, this.rows());
+    this.activeCategoriesStore.refresh();
   }
 
   activate(category: ServiceCategoryDto): void {
@@ -86,6 +89,7 @@ export class CategoriesComponent {
       next: () => {
         this.notifications.showSuccess(this.translate.instant('CATALOG.CATEGORIES.ACTIVATED'));
         this.fetch(this.table?.first ?? 0, this.rows());
+        this.activeCategoriesStore.refresh();
       },
       error: () => {},
     });
@@ -103,6 +107,7 @@ export class CategoriesComponent {
           next: () => {
             this.notifications.showSuccess(this.translate.instant('CATALOG.CATEGORIES.DEACTIVATED'));
             this.fetch(this.table?.first ?? 0, this.rows());
+            this.activeCategoriesStore.refresh();
           },
           error: () => {},
         });
@@ -123,6 +128,7 @@ export class CategoriesComponent {
           next: () => {
             this.notifications.showSuccess(this.translate.instant('CATALOG.CATEGORIES.DELETED'));
             this.fetch(this.table?.first ?? 0, this.rows());
+            this.activeCategoriesStore.refresh();
           },
           error: () => {},
         });

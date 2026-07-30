@@ -7,18 +7,16 @@ import { Select } from 'primeng/select';
 import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { LocationDto } from '../../../../../../core/models/location.model';
-import { PackageDto } from '../../../../../../core/models/package.model';
 import {
   PriceListItemDto,
   PriceListSubjectType,
   priceListSubjectName,
 } from '../../../../../../core/models/price-list.model';
-import { ServiceDto } from '../../../../../../core/models/service.model';
+import { ActivePackagesStore } from '../../../../../../core/services/active-packages.store';
+import { ActiveServicesStore } from '../../../../../../core/services/active-services.store';
 import { LocationsService } from '../../../../../../core/services/locations.service';
 import { NotificationService } from '../../../../../../core/services/notification.service';
-import { PackagesService } from '../../../../../../core/services/packages.service';
 import { PriceListService } from '../../../../../../core/services/price-list.service';
-import { ServicesService } from '../../../../../../core/services/services.service';
 import { translationReadySignal } from '../../../../../../core/utils/translation-signal.util';
 import { ListToolbarComponent } from '../../../../../../shared/components/list-toolbar/list-toolbar.component';
 import { StatusTagComponent } from '../../../../../../shared/components/status-tag/status-tag.component';
@@ -56,8 +54,8 @@ interface FilterOption<T> {
 })
 export class PriceListItemsComponent {
   private readonly priceListService = inject(PriceListService);
-  private readonly servicesService = inject(ServicesService);
-  private readonly packagesService = inject(PackagesService);
+  private readonly activeServicesStore = inject(ActiveServicesStore);
+  private readonly activePackagesStore = inject(ActivePackagesStore);
   private readonly locationsService = inject(LocationsService);
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
@@ -74,10 +72,13 @@ export class PriceListItemsComponent {
   readonly locationFilter = signal<string | null>(null);
   readonly subjectTypeFilter = signal<PriceListSubjectType | null>(null);
 
-  /** Preloaded for both the filter dropdowns here and the create/edit form
-   * (which the dialog receives as inputs). */
-  readonly activeServices = signal<ServiceDto[]>([]);
-  readonly activePackages = signal<PackageDto[]>([]);
+  /** Services/packages preloaded via shared stores (see ActiveServicesStore /
+   * ActivePackagesStore) so a create/activate/deactivate/delete on Usluge or
+   * Paketi is reflected here without a page reload. Locations aren't shared
+   * that way - Lokacije lives on a separate route, so this screen is always
+   * freshly mounted (and this fetched fresh) whenever that could matter. */
+  readonly activeServices = this.activeServicesStore.services;
+  readonly activePackages = this.activePackagesStore.packages;
   readonly activeLocations = signal<LocationDto[]>([]);
 
   private readonly translationsReady = translationReadySignal(this.translate);
@@ -232,12 +233,6 @@ export class PriceListItemsComponent {
   }
 
   private loadLookups(): void {
-    this.servicesService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeServices.set(result.items));
-    this.packagesService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activePackages.set(result.items));
     this.locationsService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
       .subscribe((result) => this.activeLocations.set(result.items));
