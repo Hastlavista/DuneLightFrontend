@@ -1,0 +1,44 @@
+<p-tabs [value]="initialTab">
+  <p-tablist>
+    <p-tab value="types">{{ 'ROSTER.TYPES.TAB_LABEL' | translate }}</p-tab>
+    <p-tab value="team">{{ 'ROSTER.TEAM_MONTHLY.TAB_LABEL' | translate }}</p-tab>
+    @if (hasEmployeeProfile()) {
+      <p-tab value="personal">{{ 'ROSTER.PERSONAL.TAB_LABEL' | translate }}</p-tab>
+    }
+  </p-tablist>
+  <p-tabpanels>
+    <p-tabpanel value="types">
+      <app-admin-roster-types />
+    </p-tabpanel>
+    <p-tabpanel value="team">
+      <app-roster-team-monthly
+        [currentEmployeeId]="currentEmployeeId()"
+        [isAdmin]="true"
+        [activeLocations]="activeLocations()"
+        (cellClick)="onTeamCellClick($event)"
+      />
+    </p-tabpanel>
+    @if (hasEmployeeProfile()) {
+      <p-tabpanel value="personal">
+        <app-roster-personal
+          [allowEmployeePicker]="true"
+          [currentEmployeeId]="currentEmployeeId()"
+          [employees]="activeEmployees()"
+          (add)="onPersonalAdd($event)"
+          (edit)="onPersonalEdit($event)"
+        />
+      </p-tabpanel>
+    }
+  </p-tabpanels>
+</p-tabs>
+
+<app-roster-entry-form-dialog
+  [(visible)]="dialogVisible"
+  [entry]="editingEntry()"
+  [initial]="dialogInitial()"
+  [employees]="activeEmployees()"
+  [rosterTypes]="activeRosterTypes()"
+  [isAdminRole]="true"
+  [currentEmployeeId]="currentEmployeeId()"
+  (saved)="onDialogSaved()"
+/>

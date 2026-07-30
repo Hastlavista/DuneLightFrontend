@@ -1,0 +1,30 @@
+.trainer-group-detail__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  h2 {
+    margin: 0;
+  }
+}
+
+.trainer-group-detail__basic {
+  h3 {
+    margin: 0 0 1rem;
+  }
+}
+
+.trainer-group-detail__info-row {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.35rem 0;
+
+  & + & {
+    border-top: 1px solid var(--surface-border, #eee);
+  }
+}
+
+.trainer-group-detail__info-label {
+  min-width: 10rem;
+  font-weight: 600;
+}

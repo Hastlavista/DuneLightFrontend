@@ -1,0 +1,121 @@
+<div class="personal-roster">
+  <div class="personal-roster__toolbar">
+    @if (allowEmployeePicker()) {
+      <div class="personal-roster__field">
+        <label for="personal-roster-employee">{{ 'ROSTER.PERSONAL.FIELD_EMPLOYEE' | translate }}</label>
+        <p-select
+          id="personal-roster-employee"
+          [options]="employeeOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="effectiveEmployeeId()"
+          (ngModelChange)="onEmployeeChange($event)"
+          [placeholder]="'ROSTER.PERSONAL.FIELD_EMPLOYEE_PLACEHOLDER' | translate"
+        />
+      </div>
+    }
+
+    <div class="personal-roster__field">
+      <label for="personal-roster-from">{{ 'ROSTER.PERSONAL.FIELD_FROM' | translate }}</label>
+      <p-datepicker
+        id="personal-roster-from"
+        dateFormat="dd.mm.yy"
+        [showIcon]="true"
+        [ngModel]="fromDate()"
+        (ngModelChange)="onFromDateChange($event)"
+      />
+    </div>
+
+    <div class="personal-roster__field">
+      <label for="personal-roster-to">{{ 'ROSTER.PERSONAL.FIELD_TO' | translate }}</label>
+      <p-datepicker
+        id="personal-roster-to"
+        dateFormat="dd.mm.yy"
+        [showIcon]="true"
+        [ngModel]="toDate()"
+        (ngModelChange)="onToDateChange($event)"
+      />
+    </div>
+
+    <p-button [label]="'ROSTER.PERSONAL.APPLY_RANGE' | translate" (onClick)="applyRange()" />
+
+    @if (effectiveEmployeeId()) {
+      <p-button icon="pi pi-plus" [label]="'ROSTER.PERSONAL.ADD' | translate" (onClick)="onAdd()" />
+    }
+  </div>
+
+  @if (data(); as personal) {
+    <div class="personal-roster__summary">
+      <div class="personal-roster__summary-item">
+        <strong>{{ personal.totalWorkHours }}h</strong>
+        <span>{{ 'ROSTER.PERSONAL.TOTAL_WORK_HOURS' | translate }}</span>
+      </div>
+      @for (item of personal.workHoursByType; track item.rosterTypeId) {
+        <div class="personal-roster__summary-item">
+          <strong>{{ item.hours }}h</strong>
+          <span>{{ item.rosterTypeName }}</span>
+        </div>
+      }
+      @for (item of personal.absenceDaysByType; track item.rosterTypeId) {
+        <div class="personal-roster__summary-item">
+          <strong>{{ item.days }}</strong>
+          <span>{{ item.rosterTypeName }}</span>
+        </div>
+      }
+    </div>
+
+    <table class="personal-roster__table">
+      <thead>
+        <tr>
+          <th>{{ 'ROSTER.PERSONAL.COL_TYPE' | translate }}</th>
+          <th>{{ 'ROSTER.PERSONAL.COL_DATE' | translate }}</th>
+          <th>{{ 'ROSTER.PERSONAL.COL_TIME' | translate }}</th>
+          <th>{{ 'ROSTER.PERSONAL.COL_NOTE' | translate }}</th>
+          <th class="personal-roster__actions-col"></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (entry of personal.entries; track entry.id) {
+          <tr>
+            <td>
+              <span class="personal-roster__type-swatch" [style.background]="entry.rosterTypeColorHex ?? 'var(--olive-gold)'"></span>
+              {{ entry.rosterTypeName }}
+            </td>
+            <td>
+              @if (entry.isAbsence) {
+                {{ entry.dateFrom | hrDate }}@if (entry.dateTo) { – {{ entry.dateTo | hrDate }} }
+              } @else {
+                {{ entry.dateFrom | hrDate }}
+              }
+            </td>
+            <td>{{ entryTimeLabel(entry) }}</td>
+            <td>{{ entry.note }}</td>
+            <td class="personal-roster__actions">
+              <p-button
+                icon="pi pi-pencil"
+                [text]="true"
+                [rounded]="true"
+                [ariaLabel]="'COMMON.EDIT' | translate"
+                [title]="'COMMON.EDIT' | translate"
+                (onClick)="onEdit(entry)"
+              />
+              <p-button
+                icon="pi pi-trash"
+                severity="danger"
+                [text]="true"
+                [rounded]="true"
+                [ariaLabel]="'COMMON.DELETE' | translate"
+                [title]="'COMMON.DELETE' | translate"
+                (onClick)="confirmDelete(entry)"
+              />
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="personal-roster__empty">{{ 'ROSTER.PERSONAL.EMPTY' | translate }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  }
+</div>

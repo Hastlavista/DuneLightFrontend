@@ -1,0 +1,58 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '30rem' }"
+  [header]="(isEditMode() ? 'ROSTER.TYPES.EDIT_TITLE' : 'ROSTER.TYPES.NEW_TITLE') | translate"
+  (onShow)="onDialogShow()"
+>
+  @if (dialogShown()) {
+  <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+    <div class="dl-form__field">
+      <label for="roster-type-name">{{ 'ROSTER.TYPES.FIELD_NAME' | translate }}</label>
+      <input id="roster-type-name" type="text" pInputText fluid formControlName="name" maxlength="255" />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <span class="dl-form__error">{{ 'ROSTER.TYPES.ERRORS.NAME_REQUIRED' | translate }}</span>
+      }
+    </div>
+
+    <div class="dl-form__field">
+      <label for="roster-type-color">{{ 'ROSTER.TYPES.FIELD_COLOR' | translate }}</label>
+      <p-colorpicker id="roster-type-color" formControlName="colorHex" appendTo="body" />
+    </div>
+
+    <div class="dl-form__row">
+      <div class="dl-form__field dl-form__field--checkbox">
+        <p-checkbox inputId="roster-type-counts-as-work" formControlName="countsAsWork" [binary]="true" />
+        <label for="roster-type-counts-as-work">{{ 'ROSTER.TYPES.FIELD_COUNTS_AS_WORK' | translate }}</label>
+      </div>
+
+      <div class="dl-form__field dl-form__field--checkbox">
+        <p-checkbox inputId="roster-type-is-absence" formControlName="isAbsence" [binary]="true" />
+        <label for="roster-type-is-absence">{{ 'ROSTER.TYPES.FIELD_IS_ABSENCE' | translate }}</label>
+      </div>
+    </div>
+
+    <div class="dl-form__field dl-form__field--checkbox">
+      <p-checkbox inputId="roster-type-requires-time" formControlName="requiresTime" [binary]="true" />
+      <label for="roster-type-requires-time">{{ 'ROSTER.TYPES.FIELD_REQUIRES_TIME' | translate }}</label>
+    </div>
+    <span class="dl-form__hint">{{ 'ROSTER.TYPES.REQUIRES_TIME_HINT' | translate }}</span>
+
+    <div class="dl-form__field">
+      <label for="roster-type-sort-order">{{ 'ROSTER.TYPES.FIELD_SORT_ORDER' | translate }}</label>
+      <p-inputnumber id="roster-type-sort-order" fluid formControlName="sortOrder" [showButtons]="true" />
+    </div>
+
+    <div class="dl-form__actions">
+      <p-button
+        type="button"
+        [text]="true"
+        severity="secondary"
+        [label]="'COMMON.CANCEL' | translate"
+        (onClick)="onCancel()"
+      />
+      <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+    </div>
+  </form>
+  }
+</p-dialog>

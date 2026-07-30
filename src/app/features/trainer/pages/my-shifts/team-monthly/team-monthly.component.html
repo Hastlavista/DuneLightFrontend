@@ -1,0 +1,83 @@
+<div class="team-monthly">
+  <div class="team-monthly__toolbar">
+    <div class="team-monthly__nav">
+      <p-button icon="pi pi-chevron-left" [text]="true" [rounded]="true" (onClick)="prevMonth()" />
+      <span class="team-monthly__month-label">{{ monthLabel() }}</span>
+      <p-button icon="pi pi-chevron-right" [text]="true" [rounded]="true" (onClick)="nextMonth()" />
+      <p-button
+        [label]="'SCHEDULE.TODAY' | translate"
+        [text]="true"
+        [disabled]="isThisMonth()"
+        (onClick)="goToday()"
+      />
+    </div>
+
+    @if (activeLocations().length > 0) {
+      <p-select
+        class="team-monthly__location-filter"
+        [options]="locationOptions()"
+        optionLabel="label"
+        optionValue="value"
+        [ngModel]="locationId()"
+        (ngModelChange)="onLocationChange($event)"
+      />
+    }
+  </div>
+
+  <div class="team-monthly__table-wrap">
+    <table class="team-monthly__table">
+      <thead>
+        <tr>
+          <th class="team-monthly__employee-col">{{ 'ROSTER.TEAM_MONTHLY.COL_EMPLOYEE' | translate }}</th>
+          @for (day of days(); track day) {
+            <th class="team-monthly__day-col" [class.team-monthly__day-col--today]="day === todayDay()">
+              {{ day }}
+            </th>
+          }
+          <th class="team-monthly__summary-col">{{ 'ROSTER.TEAM_MONTHLY.COL_SUMMARY' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (employee of employees(); track employee.employeeId) {
+          <tr [class.team-monthly__row--own]="employee.employeeId === currentEmployeeId()">
+            <td class="team-monthly__employee-col">{{ employee.employeeName }}</td>
+            @for (day of days(); track day) {
+              <td
+                class="team-monthly__day-cell"
+                [class.team-monthly__day-cell--today]="day === todayDay()"
+                [class.team-monthly__day-cell--editable]="isRowEditable(employee.employeeId)"
+                (click)="onCellClick(employee, day, null)"
+              >
+                @for (entry of dayEntries(employee, day); track entry.rosterEntryId) {
+                  <span
+                    class="team-monthly__entry"
+                    [class.team-monthly__entry--absence]="entry.isAbsence"
+                    [style.background]="entry.rosterTypeColorHex ?? 'var(--olive-gold)'"
+                    [title]="entryTooltip(entry)"
+                    (click)="onCellClick(employee, day, entry.rosterEntryId); $event.stopPropagation()"
+                  >
+                    {{ entryLabel(entry) }}
+                  </span>
+                }
+              </td>
+            }
+            <td class="team-monthly__summary-cell" [title]="rowSummaryTooltip(employee)">
+              <strong>{{ employee.totalWorkHours }}h</strong>
+              @if (employee.absenceDaysByType.length > 0) {
+                <span class="team-monthly__summary-absence-badge">
+                  <i class="pi pi-info-circle"></i>
+                </span>
+              }
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td [attr.colspan]="days().length + 2" class="team-monthly__empty">
+              {{ 'ROSTER.TEAM_MONTHLY.EMPTY' | translate }}
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</div>

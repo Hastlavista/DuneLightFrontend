@@ -1,0 +1,36 @@
+<p-tabs [value]="initialTab">
+  <p-tablist>
+    <p-tab value="team">{{ 'ROSTER.TEAM_MONTHLY.TAB_LABEL' | translate }}</p-tab>
+    <p-tab value="personal">{{ 'ROSTER.PERSONAL.TAB_LABEL' | translate }}</p-tab>
+  </p-tablist>
+  <p-tabpanels>
+    <p-tabpanel value="team">
+      <app-roster-team-monthly
+        [currentEmployeeId]="currentEmployeeId()"
+        [isAdmin]="isAdmin()"
+        [activeLocations]="activeLocations()"
+        (cellClick)="onTeamCellClick($event)"
+      />
+    </p-tabpanel>
+    <p-tabpanel value="personal">
+      <app-roster-personal
+        [allowEmployeePicker]="false"
+        [currentEmployeeId]="currentEmployeeId()"
+        [employees]="activeEmployees()"
+        (add)="onPersonalAdd($event)"
+        (edit)="onPersonalEdit($event)"
+      />
+    </p-tabpanel>
+  </p-tabpanels>
+</p-tabs>
+
+<app-roster-entry-form-dialog
+  [(visible)]="dialogVisible"
+  [entry]="editingEntry()"
+  [initial]="dialogInitial()"
+  [employees]="activeEmployees()"
+  [rosterTypes]="activeRosterTypes()"
+  [isAdminRole]="isAdmin()"
+  [currentEmployeeId]="currentEmployeeId()"
+  (saved)="onDialogSaved()"
+/>

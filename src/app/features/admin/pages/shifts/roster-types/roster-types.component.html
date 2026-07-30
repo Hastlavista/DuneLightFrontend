@@ -1,0 +1,95 @@
+<div class="dl-card roster-types-page">
+  <app-list-toolbar
+    [newLabelKey]="'ROSTER.TYPES.NEW'"
+    [search]="search()"
+    [showInactive]="showInactive()"
+    (searchChange)="onSearchChange($event)"
+    (showInactiveChange)="onShowInactiveChange($event)"
+    (create)="openCreate()"
+  />
+
+  <p-table
+    #dt
+    [value]="items()"
+    [lazy]="true"
+    (onLazyLoad)="onLazyLoad($event)"
+    [paginator]="true"
+    [rows]="rows()"
+    [totalRecords]="totalCount()"
+    [loading]="loading()"
+    [rowsPerPageOptions]="[20, 50, 100, 200]"
+    dataKey="id"
+    responsiveLayout="scroll"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>{{ 'ROSTER.TYPES.COL_NAME' | translate }}</th>
+        <th>{{ 'ROSTER.TYPES.COL_COLOR' | translate }}</th>
+        <th>{{ 'ROSTER.TYPES.COL_COUNTS_AS_WORK' | translate }}</th>
+        <th>{{ 'ROSTER.TYPES.COL_IS_ABSENCE' | translate }}</th>
+        <th>{{ 'COMMON.COL_STATUS' | translate }}</th>
+        <th class="roster-types-page__actions-col"></th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-type>
+      <tr [class.roster-types-page__row--inactive]="!type.isActive">
+        <td>{{ type.name }}</td>
+        <td><app-color-swatch [colorHex]="type.colorHex" /></td>
+        <td>{{ (type.countsAsWork ? 'COMMON.YES' : 'COMMON.NO') | translate }}</td>
+        <td>{{ (type.isAbsence ? 'COMMON.YES' : 'COMMON.NO') | translate }}</td>
+        <td><app-status-tag [active]="type.isActive" /></td>
+        <td class="roster-types-page__actions">
+          <p-button
+            icon="pi pi-pencil"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'COMMON.EDIT' | translate"
+            [title]="'COMMON.EDIT' | translate"
+            (onClick)="openEdit(type)"
+          />
+          @if (type.isActive) {
+            <p-button
+              icon="pi pi-eye-slash"
+              severity="warn"
+              [text]="true"
+              [rounded]="true"
+              [ariaLabel]="'COMMON.DEACTIVATE' | translate"
+              [title]="'COMMON.DEACTIVATE' | translate"
+              (onClick)="confirmDeactivate(type)"
+            />
+          } @else {
+            <p-button
+              icon="pi pi-eye"
+              severity="success"
+              [text]="true"
+              [rounded]="true"
+              [ariaLabel]="'COMMON.ACTIVATE' | translate"
+              [title]="'COMMON.ACTIVATE' | translate"
+              (onClick)="activate(type)"
+            />
+          }
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'COMMON.DELETE' | translate"
+            [title]="'COMMON.DELETE' | translate"
+            (onClick)="confirmDelete(type)"
+          />
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="6" class="roster-types-page__empty">
+          {{ 'ROSTER.TYPES.EMPTY' | translate }}
+        </td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<app-roster-type-form-dialog [(visible)]="dialogVisible" [rosterType]="editingType()" (saved)="onSaved()" />

@@ -1,0 +1,42 @@
+@if (group(); as group) {
+  <div class="dl-card trainer-group-detail__header">
+    <h2>{{ group.name }}</h2>
+    <p-button
+      [text]="true"
+      severity="secondary"
+      icon="pi pi-arrow-left"
+      [label]="'GROUPS.BACK_TO_LIST' | translate"
+      (onClick)="onBack()"
+    />
+  </div>
+
+  <div class="dl-card trainer-group-detail__basic">
+    <h3>{{ 'GROUPS.SECTION_BASIC' | translate }}</h3>
+    <div class="trainer-group-detail__info-row">
+      <span class="trainer-group-detail__info-label">{{ 'GROUPS.FIELD_SERVICE' | translate }}</span>
+      <span>{{ group.serviceName }}</span>
+    </div>
+    <div class="trainer-group-detail__info-row">
+      <span class="trainer-group-detail__info-label">{{ 'GROUPS.FIELD_LOCATION' | translate }}</span>
+      <span>{{ group.locationName }}</span>
+    </div>
+    <div class="trainer-group-detail__info-row">
+      <span class="trainer-group-detail__info-label">{{ 'GROUPS.FIELD_CAPACITY' | translate }}</span>
+      <span>{{ group.activeMemberCount }}/{{ group.capacity }}</span>
+    </div>
+    <div class="trainer-group-detail__info-row">
+      <span class="trainer-group-detail__info-label">{{ 'GROUPS.FIELD_TRAINER' | translate }}</span>
+      <span>{{ group.defaultTrainerName || ('GROUPS.NO_TRAINER' | translate) }}</span>
+    </div>
+    @if (group.note) {
+      <div class="trainer-group-detail__info-row">
+        <span class="trainer-group-detail__info-label">{{ 'GROUPS.FIELD_NOTE' | translate }}</span>
+        <span>{{ group.note }}</span>
+      </div>
+    }
+  </div>
+
+  <app-admin-group-slots-section [group]="group" [readOnly]="true" />
+  <app-admin-group-members-section [group]="group" [readOnly]="true" />
+  <app-admin-group-appointments-section [group]="group" />
+}

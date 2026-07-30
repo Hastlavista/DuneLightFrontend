@@ -1,0 +1,22 @@
+.today-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.25rem;
+
+  &__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  &__filter {
+    min-width: 12rem;
+  }
+
+  &__new-appointment {
+    margin-left: auto;
+  }
+}

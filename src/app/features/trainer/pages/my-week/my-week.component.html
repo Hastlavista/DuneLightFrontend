@@ -1,0 +1,37 @@
+<div class="my-week-page">
+  <div class="dl-card my-week-page__toolbar">
+    <p-button icon="pi pi-plus" [label]="'SCHEDULE.LOG_APPOINTMENT_BUTTON' | translate" (onClick)="openNewAppointment()" />
+  </div>
+
+  <app-schedule-week-grid
+    #weekGrid
+    [employeeId]="currentEmployeeId()"
+    (appointmentClicked)="onAppointmentClicked($event)"
+    (emptySlotClick)="onEmptySlotClick($event)"
+  />
+</div>
+
+<app-appointment-detail-dialog
+  [(visible)]="detailVisible"
+  [appointmentId]="detailAppointmentId()"
+  [employees]="[]"
+  [locations]="activeLocations()"
+  [allowEmployeeChange]="false"
+  (saved)="refreshGrid()"
+/>
+
+<app-group-attendance-dialog
+  [visible]="attendanceDialogVisible()"
+  (visibleChange)="onAttendanceVisibleChange($event)"
+  [group]="attendanceGroup()"
+  [appointment]="attendanceAppointment()"
+/>
+
+<app-new-appointment-dialog
+  [(visible)]="newAppointmentVisible"
+  [employees]="activeEmployees()"
+  [locations]="activeLocations()"
+  [services]="activeServices()"
+  [initial]="newAppointmentInitial()"
+  (created)="refreshGrid()"
+/>

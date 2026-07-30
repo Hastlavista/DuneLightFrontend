@@ -1,0 +1,148 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '30rem' }"
+  [header]="(isEditMode() ? 'ROSTER.ENTRY_FORM.EDIT_TITLE' : 'ROSTER.ENTRY_FORM.NEW_TITLE') | translate"
+  (onShow)="onDialogShow()"
+>
+  @if (dialogShown()) {
+  <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+    <div class="dl-form__field">
+      <label for="roster-entry-employee">{{ 'ROSTER.ENTRY_FORM.FIELD_EMPLOYEE' | translate }}</label>
+      @if (employeeLocked()) {
+        <div id="roster-entry-employee" class="dl-form__static-value">{{ lockedEmployeeName() }}</div>
+      } @else {
+        <p-select
+          id="roster-entry-employee"
+          fluid
+          appendTo="body"
+          formControlName="employeeId"
+          [options]="employeeOptions()"
+          optionLabel="label"
+          optionValue="value"
+        />
+      }
+      @if (form.controls.employeeId.invalid && form.controls.employeeId.touched) {
+        <span class="dl-form__error">{{ 'ROSTER.ENTRY_FORM.ERRORS.EMPLOYEE_REQUIRED' | translate }}</span>
+      }
+    </div>
+
+    <div class="dl-form__field">
+      <label for="roster-entry-type">{{ 'ROSTER.ENTRY_FORM.FIELD_TYPE' | translate }}</label>
+      <p-select
+        id="roster-entry-type"
+        fluid
+        appendTo="body"
+        formControlName="rosterTypeId"
+        [options]="rosterTypeOptions()"
+        optionLabel="label"
+        optionValue="value"
+        [placeholder]="'ROSTER.ENTRY_FORM.FIELD_TYPE_PLACEHOLDER' | translate"
+      />
+      @if (form.controls.rosterTypeId.invalid && form.controls.rosterTypeId.touched) {
+        <span class="dl-form__error">{{ 'ROSTER.ENTRY_FORM.ERRORS.TYPE_REQUIRED' | translate }}</span>
+      }
+    </div>
+
+    @if (isAbsenceShape()) {
+      <div class="dl-form__row">
+        <div class="dl-form__field">
+          <label for="roster-entry-date-from">{{ 'ROSTER.ENTRY_FORM.FIELD_DATE_FROM' | translate }}</label>
+          <p-datepicker
+            id="roster-entry-date-from"
+            fluid
+            appendTo="body"
+            formControlName="dateFrom"
+            dateFormat="dd.mm.yy"
+            [showIcon]="true"
+          />
+          @if (form.controls.dateFrom.invalid && form.controls.dateFrom.touched) {
+            <span class="dl-form__error">{{ 'ROSTER.ENTRY_FORM.ERRORS.DATE_FROM_REQUIRED' | translate }}</span>
+          }
+        </div>
+
+        <div class="dl-form__field">
+          <label for="roster-entry-date-to">{{ 'ROSTER.ENTRY_FORM.FIELD_DATE_TO' | translate }}</label>
+          <p-datepicker
+            id="roster-entry-date-to"
+            fluid
+            appendTo="body"
+            formControlName="dateTo"
+            dateFormat="dd.mm.yy"
+            [showIcon]="true"
+            [showClear]="true"
+            [placeholder]="'ROSTER.ENTRY_FORM.FIELD_DATE_TO_PLACEHOLDER' | translate"
+          />
+        </div>
+      </div>
+      <span class="dl-form__hint">{{ 'ROSTER.ENTRY_FORM.DATE_TO_OPEN_HINT' | translate }}</span>
+    } @else {
+      <div class="dl-form__field">
+        <label for="roster-entry-date-from">{{ 'ROSTER.ENTRY_FORM.FIELD_DATE' | translate }}</label>
+        <p-datepicker
+          id="roster-entry-date-from"
+          fluid
+          appendTo="body"
+          formControlName="dateFrom"
+          dateFormat="dd.mm.yy"
+          [showIcon]="true"
+        />
+        @if (form.controls.dateFrom.invalid && form.controls.dateFrom.touched) {
+          <span class="dl-form__error">{{ 'ROSTER.ENTRY_FORM.ERRORS.DATE_FROM_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <div class="dl-form__row">
+        <div class="dl-form__field">
+          <label for="roster-entry-start-time">{{ 'ROSTER.ENTRY_FORM.FIELD_START_TIME' | translate }}</label>
+          <p-datepicker
+            id="roster-entry-start-time"
+            fluid
+            appendTo="body"
+            formControlName="startTime"
+            [timeOnly]="true"
+            hourFormat="24"
+            [showIcon]="true"
+          />
+          @if (form.controls.startTime.invalid && form.controls.startTime.touched) {
+            <span class="dl-form__error">{{ 'ROSTER.ENTRY_FORM.ERRORS.TIME_REQUIRED' | translate }}</span>
+          }
+        </div>
+
+        <div class="dl-form__field">
+          <label for="roster-entry-end-time">{{ 'ROSTER.ENTRY_FORM.FIELD_END_TIME' | translate }}</label>
+          <p-datepicker
+            id="roster-entry-end-time"
+            fluid
+            appendTo="body"
+            formControlName="endTime"
+            [timeOnly]="true"
+            hourFormat="24"
+            [showIcon]="true"
+          />
+        </div>
+      </div>
+    }
+
+    <div class="dl-form__field">
+      <label for="roster-entry-note">{{ 'ROSTER.ENTRY_FORM.FIELD_NOTE' | translate }}</label>
+      <textarea id="roster-entry-note" pTextarea fluid rows="2" formControlName="note"></textarea>
+    </div>
+
+    @if (localError()) {
+      <span class="dl-form__error">{{ localError() }}</span>
+    }
+
+    <div class="dl-form__actions">
+      <p-button
+        type="button"
+        [text]="true"
+        severity="secondary"
+        [label]="'COMMON.CANCEL' | translate"
+        (onClick)="onCancel()"
+      />
+      <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+    </div>
+  </form>
+  }
+</p-dialog>

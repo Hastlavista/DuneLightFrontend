@@ -1,0 +1,72 @@
+<div class="today-page">
+  <div class="dl-card today-page__toolbar">
+    <p-select
+      class="today-page__filter"
+      [options]="statusFilterOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="statusFilter()"
+      (ngModelChange)="statusFilter.set($event)"
+    />
+    <p-select
+      class="today-page__filter"
+      [options]="serviceCategoryFilterOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="serviceCategoryFilter()"
+      (ngModelChange)="serviceCategoryFilter.set($event)"
+    />
+    <p-select
+      class="today-page__filter"
+      [options]="serviceFilterOptions()"
+      optionLabel="label"
+      optionValue="value"
+      [ngModel]="serviceFilter()"
+      (ngModelChange)="serviceFilter.set($event)"
+    />
+
+    <p-button
+      class="today-page__new-appointment"
+      icon="pi pi-plus"
+      [label]="'SCHEDULE.LOG_APPOINTMENT_BUTTON' | translate"
+      (onClick)="openNewAppointment()"
+    />
+  </div>
+
+  <app-schedule-legend [categories]="activeServiceCategories()" />
+
+  <app-admin-schedule-day-grid
+    #dayGrid
+    [employees]="employeeColumns()"
+    [statusFilter]="statusFilter()"
+    [serviceCategoryFilter]="serviceCategoryFilter()"
+    [serviceFilter]="serviceFilter()"
+    (appointmentClicked)="onAppointmentClicked($event)"
+    (emptySlotClick)="onEmptySlotClick($event)"
+  />
+</div>
+
+<app-appointment-detail-dialog
+  [(visible)]="detailVisible"
+  [appointmentId]="detailAppointmentId()"
+  [employees]="activeEmployees()"
+  [locations]="activeLocations()"
+  [allowEmployeeChange]="true"
+  (saved)="refreshGrid()"
+/>
+
+<app-group-attendance-dialog
+  [visible]="attendanceDialogVisible()"
+  (visibleChange)="onAttendanceVisibleChange($event)"
+  [group]="attendanceGroup()"
+  [appointment]="attendanceAppointment()"
+/>
+
+<app-new-appointment-dialog
+  [(visible)]="newAppointmentVisible"
+  [employees]="activeEmployees()"
+  [locations]="activeLocations()"
+  [services]="activeServices()"
+  [initial]="newAppointmentInitial()"
+  (created)="refreshGrid()"
+/>

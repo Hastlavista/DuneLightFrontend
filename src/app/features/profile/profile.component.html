@@ -1,0 +1,78 @@
+<div class="profile-page">
+  <div class="dl-card profile-page__section">
+    <h2>{{ 'PROFILE.SECTION_INFO' | translate }}</h2>
+    <div class="profile-page__info-row">
+      <span class="profile-page__info-label">{{ 'PROFILE.FIELD_NAME' | translate }}</span>
+      <span>{{ displayName() }}</span>
+    </div>
+    <div class="profile-page__info-row">
+      <span class="profile-page__info-label">{{ 'PROFILE.FIELD_ROLE' | translate }}</span>
+      <span>{{ roleLabelKey() | translate }}</span>
+    </div>
+    @if (locationNames().length > 0) {
+      <div class="profile-page__info-row">
+        <span class="profile-page__info-label">{{ 'PROFILE.FIELD_LOCATIONS' | translate }}</span>
+        <span>{{ locationNames().join(', ') }}</span>
+      </div>
+    }
+  </div>
+
+  <div class="dl-card profile-page__section">
+    <h2>{{ 'PROFILE.SECTION_CHANGE_PASSWORD' | translate }}</h2>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="dl-form" novalidate>
+      <div class="dl-form__field">
+        <label for="profile-current-password">{{ 'PROFILE.FIELD_CURRENT_PASSWORD' | translate }}</label>
+        <p-password
+          inputId="profile-current-password"
+          formControlName="currentPassword"
+          autocomplete="current-password"
+          [feedback]="false"
+          [toggleMask]="true"
+          [fluid]="true"
+        />
+        @if (form.controls.currentPassword.invalid && form.controls.currentPassword.touched) {
+          <span class="dl-form__error">{{ 'PROFILE.ERRORS.CURRENT_PASSWORD_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="profile-new-password">{{ 'PROFILE.FIELD_NEW_PASSWORD' | translate }}</label>
+        <p-password
+          inputId="profile-new-password"
+          formControlName="newPassword"
+          autocomplete="new-password"
+          [feedback]="false"
+          [toggleMask]="true"
+          [fluid]="true"
+        />
+        @if (form.controls.newPassword.invalid && form.controls.newPassword.touched) {
+          <span class="dl-form__error">{{ 'PROFILE.ERRORS.NEW_PASSWORD_MIN_LENGTH' | translate }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="profile-confirm-password">{{ 'PROFILE.FIELD_CONFIRM_PASSWORD' | translate }}</label>
+        <p-password
+          inputId="profile-confirm-password"
+          formControlName="confirmPassword"
+          autocomplete="new-password"
+          [feedback]="false"
+          [toggleMask]="true"
+          [fluid]="true"
+        />
+        @if (form.errors?.['mismatch'] && form.controls.confirmPassword.touched) {
+          <span class="dl-form__error">{{ 'PROFILE.ERRORS.PASSWORDS_DO_NOT_MATCH' | translate }}</span>
+        }
+      </div>
+
+      @if (errorMessage()) {
+        <div class="dl-form__error">{{ errorMessage() }}</div>
+      }
+
+      <div class="dl-form__actions">
+        <p-button type="submit" [label]="'PROFILE.SUBMIT' | translate" [loading]="saving()" />
+      </div>
+    </form>
+  </div>
+</div>

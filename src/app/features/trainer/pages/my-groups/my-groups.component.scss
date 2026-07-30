@@ -1,0 +1,18 @@
+.my-groups-page {
+  padding: 1.25rem;
+
+  &__row {
+    cursor: pointer;
+  }
+
+  &__capacity--over {
+    color: var(--red);
+    font-weight: 600;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 2rem 0;
+    color: var(--olive-gold);
+  }
+}
