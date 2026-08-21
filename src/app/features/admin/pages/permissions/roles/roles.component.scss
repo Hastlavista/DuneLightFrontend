@@ -1,8 +1,22 @@
-.categories-page {
+.roles-page {
   padding: 1.25rem;
 
+  &__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  &__search {
+    flex: 1 1 16rem;
+    min-width: 12rem;
+    margin-right: auto;
+  }
+
   &__actions-col {
-    width: 8rem;
+    width: 7rem;
   }
 
   &__actions {
@@ -10,10 +24,6 @@
     align-items: center;
     gap: 0.25rem;
     white-space: nowrap;
-  }
-
-  &__row--inactive {
-    opacity: 0.55;
   }
 
   &__empty {

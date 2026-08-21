@@ -1,0 +1,71 @@
+<div class="login-page">
+  <div class="dl-card login-card">
+    <div class="login-card__brand">
+      <span class="login-card__brand-mark">DL</span>
+      <span class="login-card__brand-name">DuneLight</span>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form" novalidate>
+      <div class="login-form__field">
+        <label for="organizationName">{{ 'AUTH.REGISTER.ORGANIZATION_NAME' | translate }}</label>
+        <input
+          id="organizationName"
+          type="text"
+          pInputText
+          formControlName="organizationName"
+          autocomplete="organization"
+          fluid
+          [placeholder]="'AUTH.REGISTER.ORGANIZATION_NAME_PLACEHOLDER' | translate"
+        />
+        @if (form.controls.organizationName.invalid && form.controls.organizationName.touched) {
+          <span class="login-form__error">{{ 'AUTH.REGISTER.ERRORS.ORGANIZATION_NAME_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <div class="login-form__field">
+        <label for="email">{{ 'AUTH.REGISTER.EMAIL' | translate }}</label>
+        <input
+          id="email"
+          type="email"
+          pInputText
+          formControlName="email"
+          autocomplete="email"
+          fluid
+          [placeholder]="'AUTH.REGISTER.EMAIL_PLACEHOLDER' | translate"
+        />
+        @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+          <span class="login-form__error">{{ 'AUTH.REGISTER.ERRORS.EMAIL_REQUIRED' | translate }}</span>
+        } @else if (form.controls.email.touched && form.controls.email.hasError('email')) {
+          <span class="login-form__error">{{ 'AUTH.REGISTER.ERRORS.EMAIL_INVALID' | translate }}</span>
+        }
+      </div>
+
+      <div class="login-form__field">
+        <label for="password">{{ 'AUTH.REGISTER.PASSWORD' | translate }}</label>
+        <p-password
+          inputId="password"
+          formControlName="password"
+          autocomplete="new-password"
+          [feedback]="true"
+          [toggleMask]="true"
+          [fluid]="true"
+          [placeholder]="'AUTH.REGISTER.PASSWORD_PLACEHOLDER' | translate"
+        />
+        @if (form.controls.password.invalid && form.controls.password.touched) {
+          <span class="login-form__error">{{ 'AUTH.REGISTER.ERRORS.PASSWORD_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      @if (errorMessage()) {
+        <div class="login-form__server-error">{{ errorMessage() }}</div>
+      }
+
+      <p-button type="submit" [label]="'AUTH.REGISTER.SUBMIT' | translate" [loading]="loading()" [fluid]="true" />
+    </form>
+  </div>
+
+  <p class="login-page__switch">
+    {{ 'AUTH.REGISTER.HAVE_ORGANIZATION_PROMPT' | translate }}
+    <a routerLink="/login" class="login-page__switch-link">{{ 'AUTH.REGISTER.HAVE_ORGANIZATION_LINK' | translate }}</a>
+  </p>
+</div>

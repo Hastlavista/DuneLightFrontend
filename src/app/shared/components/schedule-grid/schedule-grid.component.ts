@@ -1,4 +1,5 @@
 import { Component, computed, input, output } from '@angular/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { computeOverlapLayout } from './schedule-grid-layout.util';
 import { ScheduleEmptySlotClickEvent, ScheduleGridCell, ScheduleGridColumn } from './schedule-grid.models';
 
@@ -8,6 +9,7 @@ const DEFAULT_ROW_HEIGHT_PX = 60;
 const DEFAULT_COLUMN_WIDTH_PX = 160;
 const MIN_CELL_HEIGHT_PX = 18;
 const SNAP_MINUTES = 15;
+const QUARTERS_PER_HOUR = 4;
 
 type PositionedCell = ScheduleGridCell & {
   topPx: number;
@@ -37,6 +39,7 @@ function snapTo(value: number, step: number): number {
  */
 @Component({
   selector: 'app-schedule-grid',
+  imports: [TranslatePipe],
   templateUrl: './schedule-grid.component.html',
   styleUrl: './schedule-grid.component.scss',
 })
@@ -60,6 +63,20 @@ export class ScheduleGridComponent {
   });
 
   readonly totalHeightPx = computed(() => (this.endHour() - this.startHour()) * this.rowHeightPx());
+
+  readonly quarterRowHeightPx = computed(() => this.rowHeightPx() / QUARTERS_PER_HOUR);
+
+  /** One entry per 15-minute line within the visible hour range, so the grid
+   * can show a faint tick at :15/:30/:45 alongside the clear line at :00 -
+   * makes it easier to eyeball where a non-full-hour appointment lands. */
+  readonly quarterLines = computed<{ isHourBoundary: boolean }[]>(() => {
+    const totalQuarters = (this.endHour() - this.startHour()) * QUARTERS_PER_HOUR;
+    const result: { isHourBoundary: boolean }[] = [];
+    for (let i = 0; i < totalQuarters; i++) {
+      result.push({ isHourBoundary: (i + 1) % QUARTERS_PER_HOUR === 0 });
+    }
+    return result;
+  });
 
   readonly cellsByColumn = computed<Map<string, PositionedCell[]>>(() => {
     const pxPerMinute = this.rowHeightPx() / 60;

@@ -1,3 +1,5 @@
+import { ServiceExecutionMode } from './service.model';
+
 /** Status values exactly as the backend sends/accepts them. Use these
  * everywhere in logic - never a display label. */
 export type AppointmentStatus = 'Scheduled' | 'Completed' | 'Cancelled' | 'NoShow';
@@ -33,13 +35,16 @@ export function appointmentStatusSeverity(status: AppointmentStatus): 'info' | '
  * routing can branch on it without a later rewrite. */
 export type AppointmentForm = 'Individual' | 'Group';
 
-/** GET /api/appointments/schedule - one row of the flat (non-paged) array.
- * Backend omits null/absent fields from the JSON entirely rather than sending
- * an explicit null (see core/utils/date.util.ts's PlusSafeUrlCodec note for the
- * same convention elsewhere) - fields that can be absent are typed with `?`,
- * never `| null`. `form`/`groupName`/`attendanceCount`/`expectedCount` are
- * forward-looking - always absent today since every appointment is
- * Individual, but the schedule grid already renders them when present. */
+/** GET /api/appointments/schedule - one entry of `ScheduleFeedDto.appointments`
+ * (frontend #22 - the endpoint used to return this as a bare flat array; see
+ * ScheduleFeedDto in core/models/schedule-break.model.ts for the current
+ * envelope). Backend omits null/absent fields from the JSON entirely rather
+ * than sending an explicit null (see core/utils/date.util.ts's
+ * PlusSafeUrlCodec note for the same convention elsewhere) - fields that can
+ * be absent are typed with `?`, never `| null`. `form`/`groupName`/
+ * `attendanceCount`/`expectedCount` are forward-looking - always absent today
+ * since every appointment is Individual, but the schedule grid already
+ * renders them when present. */
 export interface AppointmentScheduleCellDto {
   id: string;
   startsAt: string;
@@ -49,9 +54,15 @@ export interface AppointmentScheduleCellDto {
   serviceCategoryColorHex?: string;
   employeeId: string;
   employeeName: string;
-  locationId: string;
-  locationName: string;
+  companyId: string;
+  companyName: string;
   clientNames: string[];
+  /** Index-aligned with `clientNames` - NOT sent by the backend yet (requested
+   * for the birthday marker in schedule-cell-view.util.ts, which needs a
+   * reliable id to match against GET /api/clients/birthdays instead of
+   * matching on name, since two clients can share a name). Frontend treats
+   * this as absent until the backend adds it - see toScheduleGridCell. */
+  clientIds?: string[];
   status: AppointmentStatus;
   isCancelled: boolean;
   form?: AppointmentForm;
@@ -92,8 +103,8 @@ export interface AppointmentDto {
   serviceCategoryColorHex?: string;
   employeeId: string;
   employeeName: string;
-  locationId: string;
-  locationName: string;
+  companyId: string;
+  companyName: string;
   status: AppointmentStatus;
   isCancelled: boolean;
   form?: AppointmentForm;
@@ -116,16 +127,16 @@ export interface AppointmentDto {
 export interface AppointmentScheduleQuery {
   from: string;
   to: string;
-  locationId?: string | null;
+  companyId?: string | null;
   employeeId?: string | null;
   serviceId?: string | null;
-  serviceCategoryId?: string | null;
+  executionMode?: ServiceExecutionMode | null;
   status?: AppointmentStatus | null;
 }
 
 /** Body for PATCH /api/appointments/{id}/move - a dedicated partial-update
  * endpoint, deliberately NOT a full PUT. Sent by AppointmentDetailDialogComponent's
- * edit form. `startsAt`/`locationId` are always sent; `employeeId` is only
+ * edit form. `startsAt`/`companyId` are always sent; `employeeId` is only
  * included when the dialog's `allowEmployeeChange` is set (grid A - see
  * ScheduleDayGridComponent - but not grid B's ScheduleWeekGridComponent, whose
  * trainer is already fixed by the grid). Every field left off this request is
@@ -133,7 +144,7 @@ export interface AppointmentScheduleQuery {
 export interface AppointmentMoveRequest {
   startsAt: string;
   employeeId?: string;
-  locationId?: string;
+  companyId?: string;
 }
 
 /** Payment method values exactly as the backend sends/accepts them. */
@@ -185,7 +196,7 @@ export interface AppointmentCreateRequest {
   startsAt: string;
   serviceId: string;
   employeeId: string;
-  locationId: string;
+  companyId: string;
   clientIds: string[];
   amount?: number | null;
   note?: string | null;
@@ -209,7 +220,7 @@ export interface RecurringAppointmentCreateRequest {
   recurrenceType: RecurrenceType;
   serviceId: string;
   employeeId: string;
-  locationId: string;
+  companyId: string;
   clientIds: string[];
   firstOccurrenceStartsAt: string;
   endDate: string;
@@ -224,17 +235,57 @@ export interface AppointmentCancelRequest {
   returnEntryForClientIds: string[];
 }
 
-/** Why one date in a POST /recurring request collided - see RecurringConflictDetail. */
-export type RecurringConflictReason = 'EXISTING_APPOINTMENT' | 'ROSTER_ABSENCE';
+/** Why one date in a POST /recurring request collided - see RecurringConflictDetail.
+ * `OUTSIDE_WORKING_HOURS` (frontend #16) means the occurrence falls outside the
+ * employee's or location's WorkingHoursTemplate - see core/models/working-hours.model.ts.
+ * `EXISTING_SCHEDULE_BREAK` (frontend #22) means the occurrence collides with a
+ * trainer's break - returned by both POST /appointments/recurring and POST
+ * /schedule-breaks/recurring, the same reason list is shared by both series
+ * endpoints. */
+export type RecurringConflictReason =
+  'EXISTING_APPOINTMENT' | 'ROSTER_ABSENCE' | 'OUTSIDE_WORKING_HOURS' | 'EXISTING_SCHEDULE_BREAK';
 
 const RECURRING_CONFLICT_REASON_TRANSLATION_KEYS: Record<RecurringConflictReason, string> = {
   EXISTING_APPOINTMENT: 'SCHEDULE.RECURRING_CONFLICT_REASONS.EXISTING_APPOINTMENT',
   ROSTER_ABSENCE: 'SCHEDULE.RECURRING_CONFLICT_REASONS.ROSTER_ABSENCE',
+  OUTSIDE_WORKING_HOURS: 'SCHEDULE.RECURRING_CONFLICT_REASONS.OUTSIDE_WORKING_HOURS',
+  EXISTING_SCHEDULE_BREAK: 'SCHEDULE.RECURRING_CONFLICT_REASONS.EXISTING_SCHEDULE_BREAK',
 };
 
 export function recurringConflictReasonTranslationKey(reason: RecurringConflictReason): string {
   return RECURRING_CONFLICT_REASON_TRANSLATION_KEYS[reason];
 }
+
+/** One free time range within GET /api/appointments/available-slots's per-employee
+ * `slots` array (frontend #24) - TimeSpan strings ("HH:mm:ss"), same format as
+ * WorkingHoursIntervalDto/AvailabilityIntervalDto. */
+export interface AvailableSlotDto {
+  start: string;
+  end: string;
+}
+
+/** One entry of GET /api/appointments/available-slots's response array - one row
+ * per employee qualified for the requested service at the requested location,
+ * even when they have no free slots that day (`slots: []` - filter those out
+ * client-side, see AvailableSlotsSliderComponent). Busyness is resolved across
+ * ALL of the employee's locations, not just the requested one, so a trainer
+ * working two locations never shows up free here when they're actually booked
+ * at their other location. */
+export interface EmployeeAvailableSlotsDto {
+  employeeId: string;
+  employeeName: string;
+  colorHex: string | null;
+  slots: AvailableSlotDto[];
+}
+
+/** GET /api/appointments/available-slots?serviceId=&companyId=&date=&employeeId=
+ * (frontend #24, last item on the feature list) - `employeeId` is optional and
+ * only used to narrow to one trainer (Member role locked to themselves via
+ * CurrentEmployeeService); omitted, every qualified employee at the location is
+ * returned. Powers NewAppointmentDialog's "slobodni termini" slider, a
+ * time-saving shortcut that pre-fills the trainer/time fields - the manual
+ * fields stay fully usable alongside it either way. */
+export type AvailableSlotsResponseDto = EmployeeAvailableSlotsDto[];
 
 /** One colliding date inside a 409 RECURRING_CONFLICT error's
  * `details.conflicts` array - see AppError.details (typed loosely as

@@ -75,4 +75,53 @@
       </div>
     </form>
   </div>
+
+  <div class="dl-card profile-page__section">
+    <h2>{{ (hasPinSet() ? 'PROFILE.SECTION_CHANGE_PIN' : 'PROFILE.SECTION_SET_PIN') | translate }}</h2>
+
+    <form [formGroup]="pinForm" (ngSubmit)="onSubmitPin()" class="dl-form" novalidate>
+      <div class="dl-form__field">
+        <label for="profile-new-pin">{{ 'PROFILE.FIELD_NEW_PIN' | translate }}</label>
+        <input
+          id="profile-new-pin"
+          type="password"
+          pInputText
+          formControlName="newPin"
+          inputmode="numeric"
+          pattern="[0-9]*"
+          maxlength="6"
+          autocomplete="off"
+          fluid
+        />
+        @if (pinForm.controls.newPin.touched && pinForm.controls.newPin.hasError('required')) {
+          <span class="dl-form__error">{{ 'PROFILE.ERRORS.PIN_REQUIRED' | translate }}</span>
+        } @else if (pinForm.controls.newPin.touched && pinForm.controls.newPin.hasError('pattern')) {
+          <span class="dl-form__error">{{ 'PROFILE.ERRORS.PIN_FORMAT' | translate }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="profile-pin-current-password">{{ 'PROFILE.FIELD_CURRENT_PASSWORD' | translate }}</label>
+        <p-password
+          inputId="profile-pin-current-password"
+          formControlName="currentPassword"
+          autocomplete="current-password"
+          [feedback]="false"
+          [toggleMask]="true"
+          [fluid]="true"
+        />
+        @if (pinForm.controls.currentPassword.invalid && pinForm.controls.currentPassword.touched) {
+          <span class="dl-form__error">{{ 'PROFILE.ERRORS.CURRENT_PASSWORD_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      @if (pinErrorMessage()) {
+        <div class="dl-form__error">{{ pinErrorMessage() }}</div>
+      }
+
+      <div class="dl-form__actions">
+        <p-button type="submit" [label]="'PROFILE.SUBMIT_PIN' | translate" [loading]="pinSaving()" />
+      </div>
+    </form>
+  </div>
 </div>

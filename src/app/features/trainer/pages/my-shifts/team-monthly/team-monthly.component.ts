@@ -5,7 +5,12 @@ import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
 import { finalize } from 'rxjs';
 import { LocationDto } from '../../../../../core/models/location.model';
-import { RosterDayEntryDto, TeamMonthlyEmployeeDto } from '../../../../../core/models/roster.model';
+import {
+  RosterDayEntryDto,
+  RosterDaySource,
+  RosterPlannedIntervalDto,
+  TeamMonthlyEmployeeDto,
+} from '../../../../../core/models/roster.model';
 import { RosterEntriesService } from '../../../../../core/services/roster-entries.service';
 import {
   YearMonth,
@@ -128,6 +133,24 @@ export class TeamMonthlyComponent {
     return entry.timeRange ? `${entry.rosterTypeName} ${entry.timeRange}` : entry.rosterTypeName;
   }
 
+  /** `Actual`/`None` render exactly as before (real entries or nothing) -
+   * only `Planned` needs its own rendering path, see plannedIntervals(). */
+  daySource(employee: TeamMonthlyEmployeeDto, day: number): RosterDaySource {
+    return employee.days[day - 1]?.source ?? 'None';
+  }
+
+  plannedIntervals(employee: TeamMonthlyEmployeeDto, day: number): RosterPlannedIntervalDto[] {
+    return employee.days[day - 1]?.plannedIntervals ?? [];
+  }
+
+  plannedLabel(interval: RosterPlannedIntervalDto): string {
+    return `${interval.start.slice(0, 5)}–${interval.end.slice(0, 5)}`;
+  }
+
+  plannedTooltip(interval: RosterPlannedIntervalDto): string {
+    return `${this.translate.instant('ROSTER.PLANNED_LABEL')}: ${this.plannedLabel(interval)}`;
+  }
+
   onCellClick(employee: TeamMonthlyEmployeeDto, day: number, entryId: string | null): void {
     if (!this.isRowEditable(employee.employeeId)) {
       return;
@@ -160,7 +183,7 @@ export class TeamMonthlyComponent {
   private fetch(): void {
     this.loading.set(true);
     this.rosterEntriesService
-      .teamMonthly({ year: this.yearMonth().year, month: this.yearMonth().month, locationId: this.locationId() })
+      .teamMonthly({ year: this.yearMonth().year, month: this.yearMonth().month, companyId: this.locationId() })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe((result) => this.employees.set(result.employees));
   }

@@ -1,0 +1,90 @@
+<div class="working-hours-editor">
+  @if (loading()) {
+    <div class="working-hours-editor__loading">{{ 'WORKING_HOURS.LOADING' | translate }}</div>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+      <div class="dl-form__field">
+        <label for="wh-cycle-type">{{ 'WORKING_HOURS.FIELD_CYCLE_TYPE' | translate }}</label>
+        <p-select
+          id="wh-cycle-type"
+          fluid
+          appendTo="body"
+          formControlName="cycleType"
+          [options]="cycleTypeOptions()"
+          optionLabel="label"
+          optionValue="value"
+        />
+      </div>
+
+      @if (anchorDateIso(); as anchorDate) {
+        <span class="dl-form__hint">{{ 'WORKING_HOURS.ANCHOR_HINT' | translate: { date: (anchorDate | hrDate) } }}</span>
+      }
+
+      <div class="working-hours-editor__weeks">
+        @for (weekGroup of weeksArray.controls; track weekGroup; let weekIndex = $index) {
+          <section class="working-hours-editor__week">
+            @if (weekLabel(form.controls.cycleType.value, weekIndex); as label) {
+              <h4>{{ label }}</h4>
+            }
+
+            @for (day of days; track day) {
+              <div class="working-hours-editor__day-row">
+                <span class="working-hours-editor__day-label">{{ dayLabels()[day] }}</span>
+
+                <div class="working-hours-editor__intervals">
+                  @for (intervalGroup of intervalsFor(weekIndex, day).controls; track intervalGroup; let intervalIndex = $index) {
+                    <div [formGroup]="$any(intervalGroup)" class="working-hours-editor__interval">
+                      <p-datepicker formControlName="startTime" [timeOnly]="true" hourFormat="24" appendTo="body" />
+                      <span>–</span>
+                      <p-datepicker formControlName="endTime" [timeOnly]="true" hourFormat="24" appendTo="body" />
+                      @if (canManage()) {
+                        <p-button
+                          type="button"
+                          icon="pi pi-trash"
+                          severity="danger"
+                          [text]="true"
+                          [rounded]="true"
+                          [ariaLabel]="'WORKING_HOURS.REMOVE_INTERVAL' | translate"
+                          [title]="'WORKING_HOURS.REMOVE_INTERVAL' | translate"
+                          (onClick)="removeInterval(weekIndex, day, intervalIndex)"
+                        />
+                      }
+                      @if ($any(intervalGroup).errors?.['endBeforeStart'] && $any(intervalGroup).touched) {
+                        <span class="dl-form__error">{{ 'WORKING_HOURS.ERRORS.END_BEFORE_START' | translate }}</span>
+                      }
+                    </div>
+                  }
+
+                  @if (intervalsFor(weekIndex, day).controls.length === 0) {
+                    <span class="dl-form__hint">{{ 'WORKING_HOURS.DAY_OFF' | translate }}</span>
+                  }
+
+                  @if (intervalsFor(weekIndex, day).errors?.['overlap']) {
+                    <span class="dl-form__error">{{ 'WORKING_HOURS.ERRORS.OVERLAP' | translate }}</span>
+                  }
+
+                  @if (canManage()) {
+                    <p-button
+                      type="button"
+                      size="small"
+                      [text]="true"
+                      icon="pi pi-plus"
+                      [label]="'WORKING_HOURS.ADD_INTERVAL' | translate"
+                      (onClick)="addInterval(weekIndex, day)"
+                    />
+                  }
+                </div>
+              </div>
+            }
+          </section>
+        }
+      </div>
+
+      @if (canManage()) {
+        <div class="dl-form__actions">
+          <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+        </div>
+      }
+    </form>
+  }
+</div>

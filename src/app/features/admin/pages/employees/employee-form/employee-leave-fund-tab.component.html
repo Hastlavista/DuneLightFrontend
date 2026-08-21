@@ -1,0 +1,115 @@
+<div class="leave-fund-tab">
+  @if (loading()) {
+    <p class="dl-form__hint">{{ 'EMPLOYEES.LEAVE_FUND.LOADING' | translate }}</p>
+  } @else {
+    <section class="employee-form-page__section">
+      <h3>{{ 'EMPLOYEES.LEAVE_FUND.SETTINGS_TITLE' | translate }}</h3>
+
+      @if (!settingsExist()) {
+        <p class="dl-form__hint">{{ 'EMPLOYEES.LEAVE_FUND.NOT_CONFIGURED_HINT' | translate }}</p>
+      }
+
+      <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+        <div class="dl-form__field">
+          <label for="leave-fund-annual-days">{{ 'EMPLOYEES.LEAVE_FUND.FIELD_ANNUAL_DAYS' | translate }}</label>
+          <p-inputnumber id="leave-fund-annual-days" fluid formControlName="annualDays" [showButtons]="true" [min]="0" />
+          @if (form.controls.annualDays.invalid && form.controls.annualDays.touched) {
+            <span class="dl-form__error">{{ 'EMPLOYEES.LEAVE_FUND.ERRORS.ANNUAL_DAYS_REQUIRED' | translate }}</span>
+          }
+        </div>
+
+        <div class="dl-form__field">
+          <label id="leave-fund-renewal-label">{{ 'EMPLOYEES.LEAVE_FUND.FIELD_RENEWAL_DATE' | translate }}</label>
+          <div class="dl-form__row" aria-labelledby="leave-fund-renewal-label">
+            <p-select
+              fluid
+              appendTo="body"
+              formControlName="renewalMonth"
+              [options]="monthOptions()"
+              optionLabel="label"
+              optionValue="value"
+            />
+            <p-select
+              fluid
+              appendTo="body"
+              formControlName="renewalDay"
+              [options]="dayOptions"
+              optionLabel="label"
+              optionValue="value"
+            />
+          </div>
+        </div>
+
+        <div class="dl-form__field">
+          <label id="leave-fund-carryover-label">{{ 'EMPLOYEES.LEAVE_FUND.FIELD_CARRYOVER_EXPIRY_DATE' | translate }}</label>
+          <div class="dl-form__row" aria-labelledby="leave-fund-carryover-label">
+            <p-select
+              fluid
+              appendTo="body"
+              formControlName="carryoverExpiryMonth"
+              [options]="monthOptions()"
+              optionLabel="label"
+              optionValue="value"
+            />
+            <p-select
+              fluid
+              appendTo="body"
+              formControlName="carryoverExpiryDay"
+              [options]="dayOptions"
+              optionLabel="label"
+              optionValue="value"
+            />
+          </div>
+          <span class="dl-form__hint">{{ 'EMPLOYEES.LEAVE_FUND.CARRYOVER_EXPIRY_HINT' | translate }}</span>
+        </div>
+
+        @if (canManage()) {
+          <div class="dl-form__actions">
+            <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+          </div>
+        }
+      </form>
+    </section>
+
+    @if (canViewFunds()) {
+      <section class="employee-form-page__section">
+        <h3>{{ 'EMPLOYEES.LEAVE_FUND.FUNDS_TITLE' | translate }}</h3>
+
+        @if (sortedFunds().length === 0) {
+          <p class="dl-form__hint">{{ 'EMPLOYEES.LEAVE_FUND.FUNDS_EMPTY' | translate }}</p>
+        } @else {
+          <table class="leave-fund-tab__table">
+            <thead>
+              <tr>
+                <th>{{ 'EMPLOYEES.LEAVE_FUND.COL_FUND_YEAR' | translate }}</th>
+                <th>{{ 'EMPLOYEES.LEAVE_FUND.COL_STATUS' | translate }}</th>
+                <th>{{ 'EMPLOYEES.LEAVE_FUND.COL_ALLOCATED' | translate }}</th>
+                <th>{{ 'EMPLOYEES.LEAVE_FUND.COL_USED' | translate }}</th>
+                <th>{{ 'EMPLOYEES.LEAVE_FUND.COL_REMAINING' | translate }}</th>
+                <th>{{ 'EMPLOYEES.LEAVE_FUND.COL_EXPIRES' | translate }}</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (fund of sortedFunds(); track fund.fundYear) {
+                <tr>
+                  <td>{{ fund.fundYear }}</td>
+                  <td>
+                    @if (isCurrentFund(fund)) {
+                      <p-tag severity="info" [value]="'EMPLOYEES.LEAVE_FUND.FUND_CURRENT' | translate" />
+                    } @else {
+                      <p-tag severity="warn" [value]="'EMPLOYEES.LEAVE_FUND.FUND_CARRYOVER' | translate" />
+                    }
+                  </td>
+                  <td>{{ fund.allocatedDays }}</td>
+                  <td>{{ fund.usedDays }}</td>
+                  <td class="leave-fund-tab__remaining">{{ fund.remainingDays }}</td>
+                  <td>{{ fund.expiresAt | hrDate }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </section>
+    }
+  }
+</div>

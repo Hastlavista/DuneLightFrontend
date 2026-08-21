@@ -60,14 +60,14 @@ export interface ClientPackageDto {
 }
 
 /** Body for POST /api/clients/{clientId}/packages. `purchaseDate` empty = now,
- * `paidPrice` empty = resolved from the price list by the backend. `locationId`
+ * `paidPrice` empty = resolved from the price list by the backend. `companyId`
  * is only used server-side to suggest/resolve the price - it is not persisted
  * on the sold package. */
 export interface ClientPackagePurchaseRequest {
   packageId: string;
   purchaseDate: string | null;
   paidPrice: number | null;
-  locationId: string | null;
+  companyId: string | null;
 }
 
 /** Remaining entries a given sold package grants for a specific service - null

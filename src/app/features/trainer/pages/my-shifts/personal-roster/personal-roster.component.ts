@@ -7,7 +7,7 @@ import { DatePicker } from 'primeng/datepicker';
 import { Select } from 'primeng/select';
 import { finalize } from 'rxjs';
 import { EmployeeSummary } from '../../../../../core/models/employee.model';
-import { PersonalRosterDto, RosterEntryDto } from '../../../../../core/models/roster.model';
+import { PersonalRosterDto, RosterEntryDto, RosterPlannedDayDto } from '../../../../../core/models/roster.model';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { RosterEntriesService } from '../../../../../core/services/roster-entries.service';
 import { toEndOfDayIso, toStartOfDayIso } from '../../../../../core/utils/date.util';
@@ -17,6 +17,15 @@ interface EmployeeSelectOption {
   label: string;
   value: string;
 }
+
+/** One row of the merged list (frontend #17) - a real record or a predicted
+ * day, sorted together by date so the table reads as one timeline. Only
+ * `actual` rows are ever edited/deleted; a `planned` row's only action is
+ * "add" (prefilled with its date), which turns it into a real entry on save -
+ * it never had an id to edit or delete in the first place. */
+type PersonalRosterRow =
+  | { kind: 'actual'; date: string; entry: RosterEntryDto }
+  | { kind: 'planned'; date: string; day: RosterPlannedDayDto };
 
 function startOfCurrentMonth(): Date {
   const now = new Date();
@@ -72,6 +81,20 @@ export class PersonalRosterComponent {
   readonly employeeOptions = computed<EmployeeSelectOption[]>(() =>
     this.employees().map((employee) => ({ label: `${employee.firstName} ${employee.lastName}`, value: employee.id })),
   );
+
+  /** Real entries and predicted (today/future, template-backed) days merged
+   * into one date-sorted timeline - `totalWorkHours`/etc. stay untouched
+   * (backend-computed from `entries` only, see PersonalRosterDto's doc), this
+   * is purely a display-level merge. */
+  readonly rows = computed<PersonalRosterRow[]>(() => {
+    const data = this.data();
+    if (!data) {
+      return [];
+    }
+    const actualRows: PersonalRosterRow[] = data.entries.map((entry) => ({ kind: 'actual', date: entry.dateFrom, entry }));
+    const plannedRows: PersonalRosterRow[] = data.plannedDays.map((day) => ({ kind: 'planned', date: day.date, day }));
+    return [...actualRows, ...plannedRows].sort((a, b) => a.date.localeCompare(b.date));
+  });
 
   /** Locked to the viewer's own id unless this page allows picking someone
    * else - and even then, defaults to "self" until they actively pick, since
@@ -151,6 +174,22 @@ export class PersonalRosterComponent {
 
   entryTimeLabel(entry: RosterEntryDto): string {
     return entry.startTime && entry.endTime ? `${entry.startTime.slice(0, 5)} – ${entry.endTime.slice(0, 5)}` : '';
+  }
+
+  plannedTimeLabel(day: RosterPlannedDayDto): string {
+    return day.intervals.map((interval) => `${interval.start.slice(0, 5)} – ${interval.end.slice(0, 5)}`).join(', ');
+  }
+
+  rowKey(row: PersonalRosterRow): string {
+    return row.kind === 'actual' ? `actual:${row.entry.id}` : `planned:${row.date}`;
+  }
+
+  onAddForPlannedDay(day: RosterPlannedDayDto): void {
+    const employeeId = this.effectiveEmployeeId();
+    if (!employeeId) {
+      return;
+    }
+    this.add.emit({ employeeId, date: new Date(day.date) });
   }
 
   private fetch(employeeId: string): void {

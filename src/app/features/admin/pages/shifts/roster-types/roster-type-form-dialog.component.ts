@@ -44,6 +44,7 @@ export class RosterTypeFormDialogComponent {
     countsAsWork: [false],
     isAbsence: [false],
     requiresTime: [false],
+    deductsFromLeaveFund: [false],
     sortOrder: [0],
   });
 
@@ -53,6 +54,18 @@ export class RosterTypeFormDialogComponent {
         this.resetForm(this.rosterType());
       } else {
         this.dialogShown.set(false);
+      }
+    });
+
+    // Mirrors the backend's LEAVE_FUND_TYPE_MUST_BE_ABSENCE rule - turning
+    // "Odsutnost" off while "Troši fond godišnjeg" is on would otherwise send
+    // an invalid combination.
+    this.form.controls.isAbsence.valueChanges.subscribe((isAbsence) => {
+      if (isAbsence) {
+        this.form.controls.deductsFromLeaveFund.enable({ emitEvent: false });
+      } else {
+        this.form.controls.deductsFromLeaveFund.setValue(false, { emitEvent: false });
+        this.form.controls.deductsFromLeaveFund.disable({ emitEvent: false });
       }
     });
   }
@@ -74,6 +87,7 @@ export class RosterTypeFormDialogComponent {
       countsAsWork: raw.countsAsWork,
       isAbsence: raw.isAbsence,
       requiresTime: raw.requiresTime,
+      deductsFromLeaveFund: raw.deductsFromLeaveFund,
       sortOrder: raw.sortOrder,
     };
 
@@ -98,13 +112,21 @@ export class RosterTypeFormDialogComponent {
   }
 
   private resetForm(type: RosterTypeDto | null): void {
+    const isAbsence = type?.isAbsence ?? false;
     this.form.reset({
       name: type?.name ?? '',
       colorHex: type?.colorHex ? type.colorHex.replace('#', '') : DEFAULT_COLOR_NO_HASH,
       countsAsWork: type?.countsAsWork ?? false,
-      isAbsence: type?.isAbsence ?? false,
+      isAbsence,
       requiresTime: type?.requiresTime ?? false,
+      deductsFromLeaveFund: type?.deductsFromLeaveFund ?? false,
       sortOrder: type?.sortOrder ?? 0,
     });
+
+    if (isAbsence) {
+      this.form.controls.deductsFromLeaveFund.enable({ emitEvent: false });
+    } else {
+      this.form.controls.deductsFromLeaveFund.disable({ emitEvent: false });
+    }
   }
 }

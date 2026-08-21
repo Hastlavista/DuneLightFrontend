@@ -1,0 +1,151 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '36rem' }"
+  [header]="'COMPLETE_PROFILE.TITLE' | translate"
+  (onShow)="onDialogShow()"
+  (onHide)="onDialogHide()"
+>
+  @if (dialogShown()) {
+    <p class="dl-form__hint">{{ 'COMPLETE_PROFILE.INTRO' | translate }}</p>
+
+    <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+      <div class="dl-form__row">
+        <div class="dl-form__field">
+          <label for="complete-profile-first-name">{{ 'EMPLOYEES.FIELD_FIRST_NAME' | translate }}</label>
+          <input id="complete-profile-first-name" type="text" pInputText fluid formControlName="firstName" maxlength="255" />
+          @if (form.controls.firstName.invalid && form.controls.firstName.touched) {
+            <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.FIRST_NAME_REQUIRED' | translate }}</span>
+          }
+        </div>
+
+        <div class="dl-form__field">
+          <label for="complete-profile-last-name">{{ 'EMPLOYEES.FIELD_LAST_NAME' | translate }}</label>
+          <input id="complete-profile-last-name" type="text" pInputText fluid formControlName="lastName" maxlength="255" />
+          @if (form.controls.lastName.invalid && form.controls.lastName.touched) {
+            <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.LAST_NAME_REQUIRED' | translate }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="dl-form__row">
+        <div class="dl-form__field">
+          <label for="complete-profile-phone">{{ 'EMPLOYEES.FIELD_PHONE' | translate }}</label>
+          <input id="complete-profile-phone" type="text" pInputText fluid formControlName="phone" />
+        </div>
+
+        <div class="dl-form__field">
+          <label for="complete-profile-email">{{ 'EMPLOYEES.FIELD_EMAIL' | translate }}</label>
+          <input id="complete-profile-email" type="email" pInputText fluid formControlName="email" />
+          <span class="dl-form__hint">{{ 'COMPLETE_PROFILE.EMAIL_HINT' | translate }}</span>
+        </div>
+      </div>
+
+      <div class="dl-form__field">
+        <label for="complete-profile-employment-start">{{ 'EMPLOYEES.FIELD_EMPLOYMENT_START' | translate }}</label>
+        <p-datepicker
+          id="complete-profile-employment-start"
+          fluid
+          appendTo="body"
+          formControlName="employmentStartDate"
+          dateFormat="dd.mm.yy"
+          [showIcon]="true"
+        />
+        @if (form.controls.employmentStartDate.invalid && form.controls.employmentStartDate.touched) {
+          <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.EMPLOYMENT_START_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="complete-profile-engagement-type">{{ 'EMPLOYEES.FIELD_ENGAGEMENT_TYPE' | translate }}</label>
+        <p-select
+          id="complete-profile-engagement-type"
+          fluid
+          appendTo="body"
+          formControlName="engagementTypeId"
+          [options]="engagementTypeOptions()"
+          optionLabel="name"
+          optionValue="id"
+          [placeholder]="'EMPLOYEES.FIELD_ENGAGEMENT_TYPE_PLACEHOLDER' | translate"
+        />
+        @if (form.controls.engagementTypeId.invalid && form.controls.engagementTypeId.touched) {
+          <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.ENGAGEMENT_TYPE_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="complete-profile-locations">{{ 'EMPLOYEES.FIELD_LOCATIONS' | translate }}</label>
+        <p-multiselect
+          id="complete-profile-locations"
+          fluid
+          appendTo="body"
+          display="chip"
+          formControlName="locationIds"
+          [options]="locationOptions()"
+          optionLabel="name"
+          optionValue="id"
+          [placeholder]="'EMPLOYEES.FIELD_LOCATIONS_PLACEHOLDER' | translate"
+        />
+        @if (form.controls.locationIds.invalid && form.controls.locationIds.touched) {
+          <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.LOCATIONS_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="complete-profile-primary-location">{{ 'EMPLOYEES.FIELD_PRIMARY_LOCATION' | translate }}</label>
+        <p-select
+          id="complete-profile-primary-location"
+          fluid
+          appendTo="body"
+          formControlName="primaryLocationId"
+          [options]="primaryLocationOptions()"
+          optionLabel="name"
+          optionValue="id"
+          [placeholder]="'EMPLOYEES.FIELD_PRIMARY_LOCATION_PLACEHOLDER' | translate"
+        />
+        @if (form.errors?.['primaryNotSelected'] && form.controls.primaryLocationId.touched) {
+          <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.PRIMARY_LOCATION_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="complete-profile-services">{{ 'EMPLOYEES.FIELD_SERVICES' | translate }}</label>
+        <p-multiselect
+          id="complete-profile-services"
+          fluid
+          appendTo="body"
+          display="chip"
+          formControlName="serviceIds"
+          [options]="serviceOptions()"
+          optionLabel="name"
+          optionValue="id"
+          [placeholder]="'EMPLOYEES.FIELD_SERVICES_PLACEHOLDER' | translate"
+        />
+        <span class="dl-form__hint">{{ 'EMPLOYEES.SERVICES_EMPTY_HINT' | translate }}</span>
+      </div>
+
+      <div class="dl-form__row">
+        <div class="dl-form__field">
+          <label for="complete-profile-color">{{ 'EMPLOYEES.FIELD_COLOR' | translate }}</label>
+          <p-colorpicker id="complete-profile-color" formControlName="colorHex" appendTo="body" />
+        </div>
+
+        <div class="dl-form__field">
+          <label for="complete-profile-sort-order">{{ 'EMPLOYEES.FIELD_SORT_ORDER' | translate }}</label>
+          <p-inputnumber id="complete-profile-sort-order" fluid formControlName="sortOrder" [showButtons]="true" />
+        </div>
+      </div>
+
+      <div class="dl-form__actions">
+        <p-button
+          type="button"
+          [text]="true"
+          severity="secondary"
+          [label]="'COMMON.CANCEL' | translate"
+          (onClick)="onCancel()"
+        />
+        <p-button type="submit" [label]="'COMPLETE_PROFILE.SAVE_BUTTON' | translate" [loading]="saving()" />
+      </div>
+    </form>
+  }
+</p-dialog>

@@ -10,11 +10,11 @@
     />
     <p-select
       class="today-page__filter"
-      [options]="serviceCategoryFilterOptions()"
+      [options]="executionModeFilterOptions()"
       optionLabel="label"
       optionValue="value"
-      [ngModel]="serviceCategoryFilter()"
-      (ngModelChange)="serviceCategoryFilter.set($event)"
+      [ngModel]="executionModeFilter()"
+      (ngModelChange)="executionModeFilter.set($event)"
     />
     <p-select
       class="today-page__filter"
@@ -31,17 +31,26 @@
       [label]="'SCHEDULE.LOG_APPOINTMENT_BUTTON' | translate"
       (onClick)="openNewAppointment()"
     />
+    <p-button
+      class="today-page__new-break"
+      [outlined]="true"
+      icon="pi pi-pause"
+      [label]="'SCHEDULE.BREAK.NEW_BUTTON' | translate"
+      (onClick)="openNewBreak()"
+    />
   </div>
 
-  <app-schedule-legend [categories]="activeServiceCategories()" />
+  <app-schedule-legend [services]="activeServices()" />
 
   <app-admin-schedule-day-grid
     #dayGrid
     [employees]="employeeColumns()"
     [statusFilter]="statusFilter()"
-    [serviceCategoryFilter]="serviceCategoryFilter()"
+    [executionModeFilter]="executionModeFilter()"
     [serviceFilter]="serviceFilter()"
+    [activeLocations]="activeLocations()"
     (appointmentClicked)="onAppointmentClicked($event)"
+    (breakClicked)="onBreakClicked($event)"
     (emptySlotClick)="onEmptySlotClick($event)"
   />
 </div>
@@ -68,5 +77,19 @@
   [locations]="activeLocations()"
   [services]="activeServices()"
   [initial]="newAppointmentInitial()"
+  (created)="refreshGrid()"
+/>
+
+<app-schedule-break-dialog
+  [(visible)]="breakDetailVisible"
+  [breakId]="selectedBreakId()"
+  (saved)="refreshGrid()"
+/>
+
+<app-schedule-break-form-dialog
+  [(visible)]="newBreakVisible"
+  [employees]="activeEmployees()"
+  [locations]="activeLocations()"
+  [initial]="newBreakInitial()"
   (created)="refreshGrid()"
 />

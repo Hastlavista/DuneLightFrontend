@@ -1,0 +1,23 @@
+@if (shouldShow()) {
+  <div class="dl-card complete-profile-cta">
+    <i class="pi pi-info-circle complete-profile-cta__icon"></i>
+    <div class="complete-profile-cta__text">
+      <strong>{{ 'COMPLETE_PROFILE.CTA_TITLE' | translate }}</strong>
+      @if (prerequisitesMissing()) {
+        <span>{{ 'COMPLETE_PROFILE.PREREQUISITES_MISSING' | translate }}</span>
+        <span class="complete-profile-cta__links">
+          <a routerLink="/admin/locations">{{ 'NAV.ADMIN.LOCATIONS' | translate }}</a>
+          <span aria-hidden="true">·</span>
+          <a [routerLink]="['/admin/employees']" [queryParams]="{ tab: 'engagement-types' }">
+            {{ 'EMPLOYEES.ENGAGEMENT_TYPES.TAB_LABEL' | translate }}
+          </a>
+        </span>
+      } @else {
+        <span>{{ 'COMPLETE_PROFILE.CTA_MESSAGE' | translate }}</span>
+      }
+    </div>
+    <p-button [label]="'COMPLETE_PROFILE.CTA_BUTTON' | translate" (onClick)="openDialog()" />
+  </div>
+
+  <app-complete-employee-profile-dialog [(visible)]="dialogVisible" (completed)="onCompleted()" />
+}

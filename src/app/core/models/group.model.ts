@@ -83,7 +83,7 @@ export interface GroupAppointmentCellDto {
   id: string;
   date: string;
   startTime: string;
-  locationName: string;
+  companyName: string;
   trainerName: string | null;
   expectedCount: number;
   attendanceCount: number;
@@ -97,8 +97,8 @@ export interface GroupDto {
   name: string;
   serviceId: string;
   serviceName: string;
-  locationId: string;
-  locationName: string;
+  companyId: string;
+  companyName: string;
   capacity: number;
   defaultTrainerId: string | null;
   defaultTrainerName: string | null;
@@ -128,7 +128,7 @@ export interface GroupDetailDto extends GroupDto {
 export interface GroupCreateRequest {
   name: string;
   serviceId: string;
-  locationId: string;
+  companyId: string;
   capacity: number;
   defaultTrainerId: string | null;
   note: string | null;
@@ -141,7 +141,7 @@ export interface GroupCreateRequest {
 export interface GroupUpdateRequest {
   name: string;
   serviceId: string;
-  locationId: string;
+  companyId: string;
   capacity: number;
   defaultTrainerId: string | null;
   note: string | null;

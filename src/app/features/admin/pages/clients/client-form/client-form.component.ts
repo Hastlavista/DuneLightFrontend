@@ -245,7 +245,7 @@ export class ClientFormComponent {
       healthNote: raw.healthNote || null,
       gdprConsentGiven: raw.gdprConsentGiven,
       gdprConsentDate: raw.gdprConsentGiven && raw.gdprConsentDate ? toStartOfDayIso(raw.gdprConsentDate) : null,
-      homeLocationId: raw.homeLocationId || null,
+      homeCompanyId: raw.homeLocationId || null,
       homeTrainerId: raw.homeTrainerId || null,
       tagIds: raw.tagIds,
     };
@@ -291,7 +291,7 @@ export class ClientFormComponent {
   private applyClient(client: ClientDto): void {
     this.loadedClient.set(client);
     this.loadedHomeLocation.set(
-      client.homeLocationId ? { id: client.homeLocationId, name: client.homeLocationName ?? '' } : null,
+      client.homeCompanyId ? { id: client.homeCompanyId, name: client.homeCompanyName ?? '' } : null,
     );
     this.loadedHomeTrainer.set(
       client.homeTrainerId ? { id: client.homeTrainerId, name: client.homeTrainerName ?? '' } : null,
@@ -309,7 +309,7 @@ export class ClientFormComponent {
         email: client.email ?? '',
         note: client.note ?? '',
         healthNote: client.healthNote ?? '',
-        homeLocationId: client.homeLocationId ?? null,
+        homeLocationId: client.homeCompanyId ?? null,
         homeTrainerId: client.homeTrainerId ?? null,
         tagIds: client.tags.map((tag) => tag.tagId),
         gdprConsentGiven: client.gdprConsentGiven,

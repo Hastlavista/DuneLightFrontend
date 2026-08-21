@@ -11,7 +11,7 @@ const DEFAULT_TAB = 'employees';
  * "Zaposlenici" tab shell. Vrste angažmana is a small šifrarnik used only by
  * the employee form's engagement-type dropdown, so it lives as a second tab
  * here rather than getting its own nav entry (same reasoning as Usluge's
- * Kategorije/Cjenik/Paketi tabs). Employees' create/edit form is a separate
+ * Cjenik/Paketi tabs). Employees' create/edit form is a separate
  * routed page (see EmployeeFormComponent) and always navigates back to this
  * default tab.
  */

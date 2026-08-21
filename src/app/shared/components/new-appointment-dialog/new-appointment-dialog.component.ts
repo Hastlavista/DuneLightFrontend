@@ -1,4 +1,5 @@
 import { Component, computed, effect, inject, input, model, output, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AutoComplete, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
@@ -30,14 +31,17 @@ import { ClientPackageDto } from '../../../core/models/client-package.model';
 import { EmployeeSummary } from '../../../core/models/employee.model';
 import { LocationDto } from '../../../core/models/location.model';
 import { ServiceDto } from '../../../core/models/service.model';
+import { AvailabilityDto } from '../../../core/models/working-hours.model';
 import { AppointmentsService } from '../../../core/services/appointments.service';
+import { AvailabilityService } from '../../../core/services/availability.service';
 import { ClientPackagesService } from '../../../core/services/client-packages.service';
 import { ClientsService } from '../../../core/services/clients.service';
 import { CurrentEmployeeService } from '../../../core/services/current-employee.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { PriceListService } from '../../../core/services/price-list.service';
-import { toEndOfDayIso, toLocalIsoFromDate } from '../../../core/utils/date.util';
+import { toDateOnly, toEndOfDayIso, toLocalIsoFromDate } from '../../../core/utils/date.util';
 import { translationReadySignal } from '../../../core/utils/translation-signal.util';
+import { AvailableSlotSelection, AvailableSlotsSliderComponent } from '../available-slots-slider/available-slots-slider.component';
 import { EligiblePackageSelectComponent } from '../eligible-package-select/eligible-package-select.component';
 
 const CLIENT_SEARCH_PAGE_SIZE = 10;
@@ -74,7 +78,7 @@ interface ClientPackageRowState {
 export interface NewAppointmentInitial {
   startsAt?: Date | null;
   employeeId?: string | null;
-  locationId?: string | null;
+  companyId?: string | null;
 }
 
 /**
@@ -111,6 +115,7 @@ export interface NewAppointmentInitial {
     Button,
     TranslatePipe,
     EligiblePackageSelectComponent,
+    AvailableSlotsSliderComponent,
   ],
   templateUrl: './new-appointment-dialog.component.html',
   styleUrl: './new-appointment-dialog.component.scss',
@@ -118,6 +123,7 @@ export interface NewAppointmentInitial {
 export class NewAppointmentDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly appointmentsService = inject(AppointmentsService);
+  private readonly availabilityService = inject(AvailabilityService);
   private readonly clientsService = inject(ClientsService);
   private readonly clientPackagesService = inject(ClientPackagesService);
   private readonly priceListService = inject(PriceListService);
@@ -146,6 +152,14 @@ export class NewAppointmentDialogComponent {
 
   readonly recurringConflicts = signal<RecurringConflictDetail[] | null>(null);
 
+  /** Employee/location availability for the currently-picked date (frontend
+   * #16) - refetched whenever trainer/location/date changes, rendered as a
+   * helper hint and a soft (non-blocking) warning below the time field. The
+   * hard block is still server-side (409 OUTSIDE_WORKING_HOURS on submit,
+   * left to the default error toast, same treatment as APPOINTMENT_OVERLAP -
+   * see errors.OUTSIDE_WORKING_HOURS). */
+  readonly availability = signal<AvailabilityDto | null>(null);
+
   private readonly packageRowState = signal<Map<string, ClientPackageRowState>>(new Map());
   private readonly selectedPackageByClient = signal<Map<string, string | null>>(new Map());
 
@@ -169,6 +183,36 @@ export class NewAppointmentDialogComponent {
     return RECURRENCE_TYPES.map((type) => ({ label: this.translate.instant(recurrenceTypeTranslationKey(type)), value: type }));
   });
 
+  /** "09:00-12:00, 14:00-18:00" - null while nothing's resolved yet (no
+   * trainer/location/date picked, or the lookup failed quietly). */
+  readonly availabilityHint = computed<string | null>(() => {
+    const intervals = this.availability()?.effectiveIntervals ?? [];
+    if (intervals.length === 0) {
+      return null;
+    }
+    return intervals.map((interval) => `${interval.startTime.slice(0, 5)}-${interval.endTime.slice(0, 5)}`).join(', ');
+  });
+
+  /** Soft warning only - the chosen start time falls outside every effective
+   * interval. Doesn't block onSubmit(); the backend's 409
+   * OUTSIDE_WORKING_HOURS is the real, authoritative check. */
+  readonly startsAtOutsideAvailability = computed<boolean>(() => {
+    const avail = this.availability();
+    const startsAt = this.form.controls.startsAt.value;
+    if (!avail || !startsAt) {
+      return false;
+    }
+    const minutes = startsAt.getHours() * 60 + startsAt.getMinutes();
+    if (avail.effectiveIntervals.length === 0) {
+      return true;
+    }
+    return !avail.effectiveIntervals.some((interval) => {
+      const [startH, startM] = interval.startTime.split(':').map(Number);
+      const [endH, endM] = interval.endTime.split(':').map(Number);
+      return minutes >= startH * 60 + startM && minutes < endH * 60 + endM;
+    });
+  });
+
   readonly form = this.fb.nonNullable.group({
     serviceId: this.fb.nonNullable.control<string>('', Validators.required),
     employeeId: this.fb.nonNullable.control<string>('', Validators.required),
@@ -180,6 +224,26 @@ export class NewAppointmentDialogComponent {
     recurrenceType: this.fb.control<RecurrenceType | null>(null),
     endDate: this.fb.control<Date | null>(null),
   });
+
+  /** Drive the available-slots slider (frontend #24) - mirrors the form's own
+   * serviceId/locationId controls as signals since the template needs them
+   * reactively and FormControl.value isn't one. */
+  private readonly selectedServiceId = toSignal(this.form.controls.serviceId.valueChanges, {
+    initialValue: this.form.controls.serviceId.value,
+  });
+  private readonly selectedLocationId = toSignal(this.form.controls.locationId.valueChanges, {
+    initialValue: this.form.controls.locationId.value,
+  });
+
+  readonly slotsServiceId = computed(() => this.selectedServiceId() || null);
+  readonly slotsCompanyId = computed(() => this.selectedLocationId() || null);
+
+  /** Locks the slider (and the form's own trainer field, see resetForm) to the
+   * logged-in employee for role Member - same rationale as isMemberRole's doc:
+   * no reason to let a trainer browse other trainers' slots either. */
+  readonly slotsLockedEmployeeId = computed(() =>
+    this.isMemberRole() ? (this.currentEmployeeService.employee()?.employeeId ?? null) : null,
+  );
 
   constructor() {
     effect(() => {
@@ -201,10 +265,15 @@ export class NewAppointmentDialogComponent {
       this.refreshSuggestedAmount();
       this.refreshEligiblePackages();
     });
-    this.form.controls.locationId.valueChanges.subscribe(() => this.refreshSuggestedAmount());
+    this.form.controls.employeeId.valueChanges.subscribe(() => this.refreshAvailability());
+    this.form.controls.locationId.valueChanges.subscribe(() => {
+      this.refreshSuggestedAmount();
+      this.refreshAvailability();
+    });
     this.form.controls.startsAt.valueChanges.subscribe(() => {
       this.refreshSuggestedAmount();
       this.refreshEligiblePackages();
+      this.refreshAvailability();
     });
     this.form.controls.paymentMethod.valueChanges.subscribe(() => this.refreshEligiblePackages());
   }
@@ -254,6 +323,13 @@ export class NewAppointmentDialogComponent {
 
   onSelectedClientsChange(clients: ClientSearchOption[]): void {
     this.selectedClients.set(clients);
+  }
+
+  onSlotSelected(selection: AvailableSlotSelection): void {
+    this.form.controls.employeeId.setValue(selection.employeeId);
+    this.form.controls.employeeId.markAsTouched();
+    this.form.controls.startsAt.setValue(selection.startsAt);
+    this.form.controls.startsAt.markAsTouched();
   }
 
   serviceDurationMinutes(serviceId: string | null): number | null {
@@ -318,7 +394,7 @@ export class NewAppointmentDialogComponent {
       startsAt: toLocalIsoFromDate(raw.startsAt as Date),
       serviceId: raw.serviceId,
       employeeId: raw.employeeId,
-      locationId: raw.locationId,
+      companyId: raw.locationId,
       clientIds: this.selectedClients().map((client) => client.clientId),
       amount: raw.amount,
       note: raw.note || null,
@@ -345,7 +421,7 @@ export class NewAppointmentDialogComponent {
       startsAt: toLocalIsoFromDate(raw.startsAt as Date),
       serviceId: raw.serviceId,
       employeeId: raw.employeeId,
-      locationId: raw.locationId,
+      companyId: raw.locationId,
       clientIds: this.selectedClients().map((client) => client.clientId),
       amount: raw.amount,
       note: raw.note || null,
@@ -373,7 +449,7 @@ export class NewAppointmentDialogComponent {
       recurrenceType: raw.recurrenceType as RecurrenceType,
       serviceId: raw.serviceId,
       employeeId: raw.employeeId,
-      locationId: raw.locationId,
+      companyId: raw.locationId,
       clientIds: this.selectedClients().map((client) => client.clientId),
       firstOccurrenceStartsAt: toLocalIsoFromDate(raw.startsAt as Date),
       endDate: toEndOfDayIso(raw.endDate as Date),
@@ -467,6 +543,22 @@ export class NewAppointmentDialogComponent {
     }
   }
 
+  private refreshAvailability(): void {
+    const employeeId = this.form.controls.employeeId.value;
+    const locationId = this.form.controls.locationId.value;
+    const startsAt = this.form.controls.startsAt.value;
+    if (!employeeId || !locationId || !startsAt) {
+      this.availability.set(null);
+      return;
+    }
+    this.availabilityService
+      .get({ employeeId, companyId: locationId, date: toDateOnly(startsAt) }, { suppressErrorToast: true })
+      .subscribe({
+        next: (result) => this.availability.set(result),
+        error: () => this.availability.set(null),
+      });
+  }
+
   private refreshSuggestedAmount(): void {
     const serviceId = this.form.controls.serviceId.value;
     const locationId = this.form.controls.locationId.value;
@@ -475,7 +567,7 @@ export class NewAppointmentDialogComponent {
       return;
     }
     this.priceListService
-      .resolve({ subjectType: 'Service', subjectId: serviceId, locationId, date: toLocalIsoFromDate(startsAt) })
+      .resolve({ subjectType: 'Service', subjectId: serviceId, companyId: locationId, date: toLocalIsoFromDate(startsAt) })
       .subscribe({
         next: (result) => this.form.controls.amount.setValue(result.price, { emitEvent: false }),
         error: () => {},
@@ -490,7 +582,7 @@ export class NewAppointmentDialogComponent {
     this.form.reset({
       serviceId: '',
       employeeId: locked ? selfId : (init?.employeeId ?? ''),
-      locationId: init?.locationId ?? '',
+      locationId: init?.companyId ?? '',
       startsAt: init?.startsAt ?? new Date(),
       note: '',
       amount: null,
@@ -513,5 +605,7 @@ export class NewAppointmentDialogComponent {
     this.packageRowState.set(new Map());
     this.selectedPackageByClient.set(new Map());
     this.attemptedSubmit.set(false);
+    this.availability.set(null);
+    this.refreshAvailability();
   }
 }

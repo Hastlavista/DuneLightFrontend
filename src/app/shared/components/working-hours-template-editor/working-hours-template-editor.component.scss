@@ -1,0 +1,54 @@
+.working-hours-editor {
+  &__loading {
+    padding: 1rem 0;
+    color: var(--clay-2);
+  }
+
+  &__weeks {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  &__week {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+
+    h4 {
+      margin: 0;
+      font-size: 0.9rem;
+      color: var(--clay-2);
+      border-bottom: 1px solid var(--sand);
+      padding-bottom: 0.375rem;
+    }
+  }
+
+  &__day-row {
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    padding: 0.375rem 0;
+  }
+
+  &__day-label {
+    width: 6rem;
+    flex-shrink: 0;
+    padding-top: 0.5rem;
+    font-weight: 500;
+  }
+
+  &__intervals {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    flex: 1;
+  }
+
+  &__interval {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}

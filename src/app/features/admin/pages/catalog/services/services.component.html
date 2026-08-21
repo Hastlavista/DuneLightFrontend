@@ -8,12 +8,12 @@
     (create)="openCreate()"
   >
     <p-select
-      class="services-page__category-filter"
-      [options]="categoryFilterOptions()"
+      class="services-page__execution-mode-filter"
+      [options]="executionModeFilterOptions()"
       optionLabel="label"
       optionValue="value"
-      [ngModel]="categoryFilter()"
-      (ngModelChange)="onCategoryFilterChange($event)"
+      [ngModel]="executionModeFilter()"
+      (ngModelChange)="onExecutionModeFilterChange($event)"
     />
   </app-list-toolbar>
 
@@ -33,7 +33,8 @@
     <ng-template pTemplate="header">
       <tr>
         <th>{{ 'CATALOG.SERVICES.COL_NAME' | translate }}</th>
-        <th>{{ 'CATALOG.SERVICES.COL_CATEGORY' | translate }}</th>
+        <th>{{ 'CATALOG.SERVICES.COL_EXECUTION_MODE' | translate }}</th>
+        <th>{{ 'CATALOG.SERVICES.COL_COLOR' | translate }}</th>
         <th>{{ 'CATALOG.SERVICES.COL_DURATION' | translate }}</th>
         <th>{{ 'CATALOG.SERVICES.COL_PRICE' | translate }}</th>
         <th>{{ 'COMMON.COL_STATUS' | translate }}</th>
@@ -44,12 +45,8 @@
     <ng-template pTemplate="body" let-service>
       <tr [class.services-page__row--inactive]="!service.isActive">
         <td>{{ service.name }}</td>
-        <td>
-          {{ service.serviceCategoryName }}
-          @if (executionModeKeyFor(service.serviceCategoryId); as executionModeKey) {
-            <span class="services-page__execution-mode">({{ executionModeKey | translate }})</span>
-          }
-        </td>
+        <td>{{ executionModeTranslationKey(service.executionMode) | translate }}</td>
+        <td><app-color-swatch [colorHex]="service.colorHex" /></td>
         <td>
           {{
             'CATALOG.SERVICES.DURATION_MINUTES'
@@ -103,7 +100,7 @@
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="6" class="services-page__empty">{{ 'CATALOG.SERVICES.EMPTY' | translate }}</td>
+        <td colspan="7" class="services-page__empty">{{ 'CATALOG.SERVICES.EMPTY' | translate }}</td>
       </tr>
     </ng-template>
   </p-table>
@@ -112,6 +109,5 @@
 <app-service-form-dialog
   [(visible)]="dialogVisible"
   [service]="editingService()"
-  [categories]="activeCategories()"
   (saved)="onSaved()"
 />

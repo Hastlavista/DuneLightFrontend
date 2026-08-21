@@ -1,0 +1,61 @@
+<div class="dl-card grant-groups-page">
+  <div class="grant-groups-page__toolbar">
+    <p-iconfield class="grant-groups-page__search">
+      <p-inputicon class="pi pi-search" />
+      <input
+        type="text"
+        pInputText
+        fluid
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+        [placeholder]="'COMMON.SEARCH_PLACEHOLDER' | translate"
+      />
+    </p-iconfield>
+
+    <p-button icon="pi pi-plus" [label]="'PERMISSIONS.GRANT_GROUPS.NEW' | translate" (onClick)="openCreate()" />
+  </div>
+
+  <p-table [value]="items()" [loading]="loading()" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>{{ 'PERMISSIONS.GRANT_GROUPS.COL_NAME' | translate }}</th>
+        <th>{{ 'PERMISSIONS.GRANT_GROUPS.COL_GRANT_COUNT' | translate }}</th>
+        <th>{{ 'PERMISSIONS.GRANT_GROUPS.COL_ASSIGNED_COUNT' | translate }}</th>
+        <th class="grant-groups-page__actions-col"></th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-group>
+      <tr>
+        <td>{{ group.name }}</td>
+        <td>{{ group.grants.length }}</td>
+        <td>{{ group.assignedUserCount }}</td>
+        <td class="grant-groups-page__actions">
+          <p-button
+            icon="pi pi-pencil"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'COMMON.EDIT' | translate"
+            [title]="'COMMON.EDIT' | translate"
+            (onClick)="openEdit(group)"
+          />
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'COMMON.DELETE' | translate"
+            [title]="'COMMON.DELETE' | translate"
+            (onClick)="confirmDelete(group)"
+          />
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="4" class="grant-groups-page__empty">{{ 'PERMISSIONS.GRANT_GROUPS.EMPTY' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

@@ -14,7 +14,7 @@
       <tr class="my-groups-page__row" (click)="openGroup(group)">
         <td>{{ group.name }}</td>
         <td>{{ group.serviceName }}</td>
-        <td>{{ group.locationName }}</td>
+        <td>{{ group.companyName }}</td>
         <td>{{ slotsSummary(group) }}</td>
         <td [class.my-groups-page__capacity--over]="isOverCapacity(group)">
           {{ group.activeMemberCount }}/{{ group.capacity }}

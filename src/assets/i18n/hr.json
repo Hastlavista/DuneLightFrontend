@@ -19,7 +19,21 @@
     "COL_STATUS": "Status",
     "STATUS_ACTIVE": "Aktivno",
     "STATUS_INACTIVE": "Neaktivno",
-    "SELECT_PACKAGE_PLACEHOLDER": "Odaberite paket"
+    "SELECT_PACKAGE_PLACEHOLDER": "Odaberite paket",
+    "MONTHS": {
+      "JANUARY": "Siječanj",
+      "FEBRUARY": "Veljača",
+      "MARCH": "Ožujak",
+      "APRIL": "Travanj",
+      "MAY": "Svibanj",
+      "JUNE": "Lipanj",
+      "JULY": "Srpanj",
+      "AUGUST": "Kolovoz",
+      "SEPTEMBER": "Rujan",
+      "OCTOBER": "Listopad",
+      "NOVEMBER": "Studeni",
+      "DECEMBER": "Prosinac"
+    }
   },
   "errors": {
     "VALIDATION_ERROR": "Neispravan zahtjev. Provjerite unesene podatke.",
@@ -31,6 +45,7 @@
     "AUTH_INVALID_CREDENTIALS": "Pogrešan email ili lozinka.",
     "AUTH_ORGANIZATION_SLUG_TAKEN": "Organizacija s tim nazivom već postoji.",
     "AUTH_CURRENT_PASSWORD_INVALID": "Trenutna lozinka nije ispravna.",
+    "AUTH_INVALID_PIN": "Neispravan PIN.",
 
     "REFERENCED_CANNOT_DELETE": "Ovaj zapis nije moguće izbrisati jer je u upotrebi. Umjesto toga ga možete deaktivirati.",
     "DUPLICATE_NAME": "Taj naziv je već zauzet.",
@@ -46,13 +61,18 @@
     "NOT_OWNER": "Možete mijenjati samo svoje zapise.",
     "PACKAGE_NOT_ELIGIBLE": "Paket nije valjan za ovog klijenta ili uslugu.",
     "PACKAGE_SERVICE_NOT_COVERED": "Odabrani paket ne pokriva ovu uslugu.",
-    "CATEGORY_IN_USE": "Kategorija je u upotrebi i ne može se deaktivirati.",
     "INACTIVE_EMPLOYEE": "Zaposlenik je neaktivan.",
     "INACTIVE_TYPE": "Odabrani tip je neaktivan.",
     "PRICE_OVERLAP": "Ova stavka cjenika preklapa se s postojećom za isto razdoblje.",
     "CLIENT_ANONYMIZED": "Klijent je anonimiziran (GDPR) te se ne može uređivati.",
     "APPOINTMENT_OVERLAP": "Termin se preklapa s postojećom obavezom trenera ili klijenta.",
     "RECURRING_CONFLICT": "Neki termini u nizu se sudaraju s postojećim obavezama. Provjerite označene datume.",
+    "OUTSIDE_WORKING_HOURS": "Termin je izvan radnog vremena zaposlenika ili lokacije.",
+
+    "LEAVE_FUND_TYPE_MUST_BE_ABSENCE": "Fond godišnjeg mogu trošiti samo vrste odsutnosti.",
+    "LEAVE_FUND_ENTRY_REQUIRES_END_DATE": "Za godišnji odmor morate unijeti datum završetka.",
+    "LEAVE_FUND_EXCEEDED": "Zaposlenik nema dovoljno preostalih dana godišnjeg odmora.",
+    "LEAVE_SETTINGS_NOT_CONFIGURED": "Fond godišnjeg odmora nije postavljen za ovog zaposlenika.",
 
     "UNKNOWN": "Došlo je do greške. Pokušajte ponovno."
   },
@@ -71,6 +91,7 @@
       "EMPLOYEES": "Zaposlenici",
       "GROUPS": "Grupe",
       "SERVICES": "Usluge i cjenik",
+      "PERMISSIONS": "Dozvole",
       "FINANCE": "Financije",
       "REPORTS": "Izvješća",
       "PROFILE": "Moj profil"
@@ -86,13 +107,14 @@
   },
   "LAYOUT": {
     "SIDEBAR": {
-      "LOGOUT": "Odjava"
+      "LOGOUT": "Odjava",
+      "SWITCH_USER": "Promijeni korisnika"
     },
     "TOPBAR": {
       "ALL_LOCATIONS": "Sve lokacije",
       "OPEN_MENU": "Otvori izbornik",
       "VIEW_ADMIN": "Admin",
-      "VIEW_TRAINER": "Trener",
+      "VIEW_MEMBER": "Član",
       "LOCATION_SWITCHER": "Odabir lokacije"
     }
   },
@@ -124,62 +146,39 @@
       "DEACTIVATED": "Lokacija je deaktivirana.",
       "DELETED": "Lokacija je izbrisana.",
       "CONFIRM_DEACTIVATE": "Jeste li sigurni da želite deaktivirati lokaciju \"{{name}}\"?",
-      "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati lokaciju \"{{name}}\"? Ova radnja je nepovratna."
-    },
-    "CATEGORIES": {
-      "TAB_LABEL": "Kategorije",
-      "NEW": "Nova kategorija",
-      "NEW_TITLE": "Nova kategorija",
-      "EDIT_TITLE": "Uredi kategoriju",
-      "COL_NAME": "Naziv",
-      "COL_EXECUTION_MODE": "Način izvođenja",
-      "COL_COLOR": "Boja",
-      "EMPTY": "Nema pronađenih kategorija.",
-      "FIELD_NAME": "Naziv",
-      "FIELD_EXECUTION_MODE": "Način izvođenja",
-      "FIELD_COLOR": "Boja",
-      "FIELD_REQUIRES_CLIENT": "Zahtijeva klijenta",
-      "FIELD_COUNTS_TOWARD_REVENUE": "Ulazi u promet",
-      "FIELD_DESCRIPTION": "Opis",
-      "FIELD_SORT_ORDER": "Redoslijed prikaza",
-      "ERRORS": {
-        "NAME_REQUIRED": "Naziv je obavezan."
-      },
-      "EXECUTION_MODE": {
-        "INDIVIDUAL": "Individualno",
-        "GROUP": "Grupno"
-      },
-      "CREATED": "Kategorija je uspješno kreirana.",
-      "UPDATED": "Kategorija je uspješno ažurirana.",
-      "ACTIVATED": "Kategorija je aktivirana.",
-      "DEACTIVATED": "Kategorija je deaktivirana.",
-      "DELETED": "Kategorija je izbrisana.",
-      "CONFIRM_DEACTIVATE": "Jeste li sigurni da želite deaktivirati kategoriju \"{{name}}\"?",
-      "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati kategoriju \"{{name}}\"? Ova radnja je nepovratna."
+      "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati lokaciju \"{{name}}\"? Ova radnja je nepovratna.",
+      "WORKING_HOURS": {
+        "BUTTON": "Radno vrijeme",
+        "TITLE": "Radno vrijeme — {{name}}"
+      }
     },
     "SERVICES": {
       "NEW": "Nova usluga",
       "NEW_TITLE": "Nova usluga",
       "EDIT_TITLE": "Uredi uslugu",
       "COL_NAME": "Naziv",
-      "COL_CATEGORY": "Kategorija",
+      "COL_EXECUTION_MODE": "Način izvođenja",
+      "COL_COLOR": "Boja",
       "COL_DURATION": "Trajanje",
       "COL_PRICE": "Cijena",
       "DURATION_MINUTES": "{{minutes}} min",
       "EMPTY": "Nema pronađenih usluga.",
-      "FILTER_CATEGORY_ALL": "Sve kategorije",
+      "FILTER_EXECUTION_MODE_ALL": "Sve",
       "FIELD_NAME": "Naziv",
-      "FIELD_CATEGORY": "Kategorija",
-      "FIELD_CATEGORY_PLACEHOLDER": "Odaberite kategoriju",
+      "FIELD_EXECUTION_MODE": "Način izvođenja",
+      "FIELD_COLOR": "Boja",
       "FIELD_DURATION": "Trajanje u minutama",
       "FIELD_PRICE": "Zadana cijena",
       "FIELD_DESCRIPTION": "Opis",
       "FIELD_SORT_ORDER": "Redoslijed prikaza",
       "ERRORS": {
         "NAME_REQUIRED": "Naziv je obavezan.",
-        "CATEGORY_REQUIRED": "Kategorija je obavezna.",
         "DURATION_INVALID": "Trajanje mora biti veće od 0.",
         "PRICE_INVALID": "Cijena ne smije biti negativna."
+      },
+      "EXECUTION_MODE": {
+        "INDIVIDUAL": "Individualno",
+        "GROUP": "Grupno"
       },
       "CREATED": "Usluga je uspješno kreirana.",
       "UPDATED": "Usluga je uspješno ažurirana.",
@@ -210,8 +209,8 @@
         "PACKAGE": "Paket"
       },
       "SOURCE": {
-        "LocationSpecific": "Lokacijska cijena",
-        "AllLocations": "Sve lokacije",
+        "CompanySpecific": "Lokacijska cijena",
+        "AllCompanies": "Sve lokacije",
         "Default": "Zadana cijena"
       },
       "FIELD_SUBJECT_TYPE": "Tip predmeta",
@@ -461,15 +460,18 @@
     "NEW_TITLE": "Novi zaposlenik",
     "EDIT_TITLE": "Uredi zaposlenika",
     "BACK_TO_LIST": "Natrag na popis",
+    "TAB_DATA": "Podaci",
+    "TAB_WORKING_HOURS": "Radno vrijeme",
+    "TAB_LEAVE_FUND": "Godišnji odmor",
     "INACTIVE_BADGE": "neaktivno",
     "COL_NAME": "Ime i prezime",
     "COL_ROLE": "Uloga",
-    "COL_ENGAGEMENT_TYPE": "Vrsta angažmana",
+    "COL_ENGAGEMENT_TYPE": "Vrsta zaposlenja",
     "COL_LOCATIONS": "Lokacije",
     "COL_COLOR": "Boja",
     "EMPTY": "Nema pronađenih zaposlenika.",
     "FILTER_LOCATION_ALL": "Sve lokacije",
-    "FILTER_ENGAGEMENT_TYPE_ALL": "Sve vrste angažmana",
+    "FILTER_ENGAGEMENT_TYPE_ALL": "Sve vrste zaposlenja",
     "FILTER_ROLE_ALL": "Sve uloge",
     "CHANGE_ROLE": "Promijeni ulogu",
     "CHANGE_ROLE_TITLE": "Promjena uloge",
@@ -480,6 +482,7 @@
     "SECTION_LOCATIONS": "Lokacije",
     "SECTION_SERVICES": "Usluge koje izvodi",
     "SECTION_LOGIN": "Login",
+    "SECTION_PERMISSIONS": "Dozvole",
     "FIELD_FIRST_NAME": "Ime",
     "FIELD_LAST_NAME": "Prezime",
     "FIELD_PHONE": "Telefon",
@@ -494,8 +497,8 @@
     "FIELD_SORT_ORDER": "Redoslijed prikaza",
     "FIELD_EMPLOYMENT_START": "Datum početka",
     "FIELD_EMPLOYMENT_END": "Datum prestanka",
-    "FIELD_ENGAGEMENT_TYPE": "Vrsta angažmana",
-    "FIELD_ENGAGEMENT_TYPE_PLACEHOLDER": "Odaberite vrstu angažmana",
+    "FIELD_ENGAGEMENT_TYPE": "Vrsta zaposlenja",
+    "FIELD_ENGAGEMENT_TYPE_PLACEHOLDER": "Odaberite vrstu zaposlenja",
     "FIELD_LOCATIONS": "Lokacije",
     "FIELD_LOCATIONS_PLACEHOLDER": "Odaberite lokacije",
     "FIELD_PRIMARY_LOCATION": "Primarna lokacija",
@@ -505,6 +508,12 @@
     "SERVICES_EMPTY_HINT": "Prazan odabir znači da zaposlenik smije izvoditi sve usluge.",
     "FIELD_PASSWORD": "Lozinka",
     "FIELD_ROLE": "Uloga",
+    "FIELD_GRANT_GROUPS": "Grant grupe",
+    "FIELD_GRANT_GROUPS_PLACEHOLDER": "Odaberite grant grupe",
+    "FIELD_ROLES": "Poslovne oznake",
+    "FIELD_ROLES_PLACEHOLDER": "Odaberite poslovne oznake (opcionalno)",
+    "GRANT_GROUPS_NOT_APPLICABLE_OWNER": "Vlasnik organizacije uvijek ima puni pristup i ne treba grant grupu.",
+    "OWNER_BADGE": "Vlasnik",
     "ERRORS": {
       "FIRST_NAME_REQUIRED": "Ime je obavezno.",
       "LAST_NAME_REQUIRED": "Prezime je obavezno.",
@@ -512,10 +521,11 @@
       "OIB_INVALID": "OIB mora sadržavati točno 11 znamenki.",
       "EMPLOYMENT_START_REQUIRED": "Datum početka je obavezan.",
       "EMPLOYMENT_END_BEFORE_START": "Datum prestanka ne može biti prije datuma početka.",
-      "ENGAGEMENT_TYPE_REQUIRED": "Vrsta angažmana je obavezna.",
+      "ENGAGEMENT_TYPE_REQUIRED": "Vrsta zaposlenja je obavezna.",
       "LOCATIONS_REQUIRED": "Odaberite barem jednu lokaciju.",
       "PRIMARY_LOCATION_REQUIRED": "Primarna lokacija mora biti među odabranim lokacijama.",
-      "PASSWORD_REQUIRED": "Lozinka je obavezna (najmanje 8 znakova)."
+      "PASSWORD_REQUIRED": "Lozinka je obavezna (najmanje 8 znakova).",
+      "GRANT_GROUPS_REQUIRED": "Odaberite barem jednu grant grupu."
     },
     "CREATED": "Zaposlenik je uspješno kreiran.",
     "UPDATED": "Zaposlenik je uspješno ažuriran.",
@@ -526,25 +536,83 @@
     "CONFIRM_DEACTIVATE": "Jeste li sigurni da želite deaktivirati zaposlenika \"{{name}}\"? Deaktivacijom se ujedno onemogućuje njegova prijava u sustav.",
     "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati zaposlenika \"{{name}}\"? Ova radnja je nepovratna.",
     "ENGAGEMENT_TYPES": {
-      "TAB_LABEL": "Vrste angažmana",
-      "NEW": "Nova vrsta angažmana",
-      "NEW_TITLE": "Nova vrsta angažmana",
-      "EDIT_TITLE": "Uredi vrstu angažmana",
+      "TAB_LABEL": "Vrste zaposlenja",
+      "NEW": "Nova vrsta zaposlenja",
+      "NEW_TITLE": "Nova vrsta zaposlenja",
+      "EDIT_TITLE": "Uredi vrstu zaposlenja",
       "COL_NAME": "Naziv",
       "COL_SORT_ORDER": "Redoslijed prikaza",
-      "EMPTY": "Nema pronađenih vrsta angažmana.",
+      "EMPTY": "Nema pronađenih vrsta zaposlenja.",
       "FIELD_NAME": "Naziv",
       "FIELD_SORT_ORDER": "Redoslijed prikaza",
       "ERRORS": {
         "NAME_REQUIRED": "Naziv je obavezan."
       },
-      "CREATED": "Vrsta angažmana je uspješno kreirana.",
-      "UPDATED": "Vrsta angažmana je uspješno ažurirana.",
-      "ACTIVATED": "Vrsta angažmana je aktivirana.",
-      "DEACTIVATED": "Vrsta angažmana je deaktivirana.",
-      "DELETED": "Vrsta angažmana je izbrisana.",
-      "CONFIRM_DEACTIVATE": "Jeste li sigurni da želite deaktivirati vrstu angažmana \"{{name}}\"?",
-      "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati vrstu angažmana \"{{name}}\"? Ova radnja je nepovratna."
+      "CREATED": "Vrsta zaposlenja je uspješno kreirana.",
+      "UPDATED": "Vrsta zaposlenja je uspješno ažurirana.",
+      "ACTIVATED": "Vrsta zaposlenja je aktivirana.",
+      "DEACTIVATED": "Vrsta zaposlenja je deaktivirana.",
+      "DELETED": "Vrsta zaposlenja je izbrisana.",
+      "CONFIRM_DEACTIVATE": "Jeste li sigurni da želite deaktivirati vrstu zaposlenja \"{{name}}\"?",
+      "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati vrstu zaposlenja \"{{name}}\"? Ova radnja je nepovratna."
+    },
+    "LEAVE_FUND": {
+      "LOADING": "Učitavanje...",
+      "SETTINGS_TITLE": "Postavke fonda",
+      "NOT_CONFIGURED_HINT": "Fond godišnjeg odmora još nije postavljen za ovog zaposlenika - dok se ne spremi, godišnji odmor mu se ne može upisati u roster.",
+      "FIELD_ANNUAL_DAYS": "Broj dana godišnje",
+      "FIELD_RENEWAL_DATE": "Datum obnove",
+      "FIELD_CARRYOVER_EXPIRY_DATE": "Datum isteka prijenosa",
+      "CARRYOVER_EXPIRY_HINT": "Neiskorišteni dani iz prethodne godine propadaju nakon ovog datuma.",
+      "ERRORS": {
+        "ANNUAL_DAYS_REQUIRED": "Broj dana godišnje je obavezan."
+      },
+      "SAVED": "Postavke fonda godišnjeg odmora su spremljene.",
+      "FUNDS_TITLE": "Stanje fonda",
+      "FUNDS_EMPTY": "Zaposlenik još nema otvoren fond godišnjeg odmora.",
+      "FUND_CURRENT": "Tekuća godina",
+      "FUND_CARRYOVER": "Prijenos",
+      "COL_FUND_YEAR": "Godina",
+      "COL_STATUS": "Status",
+      "COL_ALLOCATED": "Dodijeljeno",
+      "COL_USED": "Iskorišteno",
+      "COL_REMAINING": "Preostalo",
+      "COL_EXPIRES": "Ističe"
+    }
+  },
+  "COMPLETE_PROFILE": {
+    "CTA_TITLE": "Nemate profil zaposlenika",
+    "CTA_MESSAGE": "Dovršite ga da biste mogli koristiti svoj raspored i roster.",
+    "CTA_BUTTON": "Dovrši profil",
+    "PREREQUISITES_MISSING": "Prije nego dovršite svoj profil, dodajte barem jednu lokaciju i vrstu zaposlenja.",
+    "TITLE": "Dovrši svoj profil",
+    "INTRO": "Ovi podaci vas prijavljuju kao zaposlenika organizacije - potrebni su da biste mogli koristiti svoj tjedni raspored i roster.",
+    "EMAIL_HINT": "Ovo je kontakt email, ne mijenja vaš email za prijavu.",
+    "SAVE_BUTTON": "Spremi profil",
+    "SAVED": "Profil zaposlenika je uspješno kreiran."
+  },
+  "DASHBOARD": {
+    "ONBOARDING": {
+      "TITLE": "Checklist za početak",
+      "INTRO": "Postavite svoju organizaciju u nekoliko koraka - preporučeni redoslijed je označen, ali svaki korak možete otvoriti kad god želite.",
+      "LOCATION_TITLE": "Lokacije",
+      "LOCATION_DESC": "Dodajte barem jednu lokaciju.",
+      "LOCATION_ACTION": "Dodaj lokaciju",
+      "ENGAGEMENT_TYPE_TITLE": "Vrste zaposlenja",
+      "ENGAGEMENT_TYPE_DESC": "Definirajte vrstu zaposlenja.",
+      "ENGAGEMENT_TYPE_ACTION": "Dodaj vrstu zaposlenja",
+      "SERVICE_TITLE": "Usluge",
+      "SERVICE_DESC": "Dodajte barem jednu uslugu.",
+      "SERVICE_ACTION": "Dodaj uslugu",
+      "OWNER_PROFILE_TITLE": "Vaš profil",
+      "OWNER_PROFILE_DESC": "Dovršite svoj profil zaposlenika.",
+      "OWNER_PROFILE_ACTION": "Dovrši profil",
+      "OTHER_EMPLOYEE_TITLE": "Zaposlenici",
+      "OTHER_EMPLOYEE_DESC": "Dodajte svoj tim.",
+      "OTHER_EMPLOYEE_ACTION": "Dodaj zaposlenika",
+      "CLIENT_TITLE": "Klijenti",
+      "CLIENT_DESC": "Dodajte prvog klijenta.",
+      "CLIENT_ACTION": "Dodaj klijenta"
     }
   },
   "GROUPS": {
@@ -686,6 +754,52 @@
       }
     }
   },
+  "PERMISSIONS": {
+    "MODULES": {
+      "employees": "Zaposlenici",
+      "catalog": "Katalog",
+      "clients": "Klijenti",
+      "appointments": "Raspored",
+      "groups": "Grupe",
+      "roster": "Roster"
+    },
+    "GRANT_GROUPS": {
+      "TAB_LABEL": "Grant grupe",
+      "NEW": "Nova grant grupa",
+      "NEW_TITLE": "Nova grant grupa",
+      "EDIT_TITLE": "Uredi grant grupu",
+      "BACK_TO_LIST": "Natrag na popis",
+      "COL_NAME": "Naziv",
+      "COL_GRANT_COUNT": "Broj grantova",
+      "COL_ASSIGNED_COUNT": "Broj korisnika",
+      "EMPTY": "Nema pronađenih grant grupa.",
+      "FIELD_NAME": "Naziv",
+      "FIELD_GRANTS": "Grantovi",
+      "ERRORS": {
+        "NAME_REQUIRED": "Naziv je obavezan."
+      },
+      "CREATED": "Grant grupa je uspješno kreirana.",
+      "UPDATED": "Grant grupa je uspješno ažurirana.",
+      "DELETED": "Grant grupa je izbrisana.",
+      "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati grant grupu \"{{name}}\"? Brisanje nije moguće ako je grupa još uvijek dodijeljena nekom korisniku."
+    },
+    "ROLES": {
+      "TAB_LABEL": "Poslovne oznake",
+      "NEW": "Nova oznaka",
+      "NEW_TITLE": "Nova poslovna oznaka",
+      "EDIT_TITLE": "Uredi poslovnu oznaku",
+      "COL_NAME": "Naziv",
+      "EMPTY": "Nema pronađenih poslovnih oznaka.",
+      "FIELD_NAME": "Naziv",
+      "ERRORS": {
+        "NAME_REQUIRED": "Naziv je obavezan."
+      },
+      "CREATED": "Poslovna oznaka je uspješno kreirana.",
+      "UPDATED": "Poslovna oznaka je uspješno ažurirana.",
+      "DELETED": "Poslovna oznaka je izbrisana.",
+      "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati poslovnu oznaku \"{{name}}\"?"
+    }
+  },
   "SCHEDULE": {
     "VIEW_DAY": "Dan",
     "VIEW_WEEK": "Tjedan",
@@ -698,7 +812,7 @@
     "NEXT_WEEK": "Sljedeći tjedan",
     "TODAY": "Danas",
     "FILTER_STATUS_ALL": "Svi statusi",
-    "FILTER_CATEGORY_ALL": "Sve kategorije",
+    "FILTER_EXECUTION_MODE_ALL": "Sve",
     "FILTER_SERVICE_ALL": "Sve usluge",
     "STATUS": {
       "SCHEDULED": "Zakazano",
@@ -708,7 +822,8 @@
     },
     "CELL": {
       "PLUS_MORE": "(+{{count}})",
-      "ATTENDANCE_PAST": "{{count}} prisutnih"
+      "ATTENDANCE_PAST": "{{count}} prisutnih",
+      "BIRTHDAY_TOOLTIP": "Rođendan!"
     },
     "DETAIL": {
       "TITLE": "Detalji termina",
@@ -743,7 +858,9 @@
     },
     "RECURRING_CONFLICT_REASONS": {
       "EXISTING_APPOINTMENT": "Već postoji termin u to vrijeme",
-      "ROSTER_ABSENCE": "Zaposlenik je odsutan (godišnji/bolovanje)"
+      "ROSTER_ABSENCE": "Zaposlenik je odsutan (godišnji/bolovanje)",
+      "OUTSIDE_WORKING_HOURS": "Izvan radnog vremena",
+      "EXISTING_SCHEDULE_BREAK": "Postojeća pauza"
     },
     "FIELD_PAYMENT_METHOD": "Način plaćanja",
     "FIELD_PAYMENT_METHOD_PLACEHOLDER": "Odaberite način plaćanja",
@@ -759,6 +876,8 @@
       "FIELD_TRAINER": "Trener",
       "FIELD_LOCATION": "Lokacija",
       "FIELD_STARTS_AT": "Datum i vrijeme",
+      "AVAILABLE_HINT": "Dostupno: {{hint}}",
+      "OUTSIDE_AVAILABILITY_WARNING": "Odabrano vrijeme je izvan radnog vremena zaposlenika ili lokacije.",
       "FIELD_NOTE": "Napomena",
       "FIELD_AMOUNT": "Cijena",
       "AMOUNT_HINT": "Prazno = cijena se automatski razrješuje iz cjenika.",
@@ -772,6 +891,11 @@
       "COMPLETED": "Termin je upisan kao odrađen.",
       "RECURRING_CREATED": "Niz termina je uspješno zakazan ({{count}}).",
       "CONFLICT_TITLE": "Sljedeći termini se sudaraju:",
+      "SLOTS": {
+        "LOADING": "Učitavanje slobodnih termina...",
+        "EMPTY": "Nema slobodnih termina ovaj dan.",
+        "CHANGE_TIME": "Promijeni vrijeme"
+      },
       "ERRORS": {
         "CLIENTS_REQUIRED": "Odaberite barem jednog klijenta.",
         "SERVICE_REQUIRED": "Usluga je obavezna.",
@@ -802,9 +926,47 @@
       "RETURN_ENTRY_LABEL": "Vrati ulazak",
       "CONFIRM_BUTTON": "Označi",
       "MARKED": "Termin je označen kao \"nije došao\"."
+    },
+    "BREAK": {
+      "LABEL": "Pauza",
+      "NEW_BUTTON": "Pauza",
+      "FORM": {
+        "TITLE": "Nova pauza",
+        "FIELD_TRAINER": "Trener",
+        "FIELD_LOCATION": "Lokacija",
+        "FIELD_STARTS_AT": "Datum i vrijeme",
+        "FIELD_DURATION": "Trajanje",
+        "FIELD_NOTE": "Napomena",
+        "RECURRING_TOGGLE": "Ponavljajuća pauza",
+        "FIELD_RECURRENCE_TYPE": "Periodičnost",
+        "FIELD_END_DATE": "Datum kraja",
+        "SCHEDULE_BUTTON": "Zakaži pauzu",
+        "SCHEDULE_RECURRING_BUTTON": "Zakaži niz",
+        "CREATED": "Pauza je zakazana.",
+        "RECURRING_CREATED": "Niz pauza je uspješno zakazan ({{count}}).",
+        "ERRORS": {
+          "TRAINER_REQUIRED": "Trener je obavezan.",
+          "LOCATION_REQUIRED": "Lokacija je obavezna.",
+          "STARTS_AT_REQUIRED": "Datum i vrijeme su obavezni.",
+          "DURATION_REQUIRED": "Trajanje je obavezno.",
+          "RECURRENCE_TYPE_REQUIRED": "Periodičnost je obavezna.",
+          "END_DATE_REQUIRED": "Datum kraja je obavezan."
+        }
+      },
+      "DIALOG": {
+        "TITLE": "Pauza",
+        "FIELD_TRAINER": "Trener",
+        "FIELD_LOCATION": "Lokacija",
+        "DELETE_BUTTON": "Obriši",
+        "CONFIRM_DELETE": "Sigurno obrisati pauzu?",
+        "UPDATED": "Pauza je ažurirana.",
+        "DELETED": "Pauza je izbrisana."
+      }
     }
   },
   "ROSTER": {
+    "PLANNED_LABEL": "Planirano",
+    "PLANNED_LEGEND_HINT": "predviđeno prema rasporedu, još nije potvrđeno",
     "TYPES": {
       "TAB_LABEL": "Vrste rostera",
       "NEW": "Nova vrsta rostera",
@@ -821,6 +983,8 @@
       "FIELD_IS_ABSENCE": "Odsutnost",
       "FIELD_REQUIRES_TIME": "Zahtijeva vrijeme",
       "REQUIRES_TIME_HINT": "Samo informativno - oblik zapisa (rad ili odsutnost) određuje isključivo polje \"Odsutnost\".",
+      "FIELD_DEDUCTS_FROM_LEAVE_FUND": "Troši fond godišnjeg",
+      "DEDUCTS_FROM_LEAVE_FUND_HINT": "Dostupno samo za vrste odsutnosti - upis ovog tipa oduzima dane iz fonda godišnjeg odmora zaposlenika.",
       "FIELD_SORT_ORDER": "Redoslijed prikaza",
       "ERRORS": {
         "NAME_REQUIRED": "Naziv je obavezan."
@@ -872,18 +1036,45 @@
       "FIELD_START_TIME": "Vrijeme od",
       "FIELD_END_TIME": "Vrijeme do",
       "FIELD_NOTE": "Napomena",
+      "LEAVE_FUND_REMAINING_HINT": "Preostalo dana godišnjeg odmora: {{days}}.",
+      "LEAVE_SETTINGS_HINT": "Postavite fond godišnjeg odmora na profilu zaposlenika (tab \"Godišnji odmor\") prije upisa.",
       "ERRORS": {
         "EMPLOYEE_REQUIRED": "Zaposlenik je obavezan.",
         "TYPE_REQUIRED": "Vrsta je obavezna.",
         "DATE_FROM_REQUIRED": "Datum je obavezan.",
+        "DATE_TO_REQUIRED": "Datum \"do\" je obavezan za ovu vrstu odsutnosti.",
         "DATE_TO_BEFORE_FROM": "Datum \"do\" ne može biti prije datuma \"od\".",
         "TIME_REQUIRED": "Vrijeme od i do su obavezni.",
-        "END_BEFORE_START": "Vrijeme do mora biti nakon vremena od."
+        "END_BEFORE_START": "Vrijeme do mora biti nakon vremena od.",
+        "LEAVE_FUND_EXCEEDED_DETAIL": "Zaposlenik nema dovoljno preostalih dana godišnjeg odmora - dostupno {{available}}, traženo {{requested}}."
       },
       "CREATED": "Zapis je uspješno spremljen.",
       "UPDATED": "Zapis je uspješno ažuriran.",
       "ADD_ANOTHER_HEADER": "Dodaj još jedan zapis?",
       "ADD_ANOTHER_MESSAGE": "Zapis je spremljen. Želite li dodati još jedan zapis za isti dan (npr. drugu smjenu)?"
+    }
+  },
+  "WORKING_HOURS": {
+    "LOADING": "Učitavanje...",
+    "FIELD_CYCLE_TYPE": "Ciklus",
+    "CYCLE_TYPE": {
+      "WEEKLY": "Tjedno",
+      "FORTNIGHTLY": "Dvotjedno",
+      "FOUR_WEEKLY": "Četverotjedno"
+    },
+    "CYCLE_WEEK": {
+      "A": "Tjedan A",
+      "B": "Tjedan B",
+      "N": "Tjedan {{n}}"
+    },
+    "ANCHOR_HINT": "Raspored vrijedi od {{date}}, tjedan se računa od ponedjeljka.",
+    "DAY_OFF": "Neradni dan",
+    "ADD_INTERVAL": "Dodaj interval",
+    "REMOVE_INTERVAL": "Ukloni interval",
+    "SAVED": "Radno vrijeme je uspješno spremljeno.",
+    "ERRORS": {
+      "END_BEFORE_START": "Vrijeme do mora biti nakon vremena od.",
+      "OVERLAP": "Intervali za ovaj dan se preklapaju."
     }
   },
   "AUTH": {
@@ -895,11 +1086,44 @@
       "PASSWORD": "Lozinka",
       "PASSWORD_PLACEHOLDER": "Unesite lozinku",
       "SUBMIT": "Prijava",
+      "NO_ORGANIZATION_PROMPT": "Nemate organizaciju?",
+      "NO_ORGANIZATION_LINK": "Otvorite je",
       "ERRORS": {
         "ORGANIZATION_REQUIRED": "Organizacija je obavezna.",
         "EMAIL_REQUIRED": "Email je obavezan.",
         "EMAIL_INVALID": "Unesite ispravan email.",
         "PASSWORD_REQUIRED": "Lozinka je obavezna."
+      }
+    },
+    "PIN_LOGIN": {
+      "TITLE": "Odaberite korisnika",
+      "OTHER_ACCOUNT": "Prijavi se s drugim računom",
+      "BACK_TO_USERS": "Natrag na odabir korisnika",
+      "PIN_LABEL": "PIN",
+      "PIN_PLACEHOLDER": "Unesite PIN",
+      "SUBMIT": "Prijava",
+      "REMOVE_USER": "Ukloni korisnika s ovog uređaja",
+      "CONFIRM_REMOVE": "Ukloniti \"{{name}}\" s popisa korisnika ovog uređaja?",
+      "ERRORS": {
+        "PIN_REQUIRED": "PIN je obavezan.",
+        "PIN_FORMAT": "PIN mora imati 4 do 6 znamenki."
+      }
+    },
+    "REGISTER": {
+      "ORGANIZATION_NAME": "Naziv organizacije",
+      "ORGANIZATION_NAME_PLACEHOLDER": "npr. Moj studio",
+      "EMAIL": "Email",
+      "EMAIL_PLACEHOLDER": "ime@primjer.com",
+      "PASSWORD": "Lozinka",
+      "PASSWORD_PLACEHOLDER": "Najmanje 8 znakova",
+      "SUBMIT": "Otvori organizaciju",
+      "HAVE_ORGANIZATION_PROMPT": "Već imate organizaciju?",
+      "HAVE_ORGANIZATION_LINK": "Prijavite se",
+      "ERRORS": {
+        "ORGANIZATION_NAME_REQUIRED": "Naziv organizacije je obavezan.",
+        "EMAIL_REQUIRED": "Email je obavezan.",
+        "EMAIL_INVALID": "Unesite ispravan email.",
+        "PASSWORD_REQUIRED": "Lozinka je obavezna (najmanje 8 znakova)."
       }
     }
   },
@@ -915,10 +1139,17 @@
     "FIELD_CONFIRM_PASSWORD": "Potvrda nove lozinke",
     "SUBMIT": "Promijeni lozinku",
     "SUCCESS": "Lozinka je uspješno promijenjena.",
+    "SECTION_SET_PIN": "Postavi PIN",
+    "SECTION_CHANGE_PIN": "Promjena PIN-a",
+    "FIELD_NEW_PIN": "Novi PIN",
+    "SUBMIT_PIN": "Spremi PIN",
+    "PIN_SUCCESS": "PIN je uspješno spremljen.",
     "ERRORS": {
       "CURRENT_PASSWORD_REQUIRED": "Trenutna lozinka je obavezna.",
       "NEW_PASSWORD_MIN_LENGTH": "Nova lozinka mora imati najmanje 8 znakova.",
-      "PASSWORDS_DO_NOT_MATCH": "Lozinke se ne podudaraju."
+      "PASSWORDS_DO_NOT_MATCH": "Lozinke se ne podudaraju.",
+      "PIN_REQUIRED": "Novi PIN je obavezan.",
+      "PIN_FORMAT": "PIN mora imati 4 do 6 znamenki."
     }
   }
 }

@@ -63,7 +63,7 @@
             }})
           </span>
         </td>
-        <td>{{ item.locationName ?? ('CATALOG.PRICING.ALL_LOCATIONS' | translate) }}</td>
+        <td>{{ item.companyName ?? ('CATALOG.PRICING.ALL_LOCATIONS' | translate) }}</td>
         <td>{{ item.price | eurCurrency }}</td>
         <td>{{ item.validFrom | hrDate }}</td>
         <td>{{ item.validTo ? (item.validTo | hrDate) : ('CATALOG.PRICING.UNLIMITED' | translate) }}</td>

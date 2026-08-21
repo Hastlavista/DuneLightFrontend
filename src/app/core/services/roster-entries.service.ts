@@ -22,10 +22,10 @@ export class RosterEntriesService extends PagedCrudService<RosterEntryDto, Roste
   /** GET /api/roster/team-monthly - the whole employees x days-of-month matrix,
    * pre-assembled server-side (see TeamMonthlyDto). Visible to Admin and
    * Member alike - every row, not just the caller's own. */
-  teamMonthly(query: { year: number; month: number; locationId?: string | null }): Observable<TeamMonthlyDto> {
+  teamMonthly(query: { year: number; month: number; companyId?: string | null }): Observable<TeamMonthlyDto> {
     let params = new HttpParams().set('year', query.year).set('month', query.month);
-    if (query.locationId) {
-      params = params.set('locationId', query.locationId);
+    if (query.companyId) {
+      params = params.set('companyId', query.companyId);
     }
     return this.http.get<TeamMonthlyDto>(`${environment.apiUrl}/api/roster/team-monthly`, { params });
   }

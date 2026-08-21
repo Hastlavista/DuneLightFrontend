@@ -21,16 +21,16 @@ export class PriceListService extends PagedCrudService<PriceListItemDto, PriceLi
     super(http);
   }
 
-  /** Update only ever touches price + validity period - subject/location are
+  /** Update only ever touches price + validity period - subject/company are
    * immutable after creation (see PriceListUpdateRequest), so this narrows the
    * base class's create/update pair instead of reusing PriceListCreateRequest. */
   override update(id: string, request: PriceListUpdateRequest): Observable<PriceListItemDto> {
     return this.http.put<PriceListItemDto>(`${this.resourceUrl}/${id}`, request);
   }
 
-  getEffective(locationId: string, date: string): Observable<EffectivePriceRow[]> {
+  getEffective(companyId: string, date: string): Observable<EffectivePriceRow[]> {
     const params = new HttpParams({ encoder: new PlusSafeUrlCodec() })
-      .set('locationId', locationId)
+      .set('companyId', companyId)
       .set('date', date);
     return this.http.get<EffectivePriceRow[]>(`${this.resourceUrl}/effective`, { params });
   }
@@ -38,13 +38,13 @@ export class PriceListService extends PagedCrudService<PriceListItemDto, PriceLi
   resolve(query: {
     subjectType: PriceListSubjectType;
     subjectId: string;
-    locationId: string;
+    companyId: string;
     date: string;
   }): Observable<ResolvePriceResult> {
     const params = new HttpParams({ encoder: new PlusSafeUrlCodec() })
       .set('subjectType', query.subjectType)
       .set('subjectId', query.subjectId)
-      .set('locationId', query.locationId)
+      .set('companyId', query.companyId)
       .set('date', query.date);
     return this.http.get<ResolvePriceResult>(`${this.resourceUrl}/resolve`, { params });
   }

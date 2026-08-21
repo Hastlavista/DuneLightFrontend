@@ -176,3 +176,39 @@
     background: rgba(195, 38, 36, 0.08);
   }
 }
+
+.sidebar__user-menu {
+  display: flex;
+  flex-direction: column;
+  min-width: 11rem;
+}
+
+.sidebar__user-menu-item {
+  display: flex;
+  align-items: center;
+  gap: 0.625rem;
+  padding: 0.55rem 0.75rem;
+  border: none;
+  background: transparent;
+  border-radius: 8px;
+  color: var(--clay);
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+
+  i {
+    font-size: 0.9rem;
+    width: 1rem;
+    text-align: center;
+  }
+
+  &:hover {
+    background: var(--sand);
+  }
+
+  &:last-child:hover {
+    color: var(--red);
+    background: rgba(195, 38, 36, 0.08);
+  }
+}

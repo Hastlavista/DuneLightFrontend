@@ -41,8 +41,7 @@ interface LocationOption {
 /** "" = "sve lokacije" - a real, sendable value (locationId omitted), not "no
  * selection". Deliberately not `null`: p-select's value matching gets unreliable
  * once one of the option values is null (it also uses null/undefined internally
- * to mean "nothing selected yet"), so this mirrors the "" sentinel already used
- * elsewhere in the app (e.g. ServiceFormDialogComponent.serviceCategoryId). */
+ * to mean "nothing selected yet"). */
 const ALL_LOCATIONS_VALUE = '';
 
 interface PriceListFormRawValue {
@@ -201,7 +200,7 @@ export class PriceListItemFormDialogComponent {
       subjectType: raw.subjectType,
       serviceId: raw.subjectType === 'Service' ? (raw.serviceId ?? undefined) : undefined,
       packageId: raw.subjectType === 'Package' ? (raw.packageId ?? undefined) : undefined,
-      locationId: raw.locationId || undefined,
+      companyId: raw.locationId || undefined,
       price: raw.price,
       validFrom: toStartOfDayIso(raw.validFrom),
       validTo: raw.validTo ? toEndOfDayIso(raw.validTo) : undefined,
@@ -224,7 +223,7 @@ export class PriceListItemFormDialogComponent {
         subjectType,
         serviceId: item?.serviceId ?? null,
         packageId: item?.packageId ?? null,
-        locationId: item?.locationId ?? ALL_LOCATIONS_VALUE,
+        locationId: item?.companyId ?? ALL_LOCATIONS_VALUE,
         price: item?.price ?? 0,
         validFrom: item ? new Date(item.validFrom) : new Date(),
         validTo: item?.validTo ? new Date(item.validTo) : null,

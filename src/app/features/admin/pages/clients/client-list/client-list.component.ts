@@ -287,7 +287,7 @@ export class ClientListComponent {
           extraParams: {
             tagId: this.tagFilter(),
             homeTrainerId: this.homeTrainerFilter(),
-            homeLocationId: this.homeLocationFilter(),
+            homeCompanyId: this.homeLocationFilter(),
             mineFirst: this.mineFirst() || undefined,
           },
         },

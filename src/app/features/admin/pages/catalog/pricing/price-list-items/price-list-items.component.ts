@@ -220,7 +220,7 @@ export class PriceListItemsComponent {
         },
         {
           extraParams: {
-            locationId: this.locationFilter(),
+            companyId: this.locationFilter(),
             subjectType: this.subjectTypeFilter(),
           },
         },

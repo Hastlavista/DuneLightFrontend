@@ -1,0 +1,66 @@
+<div class="dl-card grant-group-form-page">
+  <div class="grant-group-form-page__header">
+    <h2>{{ (isEditMode() ? 'PERMISSIONS.GRANT_GROUPS.EDIT_TITLE' : 'PERMISSIONS.GRANT_GROUPS.NEW_TITLE') | translate }}</h2>
+    <p-button
+      [text]="true"
+      severity="secondary"
+      icon="pi pi-arrow-left"
+      [label]="'PERMISSIONS.GRANT_GROUPS.BACK_TO_LIST' | translate"
+      (onClick)="onCancel()"
+    />
+  </div>
+
+  <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+    <div class="dl-form__field">
+      <label for="grant-group-name">{{ 'PERMISSIONS.GRANT_GROUPS.FIELD_NAME' | translate }}</label>
+      <input id="grant-group-name" type="text" pInputText fluid formControlName="name" maxlength="255" />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <span class="dl-form__error">{{ 'PERMISSIONS.GRANT_GROUPS.ERRORS.NAME_REQUIRED' | translate }}</span>
+      }
+    </div>
+
+    <section class="grant-group-form-page__grants">
+      <h3>{{ 'PERMISSIONS.GRANT_GROUPS.FIELD_GRANTS' | translate }}</h3>
+
+      <p-accordion [value]="accordionValue()" [multiple]="true">
+        @for (group of moduleGroups(); track group.module) {
+          <p-accordion-panel [value]="group.module">
+            <p-accordion-header>
+              {{ 'PERMISSIONS.MODULES.' + group.module | translate }}
+              <span class="grant-group-form-page__module-count">({{ moduleCheckedCount(group) }}/{{ group.grants.length }})</span>
+            </p-accordion-header>
+            <p-accordion-content>
+              <div class="grant-group-form-page__grant-list">
+                @for (grant of group.grants; track grant.key) {
+                  <label class="grant-group-form-page__grant-row">
+                    <p-checkbox
+                      [binary]="true"
+                      [ngModel]="isChecked(grant.key)"
+                      [ngModelOptions]="{ standalone: true }"
+                      (ngModelChange)="onToggle(grant.key, $event)"
+                    />
+                    <span class="grant-group-form-page__grant-text">
+                      <span class="grant-group-form-page__grant-key">{{ grant.key }}</span>
+                      <span class="grant-group-form-page__grant-description">{{ grant.description }}</span>
+                    </span>
+                  </label>
+                }
+              </div>
+            </p-accordion-content>
+          </p-accordion-panel>
+        }
+      </p-accordion>
+    </section>
+
+    <div class="dl-form__actions">
+      <p-button
+        type="button"
+        [text]="true"
+        severity="secondary"
+        [label]="'COMMON.CANCEL' | translate"
+        (onClick)="onCancel()"
+      />
+      <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+    </div>
+  </form>
+</div>

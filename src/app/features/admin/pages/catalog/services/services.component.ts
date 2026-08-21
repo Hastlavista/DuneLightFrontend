@@ -6,12 +6,11 @@ import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
 import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
-import { executionModeTranslationKey } from '../../../../../core/models/service-category.model';
-import { ServiceDto } from '../../../../../core/models/service.model';
-import { ActiveServiceCategoriesStore } from '../../../../../core/services/active-service-categories.store';
+import { EXECUTION_MODES, ServiceDto, ServiceExecutionMode, executionModeTranslationKey } from '../../../../../core/models/service.model';
 import { ActiveServicesStore } from '../../../../../core/services/active-services.store';
 import { ServicesService } from '../../../../../core/services/services.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
+import { ColorSwatchComponent } from '../../../../../shared/components/color-swatch/color-swatch.component';
 import { ListToolbarComponent } from '../../../../../shared/components/list-toolbar/list-toolbar.component';
 import { StatusTagComponent } from '../../../../../shared/components/status-tag/status-tag.component';
 import { EurCurrencyPipe } from '../../../../../shared/pipes/eur-currency.pipe';
@@ -19,9 +18,9 @@ import { ServiceFormDialogComponent } from './service-form-dialog.component';
 
 const DEFAULT_PAGE_SIZE = 20;
 
-interface CategoryFilterOption {
+interface ExecutionModeFilterOption {
   label: string;
-  value: string | null;
+  value: ServiceExecutionMode | null;
 }
 
 @Component({
@@ -35,6 +34,7 @@ interface CategoryFilterOption {
     EurCurrencyPipe,
     ListToolbarComponent,
     StatusTagComponent,
+    ColorSwatchComponent,
     ServiceFormDialogComponent,
   ],
   templateUrl: './services.component.html',
@@ -42,7 +42,6 @@ interface CategoryFilterOption {
 })
 export class CatalogServicesComponent {
   private readonly servicesService = inject(ServicesService);
-  private readonly activeCategoriesStore = inject(ActiveServiceCategoriesStore);
   private readonly activeServicesStore = inject(ActiveServicesStore);
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
@@ -56,20 +55,13 @@ export class CatalogServicesComponent {
   readonly rows = signal(DEFAULT_PAGE_SIZE);
   readonly search = signal('');
   readonly showInactive = signal(false);
-  readonly categoryFilter = signal<string | null>(null);
+  readonly executionModeFilter = signal<ServiceExecutionMode | null>(null);
 
-  /** Active categories - needed for both the category filter dropdown here and
-   * the category dropdown in the create/edit form. Shared with Kategorije via
-   * ActiveServiceCategoriesStore so adding/editing a category there is
-   * reflected here without a page reload. */
-  readonly activeCategories = this.activeCategoriesStore.categories;
-  private readonly activeCategoriesById = computed(
-    () => new Map(this.activeCategories().map((category) => [category.id, category])),
-  );
+  readonly executionModeTranslationKey = executionModeTranslationKey;
 
-  readonly categoryFilterOptions = computed<CategoryFilterOption[]>(() => [
-    { label: this.translate.instant('CATALOG.SERVICES.FILTER_CATEGORY_ALL'), value: null },
-    ...this.activeCategories().map((category) => ({ label: category.name, value: category.id })),
+  readonly executionModeFilterOptions = computed<ExecutionModeFilterOption[]>(() => [
+    { label: this.translate.instant('CATALOG.SERVICES.FILTER_EXECUTION_MODE_ALL'), value: null },
+    ...EXECUTION_MODES.map((mode) => ({ label: this.translate.instant(executionModeTranslationKey(mode)), value: mode })),
   ]);
 
   readonly dialogVisible = signal(false);
@@ -94,18 +86,10 @@ export class CatalogServicesComponent {
     this.fetch(0, this.rows());
   }
 
-  onCategoryFilterChange(categoryId: string | null): void {
-    this.categoryFilter.set(categoryId);
+  onExecutionModeFilterChange(mode: ServiceExecutionMode | null): void {
+    this.executionModeFilter.set(mode);
     this.table.first = 0;
     this.fetch(0, this.rows());
-  }
-
-  /** Category isn't on ServiceDto - only serviceCategoryName is. Derived here from
-   * the already-loaded active category list; a service whose category has since
-   * been deactivated simply shows no execution mode badge. */
-  executionModeKeyFor(serviceCategoryId: string): string | null {
-    const category = this.activeCategoriesById().get(serviceCategoryId);
-    return category ? executionModeTranslationKey(category.executionMode) : null;
   }
 
   openCreate(): void {
@@ -188,7 +172,7 @@ export class CatalogServicesComponent {
           search: this.search() || undefined,
           isActive: this.showInactive() ? undefined : true,
         },
-        { extraParams: { serviceCategoryId: this.categoryFilter() } },
+        { extraParams: { executionMode: this.executionModeFilter() } },
       )
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe((result) => {

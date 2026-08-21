@@ -1,0 +1,29 @@
+.leave-fund-tab {
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+
+  &__table {
+    width: 100%;
+    border-collapse: collapse;
+
+    th,
+    td {
+      text-align: left;
+      padding: 0.5rem 0.75rem;
+      border-bottom: 1px solid var(--sand);
+      font-size: 0.9rem;
+    }
+
+    th {
+      color: var(--clay-2);
+      font-weight: 500;
+      font-size: 0.8rem;
+    }
+  }
+
+  &__remaining {
+    font-weight: 700;
+    color: var(--clay-2);
+  }
+}

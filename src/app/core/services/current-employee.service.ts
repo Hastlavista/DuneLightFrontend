@@ -26,6 +26,21 @@ export class CurrentEmployeeService {
   /** false = Owner/Admin logged in without an Employee record yet (rare, e.g. right after Register). */
   readonly hasProfile = computed(() => this.employeeState() !== null);
 
+  /** Authoritative once an Employee profile exists (EmployeeMeDto.isOwner). With
+   * no profile at all, fall back to the legacy 'Admin' role claim - after the
+   * grant-system migration every with-login-created employee is hardcoded to
+   * UserRole.Member server-side (see EmployeeService.CreateWithLogin), so
+   * 'Admin' is only ever set for the account Register creates (the Owner) -
+   * making it a reliable stand-in until a profile-less Owner creates their own
+   * Employee record. */
+  readonly isOwner = computed(() => {
+    const employee = this.employeeState();
+    if (employee) {
+      return employee.isOwner;
+    }
+    return this.loadedState() && this.auth.currentRole() === 'Admin';
+  });
+
   load(): Observable<CurrentEmployee | null> {
     return this.http
       .get<CurrentEmployee>(`${environment.apiUrl}/api/employees/me`, {
@@ -56,8 +71,38 @@ export class CurrentEmployeeService {
       );
   }
 
+  /** Returns already-loaded state synchronously (as an Observable) if a load
+   * already completed, otherwise triggers one - use this instead of load()
+   * anywhere the caller doesn't want to force a redundant re-fetch (guards
+   * that may run before ShellComponent's constructor gets a chance to call
+   * load() itself - see admin.guard.ts/owner.guard.ts's own doc comments for
+   * why that ordering matters here). */
+  ensureLoaded(): Observable<CurrentEmployee | null> {
+    if (this.loadedState()) {
+      return of(this.employeeState());
+    }
+    return this.load();
+  }
+
   clear(): void {
     this.employeeState.set(null);
     this.loadedState.set(false);
+  }
+
+  /** Same OR logic as the backend's [RequireGrant]/GrantContext.HasAny - the
+   * Owner always passes regardless of the key(s) asked for. Mirrors what the
+   * matching endpoint would actually allow, so it's safe to use for "should I
+   * show this button/menu item" decisions - the backend still enforces the
+   * real check on the request itself either way. */
+  hasGrant(key: string): boolean {
+    return this.isOwner() || (this.employeeState()?.grants.includes(key) ?? false);
+  }
+
+  hasAnyGrant(keys: string[]): boolean {
+    if (this.isOwner()) {
+      return true;
+    }
+    const grants = this.employeeState()?.grants;
+    return grants ? keys.some((key) => grants.includes(key)) : false;
   }
 }

@@ -1,6 +1,7 @@
 .login-page {
   min-height: 100vh;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   background: var(--paper);
@@ -72,4 +73,127 @@
   border: 1px solid rgba(195, 38, 36, 0.25);
   color: var(--red);
   font-size: 0.85rem;
+}
+
+.login-page__switch {
+  margin-top: 1.5rem;
+  font-size: 0.85rem;
+  color: var(--clay-2);
+}
+
+.login-page__switch-link {
+  margin-left: 0.35rem;
+  color: var(--ochre);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+
+  &--btn {
+    margin-left: 0;
+    border: none;
+    background: transparent;
+    padding: 0;
+    font-size: inherit;
+    font-family: inherit;
+    cursor: pointer;
+  }
+}
+
+.chooser-card {
+  max-width: 420px;
+}
+
+.chooser__title {
+  margin: 0 0 1.25rem;
+  text-align: center;
+  font-family: var(--font-heading);
+  font-size: 1.1rem;
+  color: var(--clay);
+}
+
+.chooser__list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.chooser-item {
+  border: 1px solid var(--sand);
+  border-radius: 12px;
+  overflow: hidden;
+
+  &--active {
+    border-color: var(--ochre);
+  }
+}
+
+.chooser-item__card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.75rem 0.9rem;
+  border: none;
+  background: var(--paper);
+  cursor: pointer;
+  text-align: left;
+
+  &:hover {
+    background: var(--sand);
+  }
+}
+
+.chooser-item__avatar {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  color: var(--clay);
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.chooser-item__name {
+  flex: 1;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--clay);
+}
+
+.chooser-item__remove {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: none;
+  background: transparent;
+  color: var(--clay-2);
+  border-radius: 6px;
+  cursor: pointer;
+
+  &:hover {
+    color: var(--red);
+    background: rgba(195, 38, 36, 0.08);
+  }
+}
+
+.chooser-item__pin-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+  padding: 0 0.9rem 0.9rem;
+}
+
+.chooser-item__pin-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
 }

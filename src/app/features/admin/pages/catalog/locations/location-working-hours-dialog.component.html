@@ -1,0 +1,12 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [dismissableMask]="true"
+  [style]="{ width: '52rem' }"
+  [header]="'CATALOG.LOCATIONS.WORKING_HOURS.TITLE' | translate: { name: location()?.name }"
+  (onHide)="onClose()"
+>
+  @if (visible() && owner(); as owner) {
+    <app-working-hours-template-editor [owner]="owner" />
+  }
+</p-dialog>

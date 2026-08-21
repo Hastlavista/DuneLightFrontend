@@ -1,0 +1,57 @@
+@if (shouldShow()) {
+  <div class="dl-card onboarding-checklist">
+    <h2 class="onboarding-checklist__title">{{ 'DASHBOARD.ONBOARDING.TITLE' | translate }}</h2>
+    <p class="onboarding-checklist__intro">{{ 'DASHBOARD.ONBOARDING.INTRO' | translate }}</p>
+
+    <ol class="onboarding-checklist__list">
+      @for (step of steps(); track step.id; let i = $index) {
+        <li
+          class="onboarding-checklist__step"
+          [class.onboarding-checklist__step--done]="step.done"
+          [class.onboarding-checklist__step--next]="step.id === nextStepId()"
+        >
+          <div class="onboarding-checklist__marker">
+            @if (step.done) {
+              <i class="pi pi-check"></i>
+            } @else {
+              {{ i + 1 }}
+            }
+          </div>
+
+          <div class="onboarding-checklist__text">
+            <strong>{{ step.titleKey | translate }}</strong>
+            <span>{{ step.descriptionKey | translate }}</span>
+
+            @if (step.kind === 'profile' && profilePrerequisitesMissing()) {
+              <span class="onboarding-checklist__blocked">
+                {{ 'COMPLETE_PROFILE.PREREQUISITES_MISSING' | translate }}
+              </span>
+            }
+          </div>
+
+          @if (!step.done) {
+            @switch (step.kind) {
+              @case ('link') {
+                <a class="onboarding-checklist__action" [routerLink]="step.routerLink" [queryParams]="step.queryParams">
+                  {{ step.actionKey | translate }}
+                </a>
+              }
+              @case ('profile') {
+                @if (isOwner()) {
+                  <p-button
+                    class="onboarding-checklist__action"
+                    [label]="step.actionKey | translate"
+                    [text]="true"
+                    (onClick)="onOwnerProfileClick()"
+                  />
+                }
+              }
+            }
+          }
+        </li>
+      }
+    </ol>
+  </div>
+
+  <app-complete-employee-profile-dialog [(visible)]="profileDialogVisible" (completed)="onProfileCompleted()" />
+}

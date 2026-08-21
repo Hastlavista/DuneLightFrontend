@@ -24,6 +24,13 @@
     }
   </div>
 
+  <div class="team-monthly__legend">
+    <span class="team-monthly__legend-item">
+      <span class="team-monthly__legend-swatch team-monthly__legend-swatch--planned"></span>
+      {{ 'ROSTER.PLANNED_LABEL' | translate }} — {{ 'ROSTER.PLANNED_LEGEND_HINT' | translate }}
+    </span>
+  </div>
+
   <div class="team-monthly__table-wrap">
     <table class="team-monthly__table">
       <thead>
@@ -58,6 +65,17 @@
                   >
                     {{ entryLabel(entry) }}
                   </span>
+                }
+                @if (daySource(employee, day) === 'Planned') {
+                  @for (interval of plannedIntervals(employee, day); track interval.start + interval.end) {
+                    <span
+                      class="team-monthly__entry team-monthly__entry--planned"
+                      [title]="plannedTooltip(interval)"
+                      (click)="onCellClick(employee, day, null); $event.stopPropagation()"
+                    >
+                      {{ plannedLabel(interval) }}
+                    </span>
+                  }
                 }
               </td>
             }

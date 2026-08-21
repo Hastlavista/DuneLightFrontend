@@ -122,7 +122,7 @@ export class GroupFormComponent {
   readonly locationOptions = computed<RefOption[]>(() =>
     this.mergeOptions(
       this.activeLocations().map((location) => ({ id: location.id, name: location.name })),
-      this.groupRefOption((group) => ({ id: group.locationId, name: group.locationName })),
+      this.groupRefOption((group) => ({ id: group.companyId, name: group.companyName })),
     ),
   );
 
@@ -233,12 +233,12 @@ export class GroupFormComponent {
     }
   }
 
-  private toCommonRequest(): { name: string; serviceId: string; locationId: string; capacity: number; defaultTrainerId: string | null; note: string | null } {
+  private toCommonRequest(): { name: string; serviceId: string; companyId: string; capacity: number; defaultTrainerId: string | null; note: string | null } {
     const raw = this.form.getRawValue();
     return {
       name: raw.name,
       serviceId: raw.serviceId as string,
-      locationId: raw.locationId as string,
+      companyId: raw.locationId as string,
       capacity: raw.capacity as number,
       defaultTrainerId: raw.defaultTrainerId,
       note: raw.note || null,
@@ -314,7 +314,7 @@ export class GroupFormComponent {
       {
         name: group.name,
         serviceId: group.serviceId,
-        locationId: group.locationId,
+        locationId: group.companyId,
         capacity: group.capacity,
         defaultTrainerId: group.defaultTrainerId,
         note: group.note ?? '',

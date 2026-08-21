@@ -1,17 +1,18 @@
 import { Component, input } from '@angular/core';
-import { ServiceCategoryDto } from '../../../core/models/service-category.model';
+import { ServiceDto } from '../../../core/models/service.model';
 
 /** Color legend for the schedule grids - appointment blocks are colored by
- * their service category (serviceCategoryColorHex), this just spells out what
- * each color means. Reused by grid A and grid B. */
+ * their service (serviceCategoryColorHex, sourced from the service's own
+ * colorHex on the backend), this just spells out what each color means.
+ * Reused by grid A and grid B. */
 @Component({
   selector: 'app-schedule-legend',
   template: `
     <div class="schedule-legend">
-      @for (category of categories(); track category.id) {
+      @for (service of services(); track service.id) {
         <span class="schedule-legend__item">
-          <span class="schedule-legend__swatch" [style.background]="category.colorHex ?? '#c9b487'"></span>
-          {{ category.name }}
+          <span class="schedule-legend__swatch" [style.background]="service.colorHex ?? '#c9b487'"></span>
+          {{ service.name }}
         </span>
       }
     </div>
@@ -42,5 +43,5 @@ import { ServiceCategoryDto } from '../../../core/models/service-category.model'
   `,
 })
 export class ScheduleLegendComponent {
-  readonly categories = input<ServiceCategoryDto[]>([]);
+  readonly services = input<ServiceDto[]>([]);
 }

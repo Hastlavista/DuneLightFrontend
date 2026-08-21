@@ -44,6 +44,13 @@
     }
   </div>
 
+  <div class="personal-roster__legend">
+    <span class="personal-roster__legend-item">
+      <span class="personal-roster__legend-swatch personal-roster__legend-swatch--planned"></span>
+      {{ 'ROSTER.PLANNED_LABEL' | translate }} — {{ 'ROSTER.PLANNED_LEGEND_HINT' | translate }}
+    </span>
+  </div>
+
   @if (data(); as personal) {
     <div class="personal-roster__summary">
       <div class="personal-roster__summary-item">
@@ -75,41 +82,62 @@
         </tr>
       </thead>
       <tbody>
-        @for (entry of personal.entries; track entry.id) {
-          <tr>
-            <td>
-              <span class="personal-roster__type-swatch" [style.background]="entry.rosterTypeColorHex ?? 'var(--olive-gold)'"></span>
-              {{ entry.rosterTypeName }}
-            </td>
-            <td>
-              @if (entry.isAbsence) {
-                {{ entry.dateFrom | hrDate }}@if (entry.dateTo) { – {{ entry.dateTo | hrDate }} }
-              } @else {
-                {{ entry.dateFrom | hrDate }}
-              }
-            </td>
-            <td>{{ entryTimeLabel(entry) }}</td>
-            <td>{{ entry.note }}</td>
-            <td class="personal-roster__actions">
-              <p-button
-                icon="pi pi-pencil"
-                [text]="true"
-                [rounded]="true"
-                [ariaLabel]="'COMMON.EDIT' | translate"
-                [title]="'COMMON.EDIT' | translate"
-                (onClick)="onEdit(entry)"
-              />
-              <p-button
-                icon="pi pi-trash"
-                severity="danger"
-                [text]="true"
-                [rounded]="true"
-                [ariaLabel]="'COMMON.DELETE' | translate"
-                [title]="'COMMON.DELETE' | translate"
-                (onClick)="confirmDelete(entry)"
-              />
-            </td>
-          </tr>
+        @for (row of rows(); track rowKey(row)) {
+          @if (row.kind === 'actual') {
+            <tr>
+              <td>
+                <span class="personal-roster__type-swatch" [style.background]="row.entry.rosterTypeColorHex ?? 'var(--olive-gold)'"></span>
+                {{ row.entry.rosterTypeName }}
+              </td>
+              <td>
+                @if (row.entry.isAbsence) {
+                  {{ row.entry.dateFrom | hrDate }}@if (row.entry.dateTo) { – {{ row.entry.dateTo | hrDate }} }
+                } @else {
+                  {{ row.entry.dateFrom | hrDate }}
+                }
+              </td>
+              <td>{{ entryTimeLabel(row.entry) }}</td>
+              <td>{{ row.entry.note }}</td>
+              <td class="personal-roster__actions">
+                <p-button
+                  icon="pi pi-pencil"
+                  [text]="true"
+                  [rounded]="true"
+                  [ariaLabel]="'COMMON.EDIT' | translate"
+                  [title]="'COMMON.EDIT' | translate"
+                  (onClick)="onEdit(row.entry)"
+                />
+                <p-button
+                  icon="pi pi-trash"
+                  severity="danger"
+                  [text]="true"
+                  [rounded]="true"
+                  [ariaLabel]="'COMMON.DELETE' | translate"
+                  [title]="'COMMON.DELETE' | translate"
+                  (onClick)="confirmDelete(row.entry)"
+                />
+              </td>
+            </tr>
+          } @else {
+            <tr class="personal-roster__row--planned">
+              <td>
+                <span class="personal-roster__planned-badge">{{ 'ROSTER.PLANNED_LABEL' | translate }}</span>
+              </td>
+              <td>{{ row.day.date | hrDate }}</td>
+              <td>{{ plannedTimeLabel(row.day) }}</td>
+              <td></td>
+              <td class="personal-roster__actions">
+                <p-button
+                  icon="pi pi-plus"
+                  [text]="true"
+                  [rounded]="true"
+                  [ariaLabel]="'ROSTER.PERSONAL.ADD' | translate"
+                  [title]="'ROSTER.PERSONAL.ADD' | translate"
+                  (onClick)="onAddForPlannedDay(row.day)"
+                />
+              </td>
+            </tr>
+          }
         } @empty {
           <tr>
             <td colspan="5" class="personal-roster__empty">{{ 'ROSTER.PERSONAL.EMPTY' | translate }}</td>

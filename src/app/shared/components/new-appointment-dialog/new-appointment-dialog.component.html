@@ -50,22 +50,6 @@
       </div>
 
       <div class="dl-form__field">
-        <label for="new-appt-trainer">{{ 'SCHEDULE.NEW_APPOINTMENT.FIELD_TRAINER' | translate }}</label>
-        <p-select
-          id="new-appt-trainer"
-          fluid
-          appendTo="body"
-          formControlName="employeeId"
-          [options]="employeeOptions()"
-          optionLabel="label"
-          optionValue="value"
-        />
-        @if (form.controls.employeeId.invalid && form.controls.employeeId.touched) {
-          <span class="dl-form__error">{{ 'SCHEDULE.NEW_APPOINTMENT.ERRORS.TRAINER_REQUIRED' | translate }}</span>
-        }
-      </div>
-
-      <div class="dl-form__field">
         <label for="new-appt-location">{{ 'SCHEDULE.NEW_APPOINTMENT.FIELD_LOCATION' | translate }}</label>
         <p-select
           id="new-appt-location"
@@ -78,6 +62,29 @@
         />
         @if (form.controls.locationId.invalid && form.controls.locationId.touched) {
           <span class="dl-form__error">{{ 'SCHEDULE.NEW_APPOINTMENT.ERRORS.LOCATION_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <app-available-slots-slider
+        [serviceId]="slotsServiceId()"
+        [companyId]="slotsCompanyId()"
+        [lockedEmployeeId]="slotsLockedEmployeeId()"
+        (slotSelected)="onSlotSelected($event)"
+      />
+
+      <div class="dl-form__field">
+        <label for="new-appt-trainer">{{ 'SCHEDULE.NEW_APPOINTMENT.FIELD_TRAINER' | translate }}</label>
+        <p-select
+          id="new-appt-trainer"
+          fluid
+          appendTo="body"
+          formControlName="employeeId"
+          [options]="employeeOptions()"
+          optionLabel="label"
+          optionValue="value"
+        />
+        @if (form.controls.employeeId.invalid && form.controls.employeeId.touched) {
+          <span class="dl-form__error">{{ 'SCHEDULE.NEW_APPOINTMENT.ERRORS.TRAINER_REQUIRED' | translate }}</span>
         }
       </div>
 
@@ -95,6 +102,15 @@
         />
         @if (form.controls.startsAt.invalid && form.controls.startsAt.touched) {
           <span class="dl-form__error">{{ 'SCHEDULE.NEW_APPOINTMENT.ERRORS.STARTS_AT_REQUIRED' | translate }}</span>
+        } @else {
+          @if (availabilityHint(); as hint) {
+            <span class="dl-form__hint">{{ 'SCHEDULE.NEW_APPOINTMENT.AVAILABLE_HINT' | translate: { hint: hint } }}</span>
+          }
+          @if (startsAtOutsideAvailability()) {
+            <span class="new-appointment-dialog__availability-warning">
+              {{ 'SCHEDULE.NEW_APPOINTMENT.OUTSIDE_AVAILABILITY_WARNING' | translate }}
+            </span>
+          }
         }
       </div>
 

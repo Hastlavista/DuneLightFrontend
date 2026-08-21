@@ -27,21 +27,20 @@
     </div>
 
     <div class="dl-form__field">
-      <label for="service-category">{{ 'CATALOG.SERVICES.FIELD_CATEGORY' | translate }}</label>
+      <label for="service-execution-mode">{{ 'CATALOG.SERVICES.FIELD_EXECUTION_MODE' | translate }}</label>
       <p-select
-        id="service-category"
+        id="service-execution-mode"
         fluid
-        formControlName="serviceCategoryId"
-        [options]="categories()"
-        optionLabel="name"
-        optionValue="id"
-        [placeholder]="'CATALOG.SERVICES.FIELD_CATEGORY_PLACEHOLDER' | translate"
+        formControlName="executionMode"
+        [options]="executionModeOptions()"
+        optionLabel="label"
+        optionValue="value"
       />
-      @if (form.controls.serviceCategoryId.invalid && form.controls.serviceCategoryId.touched) {
-        <span class="dl-form__error">{{
-          'CATALOG.SERVICES.ERRORS.CATEGORY_REQUIRED' | translate
-        }}</span>
-      }
+    </div>
+
+    <div class="dl-form__field">
+      <label for="service-color">{{ 'CATALOG.SERVICES.FIELD_COLOR' | translate }}</label>
+      <p-colorpicker id="service-color" formControlName="colorHex" appendTo="body" />
     </div>
 
     <div class="dl-form__row">

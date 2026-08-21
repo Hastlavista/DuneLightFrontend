@@ -1,0 +1,34 @@
+.grant-groups-page {
+  padding: 1.25rem;
+
+  &__toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  &__search {
+    flex: 1 1 16rem;
+    min-width: 12rem;
+    margin-right: auto;
+  }
+
+  &__actions-col {
+    width: 7rem;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    white-space: nowrap;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 2rem 0;
+    color: var(--olive-gold);
+  }
+}

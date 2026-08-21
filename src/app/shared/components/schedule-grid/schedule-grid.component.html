@@ -28,26 +28,38 @@
           [style.height.px]="totalHeightPx()"
           (click)="onColumnClick(column, $event)"
         >
-          @for (hour of hours(); track hour) {
-            <div class="schedule-grid__hour-line" [style.height.px]="rowHeightPx()"></div>
+          @for (line of quarterLines(); track $index) {
+            <div
+              class="schedule-grid__hour-line"
+              [class.schedule-grid__hour-line--quarter]="!line.isHourBoundary"
+              [style.height.px]="quarterRowHeightPx()"
+            ></div>
           }
 
           @for (cell of cellsForColumn(column.id); track cell.id) {
             <div
               class="schedule-grid__cell"
-              [class.schedule-grid__cell--cancelled]="cell.cancelled"
+              [class.schedule-grid__cell--no-show]="cell.noShow"
+              [class.schedule-grid__cell--break]="cell.kind === 'break'"
               [style.top.px]="cell.topPx"
               [style.height.px]="cell.heightPx"
               [style.left.%]="cell.leftPercent"
               [style.width.%]="cell.widthPercent"
-              [style.borderColor]="cell.colorHex"
-              [style.background]="cellBackground(cell.colorHex)"
+              [style.borderColor]="cell.kind === 'break' ? null : cell.colorHex"
+              [style.background]="cell.kind === 'break' ? null : cellBackground(cell.colorHex)"
               (click)="onCellClick(cell, $event)"
             >
               @if (cell.locationColorHex) {
                 <span class="schedule-grid__cell-loc" [style.background]="cell.locationColorHex"></span>
               }
-              <span class="schedule-grid__cell-title">{{ cell.title }}</span>
+              <span class="schedule-grid__cell-title">
+                @if (cell.kind === 'break') {
+                  <i class="pi pi-pause schedule-grid__cell-break-icon"></i>
+                } @else if (cell.hasBirthday) {
+                  <i class="pi pi-gift schedule-grid__cell-birthday" [title]="'SCHEDULE.CELL.BIRTHDAY_TOOLTIP' | translate"></i>
+                }
+                {{ cell.title }}
+              </span>
               <span class="schedule-grid__cell-subtitle">{{ cell.subtitle }}</span>
             </div>
           }

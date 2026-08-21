@@ -1,14 +1,19 @@
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
-import { finalize } from 'rxjs';
+import { finalize, forkJoin } from 'rxjs';
 import { AppointmentScheduleCellDto, AppointmentStatus } from '../../../core/models/appointment.model';
+import { BirthdayDto } from '../../../core/models/client.model';
 import { dayOfWeekShortTranslationKey } from '../../../core/models/group.model';
 import { LocationDto } from '../../../core/models/location.model';
+import { ScheduleBreakCellDto } from '../../../core/models/schedule-break.model';
+import { ServiceExecutionMode } from '../../../core/models/service.model';
 import { AppointmentsService } from '../../../core/services/appointments.service';
+import { ClientsService } from '../../../core/services/clients.service';
 import { LocationContextService } from '../../../core/services/location-context.service';
 import { toEndOfDayIso, toStartOfDayIso } from '../../../core/utils/date.util';
-import { toScheduleGridCell } from '../schedule-grid/schedule-cell-view.util';
+import { buildBirthdayLookup } from '../schedule-grid/schedule-birthday.util';
+import { toScheduleBreakGridCell, toScheduleGridCell } from '../schedule-grid/schedule-cell-view.util';
 import {
   addDays,
   dateFromLocalKey,
@@ -28,14 +33,14 @@ const WEEK_COLUMN_WIDTH_PX = 140;
 export interface WeekEmptySlotEvent {
   startsAt: Date;
   employeeId: string;
-  locationId: string | null;
+  companyId: string | null;
 }
 
 interface ScheduleFilters {
   status: AppointmentStatus | null;
-  category: string | null;
+  executionMode: ServiceExecutionMode | null;
   service: string | null;
-  locationId: string | null;
+  companyId: string | null;
 }
 
 /**
@@ -62,12 +67,13 @@ interface ScheduleFilters {
 })
 export class ScheduleWeekGridComponent {
   private readonly appointmentsService = inject(AppointmentsService);
+  private readonly clientsService = inject(ClientsService);
   private readonly locationContext = inject(LocationContextService);
   private readonly translate = inject(TranslateService);
 
   readonly employeeId = input<string | null>(null);
   readonly statusFilter = input<AppointmentStatus | null>(null);
-  readonly serviceCategoryFilter = input<string | null>(null);
+  readonly executionModeFilter = input<ServiceExecutionMode | null>(null);
   readonly serviceFilter = input<string | null>(null);
   /** Fetched once by ScheduleComponent and shared with both grids - see
    * MyShiftsComponent for the same "fetch once, pass down via @Input" pattern
@@ -76,10 +82,14 @@ export class ScheduleWeekGridComponent {
 
   readonly emptySlotClick = output<WeekEmptySlotEvent>();
   readonly appointmentClicked = output<AppointmentScheduleCellDto>();
+  readonly breakClicked = output<ScheduleBreakCellDto>();
 
   readonly weekStart = signal(startOfWeek(new Date()));
   readonly loading = signal(false);
   private readonly rawCells = signal<AppointmentScheduleCellDto[]>([]);
+  private readonly rawBreaks = signal<ScheduleBreakCellDto[]>([]);
+  private readonly rawBirthdays = signal<BirthdayDto[]>([]);
+  private readonly birthdayLookup = computed(() => buildBirthdayLookup(this.rawBirthdays()));
   private readonly locationColors = computed<Map<string, string | null>>(
     () => new Map(this.activeLocations().map((location) => [location.id, location.colorHex])),
   );
@@ -99,17 +109,35 @@ export class ScheduleWeekGridComponent {
     });
   });
 
+  /** Cancelled termini free their slot and never render on the grid - a
+   * cancelled slot looks like plain empty space, clickable like any other
+   * empty cell to book a new termin. NoShow keeps rendering (dimmed/
+   * struck-through, see toScheduleGridCell) since that status stays visible
+   * by design. */
   readonly gridCells = computed<ScheduleGridCell[]>(() => {
     const showLocationBadge = this.locationContext.selectedLocationId() === null;
     const colors = this.locationColors();
-    return this.rawCells().map((dto) =>
-      toScheduleGridCell(
+    const birthdays = this.birthdayLookup();
+    const appointmentCells = this.rawCells()
+      .filter((dto) => dto.status !== 'Cancelled')
+      .map((dto) =>
+        toScheduleGridCell(
+          dto,
+          localDateKey(new Date(dto.startsAt)),
+          showLocationBadge ? (colors.get(dto.companyId) ?? null) : null,
+          this.translate,
+          birthdays,
+        ),
+      );
+    const breakCells = this.rawBreaks().map((dto) =>
+      toScheduleBreakGridCell(
         dto,
         localDateKey(new Date(dto.startsAt)),
-        showLocationBadge ? (colors.get(dto.locationId) ?? null) : null,
+        showLocationBadge ? (colors.get(dto.companyId) ?? null) : null,
         this.translate,
       ),
     );
+    return [...appointmentCells, ...breakCells];
   });
 
   constructor() {
@@ -118,13 +146,15 @@ export class ScheduleWeekGridComponent {
       const weekStart = this.weekStart();
       const filters: ScheduleFilters = {
         status: this.statusFilter(),
-        category: this.serviceCategoryFilter(),
+        executionMode: this.executionModeFilter(),
         service: this.serviceFilter(),
-        locationId: this.locationContext.selectedLocationId(),
+        companyId: this.locationContext.selectedLocationId(),
       };
 
       if (!employeeId) {
         this.rawCells.set([]);
+        this.rawBreaks.set([]);
+        this.rawBirthdays.set([]);
         return;
       }
       this.fetch(employeeId, weekStart, filters);
@@ -144,7 +174,11 @@ export class ScheduleWeekGridComponent {
   }
 
   onCellClick(cell: ScheduleGridCell): void {
-    this.appointmentClicked.emit(cell.source);
+    if (cell.kind === 'break') {
+      this.breakClicked.emit(cell.source as ScheduleBreakCellDto);
+    } else {
+      this.appointmentClicked.emit(cell.source as AppointmentScheduleCellDto);
+    }
   }
 
   onEmptySlotClick(event: ScheduleEmptySlotClickEvent): void {
@@ -154,7 +188,7 @@ export class ScheduleWeekGridComponent {
     }
     const date = dateFromLocalKey(event.columnId);
     date.setHours(Math.floor(event.startMinutes / 60), event.startMinutes % 60, 0, 0);
-    this.emptySlotClick.emit({ startsAt: date, employeeId, locationId: this.locationContext.selectedLocationId() });
+    this.emptySlotClick.emit({ startsAt: date, employeeId, companyId: this.locationContext.selectedLocationId() });
   }
 
   /** Public so ScheduleComponent can trigger a reload after closing whichever
@@ -167,25 +201,33 @@ export class ScheduleWeekGridComponent {
     }
     this.fetch(employeeId, this.weekStart(), {
       status: this.statusFilter(),
-      category: this.serviceCategoryFilter(),
+      executionMode: this.executionModeFilter(),
       service: this.serviceFilter(),
-      locationId: this.locationContext.selectedLocationId(),
+      companyId: this.locationContext.selectedLocationId(),
     });
   }
 
   private fetch(employeeId: string, weekStart: Date, filters: ScheduleFilters): void {
     this.loading.set(true);
-    this.appointmentsService
-      .getSchedule({
-        from: toStartOfDayIso(weekStart),
-        to: toEndOfDayIso(addDays(weekStart, 6)),
+    const from = toStartOfDayIso(weekStart);
+    const to = toEndOfDayIso(addDays(weekStart, 6));
+    forkJoin({
+      feed: this.appointmentsService.getSchedule({
+        from,
+        to,
         employeeId,
-        locationId: filters.locationId ?? undefined,
+        companyId: filters.companyId ?? undefined,
         status: filters.status ?? undefined,
-        serviceCategoryId: filters.category ?? undefined,
+        executionMode: filters.executionMode ?? undefined,
         serviceId: filters.service ?? undefined,
-      })
+      }),
+      birthdays: this.clientsService.getBirthdays(from, to),
+    })
       .pipe(finalize(() => this.loading.set(false)))
-      .subscribe((cells) => this.rawCells.set(cells));
+      .subscribe(({ feed, birthdays }) => {
+        this.rawCells.set(feed.appointments);
+        this.rawBreaks.set(feed.breaks);
+        this.rawBirthdays.set(birthdays);
+      });
   }
 }

@@ -1,14 +1,10 @@
 <p-tabs [value]="initialTab">
   <p-tablist>
-    <p-tab value="categories">{{ 'CATALOG.CATEGORIES.TAB_LABEL' | translate }}</p-tab>
     <p-tab value="services">{{ 'CATALOG.SERVICES_TAB_LABEL' | translate }}</p-tab>
     <p-tab value="packages">{{ 'CATALOG.PACKAGES_TAB_LABEL' | translate }}</p-tab>
     <p-tab value="pricing">{{ 'CATALOG.PRICING_TAB_LABEL' | translate }}</p-tab>
   </p-tablist>
   <p-tabpanels>
-    <p-tabpanel value="categories">
-      <app-admin-service-categories />
-    </p-tabpanel>
     <p-tabpanel value="services">
       <app-admin-catalog-services />
     </p-tabpanel>

@@ -9,9 +9,9 @@ export interface ClientTagRef {
 
 /** GET /api/clients/{id} and the items of its paged list. Null/absent fields are
  * both possible - the backend omits null fields from the JSON entirely, so treat
- * "missing key" and "null" the same. `homeLocationName`/`homeTrainerName` are
+ * "missing key" and "null" the same. `homeCompanyName`/`homeTrainerName` are
  * ready-to-display text (trainer name is already "Ime Prezime"). Unlike
- * Zaposlenici, assigning a home location/trainer/tag is NOT checked for
+ * Zaposlenici, assigning a home company/trainer/tag is NOT checked for
  * activity by the backend - inactive ones stay assigned freely, no grandfathering
  * warning, no VALIDATION_ERROR. */
 export interface ClientDto {
@@ -27,8 +27,8 @@ export interface ClientDto {
   healthNote?: string;
   gdprConsentGiven: boolean;
   gdprConsentDate?: string;
-  homeLocationId?: string;
-  homeLocationName?: string;
+  homeCompanyId?: string;
+  homeCompanyName?: string;
   homeTrainerId?: string;
   homeTrainerName?: string;
   isActive: boolean;
@@ -43,7 +43,7 @@ export interface ClientDto {
 
 /** Body for both POST and PUT /api/clients - identical shape. `tagIds` is a
  * full-replace of the client's tags on every save, same convention as
- * Zaposlenici's `locationIds`/`serviceIds`. `dateOfBirth`/`gdprConsentDate` -
+ * Zaposlenici's `companyIds`/`serviceIds`. `dateOfBirth`/`gdprConsentDate` -
  * use toStartOfDayIso(). The backend requires gdprConsentDate whenever
  * gdprConsentGiven is true (VALIDATION_ERROR otherwise) - validate this on the
  * frontend first. */
@@ -59,7 +59,7 @@ export interface ClientUpsertRequest {
   healthNote: string | null;
   gdprConsentGiven: boolean;
   gdprConsentDate: string | null;
-  homeLocationId: string | null;
+  homeCompanyId: string | null;
   homeTrainerId: string | null;
   tagIds: string[];
 }

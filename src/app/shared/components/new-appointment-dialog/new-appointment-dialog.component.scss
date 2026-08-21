@@ -19,6 +19,11 @@
     }
   }
 
+  &__availability-warning {
+    font-size: 0.78rem;
+    color: var(--ochre);
+  }
+
   &__packages {
     display: flex;
     flex-direction: column;

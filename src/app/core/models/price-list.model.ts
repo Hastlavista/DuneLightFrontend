@@ -1,14 +1,14 @@
 export type PriceListSubjectType = 'Service' | 'Package';
 
 /** Where an effective/resolved price came from - see PriceListService.getEffective
- * and .resolve. Location-specific beats "all locations" beats the subject's
+ * and .resolve. Company-specific beats "all companies" beats the subject's
  * own default price. */
-export type PriceSource = 'LocationSpecific' | 'AllLocations' | 'Default';
+export type PriceSource = 'CompanySpecific' | 'AllCompanies' | 'Default';
 
 /** GET /api/catalog/price-list/{id} and the items of its paged list. Exactly one
  * of serviceId/packageId is populated (matching subjectType); the other is
- * omitted from the JSON, not null. locationId omitted/null = applies to all
- * locations (and locationName is then omitted too). */
+ * omitted from the JSON, not null. companyId omitted/null = applies to all
+ * companies (and companyName is then omitted too). */
 export interface PriceListItemDto {
   id: string;
   subjectType: PriceListSubjectType;
@@ -16,8 +16,8 @@ export interface PriceListItemDto {
   serviceName?: string;
   packageId?: string;
   packageName?: string;
-  locationId?: string;
-  locationName?: string;
+  companyId?: string;
+  companyName?: string;
   price: number;
   validFrom: string;
   validTo?: string;
@@ -28,20 +28,20 @@ export interface PriceListItemDto {
   updatedBy?: string;
 }
 
-/** Body for POST /api/catalog/price-list. Subject and location are only ever set
+/** Body for POST /api/catalog/price-list. Subject and company are only ever set
  * here - PUT (PriceListUpdateRequest) can't change them. */
 export interface PriceListCreateRequest {
   subjectType: PriceListSubjectType;
   serviceId?: string;
   packageId?: string;
-  locationId?: string;
+  companyId?: string;
   price: number;
   validFrom: string;
   validTo?: string;
 }
 
 /** Body for PUT /api/catalog/price-list/{id} - price and validity period only.
- * Subject/location are immutable after creation; the form disables those
+ * Subject/company are immutable after creation; the form disables those
  * fields in edit mode instead of sending them here. */
 export interface PriceListUpdateRequest {
   price: number;
@@ -62,7 +62,7 @@ export interface EffectivePriceRow {
 export interface ResolvePriceResult {
   subjectType: PriceListSubjectType;
   subjectId: string;
-  locationId: string;
+  companyId: string;
   date: string;
   price: number;
   source: PriceSource;

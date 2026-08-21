@@ -5,6 +5,7 @@ import { map } from 'rxjs/operators';
 import { environment } from '../../../environments/environment';
 import { SUPPRESS_ERROR_TOAST } from '../http/http-context.tokens';
 import {
+  CompleteOwnEmployeeRequest,
   EmployeeDirectoryDto,
   EmployeeDto,
   EmployeeUpsertRequest,
@@ -12,7 +13,6 @@ import {
   EmployeeWithLoginResponse,
 } from '../models/employee.model';
 import { PagedResult } from '../models/paged-result.model';
-import { UserRole } from '../models/role';
 import { PagedCrudService } from './paged-crud.service';
 
 /** Same rationale as PagedCrudService's own LOOKUP_PAGE_SIZE=200 convention -
@@ -29,16 +29,19 @@ export class EmployeesService extends PagedCrudService<EmployeeDto, EmployeeUpse
   }
 
   /** POST /api/employees/with-login - the only create path the UI uses. Returns
-   * `{ employeeId, userId, email, role }`, not a full EmployeeDto - the caller
-   * navigates back to the list rather than trying to render the result. */
+   * `{ employeeId, userId, email, grantGroupIds }`, not a full EmployeeDto - the
+   * caller navigates back to the list rather than trying to render the result. */
   createWithLogin(request: EmployeeWithLoginRequest): Observable<EmployeeWithLoginResponse> {
     return this.http.post<EmployeeWithLoginResponse>(`${this.resourceUrl}/with-login`, request);
   }
 
-  /** PATCH /api/employees/{id}/role - a separate action from update() since it
-   * carries its own business rule (409 LAST_ACTIVE_ADMIN). */
-  changeRole(id: string, role: UserRole): Observable<EmployeeDto> {
-    return this.http.patch<EmployeeDto>(`${this.resourceUrl}/${id}/role`, { role });
+  /** POST /api/employees (no `-login` suffix) - lets an Owner who registered
+   * without one (GET /api/employees/me 404s, see CurrentEmployeeService)
+   * complete their own Employee profile. Not exposed anywhere else in the UI -
+   * see CompleteOwnEmployeeRequest's own doc for why this endpoint's body
+   * differs from createWithLogin()'s. */
+  completeOwnProfile(request: CompleteOwnEmployeeRequest): Observable<EmployeeDto> {
+    return this.http.post<EmployeeDto>(this.resourceUrl, request);
   }
 
   /** GET /api/employees/directory - lightweight lookup any logged-in role may

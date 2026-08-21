@@ -27,11 +27,11 @@
     />
     <p-select
       class="schedule-page__filter"
-      [options]="serviceCategoryFilterOptions()"
+      [options]="executionModeFilterOptions()"
       optionLabel="label"
       optionValue="value"
-      [ngModel]="serviceCategoryFilter()"
-      (ngModelChange)="serviceCategoryFilter.set($event)"
+      [ngModel]="executionModeFilter()"
+      (ngModelChange)="executionModeFilter.set($event)"
     />
     <p-select
       class="schedule-page__filter"
@@ -48,19 +48,27 @@
       [label]="'SCHEDULE.NEW_APPOINTMENT_BUTTON' | translate"
       (onClick)="openNewAppointment()"
     />
+    <p-button
+      class="schedule-page__new-break"
+      [outlined]="true"
+      icon="pi pi-pause"
+      [label]="'SCHEDULE.BREAK.NEW_BUTTON' | translate"
+      (onClick)="openNewBreak()"
+    />
   </div>
 
-  <app-schedule-legend [categories]="activeServiceCategories()" />
+  <app-schedule-legend [services]="activeServices()" />
 
   @if (viewMode() === 'day') {
     <app-admin-schedule-day-grid
       #dayGrid
       [employees]="employeeColumns()"
       [statusFilter]="statusFilter()"
-      [serviceCategoryFilter]="serviceCategoryFilter()"
+      [executionModeFilter]="executionModeFilter()"
       [serviceFilter]="serviceFilter()"
       [activeLocations]="activeLocations()"
       (appointmentClicked)="onAppointmentClicked($event)"
+      (breakClicked)="onBreakClicked($event)"
       (emptySlotClick)="onEmptySlotClick($event)"
     />
   } @else {
@@ -68,10 +76,11 @@
       #weekGrid
       [employeeId]="selectedTrainerId()"
       [statusFilter]="statusFilter()"
-      [serviceCategoryFilter]="serviceCategoryFilter()"
+      [executionModeFilter]="executionModeFilter()"
       [serviceFilter]="serviceFilter()"
       [activeLocations]="activeLocations()"
       (appointmentClicked)="onAppointmentClicked($event)"
+      (breakClicked)="onBreakClicked($event)"
       (emptySlotClick)="onEmptySlotClick($event)"
     />
   }
@@ -99,5 +108,19 @@
   [locations]="activeLocations()"
   [services]="activeServices()"
   [initial]="newAppointmentInitial()"
+  (created)="refreshActiveGrid()"
+/>
+
+<app-schedule-break-dialog
+  [(visible)]="breakDetailVisible"
+  [breakId]="selectedBreakId()"
+  (saved)="refreshActiveGrid()"
+/>
+
+<app-schedule-break-form-dialog
+  [(visible)]="newBreakVisible"
+  [employees]="activeEmployees()"
+  [locations]="activeLocations()"
+  [initial]="newBreakInitial()"
   (created)="refreshActiveGrid()"
 />

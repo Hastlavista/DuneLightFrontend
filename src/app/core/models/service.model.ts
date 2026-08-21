@@ -1,11 +1,24 @@
-/** GET /api/catalog/services/{id} and the items of its paged list. Note there is
- * no executionMode here - derive it from the linked category (serviceCategoryId)
- * if needed, via the already-loaded category list. */
+/** Execution mode values exactly as the backend sends/accepts them. Use these
+ * everywhere in logic - never a display label. */
+export type ServiceExecutionMode = 'Individual' | 'Group';
+
+const EXECUTION_MODE_TRANSLATION_KEYS: Record<ServiceExecutionMode, string> = {
+  Individual: 'CATALOG.SERVICES.EXECUTION_MODE.INDIVIDUAL',
+  Group: 'CATALOG.SERVICES.EXECUTION_MODE.GROUP',
+};
+
+export function executionModeTranslationKey(mode: ServiceExecutionMode): string {
+  return EXECUTION_MODE_TRANSLATION_KEYS[mode];
+}
+
+export const EXECUTION_MODES: ServiceExecutionMode[] = ['Individual', 'Group'];
+
+/** GET /api/catalog/services/{id} and the items of its paged list. */
 export interface ServiceDto {
   id: string;
   name: string;
-  serviceCategoryId: string;
-  serviceCategoryName: string;
+  executionMode: ServiceExecutionMode;
+  colorHex: string | null;
   defaultDurationMinutes: number;
   defaultPrice: number;
   description: string | null;
@@ -18,12 +31,11 @@ export interface ServiceDto {
 }
 
 /** Body for both POST and PUT /api/catalog/services - identical shape. `isActive`
- * is never sent, it has its own activate/deactivate endpoints. The backend
- * rejects a serviceCategoryId that points to an inactive category with
- * VALIDATION_ERROR - the category dropdown must only offer active categories. */
+ * is never sent, it has its own activate/deactivate endpoints. */
 export interface ServiceUpsertRequest {
   name: string;
-  serviceCategoryId: string;
+  executionMode: ServiceExecutionMode;
+  colorHex: string | null;
   defaultDurationMinutes: number;
   defaultPrice: number;
   description: string | null;

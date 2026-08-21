@@ -118,7 +118,7 @@ export class GroupAttendanceDialogComponent {
     return this.translate.instant('GROUPS.ATTENDANCE.SUBTITLE', {
       date: this.hrDatePipe.transform(appointment.date),
       time: appointment.startTime.slice(0, 5),
-      location: appointment.locationName,
+      location: appointment.companyName,
     });
   }
 

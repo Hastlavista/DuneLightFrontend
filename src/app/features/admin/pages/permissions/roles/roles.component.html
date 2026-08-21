@@ -1,0 +1,59 @@
+<div class="dl-card roles-page">
+  <div class="roles-page__toolbar">
+    <p-iconfield class="roles-page__search">
+      <p-inputicon class="pi pi-search" />
+      <input
+        type="text"
+        pInputText
+        fluid
+        [ngModel]="search()"
+        (ngModelChange)="search.set($event)"
+        [placeholder]="'COMMON.SEARCH_PLACEHOLDER' | translate"
+      />
+    </p-iconfield>
+
+    <p-button icon="pi pi-plus" [label]="'PERMISSIONS.ROLES.NEW' | translate" (onClick)="openCreate()" />
+  </div>
+
+  <p-table [value]="items()" [loading]="loading()" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>{{ 'PERMISSIONS.ROLES.COL_NAME' | translate }}</th>
+        <th class="roles-page__actions-col"></th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-role>
+      <tr>
+        <td>{{ role.name }}</td>
+        <td class="roles-page__actions">
+          <p-button
+            icon="pi pi-pencil"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'COMMON.EDIT' | translate"
+            [title]="'COMMON.EDIT' | translate"
+            (onClick)="openEdit(role)"
+          />
+          <p-button
+            icon="pi pi-trash"
+            severity="danger"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'COMMON.DELETE' | translate"
+            [title]="'COMMON.DELETE' | translate"
+            (onClick)="confirmDelete(role)"
+          />
+        </td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="2" class="roles-page__empty">{{ 'PERMISSIONS.ROLES.EMPTY' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<app-role-form-dialog [(visible)]="dialogVisible" [role]="editingRole()" (saved)="onSaved()" />

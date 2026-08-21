@@ -1,14 +1,8 @@
 .services-page {
   padding: 1.25rem;
 
-  &__category-filter {
+  &__execution-mode-filter {
     min-width: 14rem;
-  }
-
-  &__execution-mode {
-    color: var(--olive-gold);
-    font-size: 0.85rem;
-    margin-left: 0.25rem;
   }
 
   &__actions-col {

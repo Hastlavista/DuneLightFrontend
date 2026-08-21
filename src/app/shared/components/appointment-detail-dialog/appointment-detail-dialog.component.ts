@@ -181,7 +181,7 @@ export class AppointmentDetailDialogComponent {
     const raw = this.form.getRawValue();
     const request = {
       startsAt: toLocalIsoFromDate(raw.startsAt as Date),
-      locationId: raw.locationId,
+      companyId: raw.locationId,
       ...(this.allowEmployeeChange() ? { employeeId: raw.employeeId } : {}),
     };
 
@@ -266,7 +266,7 @@ export class AppointmentDetailDialogComponent {
       startsAt: appt.startsAt,
       serviceId: appt.serviceId,
       employeeId: appt.employeeId,
-      locationId: appt.locationId,
+      companyId: appt.companyId,
       clientIds: appt.clients.map((client) => client.clientId),
       amount: appt.price,
       note: appt.note ?? null,
@@ -442,7 +442,7 @@ export class AppointmentDetailDialogComponent {
         this.form.reset({
           startsAt: new Date(dto.startsAt),
           employeeId: dto.employeeId,
-          locationId: dto.locationId,
+          locationId: dto.companyId,
         });
         if (dto.status === 'Cancelled' || dto.status === 'NoShow') {
           this.form.disable();

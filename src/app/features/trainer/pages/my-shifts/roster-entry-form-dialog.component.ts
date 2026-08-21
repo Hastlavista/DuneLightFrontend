@@ -8,9 +8,11 @@ import { Dialog } from 'primeng/dialog';
 import { Select } from 'primeng/select';
 import { Textarea } from 'primeng/textarea';
 import { finalize } from 'rxjs';
+import { AppError } from '../../../../core/models/api-error.model';
 import { EmployeeSummary } from '../../../../core/models/employee.model';
 import { RosterEntryDto, RosterEntryUpsertRequest, RosterTypeDto } from '../../../../core/models/roster.model';
 import { CurrentEmployeeService } from '../../../../core/services/current-employee.service';
+import { LeaveFundService } from '../../../../core/services/leave-fund.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { RosterEntriesService } from '../../../../core/services/roster-entries.service';
 import { toStartOfDayIso } from '../../../../core/utils/date.util';
@@ -60,6 +62,7 @@ export interface RosterEntryFormInitial {
 export class RosterEntryFormDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly rosterEntriesService = inject(RosterEntriesService);
+  private readonly leaveFundService = inject(LeaveFundService);
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly currentEmployeeService = inject(CurrentEmployeeService);
@@ -81,6 +84,19 @@ export class RosterEntryFormDialogComponent {
   readonly saving = signal(false);
   readonly dialogShown = signal(false);
   readonly localError = signal<string | null>(null);
+  /** Set alongside `localError` only for LEAVE_SETTINGS_NOT_CONFIGURED - the
+   * dialog has no reliable way to deep-link into the Employee form's
+   * "Godišnji odmor" tab (this form is reused by both Admin and Member, and
+   * the employee-form route is Admin-only), so the extra hint below the
+   * error just tells the admin where to go instead of linking there. */
+  readonly leaveSettingsNotConfigured = signal(false);
+  /** Sum of remainingDays across every currently relevant LeaveFund - null
+   * while unknown/not applicable (not yet loaded, no type/employee picked, or
+   * the picked type doesn't deduct from the fund at all). Purely informative;
+   * the backend's 409 LEAVE_FUND_EXCEEDED on submit is the real, authoritative
+   * check (same soft-hint/hard-block split as NewAppointmentDialogComponent's
+   * availability vs. OUTSIDE_WORKING_HOURS). */
+  readonly leaveFundRemainingDays = signal<number | null>(null);
 
   readonly isEditMode = computed(() => this.entry() !== null);
   readonly employeeLocked = computed(() => !this.isAdminRole() || this.isEditMode());
@@ -125,6 +141,11 @@ export class RosterEntryFormDialogComponent {
 
   readonly isAbsenceShape = computed(() => this.selectedType()?.isAbsence ?? false);
 
+  /** Frontend #18 - this type consumes the employee's annual leave fund on
+   * entry, so "do" stops being optional (see syncDateToValidator) and a
+   * remaining-days hint is fetched (see refreshLeaveFundSummary). */
+  readonly deductsFromLeaveFund = computed(() => this.selectedType()?.deductsFromLeaveFund ?? false);
+
   constructor() {
     effect(() => {
       if (this.visible()) {
@@ -137,10 +158,18 @@ export class RosterEntryFormDialogComponent {
     this.form.controls.rosterTypeId.valueChanges.subscribe((typeId) => {
       this.selectedTypeId.set(typeId);
       this.localError.set(null);
+      this.leaveSettingsNotConfigured.set(false);
       // Clear whatever the previous shape's fields held - a leftover
       // startTime/dateTo from before the switch must never be sent.
       this.form.patchValue({ dateTo: null, startTime: null, endTime: null }, { emitEvent: false });
+      this.syncDateToValidator(this.selectedType());
+      this.refreshLeaveFundSummary();
     });
+
+    // Only relevant when the employee field isn't locked (Admin picking an
+    // arbitrary employee) - the fund summary must follow whichever employee
+    // is currently selected, not stay pinned to whoever it was fetched for.
+    this.form.controls.employeeId.valueChanges.subscribe(() => this.refreshLeaveFundSummary());
   }
 
   onDialogShow(): void {
@@ -153,8 +182,14 @@ export class RosterEntryFormDialogComponent {
 
   onSave(): void {
     this.localError.set(null);
+    this.leaveSettingsNotConfigured.set(false);
 
-    if (this.form.controls.employeeId.invalid || this.form.controls.rosterTypeId.invalid || this.form.controls.dateFrom.invalid) {
+    if (
+      this.form.controls.employeeId.invalid ||
+      this.form.controls.rosterTypeId.invalid ||
+      this.form.controls.dateFrom.invalid ||
+      this.form.controls.dateTo.invalid
+    ) {
       this.form.markAllAsTouched();
       return;
     }
@@ -208,9 +243,14 @@ export class RosterEntryFormDialogComponent {
     }
 
     const current = this.entry();
+    // Toast suppressed unconditionally (not just for deductsFromLeaveFund
+    // types) so both new error codes get their inline treatment below - every
+    // other code falls through to the same notifications.showAppError() a
+    // suppressed request would otherwise have lost, same convention as
+    // AppointmentsService.createRecurring/NewAppointmentDialogComponent.
     const request$ = current
-      ? this.rosterEntriesService.update(current.id, request)
-      : this.rosterEntriesService.create(request);
+      ? this.rosterEntriesService.update(current.id, request, { suppressErrorToast: true })
+      : this.rosterEntriesService.create(request, { suppressErrorToast: true });
 
     this.saving.set(true);
     request$.pipe(finalize(() => this.saving.set(false))).subscribe({
@@ -227,7 +267,21 @@ export class RosterEntryFormDialogComponent {
           this.visible.set(false);
         }
       },
-      error: () => {},
+      error: (err: AppError) => {
+        if (err.code === 'LEAVE_FUND_EXCEEDED') {
+          const details = err.details as unknown as { available?: number; requested?: number } | undefined;
+          this.localError.set(
+            details?.available !== undefined && details?.requested !== undefined
+              ? this.translate.instant('ROSTER.ENTRY_FORM.ERRORS.LEAVE_FUND_EXCEEDED_DETAIL', details)
+              : this.translate.instant('errors.LEAVE_FUND_EXCEEDED'),
+          );
+        } else if (err.code === 'LEAVE_SETTINGS_NOT_CONFIGURED') {
+          this.localError.set(this.translate.instant('errors.LEAVE_SETTINGS_NOT_CONFIGURED'));
+          this.leaveSettingsNotConfigured.set(true);
+        } else {
+          this.notifications.showAppError(err);
+        }
+      },
     });
   }
 
@@ -249,12 +303,41 @@ export class RosterEntryFormDialogComponent {
           note: '',
         });
         this.selectedTypeId.set('');
+        this.syncDateToValidator(null);
         this.form.markAsUntouched();
         this.localError.set(null);
+        this.leaveSettingsNotConfigured.set(false);
+        this.leaveFundRemainingDays.set(null);
       },
       reject: () => {
         this.visible.set(false);
       },
+    });
+  }
+
+  /** "do" is required only for a type that deducts from the leave fund
+   * (LEAVE_FUND_ENTRY_REQUIRES_END_DATE) - every other odsutnost keeps the
+   * existing "still ongoing" open-ended contract. */
+  private syncDateToValidator(type: RosterTypeDto | null): void {
+    const control = this.form.controls.dateTo;
+    if (type?.deductsFromLeaveFund) {
+      control.setValidators(Validators.required);
+    } else {
+      control.clearValidators();
+    }
+    control.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private refreshLeaveFundSummary(): void {
+    const type = this.selectedType();
+    const employeeId = this.form.controls.employeeId.value;
+    if (!type?.deductsFromLeaveFund || !employeeId) {
+      this.leaveFundRemainingDays.set(null);
+      return;
+    }
+    this.leaveFundService.getFunds(employeeId, { suppressErrorToast: true }).subscribe({
+      next: (funds) => this.leaveFundRemainingDays.set(funds.reduce((sum, fund) => sum + fund.remainingDays, 0)),
+      error: () => this.leaveFundRemainingDays.set(null),
     });
   }
 
@@ -292,6 +375,9 @@ export class RosterEntryFormDialogComponent {
       this.form.controls.employeeId.enable();
     }
 
+    this.syncDateToValidator(this.selectedType());
     this.localError.set(null);
+    this.leaveSettingsNotConfigured.set(false);
+    this.refreshLeaveFundSummary();
   }
 }

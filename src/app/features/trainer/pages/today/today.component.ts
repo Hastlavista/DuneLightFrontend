@@ -7,19 +7,20 @@ import { APPOINTMENT_STATUSES, AppointmentScheduleCellDto, AppointmentStatus, ap
 import { EmployeeColumnEntry, EmployeeDirectoryDto } from '../../../../core/models/employee.model';
 import { GroupAppointmentCellDto, GroupDto } from '../../../../core/models/group.model';
 import { LocationDto } from '../../../../core/models/location.model';
-import { ServiceCategoryDto } from '../../../../core/models/service-category.model';
-import { ServiceDto } from '../../../../core/models/service.model';
+import { ScheduleBreakCellDto } from '../../../../core/models/schedule-break.model';
+import { EXECUTION_MODES, ServiceDto, ServiceExecutionMode, executionModeTranslationKey } from '../../../../core/models/service.model';
 import { EmployeesService } from '../../../../core/services/employees.service';
 import { GroupsService } from '../../../../core/services/groups.service';
 import { LocationContextService } from '../../../../core/services/location-context.service';
 import { LocationsService } from '../../../../core/services/locations.service';
-import { ServiceCategoriesService } from '../../../../core/services/service-categories.service';
 import { ServicesService } from '../../../../core/services/services.service';
 import { translationReadySignal } from '../../../../core/utils/translation-signal.util';
 import { AppointmentDetailDialogComponent } from '../../../../shared/components/appointment-detail-dialog/appointment-detail-dialog.component';
 import { NewAppointmentDialogComponent, NewAppointmentInitial } from '../../../../shared/components/new-appointment-dialog/new-appointment-dialog.component';
 import { toGroupAppointmentCell } from '../../../../shared/components/schedule-grid/schedule-cell-view.util';
 import { ScheduleLegendComponent } from '../../../../shared/components/schedule-legend/schedule-legend.component';
+import { ScheduleBreakDialogComponent } from '../../../../shared/components/schedule-break-dialog/schedule-break-dialog.component';
+import { ScheduleBreakFormDialogComponent } from '../../../../shared/components/schedule-break-form-dialog/schedule-break-form-dialog.component';
 import { GroupAttendanceDialogComponent } from '../../../admin/pages/groups/attendance/group-attendance-dialog.component';
 import { ScheduleDayGridComponent } from '../../../admin/pages/schedule/schedule-day-grid/schedule-day-grid.component';
 
@@ -47,6 +48,8 @@ interface FilterOption<T> {
     AppointmentDetailDialogComponent,
     GroupAttendanceDialogComponent,
     NewAppointmentDialogComponent,
+    ScheduleBreakDialogComponent,
+    ScheduleBreakFormDialogComponent,
     Select,
     Button,
     FormsModule,
@@ -60,18 +63,16 @@ export class TodayComponent {
   private readonly groupsService = inject(GroupsService);
   private readonly locationContext = inject(LocationContextService);
   private readonly locationsService = inject(LocationsService);
-  private readonly serviceCategoriesService = inject(ServiceCategoriesService);
   private readonly servicesService = inject(ServicesService);
   private readonly translate = inject(TranslateService);
 
   readonly dayGrid = viewChild<ScheduleDayGridComponent>('dayGrid');
 
   readonly statusFilter = signal<AppointmentStatus | null>(null);
-  readonly serviceCategoryFilter = signal<string | null>(null);
+  readonly executionModeFilter = signal<ServiceExecutionMode | null>(null);
   readonly serviceFilter = signal<string | null>(null);
 
   readonly activeEmployees = signal<EmployeeDirectoryDto[]>([]);
-  readonly activeServiceCategories = signal<ServiceCategoryDto[]>([]);
   readonly activeServices = signal<ServiceDto[]>([]);
   readonly activeLocations = signal<LocationDto[]>([]);
 
@@ -84,6 +85,12 @@ export class TodayComponent {
 
   readonly newAppointmentVisible = signal(false);
   readonly newAppointmentInitial = signal<NewAppointmentInitial | null>(null);
+
+  readonly breakDetailVisible = signal(false);
+  readonly selectedBreakId = signal<string | null>(null);
+
+  readonly newBreakVisible = signal(false);
+  readonly newBreakInitial = signal<NewAppointmentInitial | null>(null);
 
   private readonly translationsReady = translationReadySignal(this.translate);
 
@@ -100,28 +107,32 @@ export class TodayComponent {
       id: employee.id,
       firstName: employee.firstName,
       lastName: employee.lastName,
-      locationIds: employee.locations
+      companyIds: employee.companies
         .map((name) => locationIdByName.get(name))
         .filter((id): id is string => id !== undefined),
     }));
   });
 
+  /** Excludes `Cancelled` - a cancelled termin never renders on the grid
+   * regardless of this filter (see ScheduleDayGridComponent's `gridCells`),
+   * so offering it as a filter value would just produce a silently empty
+   * grid. */
   readonly statusFilterOptions = computed<FilterOption<AppointmentStatus>[]>(() => {
     this.translationsReady();
     return [
       { label: this.translate.instant('SCHEDULE.FILTER_STATUS_ALL'), value: null },
-      ...APPOINTMENT_STATUSES.map((status) => ({
+      ...APPOINTMENT_STATUSES.filter((status) => status !== 'Cancelled').map((status) => ({
         label: this.translate.instant(appointmentStatusTranslationKey(status)),
         value: status,
       })),
     ];
   });
 
-  readonly serviceCategoryFilterOptions = computed<FilterOption<string>[]>(() => {
+  readonly executionModeFilterOptions = computed<FilterOption<ServiceExecutionMode>[]>(() => {
     this.translationsReady();
     return [
-      { label: this.translate.instant('SCHEDULE.FILTER_CATEGORY_ALL'), value: null },
-      ...this.activeServiceCategories().map((category) => ({ label: category.name, value: category.id })),
+      { label: this.translate.instant('SCHEDULE.FILTER_EXECUTION_MODE_ALL'), value: null },
+      ...EXECUTION_MODES.map((mode) => ({ label: this.translate.instant(executionModeTranslationKey(mode)), value: mode })),
     ];
   });
 
@@ -135,7 +146,6 @@ export class TodayComponent {
 
   constructor() {
     this.loadActiveEmployees();
-    this.loadActiveServiceCategories();
     this.loadActiveServices();
     this.loadActiveLocations();
   }
@@ -149,14 +159,24 @@ export class TodayComponent {
     this.detailVisible.set(true);
   }
 
-  onEmptySlotClick(event: { startsAt: Date; employeeId: string; locationId: string | null }): void {
+  onEmptySlotClick(event: { startsAt: Date; employeeId: string; companyId: string | null }): void {
     this.newAppointmentInitial.set(event);
     this.newAppointmentVisible.set(true);
   }
 
   openNewAppointment(): void {
-    this.newAppointmentInitial.set({ startsAt: new Date(), employeeId: null, locationId: this.locationContext.selectedLocationId() });
+    this.newAppointmentInitial.set({ startsAt: new Date(), employeeId: null, companyId: this.locationContext.selectedLocationId() });
     this.newAppointmentVisible.set(true);
+  }
+
+  onBreakClicked(scheduleBreak: ScheduleBreakCellDto): void {
+    this.selectedBreakId.set(scheduleBreak.id);
+    this.breakDetailVisible.set(true);
+  }
+
+  openNewBreak(): void {
+    this.newBreakInitial.set({ startsAt: new Date(), employeeId: null, companyId: this.locationContext.selectedLocationId() });
+    this.newBreakVisible.set(true);
   }
 
   onAttendanceVisibleChange(visible: boolean): void {
@@ -188,12 +208,6 @@ export class TodayComponent {
     this.employeesService
       .getDirectory(true, { suppressErrorToast: true })
       .subscribe((result) => this.activeEmployees.set(result));
-  }
-
-  private loadActiveServiceCategories(): void {
-    this.serviceCategoriesService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeServiceCategories.set(result.items));
   }
 
   private loadActiveServices(): void {

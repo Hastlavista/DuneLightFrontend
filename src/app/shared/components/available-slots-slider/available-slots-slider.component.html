@@ -1,0 +1,57 @@
+@if (serviceId() && companyId()) {
+  <div class="available-slots-slider">
+    <div class="available-slots-slider__nav">
+      <p-button
+        icon="pi pi-chevron-left"
+        [text]="true"
+        [ariaLabel]="'SCHEDULE.PREV_DAY' | translate"
+        (onClick)="goPrevDay()"
+      />
+      <span class="available-slots-slider__date">{{ dateLabel() }}</span>
+      <p-button
+        icon="pi pi-chevron-right"
+        [text]="true"
+        [ariaLabel]="'SCHEDULE.NEXT_DAY' | translate"
+        (onClick)="goNextDay()"
+      />
+    </div>
+
+    @if (!expanded()) {
+      <div class="available-slots-slider__summary">
+        <span>{{ summaryLabel() }}</span>
+        <button type="button" class="available-slots-slider__change" (click)="expand()">
+          {{ 'SCHEDULE.NEW_APPOINTMENT.SLOTS.CHANGE_TIME' | translate }}
+        </button>
+      </div>
+    } @else if (loading()) {
+      <div class="available-slots-slider__hint">{{ 'SCHEDULE.NEW_APPOINTMENT.SLOTS.LOADING' | translate }}</div>
+    } @else if (visibleRows().length === 0) {
+      <div class="available-slots-slider__empty">{{ 'SCHEDULE.NEW_APPOINTMENT.SLOTS.EMPTY' | translate }}</div>
+    } @else {
+      <div class="available-slots-slider__rows">
+        @for (row of visibleRows(); track row.employeeId) {
+          <div class="available-slots-slider__row">
+            @if (!lockedEmployeeId()) {
+              <div class="available-slots-slider__employee">
+                <span class="available-slots-slider__swatch" [style.background]="row.colorHex ?? '#c9b487'"></span>
+                <span>{{ row.employeeName }}</span>
+              </div>
+            }
+            <div class="available-slots-slider__chips">
+              @for (slot of row.slots; track slot.start) {
+                <button
+                  type="button"
+                  class="available-slots-slider__chip"
+                  [class.available-slots-slider__chip--selected]="isSelected(row.employeeId, slot.start)"
+                  (click)="onSlotClick(row.employeeId, slot.start)"
+                >
+                  {{ slot.start.slice(0, 5) }}
+                </button>
+              }
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </div>
+}

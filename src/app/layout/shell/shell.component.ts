@@ -1,7 +1,10 @@
-import { Component, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, inject, input, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
+import { AuthService } from '../../core/auth/auth.service';
+import { InactivityService } from '../../core/auth/inactivity.service';
+import { KnownUsersService } from '../../core/auth/known-users.service';
 import { CurrentEmployeeService } from '../../core/services/current-employee.service';
 import { LocationContextService } from '../../core/services/location-context.service';
 import { SidebarComponent } from '../sidebar/sidebar.component';
@@ -33,9 +36,32 @@ export class ShellComponent {
   constructor(
     private readonly locationContextService: LocationContextService,
     private readonly currentEmployeeService: CurrentEmployeeService,
+    private readonly authService: AuthService,
+    private readonly knownUsersService: KnownUsersService,
+    private readonly inactivityService: InactivityService,
   ) {
     this.locationContextService.loadLocations();
-    this.currentEmployeeService.load().subscribe();
+    // ensureLoaded(), not load() - a guard on this navigation (adminGuard/
+    // ownerGuard) may have already triggered and awaited the fetch before
+    // this component ever got constructed; avoid a redundant second call.
+    this.currentEmployeeService.ensureLoaded().subscribe((employee) => {
+      const user = this.authService.currentUser();
+      if (employee && user) {
+        // Keeps the device's "known users" chooser fresh on every session
+        // start (full login or PIN login both land here) - see
+        // KnownUsersService's doc comment.
+        this.knownUsersService.remember({
+          email: user.email,
+          organizationSlug: user.organizationSlug,
+          firstName: employee.firstName,
+          lastName: employee.lastName,
+          colorHex: employee.colorHex,
+        });
+      }
+    });
+
+    this.inactivityService.start();
+    inject(DestroyRef).onDestroy(() => this.inactivityService.stop());
   }
 
   toggleSidebar(): void {

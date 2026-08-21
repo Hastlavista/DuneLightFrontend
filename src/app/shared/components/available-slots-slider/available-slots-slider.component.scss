@@ -1,0 +1,115 @@
+.available-slots-slider {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border: 1px solid var(--sand-deep);
+  border-radius: var(--radius-card);
+  background: color-mix(in srgb, var(--sand-deep) 12%, transparent);
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  &__date {
+    min-width: 12rem;
+    text-align: center;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--clay-2);
+  }
+
+  &__hint,
+  &__empty {
+    text-align: center;
+    font-size: 0.85rem;
+    color: var(--olive-gold);
+    padding: 0.5rem 0;
+  }
+
+  &__rows {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    max-height: 12rem;
+    overflow-y: auto;
+  }
+
+  &__row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+  }
+
+  &__employee {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    flex: 0 0 8rem;
+    font-size: 0.8rem;
+    color: var(--clay-2);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__swatch {
+    width: 0.7rem;
+    height: 0.7rem;
+    border-radius: 3px;
+    border: 1px solid var(--sand-deep);
+    flex-shrink: 0;
+  }
+
+  &__chips {
+    display: flex;
+    gap: 0.4rem;
+    overflow-x: auto;
+    flex: 1;
+    min-width: 0;
+    padding-bottom: 0.15rem;
+  }
+
+  &__chip {
+    flex-shrink: 0;
+    border: 1px solid var(--sand-deep);
+    border-radius: 999px;
+    padding: 0.3rem 0.7rem;
+    font-size: 0.8rem;
+    background: var(--sand);
+    color: var(--clay-2);
+    cursor: pointer;
+
+    &:hover {
+      background: color-mix(in srgb, var(--olive-gold) 15%, var(--sand));
+    }
+
+    &--selected {
+      background: var(--olive-gold);
+      color: var(--sand);
+      border-color: var(--olive-gold);
+    }
+  }
+
+  &__summary {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+    color: var(--clay-2);
+  }
+
+  &__change {
+    border: none;
+    background: none;
+    color: var(--olive-gold);
+    font-size: 0.8rem;
+    text-decoration: underline;
+    cursor: pointer;
+    padding: 0;
+  }
+}

@@ -1,4 +1,5 @@
 import { AppointmentScheduleCellDto, AppointmentStatus } from '../../../core/models/appointment.model';
+import { ScheduleBreakCellDto } from '../../../core/models/schedule-break.model';
 
 /** One column of the schedule grid - a trainer (grid A) or a day of the week
  * (grid B). Deliberately generic: ScheduleGridComponent doesn't know or care
@@ -9,12 +10,17 @@ export interface ScheduleGridColumn {
   subLabel?: string;
 }
 
-/** One appointment block, pre-resolved to display-ready strings by the parent
+/** One block on the grid, pre-resolved to display-ready strings by the parent
  * (ScheduleDayGridComponent/ScheduleWeekGridComponent) via
- * toScheduleGridCell() - the grid itself only positions and renders. */
+ * toScheduleGridCell()/toScheduleBreakGridCell() - the grid itself only
+ * positions and renders, branching on `kind` only for the handful of things
+ * that render differently (see schedule-grid.component.html). Both grids mix
+ * appointment and break cells into the same `cells` input so they lay out
+ * (and overlap-lane) together within a column. */
 export interface ScheduleGridCell {
   id: string;
   columnId: string;
+  kind: 'appointment' | 'break';
   /** Minutes since local midnight - the grid's only notion of "when", shared
    * by both grids since each one's columns already fix the calendar day. */
   startMinutes: number;
@@ -24,9 +30,20 @@ export interface ScheduleGridCell {
   locationColorHex?: string | null;
   title: string;
   subtitle: string;
-  cancelled: boolean;
-  status: AppointmentStatus;
-  source: AppointmentScheduleCellDto;
+  /** True only for an appointment's `NoShow` status - `Cancelled` appointments
+   * never reach the grid at all (filtered out before toScheduleGridCell() is
+   * called, see ScheduleDayGridComponent/ScheduleWeekGridComponent's
+   * `gridCells`), so a cancelled slot renders as plain empty space rather than
+   * a dimmed block. Always false for a break. */
+  noShow: boolean;
+  /** Only set for `kind === 'appointment'`. */
+  status?: AppointmentStatus;
+  /** True when a client on this appointment has a birthday on the
+   * appointment's calendar date - see toScheduleGridCell. Always false until
+   * the backend adds `clientIds` to AppointmentScheduleCellDto, and always
+   * false for a break (no clients). */
+  hasBirthday: boolean;
+  source: AppointmentScheduleCellDto | ScheduleBreakCellDto;
 }
 
 /** Emitted on a click that lands on empty grid space (not an appointment

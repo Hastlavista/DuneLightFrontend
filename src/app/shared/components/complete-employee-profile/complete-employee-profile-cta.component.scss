@@ -1,0 +1,39 @@
+.complete-profile-cta {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-color: var(--gold);
+
+  &__icon {
+    font-size: 1.5rem;
+    color: var(--ochre);
+    flex-shrink: 0;
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    flex: 1;
+
+    strong {
+      font-family: var(--font-heading);
+    }
+
+    span {
+      font-size: 0.85rem;
+      color: var(--clay-2);
+    }
+  }
+
+  &__links {
+    display: flex;
+    gap: 0.4rem;
+
+    a {
+      font-weight: 600;
+      text-decoration: underline;
+    }
+  }
+}

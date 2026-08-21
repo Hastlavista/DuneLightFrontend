@@ -1,0 +1,63 @@
+.grant-group-form-page {
+  padding: 1.25rem;
+  max-width: 56rem;
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1.25rem;
+
+    h2 {
+      margin: 0;
+    }
+  }
+
+  &__grants {
+    h3 {
+      margin: 0 0 0.75rem;
+      font-size: 0.95rem;
+      color: var(--clay-2);
+      border-bottom: 1px solid var(--sand);
+      padding-bottom: 0.5rem;
+    }
+  }
+
+  &__module-count {
+    margin-left: 0.5rem;
+    color: var(--olive-gold);
+    font-weight: 400;
+    font-size: 0.85rem;
+  }
+
+  &__grant-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    padding: 0.5rem 0;
+  }
+
+  &__grant-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.6rem;
+    cursor: pointer;
+  }
+
+  &__grant-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  &__grant-key {
+    font-family: monospace;
+    font-size: 0.85rem;
+    color: var(--clay);
+  }
+
+  &__grant-description {
+    font-size: 0.85rem;
+    color: var(--olive-gold);
+  }
+}

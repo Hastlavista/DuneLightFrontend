@@ -61,3 +61,11 @@ export function toIsoAtMinutes(date: Date, minutesFromMidnight: number): string 
 export function toLocalIsoFromDate(date: Date): string {
   return toLocalIso(date, date.getHours(), date.getMinutes(), date.getSeconds(), date.getMilliseconds());
 }
+
+/** Plain calendar date "YYYY-MM-DD", no time-of-day or offset - used by
+ * GET /api/availability's `date` query param, which is a LocalDate on the
+ * backend, not a DateTimeOffset (contrast with every other helper in this
+ * file). */
+export function toDateOnly(date: Date): string {
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
+}

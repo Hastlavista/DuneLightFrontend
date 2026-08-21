@@ -85,6 +85,10 @@
   &__hour-line {
     box-sizing: border-box;
     border-bottom: 1px dashed var(--sand);
+
+    &--quarter {
+      border-bottom: 1px dotted color-mix(in srgb, var(--sand) 55%, transparent);
+    }
   }
 
   &__cell {
@@ -102,13 +106,29 @@
     flex-direction: column;
     gap: 0.05rem;
 
-    &--cancelled {
+    &--no-show {
       opacity: 0.55;
     }
 
-    &--cancelled &-title,
-    &--cancelled &-subtitle {
+    &--no-show &-title,
+    &--no-show &-subtitle {
       text-decoration: line-through;
+    }
+
+    /* Pauza - deliberately not a service-category tint (a break has no
+     * category): a neutral diagonal-stripe background so it reads as
+     * "unavailable" rather than "booked", distinct from any appointment card
+     * at a glance. */
+    &--break {
+      border: 1.5px dashed var(--clay-2);
+      background: repeating-linear-gradient(
+        135deg,
+        var(--paper-2),
+        var(--paper-2) 6px,
+        var(--sand) 6px,
+        var(--sand) 12px
+      );
+      color: var(--clay-2);
     }
   }
 
@@ -118,6 +138,18 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  &__cell-birthday {
+    font-size: 0.68rem;
+    color: var(--gold);
+    margin-right: 0.15rem;
+  }
+
+  &__cell-break-icon {
+    font-size: 0.68rem;
+    color: var(--clay-2);
+    margin-right: 0.15rem;
   }
 
   &__cell-subtitle {

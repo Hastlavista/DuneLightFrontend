@@ -87,7 +87,7 @@ export class IssuePackageDialogComponent {
       packageId: raw.packageId as string,
       purchaseDate: raw.purchaseDate ? toStartOfDayIso(raw.purchaseDate) : null,
       paidPrice: raw.paidPrice,
-      locationId: raw.locationId,
+      companyId: raw.locationId,
     };
 
     this.saving.set(true);
@@ -116,7 +116,7 @@ export class IssuePackageDialogComponent {
       return;
     }
     this.priceListService
-      .resolve({ subjectType: 'Package', subjectId: packageId, locationId, date: toStartOfDayIso(date) })
+      .resolve({ subjectType: 'Package', subjectId: packageId, companyId: locationId, date: toStartOfDayIso(date) })
       .subscribe({
         next: (result) => this.form.controls.paidPrice.setValue(result.price, { emitEvent: false }),
         error: () => {},

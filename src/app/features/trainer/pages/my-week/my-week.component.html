@@ -1,14 +1,21 @@
 <div class="my-week-page">
-  <div class="dl-card my-week-page__toolbar">
-    <p-button icon="pi pi-plus" [label]="'SCHEDULE.LOG_APPOINTMENT_BUTTON' | translate" (onClick)="openNewAppointment()" />
-  </div>
+  @if (hasEmployeeProfile()) {
+    <div class="dl-card my-week-page__toolbar">
+      <p-button icon="pi pi-plus" [label]="'SCHEDULE.LOG_APPOINTMENT_BUTTON' | translate" (onClick)="openNewAppointment()" />
+      <p-button [outlined]="true" icon="pi pi-pause" [label]="'SCHEDULE.BREAK.NEW_BUTTON' | translate" (onClick)="openNewBreak()" />
+    </div>
 
-  <app-schedule-week-grid
-    #weekGrid
-    [employeeId]="currentEmployeeId()"
-    (appointmentClicked)="onAppointmentClicked($event)"
-    (emptySlotClick)="onEmptySlotClick($event)"
-  />
+    <app-schedule-week-grid
+      #weekGrid
+      [employeeId]="currentEmployeeId()"
+      [activeLocations]="activeLocations()"
+      (appointmentClicked)="onAppointmentClicked($event)"
+      (breakClicked)="onBreakClicked($event)"
+      (emptySlotClick)="onEmptySlotClick($event)"
+    />
+  } @else {
+    <app-complete-employee-profile-cta />
+  }
 </div>
 
 <app-appointment-detail-dialog
@@ -33,5 +40,19 @@
   [locations]="activeLocations()"
   [services]="activeServices()"
   [initial]="newAppointmentInitial()"
+  (created)="refreshGrid()"
+/>
+
+<app-schedule-break-dialog
+  [(visible)]="breakDetailVisible"
+  [breakId]="selectedBreakId()"
+  (saved)="refreshGrid()"
+/>
+
+<app-schedule-break-form-dialog
+  [(visible)]="newBreakVisible"
+  [employees]="activeEmployees()"
+  [locations]="activeLocations()"
+  [initial]="newBreakInitial()"
   (created)="refreshGrid()"
 />

@@ -1,6 +1,11 @@
 /** GET /api/roster/types/{id} and the items of its paged list. `requiresTime`
  * is informative only - it does NOT drive RosterEntry's create/update shape,
- * `isAbsence` alone does (see RosterEntryDto). */
+ * `isAbsence` alone does (see RosterEntryDto). `deductsFromLeaveFund`
+ * (frontend #18) - this type consumes the employee's annual leave fund on
+ * entry - is only ever true when `isAbsence` is also true (backend rejects
+ * otherwise with LEAVE_FUND_TYPE_MUST_BE_ABSENCE); the frontend mirrors that
+ * by disabling the checkbox until "Odsutnost" is checked (see
+ * RosterTypeFormDialogComponent). */
 export interface RosterTypeDto {
   id: string;
   name: string;
@@ -8,6 +13,7 @@ export interface RosterTypeDto {
   countsAsWork: boolean;
   isAbsence: boolean;
   requiresTime: boolean;
+  deductsFromLeaveFund: boolean;
   isActive: boolean;
   sortOrder: number;
   createdAt: string;
@@ -25,6 +31,7 @@ export interface RosterTypeUpsertRequest {
   countsAsWork: boolean;
   isAbsence: boolean;
   requiresTime: boolean;
+  deductsFromLeaveFund: boolean;
   sortOrder: number;
 }
 
@@ -91,12 +98,37 @@ export interface RosterDayEntryDto {
   timeRange: string | null;
 }
 
+/** Where a day's roster picture came from (frontend #17): `Actual` means at
+ * least one real RosterEntry exists that day (`entries` is populated,
+ * `plannedIntervals` always empty - a real record always wins over a
+ * prediction); `Planned` means no real entry exists but the day is
+ * today/future AND the employee's WorkingHoursTemplate has hours for it
+ * (`plannedIntervals` populated instead, `entries` empty); `None` means
+ * neither - a genuinely empty day (including any past day with no record -
+ * the backend never backfills a fake "planned" for the past). Render
+ * `Planned` visually distinct (muted/dashed) from `Actual` - see
+ * TeamMonthlyComponent. */
+export type RosterDaySource = 'Actual' | 'Planned' | 'None';
+
+/** One planned interval - the employee's WorkingHoursTemplate resolved down to
+ * a concrete time range for one calendar day, same shape as
+ * AvailabilityIntervalDto but with the backend's own field names for this
+ * endpoint ("start"/"end", not "startTime"/"endTime"). */
+export interface RosterPlannedIntervalDto {
+  start: string;
+  end: string;
+}
+
 /** One calendar day column of a team-monthly employee row - `day` is the
  * 1-based day-of-month, present for every day of the month even when `entries`
- * is empty (no gaps). */
+ * is empty (no gaps). `plannedIntervals` is only ever populated when
+ * `source === 'Planned'` (see RosterDaySource) - `entries` and
+ * `plannedIntervals` are never both non-empty for the same day. */
 export interface RosterDayDto {
   day: number;
   entries: RosterDayEntryDto[];
+  source: RosterDaySource;
+  plannedIntervals: RosterPlannedIntervalDto[];
 }
 
 export interface RosterWorkHoursByTypeDto {
@@ -124,7 +156,7 @@ export interface TeamMonthlyEmployeeDto {
   absenceDaysByType: RosterAbsenceDaysByTypeDto[];
 }
 
-/** GET /api/roster/team-monthly?year=&month=&locationId= - the whole matrix,
+/** GET /api/roster/team-monthly?year=&month=&companyId= - the whole matrix,
  * already assembled server-side (do not rebuild it from a flat entry list). */
 export interface TeamMonthlyDto {
   year: number;
@@ -132,15 +164,26 @@ export interface TeamMonthlyDto {
   employees: TeamMonthlyEmployeeDto[];
 }
 
+/** One day within [from,to] that has no real RosterEntry but IS today/future
+ * AND has hours in the employee's WorkingHoursTemplate (frontend #17) - see
+ * RosterDaySource. Never generated for a past day. */
+export interface RosterPlannedDayDto {
+  date: string;
+  intervals: RosterPlannedIntervalDto[];
+}
+
 /** GET /api/roster/personal?employeeId=&from=&to= - same per-type sums
- * convention as TeamMonthlyEmployeeDto, computed by the backend. Member may
- * only request their own employeeId (409 NOT_OWNER otherwise). */
+ * convention as TeamMonthlyEmployeeDto, computed by the backend (unaffected by
+ * `plannedDays` - sums only ever count real `entries`, never re-add planned
+ * hours on the frontend). Member may only request their own employeeId (409
+ * NOT_OWNER otherwise). */
 export interface PersonalRosterDto {
   employeeId: string;
   employeeName: string;
   from: string;
   to: string;
   entries: RosterEntryDto[];
+  plannedDays: RosterPlannedDayDto[];
   workHoursByType: RosterWorkHoursByTypeDto[];
   totalWorkHours: number;
   absenceDaysByType: RosterAbsenceDaysByTypeDto[];

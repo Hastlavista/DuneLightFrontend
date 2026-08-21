@@ -139,7 +139,7 @@ export class EffectivePriceListComponent {
       .resolve({
         subjectType: this.resolveSubjectType(),
         subjectId,
-        locationId,
+        companyId: locationId,
         date: toStartOfDayIso(this.resolveDate()),
       })
       .pipe(finalize(() => this.resolving.set(false)))
@@ -155,9 +155,9 @@ export class EffectivePriceListComponent {
 
   sourceSeverity(source: PriceSource): 'success' | 'info' | 'secondary' {
     switch (source) {
-      case 'LocationSpecific':
+      case 'CompanySpecific':
         return 'success';
-      case 'AllLocations':
+      case 'AllCompanies':
         return 'info';
       default:
         return 'secondary';

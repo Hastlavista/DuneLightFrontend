@@ -38,6 +38,12 @@
     </div>
     <span class="dl-form__hint">{{ 'ROSTER.TYPES.REQUIRES_TIME_HINT' | translate }}</span>
 
+    <div class="dl-form__field dl-form__field--checkbox">
+      <p-checkbox inputId="roster-type-deducts-from-leave-fund" formControlName="deductsFromLeaveFund" [binary]="true" />
+      <label for="roster-type-deducts-from-leave-fund">{{ 'ROSTER.TYPES.FIELD_DEDUCTS_FROM_LEAVE_FUND' | translate }}</label>
+    </div>
+    <span class="dl-form__hint">{{ 'ROSTER.TYPES.DEDUCTS_FROM_LEAVE_FUND_HINT' | translate }}</span>
+
     <div class="dl-form__field">
       <label for="roster-type-sort-order">{{ 'ROSTER.TYPES.FIELD_SORT_ORDER' | translate }}</label>
       <p-inputnumber id="roster-type-sort-order" fluid formControlName="sortOrder" [showButtons]="true" />

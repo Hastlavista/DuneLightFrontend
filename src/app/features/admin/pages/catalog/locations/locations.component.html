@@ -48,6 +48,16 @@
             [title]="'COMMON.EDIT' | translate"
             (onClick)="openEdit(location)"
           />
+          @if (canViewWorkingHours()) {
+            <p-button
+              icon="pi pi-clock"
+              [text]="true"
+              [rounded]="true"
+              [ariaLabel]="'CATALOG.LOCATIONS.WORKING_HOURS.BUTTON' | translate"
+              [title]="'CATALOG.LOCATIONS.WORKING_HOURS.BUTTON' | translate"
+              (onClick)="openWorkingHours(location)"
+            />
+          }
           @if (location.isActive) {
             <p-button
               icon="pi pi-eye-slash"
@@ -91,3 +101,5 @@
 </div>
 
 <app-location-form-dialog [(visible)]="dialogVisible" [location]="editingLocation()" (saved)="onSaved()" />
+
+<app-location-working-hours-dialog [(visible)]="workingHoursDialogVisible" [location]="workingHoursLocation()" />

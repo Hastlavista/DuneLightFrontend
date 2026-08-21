@@ -10,7 +10,7 @@ import { finalize } from 'rxjs';
 import { EmployeeDto } from '../../../../../core/models/employee.model';
 import { EngagementTypeDto } from '../../../../../core/models/engagement-type.model';
 import { LocationDto } from '../../../../../core/models/location.model';
-import { UserRole, USER_ROLES, roleTranslationKey } from '../../../../../core/models/role';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { EmployeesService } from '../../../../../core/services/employees.service';
 import { EngagementTypesService } from '../../../../../core/services/engagement-types.service';
 import { LocationsService } from '../../../../../core/services/locations.service';
@@ -19,7 +19,6 @@ import { translationReadySignal } from '../../../../../core/utils/translation-si
 import { ColorSwatchComponent } from '../../../../../shared/components/color-swatch/color-swatch.component';
 import { ListToolbarComponent } from '../../../../../shared/components/list-toolbar/list-toolbar.component';
 import { StatusTagComponent } from '../../../../../shared/components/status-tag/status-tag.component';
-import { RoleChangeDialogComponent } from './role-change-dialog.component';
 
 const DEFAULT_PAGE_SIZE = 20;
 /** pageSize max is 200 - fetches the full active set in one page for the filter
@@ -42,13 +41,13 @@ interface FilterOption<T> {
     ListToolbarComponent,
     StatusTagComponent,
     ColorSwatchComponent,
-    RoleChangeDialogComponent,
   ],
   templateUrl: './employee-list.component.html',
   styleUrl: './employee-list.component.scss',
 })
 export class EmployeeListComponent {
   private readonly employeesService = inject(EmployeesService);
+  private readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly locationsService = inject(LocationsService);
   private readonly engagementTypesService = inject(EngagementTypesService);
   private readonly notifications = inject(NotificationService);
@@ -67,7 +66,6 @@ export class EmployeeListComponent {
 
   readonly locationFilter = signal<string | null>(null);
   readonly engagementTypeFilter = signal<string | null>(null);
-  readonly roleFilter = signal<UserRole | null>(null);
 
   readonly activeLocations = signal<LocationDto[]>([]);
   readonly activeEngagementTypes = signal<EngagementTypeDto[]>([]);
@@ -89,19 +87,6 @@ export class EmployeeListComponent {
       ...this.activeEngagementTypes().map((type) => ({ label: type.name, value: type.id })),
     ];
   });
-
-  readonly roleFilterOptions = computed<FilterOption<UserRole>[]>(() => {
-    this.translationsReady();
-    return [
-      { label: this.translate.instant('EMPLOYEES.FILTER_ROLE_ALL'), value: null },
-      ...USER_ROLES.map((role) => ({ label: this.translate.instant(roleTranslationKey(role)), value: role })),
-    ];
-  });
-
-  readonly roleChangeDialogVisible = signal(false);
-  readonly roleChangeEmployee = signal<EmployeeDto | null>(null);
-
-  readonly roleTranslationKey = roleTranslationKey;
 
   constructor() {
     this.loadActiveLocations();
@@ -139,27 +124,12 @@ export class EmployeeListComponent {
     this.fetch(0, this.rows());
   }
 
-  onRoleFilterChange(role: UserRole | null): void {
-    this.roleFilter.set(role);
-    this.table.first = 0;
-    this.fetch(0, this.rows());
-  }
-
   openCreate(): void {
     this.router.navigate(['/admin/employees/new']);
   }
 
   openEdit(employee: EmployeeDto): void {
     this.router.navigate(['/admin/employees', employee.id]);
-  }
-
-  openRoleChange(employee: EmployeeDto): void {
-    this.roleChangeEmployee.set(employee);
-    this.roleChangeDialogVisible.set(true);
-  }
-
-  onRoleChanged(): void {
-    this.fetch(this.table?.first ?? 0, this.rows());
   }
 
   activate(employee: EmployeeDto): void {
@@ -221,6 +191,32 @@ export class EmployeeListComponent {
     return `${employee.firstName} ${employee.lastName}`;
   }
 
+  /** Only ever true for the org's Owner viewing their own row (see
+   * CurrentEmployeeService.isOwner) - EmployeeDto doesn't carry IsOwner for
+   * every row, so this can't identify the Owner in anyone else's rows/when
+   * viewed by a non-Owner. */
+  isOwnerRow(employee: EmployeeDto): boolean {
+    return this.currentEmployeeService.isOwner() && employee.id === this.currentEmployeeService.employee()?.employeeId;
+  }
+
+  /** "Uloga" column: Owner badge for the one row that can be identified as
+   * such (see isOwnerRow), else Role (business tag) names if any, else
+   * GrantGroup names, else a dash. Priority matches how meaningful each is to
+   * a viewer scanning the list - Role is a deliberately-chosen business label,
+   * GrantGroup names are more technical/permission-shaped. */
+  roleColumnLabel(employee: EmployeeDto): string {
+    if (this.isOwnerRow(employee)) {
+      return this.translate.instant('EMPLOYEES.OWNER_BADGE');
+    }
+    if (employee.roleNames.length > 0) {
+      return employee.roleNames.join(', ');
+    }
+    if (employee.grantGroupNames.length > 0) {
+      return employee.grantGroupNames.join(', ');
+    }
+    return '—';
+  }
+
   private fetch(first: number, rows: number): void {
     this.loading.set(true);
     const page = Math.floor(first / rows) + 1;
@@ -234,9 +230,8 @@ export class EmployeeListComponent {
         },
         {
           extraParams: {
-            locationId: this.locationFilter(),
+            companyId: this.locationFilter(),
             engagementTypeId: this.engagementTypeFilter(),
-            role: this.roleFilter(),
           },
         },
       )

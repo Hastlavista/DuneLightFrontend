@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { ownerGuard } from '../../core/guards/owner.guard';
 
 export const ADMIN_ROUTES: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
@@ -81,6 +82,23 @@ export const ADMIN_ROUTES: Routes = [
         (m) => m.PackageFormComponent,
       ),
     data: { titleKey: 'NAV.ADMIN.SERVICES' },
+  },
+  {
+    path: 'permissions',
+    canActivate: [ownerGuard],
+    loadComponent: () => import('./pages/permissions/permissions.component').then((m) => m.PermissionsComponent),
+    data: { titleKey: 'NAV.ADMIN.PERMISSIONS' },
+  },
+  {
+    // Same convention as 'employees/:id' - separate routed page, `:id` is
+    // either a real id (edit) or the literal 'new' (create).
+    path: 'permissions/grant-groups/:id',
+    canActivate: [ownerGuard],
+    loadComponent: () =>
+      import('./pages/permissions/grant-groups/grant-group-form/grant-group-form.component').then(
+        (m) => m.GrantGroupFormComponent,
+      ),
+    data: { titleKey: 'NAV.ADMIN.PERMISSIONS' },
   },
   {
     path: 'finance',

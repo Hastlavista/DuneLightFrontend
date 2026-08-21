@@ -9,6 +9,7 @@ import { EmployeesService } from '../../../../core/services/employees.service';
 import { LocationsService } from '../../../../core/services/locations.service';
 import { RosterEntriesService } from '../../../../core/services/roster-entries.service';
 import { RosterTypesService } from '../../../../core/services/roster-types.service';
+import { CompleteEmployeeProfileCtaComponent } from '../../../../shared/components/complete-employee-profile/complete-employee-profile-cta.component';
 import { PersonalRosterComponent } from '../../../trainer/pages/my-shifts/personal-roster/personal-roster.component';
 import { RosterEntryFormDialogComponent, RosterEntryFormInitial } from '../../../trainer/pages/my-shifts/roster-entry-form-dialog.component';
 import { TeamMonthlyCellClickEvent, TeamMonthlyComponent } from '../../../trainer/pages/my-shifts/team-monthly/team-monthly.component';
@@ -49,6 +50,7 @@ const DEFAULT_TAB = 'types';
     TeamMonthlyComponent,
     PersonalRosterComponent,
     RosterEntryFormDialogComponent,
+    CompleteEmployeeProfileCtaComponent,
   ],
   templateUrl: './shifts.component.html',
 })

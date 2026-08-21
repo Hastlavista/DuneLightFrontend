@@ -23,14 +23,6 @@
       [ngModel]="engagementTypeFilter()"
       (ngModelChange)="onEngagementTypeFilterChange($event)"
     />
-    <p-select
-      class="employee-list-page__filter"
-      [options]="roleFilterOptions()"
-      optionLabel="label"
-      optionValue="value"
-      [ngModel]="roleFilter()"
-      (ngModelChange)="onRoleFilterChange($event)"
-    />
   </app-list-toolbar>
 
   <p-table
@@ -61,15 +53,15 @@
     <ng-template pTemplate="body" let-employee>
       <tr [class.employee-list-page__row--inactive]="!employee.isActive">
         <td>{{ fullName(employee) }}</td>
-        <td>{{ employee.role ? (roleTranslationKey(employee.role) | translate) : '—' }}</td>
+        <td>{{ roleColumnLabel(employee) }}</td>
         <td>{{ employee.engagementTypeName }}</td>
         <td>
-          @for (location of employee.locations; track location.locationId) {
+          @for (location of employee.companies; track location.companyId) {
             <span
               class="employee-list-page__location"
               [class.employee-list-page__location--primary]="location.isPrimary"
             >
-              {{ location.locationName }}@if (!$last) {, }
+              {{ location.companyName }}@if (!$last) {, }
             </span>
           }
         </td>
@@ -83,14 +75,6 @@
             [ariaLabel]="'COMMON.EDIT' | translate"
             [title]="'COMMON.EDIT' | translate"
             (onClick)="openEdit(employee)"
-          />
-          <p-button
-            icon="pi pi-user-edit"
-            [text]="true"
-            [rounded]="true"
-            [ariaLabel]="'EMPLOYEES.CHANGE_ROLE' | translate"
-            [title]="'EMPLOYEES.CHANGE_ROLE' | translate"
-            (onClick)="openRoleChange(employee)"
           />
           @if (employee.isActive) {
             <p-button
@@ -133,9 +117,3 @@
     </ng-template>
   </p-table>
 </div>
-
-<app-role-change-dialog
-  [(visible)]="roleChangeDialogVisible"
-  [employee]="roleChangeEmployee()"
-  (saved)="onRoleChanged()"
-/>

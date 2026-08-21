@@ -1,0 +1,90 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [dismissableMask]="true"
+  [style]="{ width: '26rem' }"
+  [header]="'SCHEDULE.BREAK.DIALOG.TITLE' | translate"
+  (onHide)="onCancel()"
+>
+  @if (loading()) {
+    <div class="schedule-break-dialog__loading">{{ 'SCHEDULE.DETAIL.LOADING' | translate }}</div>
+  } @else if (scheduleBreak(); as brk) {
+    <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+      <div class="dl-form__field">
+        <label>{{ 'SCHEDULE.BREAK.DIALOG.FIELD_TRAINER' | translate }}</label>
+        <div class="dl-form__static-value">{{ brk.employeeName }}</div>
+      </div>
+
+      <div class="dl-form__field">
+        <label>{{ 'SCHEDULE.BREAK.DIALOG.FIELD_LOCATION' | translate }}</label>
+        <div class="dl-form__static-value">{{ brk.companyName }}</div>
+      </div>
+
+      <div class="dl-form__row">
+        <div class="dl-form__field">
+          <label for="break-detail-starts-at">{{
+            'SCHEDULE.BREAK.FORM.FIELD_STARTS_AT' | translate
+          }}</label>
+          <p-datepicker
+            id="break-detail-starts-at"
+            fluid
+            appendTo="body"
+            formControlName="startsAt"
+            [showTime]="true"
+            hourFormat="24"
+            dateFormat="dd.mm.yy"
+            [showIcon]="true"
+          />
+          @if (form.controls.startsAt.invalid && form.controls.startsAt.touched) {
+            <span class="dl-form__error">{{
+              'SCHEDULE.BREAK.FORM.ERRORS.STARTS_AT_REQUIRED' | translate
+            }}</span>
+          }
+        </div>
+
+        <div class="dl-form__field">
+          <label for="break-detail-duration">{{
+            'SCHEDULE.BREAK.FORM.FIELD_DURATION' | translate
+          }}</label>
+          <p-inputnumber
+            id="break-detail-duration"
+            fluid
+            formControlName="durationMinutes"
+            suffix=" min"
+            [min]="1"
+          />
+          @if (form.controls.durationMinutes.invalid && form.controls.durationMinutes.touched) {
+            <span class="dl-form__error">{{
+              'SCHEDULE.BREAK.FORM.ERRORS.DURATION_REQUIRED' | translate
+            }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="dl-form__field">
+        <label for="break-detail-note">{{ 'SCHEDULE.BREAK.FORM.FIELD_NOTE' | translate }}</label>
+        <textarea id="break-detail-note" pTextarea fluid rows="2" formControlName="note"></textarea>
+      </div>
+
+      <div class="dl-form__actions">
+        <p-button
+          type="button"
+          [text]="true"
+          severity="danger"
+          [label]="'SCHEDULE.BREAK.DIALOG.DELETE_BUTTON' | translate"
+          [loading]="deleting()"
+          (onClick)="onDelete()"
+        />
+        <span class="dl-form__actions-spacer"></span>
+        <p-button
+          type="button"
+          [text]="true"
+          severity="secondary"
+          [label]="'COMMON.CANCEL' | translate"
+          (onClick)="onCancel()"
+        />
+        <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+      </div>
+    </form>
+  }
+</p-dialog>

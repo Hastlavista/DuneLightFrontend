@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
+import { InputText } from 'primeng/inputtext';
 import { Password } from 'primeng/password';
 import { finalize } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
@@ -10,6 +11,8 @@ import { roleTranslationKey } from '../../core/models/role';
 import { CurrentEmployeeService } from '../../core/services/current-employee.service';
 import { NotificationService } from '../../core/services/notification.service';
 import { resolveErrorMessage } from '../../core/utils/error-translation.util';
+
+const PIN_PATTERN = /^\d{4,6}$/;
 
 /** Group-level: only checked once both fields have a value, so the per-field
  * "min 8 znakova" error on newPassword isn't drowned out while still typing. */
@@ -31,7 +34,7 @@ function passwordsMatchValidator(group: AbstractControl): ValidationErrors | nul
  */
 @Component({
   selector: 'app-profile',
-  imports: [ReactiveFormsModule, Password, Button, TranslatePipe],
+  imports: [ReactiveFormsModule, Password, InputText, Button, TranslatePipe],
   templateUrl: './profile.component.html',
   styleUrl: './profile.component.scss',
 })
@@ -55,7 +58,8 @@ export class ProfileComponent {
     return role ? roleTranslationKey(role) : '';
   });
 
-  readonly locationNames = computed(() => this.employee()?.locations.map((location) => location.locationName) ?? []);
+  readonly locationNames = computed(() => this.employee()?.companies.map((company) => company.companyName) ?? []);
+  readonly hasPinSet = computed(() => this.employee()?.hasPinSet ?? false);
 
   readonly saving = signal(false);
   readonly errorMessage = signal<string | null>(null);
@@ -89,6 +93,40 @@ export class ProfileComponent {
         },
         error: (err: AppError) => {
           this.errorMessage.set(resolveErrorMessage(this.translate, err.code));
+        },
+      });
+  }
+
+  readonly pinSaving = signal(false);
+  readonly pinErrorMessage = signal<string | null>(null);
+
+  readonly pinForm = this.fb.nonNullable.group({
+    currentPassword: ['', Validators.required],
+    newPin: ['', [Validators.required, Validators.pattern(PIN_PATTERN)]],
+  });
+
+  onSubmitPin(): void {
+    if (this.pinForm.invalid) {
+      this.pinForm.markAllAsTouched();
+      return;
+    }
+
+    this.pinErrorMessage.set(null);
+    this.pinSaving.set(true);
+    const raw = this.pinForm.getRawValue();
+
+    this.authService
+      .changePin({ currentPassword: raw.currentPassword, newPin: raw.newPin })
+      .pipe(finalize(() => this.pinSaving.set(false)))
+      .subscribe({
+        next: () => {
+          this.notifications.showSuccess(this.translate.instant('PROFILE.PIN_SUCCESS'));
+          this.pinForm.reset({ currentPassword: '', newPin: '' });
+          // Refetch (not ensureLoaded) so hasPinSet reflects the change immediately.
+          this.currentEmployeeService.load().subscribe();
+        },
+        error: (err: AppError) => {
+          this.pinErrorMessage.set(resolveErrorMessage(this.translate, err.code));
         },
       });
   }

@@ -70,12 +70,21 @@
             formControlName="dateTo"
             dateFormat="dd.mm.yy"
             [showIcon]="true"
-            [showClear]="true"
-            [placeholder]="'ROSTER.ENTRY_FORM.FIELD_DATE_TO_PLACEHOLDER' | translate"
+            [showClear]="!deductsFromLeaveFund()"
+            [placeholder]="deductsFromLeaveFund() ? '' : ('ROSTER.ENTRY_FORM.FIELD_DATE_TO_PLACEHOLDER' | translate)"
           />
+          @if (form.controls.dateTo.invalid && form.controls.dateTo.touched) {
+            <span class="dl-form__error">{{ 'ROSTER.ENTRY_FORM.ERRORS.DATE_TO_REQUIRED' | translate }}</span>
+          }
         </div>
       </div>
-      <span class="dl-form__hint">{{ 'ROSTER.ENTRY_FORM.DATE_TO_OPEN_HINT' | translate }}</span>
+      @if (deductsFromLeaveFund()) {
+        @if (leaveFundRemainingDays() !== null) {
+          <span class="dl-form__hint">{{ 'ROSTER.ENTRY_FORM.LEAVE_FUND_REMAINING_HINT' | translate: { days: leaveFundRemainingDays() } }}</span>
+        }
+      } @else {
+        <span class="dl-form__hint">{{ 'ROSTER.ENTRY_FORM.DATE_TO_OPEN_HINT' | translate }}</span>
+      }
     } @else {
       <div class="dl-form__field">
         <label for="roster-entry-date-from">{{ 'ROSTER.ENTRY_FORM.FIELD_DATE' | translate }}</label>
@@ -131,6 +140,9 @@
 
     @if (localError()) {
       <span class="dl-form__error">{{ localError() }}</span>
+      @if (leaveSettingsNotConfigured()) {
+        <span class="dl-form__hint">{{ 'ROSTER.ENTRY_FORM.LEAVE_SETTINGS_HINT' | translate }}</span>
+      }
     }
 
     <div class="dl-form__actions">

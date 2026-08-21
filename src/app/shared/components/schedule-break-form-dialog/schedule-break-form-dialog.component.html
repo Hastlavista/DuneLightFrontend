@@ -1,0 +1,182 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [dismissableMask]="true"
+  [style]="{ width: '28rem' }"
+  [header]="'SCHEDULE.BREAK.FORM.TITLE' | translate"
+  (onShow)="onDialogShow()"
+  (onHide)="onCancel()"
+>
+  @if (dialogShown()) {
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="dl-form" novalidate>
+      <div class="dl-form__field">
+        <label for="break-trainer">{{ 'SCHEDULE.BREAK.FORM.FIELD_TRAINER' | translate }}</label>
+        <p-select
+          id="break-trainer"
+          fluid
+          appendTo="body"
+          formControlName="employeeId"
+          [options]="employeeOptions()"
+          optionLabel="label"
+          optionValue="value"
+        />
+        @if (form.controls.employeeId.invalid && form.controls.employeeId.touched) {
+          <span class="dl-form__error">{{
+            'SCHEDULE.BREAK.FORM.ERRORS.TRAINER_REQUIRED' | translate
+          }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="break-location">{{ 'SCHEDULE.BREAK.FORM.FIELD_LOCATION' | translate }}</label>
+        <p-select
+          id="break-location"
+          fluid
+          appendTo="body"
+          formControlName="locationId"
+          [options]="locations()"
+          optionLabel="name"
+          optionValue="id"
+        />
+        @if (form.controls.locationId.invalid && form.controls.locationId.touched) {
+          <span class="dl-form__error">{{
+            'SCHEDULE.BREAK.FORM.ERRORS.LOCATION_REQUIRED' | translate
+          }}</span>
+        }
+      </div>
+
+      <div class="dl-form__row">
+        <div class="dl-form__field">
+          <label for="break-starts-at">{{
+            'SCHEDULE.BREAK.FORM.FIELD_STARTS_AT' | translate
+          }}</label>
+          <p-datepicker
+            id="break-starts-at"
+            fluid
+            appendTo="body"
+            formControlName="startsAt"
+            [showTime]="true"
+            hourFormat="24"
+            dateFormat="dd.mm.yy"
+            [showIcon]="true"
+          />
+          @if (form.controls.startsAt.invalid && form.controls.startsAt.touched) {
+            <span class="dl-form__error">{{
+              'SCHEDULE.BREAK.FORM.ERRORS.STARTS_AT_REQUIRED' | translate
+            }}</span>
+          }
+        </div>
+
+        <div class="dl-form__field">
+          <label for="break-duration">{{ 'SCHEDULE.BREAK.FORM.FIELD_DURATION' | translate }}</label>
+          <p-inputnumber
+            id="break-duration"
+            fluid
+            formControlName="durationMinutes"
+            suffix=" min"
+            [min]="1"
+          />
+          @if (form.controls.durationMinutes.invalid && form.controls.durationMinutes.touched) {
+            <span class="dl-form__error">{{
+              'SCHEDULE.BREAK.FORM.ERRORS.DURATION_REQUIRED' | translate
+            }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="dl-form__field">
+        <label for="break-note">{{ 'SCHEDULE.BREAK.FORM.FIELD_NOTE' | translate }}</label>
+        <textarea id="break-note" pTextarea fluid rows="2" formControlName="note"></textarea>
+      </div>
+
+      <label class="dl-form__field dl-form__field--checkbox">
+        <p-toggleswitch
+          [ngModel]="isRecurring()"
+          [ngModelOptions]="{ standalone: true }"
+          (ngModelChange)="onRecurringToggle($event)"
+        />
+        <span>{{ 'SCHEDULE.BREAK.FORM.RECURRING_TOGGLE' | translate }}</span>
+      </label>
+
+      @if (isRecurring()) {
+        <div class="dl-form__row">
+          <div class="dl-form__field">
+            <label for="break-recurrence-type">{{
+              'SCHEDULE.BREAK.FORM.FIELD_RECURRENCE_TYPE' | translate
+            }}</label>
+            <p-select
+              id="break-recurrence-type"
+              fluid
+              appendTo="body"
+              formControlName="recurrenceType"
+              [options]="recurrenceTypeOptions()"
+              optionLabel="label"
+              optionValue="value"
+            />
+            @if (attemptedSubmit() && !form.controls.recurrenceType.value) {
+              <span class="dl-form__error">{{
+                'SCHEDULE.BREAK.FORM.ERRORS.RECURRENCE_TYPE_REQUIRED' | translate
+              }}</span>
+            }
+          </div>
+
+          <div class="dl-form__field">
+            <label for="break-end-date">{{
+              'SCHEDULE.BREAK.FORM.FIELD_END_DATE' | translate
+            }}</label>
+            <p-datepicker
+              id="break-end-date"
+              fluid
+              appendTo="body"
+              formControlName="endDate"
+              dateFormat="dd.mm.yy"
+              [showIcon]="true"
+            />
+            @if (attemptedSubmit() && !form.controls.endDate.value) {
+              <span class="dl-form__error">{{
+                'SCHEDULE.BREAK.FORM.ERRORS.END_DATE_REQUIRED' | translate
+              }}</span>
+            }
+          </div>
+        </div>
+
+        @if (recurringConflicts(); as conflicts) {
+          <div class="schedule-break-form-dialog__conflicts">
+            <strong>{{ 'SCHEDULE.NEW_APPOINTMENT.CONFLICT_TITLE' | translate }}</strong>
+            <ul>
+              @for (conflict of conflicts; track conflict.date + conflict.reason) {
+                <li>
+                  {{ conflictDateLabel(conflict.date) }} —
+                  {{ recurringConflictReasonTranslationKey(conflict.reason) | translate }}
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      }
+
+      <div class="dl-form__actions">
+        <p-button
+          type="button"
+          [text]="true"
+          severity="secondary"
+          [label]="'COMMON.CANCEL' | translate"
+          (onClick)="onCancel()"
+        />
+        @if (isRecurring()) {
+          <p-button
+            type="submit"
+            [label]="'SCHEDULE.BREAK.FORM.SCHEDULE_RECURRING_BUTTON' | translate"
+            [loading]="saving()"
+          />
+        } @else {
+          <p-button
+            type="submit"
+            [label]="'SCHEDULE.BREAK.FORM.SCHEDULE_BUTTON' | translate"
+            [loading]="saving()"
+          />
+        }
+      </div>
+    </form>
+  }
+</p-dialog>

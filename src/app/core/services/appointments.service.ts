@@ -8,34 +8,37 @@ import {
   AppointmentCreateRequest,
   AppointmentDto,
   AppointmentMoveRequest,
-  AppointmentScheduleCellDto,
   AppointmentScheduleQuery,
+  AvailableSlotsResponseDto,
   RecurringAppointmentCreateRequest,
 } from '../models/appointment.model';
+import { ScheduleFeedDto } from '../models/schedule-break.model';
 import { SUPPRESS_ERROR_TOAST } from '../http/http-context.tokens';
 import { PlusSafeUrlCodec } from '../http/plus-safe-url-codec';
 
 /** Raspored (frontend #8) - schedule grid read, appointment detail, the
  * dedicated drag & drop "move" endpoint, and (frontend #10) creating/billing/
  * cancelling termini. Not a PagedCrudService subclass: the schedule endpoint
- * returns a flat array, not a PagedResult, and there is no PUT/activate/
- * deactivate here at all - "editing" an appointment only ever happens through
- * one of the dedicated partial-update endpoints below (move/complete/cancel/
- * no-show), never a full replace. */
+ * returns a single ScheduleFeedDto envelope, not a PagedResult, and there is
+ * no PUT/activate/deactivate here at all - "editing" an appointment only ever
+ * happens through one of the dedicated partial-update endpoints below
+ * (move/complete/cancel/no-show), never a full replace. */
 @Injectable({ providedIn: 'root' })
 export class AppointmentsService {
   private readonly resourceUrl = `${environment.apiUrl}/api/appointments`;
 
   constructor(private readonly http: HttpClient) {}
 
-  /** GET /api/appointments/schedule - flat array, not paged. `from`/`to` are
-   * required local-offset ISO strings (core/utils/date.util.ts); the "+" in
-   * their offset must survive URL encoding, hence PlusSafeUrlCodec. Includes
-   * cancelled/no-show rows - filter by `status` if the caller doesn't want them. */
-  getSchedule(query: AppointmentScheduleQuery, options?: { suppressErrorToast?: boolean }): Observable<AppointmentScheduleCellDto[]> {
+  /** GET /api/appointments/schedule - returns `{ appointments, breaks }`
+   * (frontend #22 - used to return `appointments` as a bare flat array, see
+   * ScheduleFeedDto). `from`/`to` are required local-offset ISO strings
+   * (core/utils/date.util.ts); the "+" in their offset must survive URL
+   * encoding, hence PlusSafeUrlCodec. `appointments` includes cancelled/no-show
+   * rows - filter by `status` if the caller doesn't want them. */
+  getSchedule(query: AppointmentScheduleQuery, options?: { suppressErrorToast?: boolean }): Observable<ScheduleFeedDto> {
     let params = new HttpParams({ encoder: new PlusSafeUrlCodec() }).set('from', query.from).set('to', query.to);
-    if (query.locationId) {
-      params = params.set('locationId', query.locationId);
+    if (query.companyId) {
+      params = params.set('companyId', query.companyId);
     }
     if (query.employeeId) {
       params = params.set('employeeId', query.employeeId);
@@ -43,13 +46,13 @@ export class AppointmentsService {
     if (query.serviceId) {
       params = params.set('serviceId', query.serviceId);
     }
-    if (query.serviceCategoryId) {
-      params = params.set('serviceCategoryId', query.serviceCategoryId);
+    if (query.executionMode) {
+      params = params.set('executionMode', query.executionMode);
     }
     if (query.status) {
       params = params.set('status', query.status);
     }
-    return this.http.get<AppointmentScheduleCellDto[]>(`${this.resourceUrl}/schedule`, {
+    return this.http.get<ScheduleFeedDto>(`${this.resourceUrl}/schedule`, {
       params,
       context: new HttpContext().set(SUPPRESS_ERROR_TOAST, options?.suppressErrorToast ?? false),
     });
@@ -113,5 +116,27 @@ export class AppointmentsService {
    * AppointmentCancelRequest. */
   noShow(id: string, request: AppointmentCancelRequest): Observable<AppointmentDto> {
     return this.http.post<AppointmentDto>(`${this.resourceUrl}/${id}/no-show`, request);
+  }
+
+  /** GET /api/appointments/available-slots (frontend #24) - see
+   * AvailableSlotsResponseDto's doc. `date` is a plain calendar date
+   * ("YYYY-MM-DD", core/utils/date.util.ts's toDateOnly), not a DateTimeOffset,
+   * same convention as AvailabilityService.get. Error toast is always
+   * suppressed - the slider treats a failed lookup the same as "no free slots"
+   * rather than interrupting the rest of the form with a toast. */
+  getAvailableSlots(query: {
+    serviceId: string;
+    companyId: string;
+    date: string;
+    employeeId?: string | null;
+  }): Observable<AvailableSlotsResponseDto> {
+    let params = new HttpParams().set('serviceId', query.serviceId).set('companyId', query.companyId).set('date', query.date);
+    if (query.employeeId) {
+      params = params.set('employeeId', query.employeeId);
+    }
+    return this.http.get<AvailableSlotsResponseDto>(`${this.resourceUrl}/available-slots`, {
+      params,
+      context: new HttpContext().set(SUPPRESS_ERROR_TOAST, true),
+    });
   }
 }

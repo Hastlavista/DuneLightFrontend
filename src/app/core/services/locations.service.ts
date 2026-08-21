@@ -6,7 +6,7 @@ import { PagedCrudService } from './paged-crud.service';
 
 @Injectable({ providedIn: 'root' })
 export class LocationsService extends PagedCrudService<LocationDto, LocationUpsertRequest> {
-  protected readonly resourceUrl = `${environment.apiUrl}/api/catalog/locations`;
+  protected readonly resourceUrl = `${environment.apiUrl}/api/catalog/companies`;
 
   constructor(http: HttpClient) {
     super(http);

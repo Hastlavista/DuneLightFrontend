@@ -55,7 +55,7 @@ export class GroupsComponent {
       return (
         group.name.toLowerCase().includes(term) ||
         group.serviceName.toLowerCase().includes(term) ||
-        group.locationName.toLowerCase().includes(term) ||
+        group.companyName.toLowerCase().includes(term) ||
         (group.defaultTrainerName ?? '').toLowerCase().includes(term)
       );
     });

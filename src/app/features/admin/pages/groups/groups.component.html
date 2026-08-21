@@ -42,7 +42,7 @@
       <tr [class.groups-page__row--inactive]="!group.isActive">
         <td>{{ group.name }}</td>
         <td>{{ group.serviceName }}</td>
-        <td>{{ group.locationName }}</td>
+        <td>{{ group.companyName }}</td>
         <td>{{ group.defaultTrainerName || ('GROUPS.NO_TRAINER' | translate) }}</td>
         <td>{{ slotsSummary(group) }}</td>
         <td [class.groups-page__capacity--over]="isOverCapacity(group)">

@@ -1,4 +1,6 @@
-/** GET /api/catalog/locations/{id} and the items of its paged list. */
+/** GET /api/catalog/companies/{id} and the items of its paged list (backend
+ * route/entity is "Company" - kept named Location on the frontend since the
+ * user-facing concept and screen stay "Lokacije"). */
 export interface LocationDto {
   id: string;
   name: string;
@@ -14,7 +16,7 @@ export interface LocationDto {
   updatedBy: string | null;
 }
 
-/** Body for both POST /api/catalog/locations and PUT /api/catalog/locations/{id} -
+/** Body for both POST /api/catalog/companies and PUT /api/catalog/companies/{id} -
  * the two requests are identical; `isActive` is never sent, it has its own
  * activate/deactivate endpoints. */
 export interface LocationUpsertRequest {

@@ -2,18 +2,33 @@ import { Component, computed, effect, inject, input, model, output, signal } fro
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
+import { ColorPicker } from 'primeng/colorpicker';
 import { Dialog } from 'primeng/dialog';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { Textarea } from 'primeng/textarea';
 import { finalize } from 'rxjs';
-import { ServiceCategoryDto } from '../../../../../core/models/service-category.model';
-import { ServiceDto, ServiceUpsertRequest } from '../../../../../core/models/service.model';
+import {
+  EXECUTION_MODES,
+  ServiceDto,
+  ServiceExecutionMode,
+  ServiceUpsertRequest,
+  executionModeTranslationKey,
+} from '../../../../../core/models/service.model';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { ServicesService } from '../../../../../core/services/services.service';
 
 const DEFAULT_DURATION_MINUTES = 30;
+
+/** Olive-gold from the dune palette - a sensible default when creating a new
+ * service, before the user picks their own color. */
+const DEFAULT_COLOR_NO_HASH = '8F7A45';
+
+interface ExecutionModeOption {
+  label: string;
+  value: ServiceExecutionMode;
+}
 
 @Component({
   selector: 'app-service-form-dialog',
@@ -23,6 +38,7 @@ const DEFAULT_DURATION_MINUTES = 30;
     InputText,
     Textarea,
     InputNumber,
+    ColorPicker,
     Select,
     Button,
     TranslatePipe,
@@ -37,13 +53,14 @@ export class ServiceFormDialogComponent {
 
   readonly visible = model(false);
   readonly service = input<ServiceDto | null>(null);
-  /** Active categories only - the backend rejects an inactive one, so it's never
-   * offered here (see ServicesComponent, which loads this list). */
-  readonly categories = input<ServiceCategoryDto[]>([]);
   readonly saved = output<void>();
 
   readonly saving = signal(false);
   readonly isEditMode = computed(() => this.service() !== null);
+
+  readonly executionModeOptions = computed<ExecutionModeOption[]>(() =>
+    EXECUTION_MODES.map((mode) => ({ label: this.translate.instant(executionModeTranslationKey(mode)), value: mode })),
+  );
 
   /** True only once p-dialog's own open transition has actually finished (its
    * (onShow) event). A p-select created in the SAME tick as that transition ends
@@ -55,7 +72,8 @@ export class ServiceFormDialogComponent {
 
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(255)]],
-    serviceCategoryId: ['', Validators.required],
+    executionMode: ['Individual' as ServiceExecutionMode, Validators.required],
+    colorHex: [DEFAULT_COLOR_NO_HASH],
     defaultDurationMinutes: [DEFAULT_DURATION_MINUTES, [Validators.required, Validators.min(1)]],
     defaultPrice: [0, [Validators.required, Validators.min(0)]],
     description: [''],
@@ -87,7 +105,8 @@ export class ServiceFormDialogComponent {
     const raw = this.form.getRawValue();
     const request: ServiceUpsertRequest = {
       name: raw.name,
-      serviceCategoryId: raw.serviceCategoryId,
+      executionMode: raw.executionMode,
+      colorHex: raw.colorHex ? `#${raw.colorHex.replace('#', '').toUpperCase()}` : null,
       defaultDurationMinutes: raw.defaultDurationMinutes,
       defaultPrice: raw.defaultPrice,
       description: raw.description || null,
@@ -119,7 +138,8 @@ export class ServiceFormDialogComponent {
   private resetForm(service: ServiceDto | null): void {
     this.form.reset({
       name: service?.name ?? '',
-      serviceCategoryId: service?.serviceCategoryId ?? '',
+      executionMode: service?.executionMode ?? 'Individual',
+      colorHex: service?.colorHex ? service.colorHex.replace('#', '') : DEFAULT_COLOR_NO_HASH,
       defaultDurationMinutes: service?.defaultDurationMinutes ?? DEFAULT_DURATION_MINUTES,
       defaultPrice: service?.defaultPrice ?? 0,
       description: service?.description ?? '',

@@ -1,66 +1,170 @@
 <div class="login-page">
-  <div class="dl-card login-card">
-    <div class="login-card__brand">
-      <span class="login-card__brand-mark">DL</span>
-      <span class="login-card__brand-name">DuneLight</span>
+  @if (showChooser()) {
+    <div class="dl-card login-card chooser-card">
+      <div class="login-card__brand">
+        <span class="login-card__brand-mark">DL</span>
+        <span class="login-card__brand-name">DuneLight</span>
+      </div>
+
+      <h2 class="chooser__title">{{ 'AUTH.PIN_LOGIN.TITLE' | translate }}</h2>
+
+      <div class="chooser__list">
+        @for (user of knownUsers(); track user.email + user.organizationSlug) {
+          <div class="chooser-item" [class.chooser-item--active]="selectedUser() === user">
+            <div
+              class="chooser-item__card"
+              role="button"
+              tabindex="0"
+              (click)="selectUser(user)"
+              (keydown.enter)="selectUser(user)"
+            >
+              <span class="chooser-item__avatar" [style.background]="colorFor(user)">{{ initialsFor(user) }}</span>
+              <span class="chooser-item__name">{{ user.firstName }} {{ user.lastName }}</span>
+              <button
+                type="button"
+                class="chooser-item__remove"
+                [attr.aria-label]="'AUTH.PIN_LOGIN.REMOVE_USER' | translate"
+                [title]="'AUTH.PIN_LOGIN.REMOVE_USER' | translate"
+                (click)="removeUser(user, $event)"
+              >
+                <i class="pi pi-times"></i>
+              </button>
+            </div>
+
+            @if (selectedUser() === user) {
+              <form [formGroup]="pinForm" (ngSubmit)="submitPin()" class="chooser-item__pin-form" novalidate>
+                <div class="login-form__field">
+                  <label [for]="'pin-' + user.email">{{ 'AUTH.PIN_LOGIN.PIN_LABEL' | translate }}</label>
+                  <input
+                    [id]="'pin-' + user.email"
+                    type="password"
+                    pInputText
+                    formControlName="pin"
+                    inputmode="numeric"
+                    pattern="[0-9]*"
+                    maxlength="6"
+                    autocomplete="off"
+                    fluid
+                    [placeholder]="'AUTH.PIN_LOGIN.PIN_PLACEHOLDER' | translate"
+                  />
+                  @if (pinForm.controls.pin.touched && pinForm.controls.pin.hasError('required')) {
+                    <span class="login-form__error">{{ 'AUTH.PIN_LOGIN.ERRORS.PIN_REQUIRED' | translate }}</span>
+                  } @else if (pinForm.controls.pin.touched && pinForm.controls.pin.hasError('pattern')) {
+                    <span class="login-form__error">{{ 'AUTH.PIN_LOGIN.ERRORS.PIN_FORMAT' | translate }}</span>
+                  }
+                </div>
+
+                @if (pinErrorMessage()) {
+                  <div class="login-form__server-error">{{ pinErrorMessage() }}</div>
+                }
+
+                <div class="chooser-item__pin-actions">
+                  <p-button
+                    type="button"
+                    [label]="'COMMON.CANCEL' | translate"
+                    severity="secondary"
+                    [text]="true"
+                    (onClick)="cancelPin()"
+                  />
+                  <p-button
+                    type="submit"
+                    [label]="'AUTH.PIN_LOGIN.SUBMIT' | translate"
+                    [loading]="pinLoading()"
+                  />
+                </div>
+              </form>
+            }
+          </div>
+        }
+      </div>
+
+      <p class="login-page__switch">
+        <button type="button" class="login-page__switch-link login-page__switch-link--btn" (click)="showFullLogin()">
+          {{ 'AUTH.PIN_LOGIN.OTHER_ACCOUNT' | translate }}
+        </button>
+      </p>
+    </div>
+  } @else {
+    <div class="dl-card login-card">
+      <div class="login-card__brand">
+        <span class="login-card__brand-mark">DL</span>
+        <span class="login-card__brand-name">DuneLight</span>
+      </div>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form" novalidate>
+        <div class="login-form__field">
+          <label for="email">{{ 'AUTH.LOGIN.EMAIL' | translate }}</label>
+          <input
+            id="email"
+            type="email"
+            pInputText
+            formControlName="email"
+            autocomplete="email"
+            fluid
+            [placeholder]="'AUTH.LOGIN.EMAIL_PLACEHOLDER' | translate"
+          />
+          @if (form.controls.email.touched && form.controls.email.hasError('required')) {
+            <span class="login-form__error">{{ 'AUTH.LOGIN.ERRORS.EMAIL_REQUIRED' | translate }}</span>
+          } @else if (form.controls.email.touched && form.controls.email.hasError('email')) {
+            <span class="login-form__error">{{ 'AUTH.LOGIN.ERRORS.EMAIL_INVALID' | translate }}</span>
+          }
+        </div>
+
+        <div class="login-form__field">
+          <label for="password">{{ 'AUTH.LOGIN.PASSWORD' | translate }}</label>
+          <p-password
+            inputId="password"
+            formControlName="password"
+            autocomplete="current-password"
+            [feedback]="false"
+            [toggleMask]="true"
+            [fluid]="true"
+            [placeholder]="'AUTH.LOGIN.PASSWORD_PLACEHOLDER' | translate"
+          />
+          @if (form.controls.password.invalid && form.controls.password.touched) {
+            <span class="login-form__error">{{ 'AUTH.LOGIN.ERRORS.PASSWORD_REQUIRED' | translate }}</span>
+          }
+        </div>
+
+        <div class="login-form__field">
+          <label for="organizationSlug">{{ 'AUTH.LOGIN.ORGANIZATION' | translate }}</label>
+          <input
+            id="organizationSlug"
+            type="text"
+            pInputText
+            formControlName="organizationSlug"
+            autocomplete="organization"
+            fluid
+            [placeholder]="'AUTH.LOGIN.ORGANIZATION_PLACEHOLDER' | translate"
+          />
+          @if (form.controls.organizationSlug.invalid && form.controls.organizationSlug.touched) {
+            <span class="login-form__error">{{ 'AUTH.LOGIN.ERRORS.ORGANIZATION_REQUIRED' | translate }}</span>
+          }
+        </div>
+
+        @if (errorMessage()) {
+          <div class="login-form__server-error">{{ errorMessage() }}</div>
+        }
+
+        <p-button type="submit" [label]="'AUTH.LOGIN.SUBMIT' | translate" [loading]="loading()" [fluid]="true" />
+      </form>
+
+      @if (knownUsers().length > 0) {
+        <p class="login-page__switch">
+          <button
+            type="button"
+            class="login-page__switch-link login-page__switch-link--btn"
+            (click)="showChooserAgain()"
+          >
+            {{ 'AUTH.PIN_LOGIN.BACK_TO_USERS' | translate }}
+          </button>
+        </p>
+      }
     </div>
 
-    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form" novalidate>
-      <div class="login-form__field">
-        <label for="email">{{ 'AUTH.LOGIN.EMAIL' | translate }}</label>
-        <input
-          id="email"
-          type="email"
-          pInputText
-          formControlName="email"
-          autocomplete="email"
-          fluid
-          [placeholder]="'AUTH.LOGIN.EMAIL_PLACEHOLDER' | translate"
-        />
-        @if (form.controls.email.touched && form.controls.email.hasError('required')) {
-          <span class="login-form__error">{{ 'AUTH.LOGIN.ERRORS.EMAIL_REQUIRED' | translate }}</span>
-        } @else if (form.controls.email.touched && form.controls.email.hasError('email')) {
-          <span class="login-form__error">{{ 'AUTH.LOGIN.ERRORS.EMAIL_INVALID' | translate }}</span>
-        }
-      </div>
-
-      <div class="login-form__field">
-        <label for="password">{{ 'AUTH.LOGIN.PASSWORD' | translate }}</label>
-        <p-password
-          inputId="password"
-          formControlName="password"
-          autocomplete="current-password"
-          [feedback]="false"
-          [toggleMask]="true"
-          [fluid]="true"
-          [placeholder]="'AUTH.LOGIN.PASSWORD_PLACEHOLDER' | translate"
-        />
-        @if (form.controls.password.invalid && form.controls.password.touched) {
-          <span class="login-form__error">{{ 'AUTH.LOGIN.ERRORS.PASSWORD_REQUIRED' | translate }}</span>
-        }
-      </div>
-
-      <div class="login-form__field">
-        <label for="organizationSlug">{{ 'AUTH.LOGIN.ORGANIZATION' | translate }}</label>
-        <input
-          id="organizationSlug"
-          type="text"
-          pInputText
-          formControlName="organizationSlug"
-          autocomplete="organization"
-          fluid
-          [placeholder]="'AUTH.LOGIN.ORGANIZATION_PLACEHOLDER' | translate"
-        />
-        @if (form.controls.organizationSlug.invalid && form.controls.organizationSlug.touched) {
-          <span class="login-form__error">{{ 'AUTH.LOGIN.ERRORS.ORGANIZATION_REQUIRED' | translate }}</span>
-        }
-      </div>
-
-      @if (errorMessage()) {
-        <div class="login-form__server-error">{{ errorMessage() }}</div>
-      }
-
-      <p-button type="submit" [label]="'AUTH.LOGIN.SUBMIT' | translate" [loading]="loading()" [fluid]="true" />
-    </form>
-  </div>
+    <p class="login-page__switch">
+      {{ 'AUTH.LOGIN.NO_ORGANIZATION_PROMPT' | translate }}
+      <a routerLink="/register" class="login-page__switch-link">{{ 'AUTH.LOGIN.NO_ORGANIZATION_LINK' | translate }}</a>
+    </p>
+  }
 </div>

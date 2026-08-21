@@ -5,6 +5,7 @@ import { AppointmentScheduleCellDto } from '../../../../core/models/appointment.
 import { EmployeeDirectoryDto } from '../../../../core/models/employee.model';
 import { GroupAppointmentCellDto, GroupDto } from '../../../../core/models/group.model';
 import { LocationDto } from '../../../../core/models/location.model';
+import { ScheduleBreakCellDto } from '../../../../core/models/schedule-break.model';
 import { ServiceDto } from '../../../../core/models/service.model';
 import { CurrentEmployeeService } from '../../../../core/services/current-employee.service';
 import { EmployeesService } from '../../../../core/services/employees.service';
@@ -15,6 +16,9 @@ import { ServicesService } from '../../../../core/services/services.service';
 import { AppointmentDetailDialogComponent } from '../../../../shared/components/appointment-detail-dialog/appointment-detail-dialog.component';
 import { NewAppointmentDialogComponent, NewAppointmentInitial } from '../../../../shared/components/new-appointment-dialog/new-appointment-dialog.component';
 import { toGroupAppointmentCell } from '../../../../shared/components/schedule-grid/schedule-cell-view.util';
+import { CompleteEmployeeProfileCtaComponent } from '../../../../shared/components/complete-employee-profile/complete-employee-profile-cta.component';
+import { ScheduleBreakDialogComponent } from '../../../../shared/components/schedule-break-dialog/schedule-break-dialog.component';
+import { ScheduleBreakFormDialogComponent } from '../../../../shared/components/schedule-break-form-dialog/schedule-break-form-dialog.component';
 import { ScheduleWeekGridComponent } from '../../../../shared/components/schedule-week-grid/schedule-week-grid.component';
 import { GroupAttendanceDialogComponent } from '../../../admin/pages/groups/attendance/group-attendance-dialog.component';
 
@@ -35,6 +39,9 @@ const LOOKUP_PAGE_SIZE = 200;
     AppointmentDetailDialogComponent,
     GroupAttendanceDialogComponent,
     NewAppointmentDialogComponent,
+    ScheduleBreakDialogComponent,
+    ScheduleBreakFormDialogComponent,
+    CompleteEmployeeProfileCtaComponent,
     Button,
     TranslatePipe,
   ],
@@ -52,6 +59,14 @@ export class MyWeekComponent {
   readonly weekGrid = viewChild<ScheduleWeekGridComponent>('weekGrid');
 
   readonly currentEmployeeId = computed(() => this.currentEmployeeService.employee()?.employeeId ?? null);
+  /** Owner without an Employee profile yet (see CurrentEmployeeService's doc) -
+   * this screen has no trainer picker of its own (employeeId is always pinned
+   * to the viewer's own id), so a null currentEmployeeId here means exactly
+   * that, never "nobody picked a trainer" the way it can on the admin
+   * Raspored week view. Gates showing the "dovrši profil" CTA instead of the
+   * grid's own generic SELECT_TRAINER_HINT empty state, which would otherwise
+   * be misleading here. */
+  readonly hasEmployeeProfile = computed(() => this.currentEmployeeService.hasProfile());
 
   readonly activeEmployees = signal<EmployeeDirectoryDto[]>([]);
   readonly activeServices = signal<ServiceDto[]>([]);
@@ -66,6 +81,12 @@ export class MyWeekComponent {
 
   readonly newAppointmentVisible = signal(false);
   readonly newAppointmentInitial = signal<NewAppointmentInitial | null>(null);
+
+  readonly breakDetailVisible = signal(false);
+  readonly selectedBreakId = signal<string | null>(null);
+
+  readonly newBreakVisible = signal(false);
+  readonly newBreakInitial = signal<NewAppointmentInitial | null>(null);
 
   constructor() {
     this.loadActiveEmployees();
@@ -82,7 +103,7 @@ export class MyWeekComponent {
     this.detailVisible.set(true);
   }
 
-  onEmptySlotClick(event: { startsAt: Date; employeeId: string; locationId: string | null }): void {
+  onEmptySlotClick(event: { startsAt: Date; employeeId: string; companyId: string | null }): void {
     this.newAppointmentInitial.set(event);
     this.newAppointmentVisible.set(true);
   }
@@ -91,9 +112,23 @@ export class MyWeekComponent {
     this.newAppointmentInitial.set({
       startsAt: new Date(),
       employeeId: this.currentEmployeeService.employee()?.employeeId ?? null,
-      locationId: this.locationContext.selectedLocationId(),
+      companyId: this.locationContext.selectedLocationId(),
     });
     this.newAppointmentVisible.set(true);
+  }
+
+  onBreakClicked(scheduleBreak: ScheduleBreakCellDto): void {
+    this.selectedBreakId.set(scheduleBreak.id);
+    this.breakDetailVisible.set(true);
+  }
+
+  openNewBreak(): void {
+    this.newBreakInitial.set({
+      startsAt: new Date(),
+      employeeId: this.currentEmployeeService.employee()?.employeeId ?? null,
+      companyId: this.locationContext.selectedLocationId(),
+    });
+    this.newBreakVisible.set(true);
   }
 
   onAttendanceVisibleChange(visible: boolean): void {

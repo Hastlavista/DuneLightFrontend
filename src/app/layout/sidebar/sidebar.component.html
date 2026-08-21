@@ -29,11 +29,23 @@
     <button
       type="button"
       class="sidebar__logout"
-      (click)="logout()"
+      (click)="userMenu.toggle($event)"
       [attr.aria-label]="'LAYOUT.SIDEBAR.LOGOUT' | translate"
       [title]="'LAYOUT.SIDEBAR.LOGOUT' | translate"
     >
       <i class="pi pi-sign-out"></i>
     </button>
+    <p-popover #userMenu>
+      <div class="sidebar__user-menu">
+        <button type="button" class="sidebar__user-menu-item" (click)="switchUser(); userMenu.hide()">
+          <i class="pi pi-users"></i>
+          <span>{{ 'LAYOUT.SIDEBAR.SWITCH_USER' | translate }}</span>
+        </button>
+        <button type="button" class="sidebar__user-menu-item" (click)="logout(); userMenu.hide()">
+          <i class="pi pi-sign-out"></i>
+          <span>{{ 'LAYOUT.SIDEBAR.LOGOUT' | translate }}</span>
+        </button>
+      </div>
+    </p-popover>
   </div>
 </div>

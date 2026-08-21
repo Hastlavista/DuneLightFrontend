@@ -1,0 +1,14 @@
+<p-tabs [value]="initialTab">
+  <p-tablist>
+    <p-tab value="grant-groups">{{ 'PERMISSIONS.GRANT_GROUPS.TAB_LABEL' | translate }}</p-tab>
+    <p-tab value="roles">{{ 'PERMISSIONS.ROLES.TAB_LABEL' | translate }}</p-tab>
+  </p-tablist>
+  <p-tabpanels>
+    <p-tabpanel value="grant-groups">
+      <app-admin-grant-groups />
+    </p-tabpanel>
+    <p-tabpanel value="roles">
+      <app-admin-roles />
+    </p-tabpanel>
+  </p-tabpanels>
+</p-tabs>
