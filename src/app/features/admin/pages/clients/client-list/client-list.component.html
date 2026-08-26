@@ -63,7 +63,14 @@
     <ng-template pTemplate="body" let-client>
       <tr [class.client-list-page__row--inactive]="!client.isActive">
         <td>{{ client.memberNumber }}</td>
-        <td>{{ fullName(client) }}</td>
+        <td>
+          {{ fullName(client) }}
+          @if (client.noShowCount > 0) {
+            <span class="client-list-page__no-show-badge" [title]="'CLIENTS.NO_SHOW_BADGE_TITLE' | translate: { count: client.noShowCount }">
+              {{ client.noShowCount }}
+            </span>
+          }
+        </td>
         <td>{{ client.phone }}</td>
         <td>{{ client.email }}</td>
         <td>{{ client.homeTrainerName }}</td>

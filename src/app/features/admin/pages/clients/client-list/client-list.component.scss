@@ -40,4 +40,21 @@
     padding: 2rem 0;
     color: var(--olive-gold);
   }
+
+  &__no-show-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 1.1rem;
+    height: 1.1rem;
+    margin-left: 0.4rem;
+    padding: 0 0.3rem;
+    border-radius: 999px;
+    background: var(--ochre);
+    color: var(--paper);
+    font-size: 0.7rem;
+    font-weight: 600;
+    line-height: 1;
+    vertical-align: middle;
+  }
 }

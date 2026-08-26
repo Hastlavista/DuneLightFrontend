@@ -53,30 +53,33 @@ export interface WorkingHoursTemplateDto {
   intervals: WorkingHoursIntervalDto[];
 }
 
-export type AvailabilitySourceKind = 'TEMPLATE' | 'OVERRIDE' | 'ABSENCE' | 'NONE';
+export type AvailabilitySourceKind = 'Template' | 'Override' | 'Absence' | 'None';
 
 /** One resolved interval of GET /api/availability's employee/company/effective
  * arrays - just a time-of-day range for the requested date, no day-of-week/
  * cycleWeekIndex (unlike WorkingHoursIntervalDto - this is already resolved to
- * one concrete calendar day). */
+ * one concrete calendar day). Same "start"/"end" field names as
+ * RosterPlannedIntervalDto, NOT "startTime"/"endTime" like
+ * WorkingHoursIntervalDto - this DTO used to (wrongly) claim the latter, which
+ * silently broke NewAppointmentDialog's availabilityHint/startsAtOutsideAvailability
+ * (every interval read as `undefined` start/end, so the "outside working hours"
+ * warning fired for every selected time - see bug report). */
 export interface AvailabilityIntervalDto {
-  startTime: string;
-  endTime: string;
+  start: string;
+  end: string;
 }
 
 /** GET /api/availability - resolves the employee's and company's working-hours
  * templates (plus any override/absence) down to concrete intervals for one
  * calendar date. `effectiveIntervals` is the intersection of
  * `employeeIntervals`/`companyIntervals` - what scheduling actually allows;
- * `source` says which layer (template/override/absence/none) produced each
- * side, for UI messaging. */
+ * `employeeSource`/`companySource` say which layer (template/override/absence/none)
+ * produced each side, for UI messaging. */
 export interface AvailabilityDto {
   date: string;
   employeeIntervals: AvailabilityIntervalDto[];
   companyIntervals: AvailabilityIntervalDto[];
   effectiveIntervals: AvailabilityIntervalDto[];
-  source: {
-    employee: AvailabilitySourceKind;
-    company: AvailabilitySourceKind;
-  };
+  employeeSource: AvailabilitySourceKind;
+  companySource: AvailabilitySourceKind;
 }

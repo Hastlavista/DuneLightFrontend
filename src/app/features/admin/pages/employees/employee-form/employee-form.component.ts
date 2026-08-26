@@ -1,3 +1,4 @@
+import { Location } from '@angular/common';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -119,25 +120,39 @@ export class EmployeeFormComponent {
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly location = inject(Location);
 
   readonly editingId = signal<string | null>(null);
   readonly isEditMode = computed(() => this.editingId() !== null);
   readonly loading = signal(false);
   readonly saving = signal(false);
 
-  /** "Radno vrijeme" tab only makes sense once the employee actually has an id
-   * (the template endpoint is keyed by employeeId) and only for someone with a
-   * reason to see it - roster.templates is a grant of its own, independent of
-   * employees.manage (see WorkingHoursTemplateEditorComponent's own doc). */
+  /** True from the moment "Podaci" creates the employee (id: null -> id) for
+   * the rest of this component's lifetime - distinguishes the "still walking
+   * through the new-employee wizard" case from a plain re-open of an
+   * already-existing employee via "uredi" (which starts in edit mode from
+   * construction and never sets this), so the wizard's forced tab-advance and
+   * "Spremi i nastavi/završi" labels apply only to the former. Leaving the
+   * page mid-wizard (id already created) and reopening later is just a normal
+   * edit from then on - see EmployeeFormComponent's own doc. */
+  readonly justCreatedInWizard = signal(false);
+
+  readonly activeTab = signal<'data' | 'workingHours' | 'leaveFund'>('data');
+
+  /** "Radno vrijeme" tab is shown (as a locked tab, see the template) as soon
+   * as someone has a reason to see it at all - roster.templates is a grant of
+   * its own, independent of employees.manage (see
+   * WorkingHoursTemplateEditorComponent's own doc). It stays disabled until
+   * editingId() exists, since the template endpoint is keyed by employeeId. */
   readonly canViewWorkingHours = computed(() =>
     this.currentEmployeeService.hasAnyGrant(['roster.templates.view', 'roster.templates.manage']),
   );
 
-  /** "Godišnji odmor" tab (frontend #18) - same edit-mode-only rationale as
-   * canViewWorkingHours (both leave-settings and leave-funds endpoints are
-   * keyed by employeeId), gated on any grant that gets you into the tab at
-   * all; EmployeeLeaveFundTabComponent itself further splits settings vs.
-   * funds visibility (see its own doc). */
+  /** "Godišnji odmor" tab (frontend #18) - same shown-but-locked-until-id
+   * rationale as canViewWorkingHours (both leave-settings and leave-funds
+   * endpoints are keyed by employeeId), gated on any grant that gets you into
+   * the tab at all; EmployeeLeaveFundTabComponent itself further splits
+   * settings vs. funds visibility (see its own doc). */
   readonly canViewLeaveFund = computed(() =>
     this.currentEmployeeService.hasAnyGrant([
       'roster.leave-fund.settings.view',
@@ -145,6 +160,28 @@ export class EmployeeFormComponent {
       'roster.leave-fund.view.own',
       'roster.leave-fund.view.all',
     ]),
+  );
+
+  /** "Podaci" tab's submit button - "Spremi i nastavi" only while creating
+   * (no id yet); once the employee exists, Save behaves plainly whether
+   * that's mid-wizard or a genuine later edit (see justCreatedInWizard's
+   * doc - the wizard's forced continuation only ever applies to the *next*
+   * tab, triggered from that tab's own save, not from re-saving "Podaci"). */
+  readonly dataSaveLabelKey = computed(() => (this.editingId() ? 'COMMON.SAVE' : 'EMPLOYEES.SAVE_AND_CONTINUE'));
+
+  readonly workingHoursSaveLabelKey = computed(() =>
+    this.justCreatedInWizard() ? 'EMPLOYEES.SAVE_AND_CONTINUE' : 'COMMON.SAVE',
+  );
+
+  readonly leaveFundSaveLabelKey = computed(() =>
+    this.justCreatedInWizard() ? 'EMPLOYEES.SAVE_AND_FINISH' : 'COMMON.SAVE',
+  );
+
+  /** Keeps the "new employee" framing through the whole wizard even after
+   * "Podaci" has created the employee under the hood - only a genuine re-open
+   * via "uredi" (justCreatedInWizard never set) shows the edit title. */
+  readonly pageTitleKey = computed(() =>
+    this.isEditMode() && !this.justCreatedInWizard() ? 'EMPLOYEES.EDIT_TITLE' : 'EMPLOYEES.NEW_TITLE',
   );
 
   readonly activeLocations = signal<LocationDto[]>([]);
@@ -318,9 +355,22 @@ export class EmployeeFormComponent {
         .createWithLogin(this.toWithLoginRequest())
         .pipe(finalize(() => this.saving.set(false)))
         .subscribe({
-          next: () => {
+          next: (response) => {
+            // GrantGroup/Role assignment on a later "Podaci" re-save needs
+            // this (see the `if (id)` branch above) - only known from here on.
+            this.loadedUserId.set(response.userId);
+            this.editingId.set(response.employeeId);
+            this.justCreatedInWizard.set(true);
+            // The password/login section only makes sense pre-creation (see
+            // the template's isEditMode() gate) - the control still holding a
+            // valid value would keep the form "valid" either way, but clearing
+            // its validators here keeps it from having an opinion on a field
+            // it can no longer even show.
+            this.form.controls.password.clearValidators();
+            this.form.controls.password.updateValueAndValidity();
+            this.location.replaceState(`/admin/employees/${response.employeeId}`);
             this.notifications.showSuccess(this.translate.instant('EMPLOYEES.CREATED'));
-            this.navigateBack();
+            this.goToNextWizardStep('data');
           },
           error: () => {},
         });
@@ -329,6 +379,34 @@ export class EmployeeFormComponent {
 
   onCancel(): void {
     this.navigateBack();
+  }
+
+  onWorkingHoursSaved(): void {
+    if (this.justCreatedInWizard()) {
+      this.goToNextWizardStep('workingHours');
+    }
+  }
+
+  onLeaveFundSaved(): void {
+    if (this.justCreatedInWizard()) {
+      this.goToNextWizardStep('leaveFund');
+    }
+  }
+
+  /** Advances to the next unlocked wizard tab after `current`, or - once
+   * there's nothing left to walk through (either every later tab is hidden by
+   * grants, or `current` was already the last one) - finishes the wizard the
+   * same way a plain edit-mode save always has: back to the list. Only called
+   * while justCreatedInWizard() is true; a normal edit never forces tab
+   * navigation on save (see each *SaveLabelKey's doc). */
+  private goToNextWizardStep(current: 'data' | 'workingHours' | 'leaveFund'): void {
+    if (current === 'data' && this.canViewWorkingHours()) {
+      this.activeTab.set('workingHours');
+    } else if (current !== 'leaveFund' && this.canViewLeaveFund()) {
+      this.activeTab.set('leaveFund');
+    } else {
+      this.navigateBack();
+    }
   }
 
   private mergeOptions(active: EmployeeOption[], linked: EmployeeOption[]): EmployeeOption[] {

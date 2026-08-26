@@ -90,7 +90,12 @@ export class MyShiftsComponent {
       return;
     }
     this.editingEntry.set(null);
-    this.dialogInitial.set({ employeeId: event.employeeId, date: event.date });
+    this.dialogInitial.set({
+      employeeId: event.employeeId,
+      date: event.date,
+      startTime: event.plannedInterval?.start,
+      endTime: event.plannedInterval?.end,
+    });
     this.dialogVisible.set(true);
   }
 

@@ -98,17 +98,20 @@ export interface RosterDayEntryDto {
   timeRange: string | null;
 }
 
-/** Where a day's roster picture came from (frontend #17): `Actual` means at
- * least one real RosterEntry exists that day (`entries` is populated,
- * `plannedIntervals` always empty - a real record always wins over a
- * prediction); `Planned` means no real entry exists but the day is
- * today/future AND the employee's WorkingHoursTemplate has hours for it
- * (`plannedIntervals` populated instead, `entries` empty); `None` means
- * neither - a genuinely empty day (including any past day with no record -
- * the backend never backfills a fake "planned" for the past). Render
- * `Planned` visually distinct (muted/dashed) from `Actual` - see
- * TeamMonthlyComponent. */
-export type RosterDaySource = 'Actual' | 'Planned' | 'None';
+/** Where a day's roster picture came from (frontend #17, revised #28):
+ * `Actual` means at least one real RosterEntry exists that day (`entries` is
+ * populated, `plannedIntervals` always empty - a real record always wins over
+ * a prediction); `Assumed` means no real entry exists but the day is
+ * past/today AND the employee's WorkingHoursTemplate resolves hours for it
+ * (`plannedIntervals` populated instead, `entries` empty) - the backend now
+ * counts these hours into `totalWorkHours`/`workHoursByType` under a
+ * synthetic "Pretpostavljeno (predložak)" row, so render `Assumed` IDENTICAL
+ * to `Actual` (no dashed/muted styling - see TeamMonthlyComponent); `Planned`
+ * is the same template-projection idea but for today/future days -
+ * genuinely hasn't happened yet, so it keeps the muted/dashed styling;
+ * `None` means neither - a genuinely empty day. Only `Planned` cells (never
+ * `Assumed`) render the dashed "not yet happened" style. */
+export type RosterDaySource = 'Actual' | 'Assumed' | 'Planned' | 'None';
 
 /** One planned interval - the employee's WorkingHoursTemplate resolved down to
  * a concrete time range for one calendar day, same shape as
@@ -122,7 +125,7 @@ export interface RosterPlannedIntervalDto {
 /** One calendar day column of a team-monthly employee row - `day` is the
  * 1-based day-of-month, present for every day of the month even when `entries`
  * is empty (no gaps). `plannedIntervals` is only ever populated when
- * `source === 'Planned'` (see RosterDaySource) - `entries` and
+ * `source` is `'Planned'` or `'Assumed'` (see RosterDaySource) - `entries` and
  * `plannedIntervals` are never both non-empty for the same day. */
 export interface RosterDayDto {
   day: number;
@@ -131,11 +134,22 @@ export interface RosterDayDto {
   plannedIntervals: RosterPlannedIntervalDto[];
 }
 
+/** One row of a `workHoursByType` sum. Usually a real RosterType's hours, but
+ * the backend may also include a synthetic row named exactly
+ * "Pretpostavljeno (predložak)" (frontend #28) bundling every `Assumed` day's
+ * template-resolved hours - it isn't backed by a real RosterType, but is
+ * otherwise rendered as a normal row (see PersonalRosterComponent/
+ * TeamMonthlyComponent). */
 export interface RosterWorkHoursByTypeDto {
   rosterTypeId: string;
   rosterTypeName: string;
   hours: number;
 }
+
+/** Exact `rosterTypeName` the backend uses for the synthetic `Assumed`-hours
+ * summary row (see RosterWorkHoursByTypeDto) - match on this, not on
+ * `rosterTypeId` (it isn't backed by a real RosterType). */
+export const ASSUMED_WORK_HOURS_ROW_NAME = 'Pretpostavljeno (predložak)';
 
 export interface RosterAbsenceDaysByTypeDto {
   rosterTypeId: string;
@@ -164,19 +178,28 @@ export interface TeamMonthlyDto {
   employees: TeamMonthlyEmployeeDto[];
 }
 
-/** One day within [from,to] that has no real RosterEntry but IS today/future
- * AND has hours in the employee's WorkingHoursTemplate (frontend #17) - see
- * RosterDaySource. Never generated for a past day. */
+/** One day within [from,to] that has no real RosterEntry but IS a FUTURE day
+ * (strictly after today) AND has hours in the employee's WorkingHoursTemplate
+ * (frontend #17, revised #28) - see RosterDaySource. Today itself is no
+ * longer included here even without a real record - it falls under `Assumed`
+ * instead (rendered like a normal completed day, not "planned"). Never
+ * generated for a past day. */
 export interface RosterPlannedDayDto {
   date: string;
   intervals: RosterPlannedIntervalDto[];
 }
 
 /** GET /api/roster/personal?employeeId=&from=&to= - same per-type sums
- * convention as TeamMonthlyEmployeeDto, computed by the backend (unaffected by
- * `plannedDays` - sums only ever count real `entries`, never re-add planned
- * hours on the frontend). Member may only request their own employeeId (409
- * NOT_OWNER otherwise). */
+ * convention as TeamMonthlyEmployeeDto, computed by the backend - never
+ * re-aggregate them from `entries`/`plannedDays` on the frontend. Unlike
+ * team-monthly's per-day matrix, this DTO has no `Assumed` day list of its
+ * own: a past/today day with no real entry (frontend #28) simply isn't
+ * itemized as a row here (neither `entries` nor `plannedDays`, which now only
+ * covers strictly-future days - see RosterPlannedDayDto), it just silently
+ * contributes to `totalWorkHours`/`workHoursByType` via the backend's
+ * synthetic "Pretpostavljeno (predložak)" row - see
+ * ASSUMED_WORK_HOURS_ROW_NAME. Member may only request their own employeeId
+ * (409 NOT_OWNER otherwise). */
 export interface PersonalRosterDto {
   employeeId: string;
   employeeName: string;

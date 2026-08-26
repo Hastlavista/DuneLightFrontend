@@ -86,7 +86,7 @@
       "DASHBOARD": "Nadzorna ploča",
       "LOCATIONS": "Lokacije",
       "SCHEDULE": "Raspored",
-      "SHIFTS": "Vrste rostera",
+      "SHIFTS": "Vrste evidencije",
       "CLIENTS": "Klijenti",
       "EMPLOYEES": "Zaposlenici",
       "GROUPS": "Grupe",
@@ -147,10 +147,11 @@
       "DELETED": "Lokacija je izbrisana.",
       "CONFIRM_DEACTIVATE": "Jeste li sigurni da želite deaktivirati lokaciju \"{{name}}\"?",
       "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati lokaciju \"{{name}}\"? Ova radnja je nepovratna.",
-      "WORKING_HOURS": {
-        "BUTTON": "Radno vrijeme",
-        "TITLE": "Radno vrijeme — {{name}}"
-      }
+      "TAB_DATA": "Podaci",
+      "TAB_WORKING_HOURS": "Radno vrijeme",
+      "WIZARD_LOCKED_HINT": "Ovaj tab bit će dostupan čim spremite osnovne podatke lokacije na tabu \"Podaci\".",
+      "SAVE_AND_CONTINUE": "Spremi i nastavi",
+      "SAVE_AND_FINISH": "Spremi i završi"
     },
     "SERVICES": {
       "NEW": "Nova usluga",
@@ -329,6 +330,8 @@
     "FIELD_FIRST_NAME": "Ime",
     "FIELD_LAST_NAME": "Prezime",
     "FIELD_OCCUPATION": "Zanimanje",
+    "NO_SHOW_COUNT_LABEL": "Broj neodrađenih dolazaka: {{count}}",
+    "NO_SHOW_BADGE_TITLE": "Broj neodrađenih dolazaka: {{count}}",
     "FIELD_PHONE": "Telefon",
     "FIELD_EMAIL": "Email",
     "FIELD_NOTE": "Napomena",
@@ -463,6 +466,9 @@
     "TAB_DATA": "Podaci",
     "TAB_WORKING_HOURS": "Radno vrijeme",
     "TAB_LEAVE_FUND": "Godišnji odmor",
+    "WIZARD_LOCKED_HINT": "Ovaj tab bit će dostupan čim spremite osnovne podatke zaposlenika na tabu \"Podaci\".",
+    "SAVE_AND_CONTINUE": "Spremi i nastavi",
+    "SAVE_AND_FINISH": "Spremi i završi",
     "INACTIVE_BADGE": "neaktivno",
     "COL_NAME": "Ime i prezime",
     "COL_ROLE": "Uloga",
@@ -870,6 +876,7 @@
       "FIELD_CLIENTS": "Klijenti",
       "FIELD_CLIENTS_PLACEHOLDER": "Pretraži klijenta...",
       "NO_RESULTS": "Nema pronađenih klijenata.",
+      "NO_SHOW_WARNING": "⚠ {{name}} ima zabilježene neodrađene dolaske - broj neodrađenih dolazaka: {{count}}.",
       "FIELD_SERVICE": "Usluga",
       "FIELD_SERVICE_PLACEHOLDER": "Odaberite uslugu",
       "DURATION_HINT": "Trajanje: {{minutes}} min",
@@ -966,17 +973,17 @@
   },
   "ROSTER": {
     "PLANNED_LABEL": "Planirano",
-    "PLANNED_LEGEND_HINT": "predviđeno prema rasporedu, još nije potvrđeno",
+    "PLANNED_LEGEND_HINT": "predviđeno za buduće dane, još se nije dogodilo",
     "TYPES": {
-      "TAB_LABEL": "Vrste rostera",
-      "NEW": "Nova vrsta rostera",
-      "NEW_TITLE": "Nova vrsta rostera",
-      "EDIT_TITLE": "Uredi vrstu rostera",
+      "TAB_LABEL": "Vrste evidencije",
+      "NEW": "Nova vrsta evidencije",
+      "NEW_TITLE": "Nova vrsta evidencije",
+      "EDIT_TITLE": "Uredi vrstu evidencije",
       "COL_NAME": "Naziv",
       "COL_COLOR": "Boja",
       "COL_COUNTS_AS_WORK": "Broji se kao rad",
       "COL_IS_ABSENCE": "Odsutnost",
-      "EMPTY": "Nema pronađenih vrsta rostera.",
+      "EMPTY": "Nema pronađenih vrsta evidencije.",
       "FIELD_NAME": "Naziv",
       "FIELD_COLOR": "Boja",
       "FIELD_COUNTS_AS_WORK": "Broji se kao rad",
@@ -989,13 +996,13 @@
       "ERRORS": {
         "NAME_REQUIRED": "Naziv je obavezan."
       },
-      "CREATED": "Vrsta rostera je uspješno kreirana.",
-      "UPDATED": "Vrsta rostera je uspješno ažurirana.",
-      "ACTIVATED": "Vrsta rostera je aktivirana.",
-      "DEACTIVATED": "Vrsta rostera je deaktivirana.",
-      "DELETED": "Vrsta rostera je izbrisana.",
-      "CONFIRM_DEACTIVATE": "Jeste li sigurni da želite deaktivirati vrstu rostera \"{{name}}\"?",
-      "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati vrstu rostera \"{{name}}\"? Ova radnja je nepovratna."
+      "CREATED": "Vrsta evidencije je uspješno kreirana.",
+      "UPDATED": "Vrsta evidencije je uspješno ažurirana.",
+      "ACTIVATED": "Vrsta evidencije je aktivirana.",
+      "DEACTIVATED": "Vrsta evidencije je deaktivirana.",
+      "DELETED": "Vrsta evidencije je izbrisana.",
+      "CONFIRM_DEACTIVATE": "Jeste li sigurni da želite deaktivirati vrstu evidencije \"{{name}}\"?",
+      "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati vrstu evidencije \"{{name}}\"? Ova radnja je nepovratna."
     },
     "TEAM_MONTHLY": {
       "TAB_LABEL": "Timski pregled",

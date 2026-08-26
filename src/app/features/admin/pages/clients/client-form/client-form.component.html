@@ -82,6 +82,13 @@
               <label for="client-occupation">{{ 'CLIENTS.FIELD_OCCUPATION' | translate }}</label>
               <input id="client-occupation" type="text" pInputText fluid formControlName="occupation" maxlength="255" />
             </div>
+
+            @if (noShowCount() > 0) {
+              <div class="client-form-page__no-show-stat">
+                <i class="pi pi-exclamation-triangle"></i>
+                {{ 'CLIENTS.NO_SHOW_COUNT_LABEL' | translate: { count: noShowCount() } }}
+              </div>
+            }
           </section>
 
           <section class="client-form-page__section">

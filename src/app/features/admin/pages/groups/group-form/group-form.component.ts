@@ -187,6 +187,9 @@ export class GroupFormComponent {
   }
 
   onSave(): void {
+    if (this.saving()) {
+      return;
+    }
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       return;
@@ -211,9 +214,9 @@ export class GroupFormComponent {
         .create(this.toCreateRequest())
         .pipe(finalize(() => this.saving.set(false)))
         .subscribe({
-          next: (created) => {
+          next: () => {
             this.notifications.showSuccess(this.translate.instant('GROUPS.CREATED'));
-            this.router.navigate(['/admin/groups', created.id]);
+            this.navigateBack();
           },
           error: () => {},
         });

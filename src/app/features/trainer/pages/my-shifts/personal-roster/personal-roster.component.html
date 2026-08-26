@@ -58,7 +58,10 @@
         <span>{{ 'ROSTER.PERSONAL.TOTAL_WORK_HOURS' | translate }}</span>
       </div>
       @for (item of personal.workHoursByType; track item.rosterTypeId) {
-        <div class="personal-roster__summary-item">
+        <div
+          class="personal-roster__summary-item"
+          [class.personal-roster__summary-item--assumed]="isAssumedSummaryRow(item)"
+        >
           <strong>{{ item.hours }}h</strong>
           <span>{{ item.rosterTypeName }}</span>
         </div>

@@ -7,7 +7,13 @@ import { DatePicker } from 'primeng/datepicker';
 import { Select } from 'primeng/select';
 import { finalize } from 'rxjs';
 import { EmployeeSummary } from '../../../../../core/models/employee.model';
-import { PersonalRosterDto, RosterEntryDto, RosterPlannedDayDto } from '../../../../../core/models/roster.model';
+import {
+  ASSUMED_WORK_HOURS_ROW_NAME,
+  PersonalRosterDto,
+  RosterEntryDto,
+  RosterPlannedDayDto,
+  RosterWorkHoursByTypeDto,
+} from '../../../../../core/models/roster.model';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { RosterEntriesService } from '../../../../../core/services/roster-entries.service';
 import { toEndOfDayIso, toStartOfDayIso } from '../../../../../core/utils/date.util';
@@ -82,10 +88,13 @@ export class PersonalRosterComponent {
     this.employees().map((employee) => ({ label: `${employee.firstName} ${employee.lastName}`, value: employee.id })),
   );
 
-  /** Real entries and predicted (today/future, template-backed) days merged
-   * into one date-sorted timeline - `totalWorkHours`/etc. stay untouched
-   * (backend-computed from `entries` only, see PersonalRosterDto's doc), this
-   * is purely a display-level merge. */
+  /** Real entries and predicted (strictly-future, template-backed) days
+   * merged into one date-sorted timeline - `totalWorkHours`/etc. stay
+   * untouched (backend-computed, see PersonalRosterDto's doc), this is purely
+   * a display-level merge. A past/today day with no real entry (`Assumed`,
+   * frontend #28) shows up in neither list here - it's not itemized as a row
+   * at all, it just contributes to the summary totals server-side; there is
+   * no frontend assumption that "today" belongs in `plannedDays` to remove. */
   readonly rows = computed<PersonalRosterRow[]>(() => {
     const data = this.data();
     if (!data) {
@@ -174,6 +183,13 @@ export class PersonalRosterComponent {
 
   entryTimeLabel(entry: RosterEntryDto): string {
     return entry.startTime && entry.endTime ? `${entry.startTime.slice(0, 5)} – ${entry.endTime.slice(0, 5)}` : '';
+  }
+
+  /** Flags the synthetic "Pretpostavljeno (predložak)" summary row (frontend
+   * #28, see RosterWorkHoursByTypeDto) so the template can give it a subtle
+   * visual nudge - it's not backed by a real RosterType. */
+  isAssumedSummaryRow(item: RosterWorkHoursByTypeDto): boolean {
+    return item.rosterTypeName === ASSUMED_WORK_HOURS_ROW_NAME;
   }
 
   plannedTimeLabel(day: RosterPlannedDayDto): string {

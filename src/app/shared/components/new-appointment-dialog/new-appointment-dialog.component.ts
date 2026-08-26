@@ -65,6 +65,7 @@ interface SelectOption {
 interface ClientSearchOption {
   clientId: string;
   name: string;
+  noShowCount: number;
 }
 
 interface ClientPackageRowState {
@@ -152,6 +153,12 @@ export class NewAppointmentDialogComponent {
 
   readonly recurringConflicts = signal<RecurringConflictDetail[] | null>(null);
 
+  /** Purely informational (frontend no-show follow-up) - never blocks
+   * scheduling, just surfaces past NoShow history so the admin/trainer can
+   * decide on their own whether to act (charge upfront, call the client,
+   * etc). Selected clients with no no-shows contribute nothing here. */
+  readonly selectedClientsWithNoShows = computed(() => this.selectedClients().filter((client) => client.noShowCount > 0));
+
   /** Employee/location availability for the currently-picked date (frontend
    * #16) - refetched whenever trainer/location/date changes, rendered as a
    * helper hint and a soft (non-blocking) warning below the time field. The
@@ -173,6 +180,12 @@ export class NewAppointmentDialogComponent {
     this.employees().map((employee) => ({ label: `${employee.firstName} ${employee.lastName}`, value: employee.id })),
   );
 
+  /** Group services belong to Grupe (fixed-schedule GroupSlot) - "Novi termin"
+   * has no notion of those constraints, so the service dropdown only offers
+   * Individual services here (frontend #24 follow-up). A guest's single paid
+   * spot on a group session goes through Grupe's attendance flow instead. */
+  readonly individualServices = computed(() => this.services().filter((service) => service.executionMode === 'Individual'));
+
   readonly paymentMethodOptions = computed<SelectOption[]>(() => {
     this.translationsReady();
     return PAYMENT_METHODS.map((method) => ({ label: this.translate.instant(paymentMethodTranslationKey(method)), value: method }));
@@ -186,11 +199,11 @@ export class NewAppointmentDialogComponent {
   /** "09:00-12:00, 14:00-18:00" - null while nothing's resolved yet (no
    * trainer/location/date picked, or the lookup failed quietly). */
   readonly availabilityHint = computed<string | null>(() => {
-    const intervals = this.availability()?.effectiveIntervals ?? [];
+    const intervals = (this.availability()?.effectiveIntervals ?? []).filter((interval) => interval.start && interval.end);
     if (intervals.length === 0) {
       return null;
     }
-    return intervals.map((interval) => `${interval.startTime.slice(0, 5)}-${interval.endTime.slice(0, 5)}`).join(', ');
+    return intervals.map((interval) => `${interval.start.slice(0, 5)}-${interval.end.slice(0, 5)}`).join(', ');
   });
 
   /** Soft warning only - the chosen start time falls outside every effective
@@ -207,8 +220,11 @@ export class NewAppointmentDialogComponent {
       return true;
     }
     return !avail.effectiveIntervals.some((interval) => {
-      const [startH, startM] = interval.startTime.split(':').map(Number);
-      const [endH, endM] = interval.endTime.split(':').map(Number);
+      if (!interval.start || !interval.end) {
+        return false;
+      }
+      const [startH, startM] = interval.start.split(':').map(Number);
+      const [endH, endM] = interval.end.split(':').map(Number);
       return minutes >= startH * 60 + startM && minutes < endH * 60 + endM;
     });
   });
@@ -234,15 +250,30 @@ export class NewAppointmentDialogComponent {
   private readonly selectedLocationId = toSignal(this.form.controls.locationId.valueChanges, {
     initialValue: this.form.controls.locationId.value,
   });
+  private readonly selectedEmployeeId = toSignal(this.form.controls.employeeId.valueChanges, {
+    initialValue: this.form.controls.employeeId.value,
+  });
+  private readonly selectedStartsAt = toSignal(this.form.controls.startsAt.valueChanges, {
+    initialValue: this.form.controls.startsAt.value,
+  });
 
   readonly slotsServiceId = computed(() => this.selectedServiceId() || null);
   readonly slotsCompanyId = computed(() => this.selectedLocationId() || null);
 
-  /** Locks the slider (and the form's own trainer field, see resetForm) to the
-   * logged-in employee for role Member - same rationale as isMemberRole's doc:
-   * no reason to let a trainer browse other trainers' slots either. */
+  /** Keeps the slider's displayed day in sync with the form's own "Datum i
+   * vrijeme" field - fed straight from resetForm's `initial.startsAt` (the
+   * clicked grid cell's exact date) on open, and from any later manual edit
+   * of that field. */
+  readonly slotsInitialDate = computed(() => this.selectedStartsAt());
+
+  /** Narrows the slider to a single employee row - either hard-locked for
+   * role Member (same rationale as isMemberRole's doc: no reason to let a
+   * trainer browse other trainers' slots), or, once the user has picked a
+   * Trener in the form themselves, filtered to that choice so the slider
+   * stops suggesting slots for anyone else. Empty/no trainer picked yet falls
+   * back to showing every trainer, same as before. */
   readonly slotsLockedEmployeeId = computed(() =>
-    this.isMemberRole() ? (this.currentEmployeeService.employee()?.employeeId ?? null) : null,
+    this.isMemberRole() ? (this.currentEmployeeService.employee()?.employeeId ?? null) : this.selectedEmployeeId() || null,
   );
 
   constructor() {
@@ -316,7 +347,11 @@ export class NewAppointmentDialogComponent {
         this.clientResults.set(
           result.items
             .filter((client: ClientDto) => !excluded.has(client.id))
-            .map((client: ClientDto) => ({ clientId: client.id, name: `${client.firstName} ${client.lastName}` })),
+            .map((client: ClientDto) => ({
+              clientId: client.id,
+              name: `${client.firstName} ${client.lastName}`,
+              noShowCount: client.noShowCount,
+            })),
         );
       });
   }

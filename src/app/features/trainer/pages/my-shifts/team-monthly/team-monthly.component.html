@@ -66,12 +66,23 @@
                     {{ entryLabel(entry) }}
                   </span>
                 }
-                @if (daySource(employee, day) === 'Planned') {
+                @if (daySource(employee, day) === 'Assumed') {
+                  @for (interval of plannedIntervals(employee, day); track interval.start + interval.end) {
+                    <span
+                      class="team-monthly__entry"
+                      [style.background]="'var(--olive-gold)'"
+                      [title]="assumedTooltip(interval)"
+                      (click)="onCellClick(employee, day, null, interval); $event.stopPropagation()"
+                    >
+                      {{ plannedLabel(interval) }}
+                    </span>
+                  }
+                } @else if (daySource(employee, day) === 'Planned') {
                   @for (interval of plannedIntervals(employee, day); track interval.start + interval.end) {
                     <span
                       class="team-monthly__entry team-monthly__entry--planned"
                       [title]="plannedTooltip(interval)"
-                      (click)="onCellClick(employee, day, null); $event.stopPropagation()"
+                      (click)="onCellClick(employee, day, null, interval); $event.stopPropagation()"
                     >
                       {{ plannedLabel(interval) }}
                     </span>

@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
@@ -57,6 +57,15 @@ export class EmployeeLeaveFundTabComponent {
 
   readonly employeeId = input.required<string>();
 
+  /** Lets the "new employee" wizard (EmployeeFormComponent) relabel the save
+   * button ("Spremi i završi") without this component knowing anything about
+   * wizards - defaults to the normal standalone-tab label. */
+  readonly saveLabelKey = input<string>('COMMON.SAVE');
+
+  /** Fires after a successful settings save - the wizard host uses this to
+   * advance past the last step; a normal edit-mode host can just ignore it. */
+  readonly saved = output<void>();
+
   readonly loading = signal(false);
   readonly saving = signal(false);
   readonly settingsExist = signal(false);
@@ -113,6 +122,7 @@ export class EmployeeLeaveFundTabComponent {
           this.applySettings(dto);
           this.notifications.showSuccess(this.translate.instant('EMPLOYEES.LEAVE_FUND.SAVED'));
           this.loadFunds(this.employeeId());
+          this.saved.emit();
         },
         error: () => {},
       });
@@ -127,11 +137,7 @@ export class EmployeeLeaveFundTabComponent {
       },
       error: (err: AppError) => {
         this.loading.set(false);
-        if (err.status === 404 || err.code === 'LEAVE_SETTINGS_NOT_CONFIGURED') {
-          this.applySettings(null);
-        } else {
-          this.notifications.showAppError(err);
-        }
+        this.notifications.showAppError(err);
       },
     });
     this.loadFunds(employeeId);
@@ -143,7 +149,7 @@ export class EmployeeLeaveFundTabComponent {
     }
     this.leaveFundService.getFunds(employeeId, { suppressErrorToast: true }).subscribe({
       next: (funds) => this.funds.set(funds),
-      error: () => this.funds.set([]),
+      error: (err: AppError) => this.notifications.showAppError(err),
     });
   }
 

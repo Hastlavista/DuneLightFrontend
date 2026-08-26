@@ -112,6 +112,7 @@ export class ClientFormComponent {
 
   private readonly loadedClient = signal<ClientDto | null>(null);
   readonly isAnonymized = computed(() => this.loadedClient()?.isAnonymized ?? false);
+  readonly noShowCount = computed(() => this.loadedClient()?.noShowCount ?? 0);
 
   readonly activeLocations = signal<LocationDto[]>([]);
   readonly activeEmployees = signal<EmployeeDirectoryDto[]>([]);

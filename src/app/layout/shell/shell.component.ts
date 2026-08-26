@@ -49,14 +49,22 @@ export class ShellComponent {
       if (employee && user) {
         // Keeps the device's "known users" chooser fresh on every session
         // start (full login or PIN login both land here) - see
-        // KnownUsersService's doc comment.
-        this.knownUsersService.remember({
-          email: user.email,
-          organizationSlug: user.organizationSlug,
-          firstName: employee.firstName,
-          lastName: employee.lastName,
-          colorHex: employee.colorHex,
-        });
+        // KnownUsersService's doc comment. Only users with a PIN set belong
+        // in the chooser (it exists to collect a PIN, which a user without
+        // one can never provide); this also self-heals any user who got
+        // added before this check existed, or who had their PIN removed
+        // since - forget() is a no-op if they're not in the list.
+        if (employee.hasPinSet) {
+          this.knownUsersService.remember({
+            email: user.email,
+            organizationSlug: user.organizationSlug,
+            firstName: employee.firstName,
+            lastName: employee.lastName,
+            colorHex: employee.colorHex,
+          });
+        } else {
+          this.knownUsersService.forget(user.email, user.organizationSlug);
+        }
       }
     });
 

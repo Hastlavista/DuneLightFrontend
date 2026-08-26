@@ -35,6 +35,10 @@ export interface ClientDto {
   isAnonymized: boolean;
   anonymizedAt?: string;
   tags: ClientTagRef[];
+  /** Total count of this client's appointments with status NoShow, ever - not
+   * scoped to any date range. 0 for a client with no no-shows (never omitted,
+   * unlike the optional fields above). */
+  noShowCount: number;
   createdAt: string;
   createdBy?: string;
   updatedAt?: string;

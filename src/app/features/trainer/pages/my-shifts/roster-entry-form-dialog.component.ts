@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, model, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, model, output, signal, untracked } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ConfirmationService } from 'primeng/api';
@@ -29,6 +29,12 @@ interface SelectOption {
 export interface RosterEntryFormInitial {
   employeeId?: string | null;
   date?: Date | null;
+  /** Prefill for a click on a `Planned` team-monthly badge ("HH:mm:ss",
+   * RosterPlannedIntervalDto's own shape) - only the time fields, since a
+   * WorkingHoursTemplate projection isn't tied to any RosterType, so the type
+   * dropdown still starts unselected either way. */
+  startTime?: string | null;
+  endTime?: string | null;
 }
 
 /**
@@ -148,8 +154,19 @@ export class RosterEntryFormDialogComponent {
 
   constructor() {
     effect(() => {
-      if (this.visible()) {
-        this.resetForm(this.entry(), this.initial());
+      const visible = this.visible();
+      const entry = this.entry();
+      const initial = this.initial();
+      // untracked: resetForm() (transitively, via syncDateToValidator/
+      // refreshLeaveFundSummary) reads selectedTypeId/isAdminRole/etc. Without
+      // untracked, this effect would also depend on those and re-fire - and
+      // re-reset the whole form back to blank - every time the user picks a
+      // type or employee, since resetForm's own selectedTypeId.set() call
+      // dirties a signal this effect had implicitly subscribed to. The effect
+      // must only react to the dialog actually (re)opening for a given
+      // entry/initial, never to what happens inside the form afterward.
+      if (visible) {
+        untracked(() => this.resetForm(entry, initial));
       } else {
         this.dialogShown.set(false);
       }
@@ -336,7 +353,12 @@ export class RosterEntryFormDialogComponent {
       return;
     }
     this.leaveFundService.getFunds(employeeId, { suppressErrorToast: true }).subscribe({
-      next: (funds) => this.leaveFundRemainingDays.set(funds.reduce((sum, fund) => sum + fund.remainingDays, 0)),
+      // An empty list also covers the "no fund configured yet" case (service
+      // defaults a 404 to []) - hide the hint rather than claim 0 remaining.
+      next: (funds) =>
+        this.leaveFundRemainingDays.set(
+          funds.length === 0 ? null : funds.reduce((sum, fund) => sum + fund.remainingDays, 0),
+        ),
       error: () => this.leaveFundRemainingDays.set(null),
     });
   }
@@ -362,8 +384,8 @@ export class RosterEntryFormDialogComponent {
         rosterTypeId: '',
         dateFrom: initial?.date ?? new Date(),
         dateTo: null,
-        startTime: null,
-        endTime: null,
+        startTime: initial?.startTime ? parseTimeOfDay(initial.startTime) : null,
+        endTime: initial?.endTime ? parseTimeOfDay(initial.endTime) : null,
         note: '',
       });
       this.selectedTypeId.set('');

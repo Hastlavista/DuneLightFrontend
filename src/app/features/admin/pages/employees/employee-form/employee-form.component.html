@@ -1,6 +1,6 @@
 <div class="dl-card employee-form-page">
   <div class="employee-form-page__header">
-    <h2>{{ (isEditMode() ? 'EMPLOYEES.EDIT_TITLE' : 'EMPLOYEES.NEW_TITLE') | translate }}</h2>
+    <h2>{{ pageTitleKey() | translate }}</h2>
     <p-button
       [text]="true"
       severity="secondary"
@@ -10,14 +10,14 @@
     />
   </div>
 
-  <p-tabs value="data">
+  <p-tabs [(value)]="activeTab">
     <p-tablist>
       <p-tab value="data">{{ 'EMPLOYEES.TAB_DATA' | translate }}</p-tab>
-      @if (isEditMode() && canViewWorkingHours()) {
-        <p-tab value="workingHours">{{ 'EMPLOYEES.TAB_WORKING_HOURS' | translate }}</p-tab>
+      @if (canViewWorkingHours()) {
+        <p-tab value="workingHours" [disabled]="!editingId()">{{ 'EMPLOYEES.TAB_WORKING_HOURS' | translate }}</p-tab>
       }
-      @if (isEditMode() && canViewLeaveFund()) {
-        <p-tab value="leaveFund">{{ 'EMPLOYEES.TAB_LEAVE_FUND' | translate }}</p-tab>
+      @if (canViewLeaveFund()) {
+        <p-tab value="leaveFund" [disabled]="!editingId()">{{ 'EMPLOYEES.TAB_LEAVE_FUND' | translate }}</p-tab>
       }
     </p-tablist>
     <p-tabpanels>
@@ -304,20 +304,36 @@
         [label]="'COMMON.CANCEL' | translate"
         (onClick)="onCancel()"
       />
-      <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+      <p-button type="submit" [label]="dataSaveLabelKey() | translate" [loading]="saving()" />
     </div>
   </form>
       </p-tabpanel>
 
-      @if (isEditMode() && canViewWorkingHours()) {
+      @if (canViewWorkingHours()) {
         <p-tabpanel value="workingHours">
-          <app-working-hours-template-editor [owner]="{ type: 'employee', employeeId: editingId()! }" />
+          @if (editingId(); as id) {
+            <app-working-hours-template-editor
+              [owner]="{ type: 'employee', employeeId: id }"
+              [saveLabelKey]="workingHoursSaveLabelKey()"
+              (saved)="onWorkingHoursSaved()"
+            />
+          } @else {
+            <p class="dl-form__hint">{{ 'EMPLOYEES.WIZARD_LOCKED_HINT' | translate }}</p>
+          }
         </p-tabpanel>
       }
 
-      @if (isEditMode() && canViewLeaveFund()) {
+      @if (canViewLeaveFund()) {
         <p-tabpanel value="leaveFund">
-          <app-employee-leave-fund-tab [employeeId]="editingId()!" />
+          @if (editingId(); as id) {
+            <app-employee-leave-fund-tab
+              [employeeId]="id"
+              [saveLabelKey]="leaveFundSaveLabelKey()"
+              (saved)="onLeaveFundSaved()"
+            />
+          } @else {
+            <p class="dl-form__hint">{{ 'EMPLOYEES.WIZARD_LOCKED_HINT' | translate }}</p>
+          }
         </p-tabpanel>
       }
     </p-tabpanels>

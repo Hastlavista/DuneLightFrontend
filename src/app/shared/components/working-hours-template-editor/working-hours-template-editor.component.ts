@@ -90,6 +90,12 @@ export class WorkingHoursTemplateEditorComponent {
   private readonly translate = inject(TranslateService);
 
   readonly owner = input.required<WorkingHoursOwner>();
+
+  /** Lets a wizard host (e.g. EmployeeFormComponent's "new employee" flow)
+   * relabel the save button ("Spremi i nastavi") without this component
+   * knowing anything about wizards - defaults to the normal standalone label. */
+  readonly saveLabelKey = input<string>('COMMON.SAVE');
+
   readonly saved = output<void>();
 
   readonly loading = signal(false);

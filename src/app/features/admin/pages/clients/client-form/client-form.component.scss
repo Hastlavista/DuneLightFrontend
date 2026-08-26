@@ -45,6 +45,19 @@
     background: rgba(238, 172, 0, 0.08);
   }
 
+  &__no-show-stat {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 0.75rem;
+    border-radius: 8px;
+    border-left: 3px solid var(--ochre);
+    background: rgba(238, 172, 0, 0.08);
+    color: var(--ochre);
+    font-size: 0.9rem;
+    font-weight: 600;
+  }
+
   &__tag-option {
     display: inline-flex;
     align-items: center;

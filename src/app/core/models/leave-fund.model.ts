@@ -47,13 +47,10 @@ export interface EmployeeLeaveSettingsDto {
 }
 
 /**
- * GET /api/employees/{employeeId}/leave-funds - every currently relevant
- * fund: the current fund year, plus a not-yet-expired carryover fund from the
- * previous year (at most two rows, newest first is not guaranteed - sort by
- * `fundYear` if display order matters). `remainingDays` (allocatedDays -
- * usedDays) is already computed server-side - never re-derive it on the
- * frontend. Grant `roster.leave-fund.view.own` (self) or `.view.all` (Admin
- * viewing anyone).
+ * One fund row within LeaveFundsResponse - the current fund year, or a
+ * not-yet-expired carryover fund from the previous year. `remainingDays`
+ * (allocatedDays - usedDays) is already computed server-side - never
+ * re-derive it on the frontend.
  */
 export interface LeaveFundDto {
   fundYear: number;
@@ -62,4 +59,19 @@ export interface LeaveFundDto {
   allocatedDays: number;
   usedDays: number;
   remainingDays: number;
+}
+
+/**
+ * GET /api/employees/{employeeId}/leave-funds - wraps `funds` (at most two
+ * rows, newest first is not guaranteed - sort by `fundYear` if display order
+ * matters) with the employee's own id/name; LeaveFundService.getFunds()
+ * unwraps this down to LeaveFundDto[] for callers, since none of them need
+ * employeeId/employeeName back (they already have the id they queried with).
+ * Grant `roster.leave-fund.view.own` (self) or `.view.all` (Admin viewing
+ * anyone).
+ */
+export interface LeaveFundsResponse {
+  employeeId: string;
+  employeeName: string;
+  funds: LeaveFundDto[];
 }

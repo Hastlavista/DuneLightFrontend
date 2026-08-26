@@ -1,4 +1,4 @@
-import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, output, signal, untracked } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
 import { EmployeeAvailableSlotsDto } from '../../../core/models/appointment.model';
@@ -47,10 +47,17 @@ export class AvailableSlotsSliderComponent {
 
   readonly serviceId = input<string | null>(null);
   readonly companyId = input<string | null>(null);
-  /** Set when the picking employee is already fixed (Member role locked to
-   * themselves, see CurrentEmployeeService.employee) - narrows the query to
-   * that employee and skips the redundant per-row name/swatch, since there's
-   * only ever one row left to show. */
+  /** The day to show - mirrors the caller's own date field (e.g. the "Datum i
+   * vrijeme" field on NewAppointmentDialog, itself seeded from the schedule
+   * grid's clicked cell). Only used to seed/re-sync `selectedDate` (see the
+   * constructor effect below) - the slider's own prev/next-day nav then
+   * browses independently of it without fighting this input. */
+  readonly initialDate = input<Date | null>(null);
+  /** Set when the picking employee is already fixed - either Member role
+   * locked to themselves (see CurrentEmployeeService.employee) or the caller
+   * has a Trener already picked in its own form - narrows the query to that
+   * employee and skips the redundant per-row name/swatch, since there's only
+   * ever one row left to show. */
   readonly lockedEmployeeId = input<string | null>(null);
 
   readonly slotSelected = output<AvailableSlotSelection>();
@@ -73,7 +80,7 @@ export class AvailableSlotsSliderComponent {
       return '';
     }
     const employee = this.rows().find((row) => row.employeeId === selection.employeeId);
-    const label = `${capitalize(DATE_LABEL_FORMATTER.format(selection.date))} · ${selection.start.slice(0, 5)}`;
+    const label = `${capitalize(DATE_LABEL_FORMATTER.format(selection.date))} · ${selection.start?.slice(0, 5) ?? ''}`;
     return employee ? `${label} · ${employee.employeeName}` : label;
   });
 
@@ -88,6 +95,34 @@ export class AvailableSlotsSliderComponent {
         return;
       }
       this.fetchSlots(serviceId, companyId, employeeId, date);
+    });
+
+    // Re-sync the displayed day whenever the caller's own date changes (dialog
+    // open with a pre-filled date, or the user editing the "Datum i vrijeme"
+    // field). `selectedDate` is read untracked so this doesn't fire back on
+    // the slider's own prev/next-day nav, which only touches `selectedDate`.
+    effect(() => {
+      const initial = this.initialDate();
+      if (!initial) {
+        return;
+      }
+      const day = startOfDay(initial);
+      if (!isSameDay(day, untracked(this.selectedDate))) {
+        this.selectedDate.set(day);
+      }
+    });
+
+    // If the caller's locked/picked trainer changes to someone other than the
+    // one behind an already-made selection, that selection no longer applies
+    // - drop it and re-expand so the slider re-offers slots for the new
+    // trainer instead of showing a stale "Promijeni vrijeme" summary.
+    effect(() => {
+      const employeeId = this.lockedEmployeeId();
+      const selection = this.selectedSlot();
+      if (employeeId && selection && selection.employeeId !== employeeId) {
+        this.selectedSlot.set(null);
+        this.expanded.set(true);
+      }
     });
   }
 

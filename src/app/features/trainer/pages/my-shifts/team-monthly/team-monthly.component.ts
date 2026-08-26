@@ -41,6 +41,13 @@ export interface TeamMonthlyCellClickEvent {
   employeeName: string;
   date: Date;
   entryId: string | null;
+  /** Set only for a click on a `Planned` badge (see plannedIntervals()) - the
+   * parent prefills the create form's time fields from it so a cell that
+   * already visibly shows a time range doesn't open as a fully blank form.
+   * There's no rosterTypeId here (a WorkingHoursTemplate projection isn't
+   * tied to any specific RosterType), so the type dropdown still starts
+   * unselected either way. */
+  plannedInterval: RosterPlannedIntervalDto | null;
 }
 
 /**
@@ -133,8 +140,11 @@ export class TeamMonthlyComponent {
     return entry.timeRange ? `${entry.rosterTypeName} ${entry.timeRange}` : entry.rosterTypeName;
   }
 
-  /** `Actual`/`None` render exactly as before (real entries or nothing) -
-   * only `Planned` needs its own rendering path, see plannedIntervals(). */
+  /** `Actual`/`None` render exactly as before (real entries or nothing).
+   * `Assumed` and `Planned` both project from plannedIntervals() - `Assumed`
+   * renders identical to `Actual` (no dashed/muted styling, no "Planirano"
+   * wording - see the template), `Planned` keeps the muted/dashed style,
+   * since only `Planned` days genuinely haven't happened yet (frontend #28). */
   daySource(employee: TeamMonthlyEmployeeDto, day: number): RosterDaySource {
     return employee.days[day - 1]?.source ?? 'None';
   }
@@ -151,7 +161,18 @@ export class TeamMonthlyComponent {
     return `${this.translate.instant('ROSTER.PLANNED_LABEL')}: ${this.plannedLabel(interval)}`;
   }
 
-  onCellClick(employee: TeamMonthlyEmployeeDto, day: number, entryId: string | null): void {
+  /** No "Planirano" wording here on purpose (frontend #28) - an `Assumed` cell
+   * must look and read exactly like a real record, the tooltip included. */
+  assumedTooltip(interval: RosterPlannedIntervalDto): string {
+    return this.plannedLabel(interval);
+  }
+
+  onCellClick(
+    employee: TeamMonthlyEmployeeDto,
+    day: number,
+    entryId: string | null,
+    plannedInterval: RosterPlannedIntervalDto | null = null,
+  ): void {
     if (!this.isRowEditable(employee.employeeId)) {
       return;
     }
@@ -160,6 +181,7 @@ export class TeamMonthlyComponent {
       employeeName: employee.employeeName,
       date: dateForDay(this.yearMonth(), day),
       entryId,
+      plannedInterval,
     });
   }
 

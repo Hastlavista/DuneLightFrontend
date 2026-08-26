@@ -1,18 +1,16 @@
-import { Component, ViewChild, computed, inject, signal } from '@angular/core';
+import { Component, ViewChild, inject, signal } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { LocationsService } from '../../../../../core/services/locations.service';
-import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { LocationDto } from '../../../../../core/models/location.model';
 import { ColorSwatchComponent } from '../../../../../shared/components/color-swatch/color-swatch.component';
 import { ListToolbarComponent } from '../../../../../shared/components/list-toolbar/list-toolbar.component';
 import { StatusTagComponent } from '../../../../../shared/components/status-tag/status-tag.component';
 import { LocationFormDialogComponent } from './location-form-dialog.component';
-import { LocationWorkingHoursDialogComponent } from './location-working-hours-dialog.component';
 
 const DEFAULT_PAGE_SIZE = 20;
 
@@ -26,14 +24,12 @@ const DEFAULT_PAGE_SIZE = 20;
     StatusTagComponent,
     ColorSwatchComponent,
     LocationFormDialogComponent,
-    LocationWorkingHoursDialogComponent,
   ],
   templateUrl: './locations.component.html',
   styleUrl: './locations.component.scss',
 })
 export class LocationsComponent {
   private readonly locationsService = inject(LocationsService);
-  private readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
@@ -49,21 +45,6 @@ export class LocationsComponent {
 
   readonly dialogVisible = signal(false);
   readonly editingLocation = signal<LocationDto | null>(null);
-
-  /** roster.templates is its own grant, independent of catalog.companies.manage
-   * (see WorkingHoursTemplateEditorComponent's own doc) - hide the action
-   * entirely for a user with neither. */
-  readonly canViewWorkingHours = computed(() =>
-    this.currentEmployeeService.hasAnyGrant(['roster.templates.view', 'roster.templates.manage']),
-  );
-
-  readonly workingHoursDialogVisible = signal(false);
-  readonly workingHoursLocation = signal<LocationDto | null>(null);
-
-  openWorkingHours(location: LocationDto): void {
-    this.workingHoursLocation.set(location);
-    this.workingHoursDialogVisible.set(true);
-  }
 
   onLazyLoad(event: TableLazyLoadEvent): void {
     const first = event.first ?? 0;

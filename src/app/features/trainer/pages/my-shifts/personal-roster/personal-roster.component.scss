@@ -73,6 +73,17 @@
       font-size: 0.75rem;
       color: var(--clay-2);
     }
+
+    /* Synthetic "Pretpostavljeno (predložak)" row (frontend #28) - not a real
+       RosterType, so nudged slightly apart from the genuine per-type sums
+       around it without being visually loud. */
+    &--assumed {
+      font-style: italic;
+
+      strong {
+        font-size: 1rem;
+      }
+    }
   }
 
   &__table {

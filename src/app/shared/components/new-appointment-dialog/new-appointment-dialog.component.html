@@ -28,6 +28,13 @@
         @if (attemptedSubmit() && selectedClients().length === 0) {
           <span class="dl-form__error">{{ 'SCHEDULE.NEW_APPOINTMENT.ERRORS.CLIENTS_REQUIRED' | translate }}</span>
         }
+        @if (selectedClientsWithNoShows().length > 0) {
+          <div class="new-appointment-dialog__no-show-warning">
+            @for (client of selectedClientsWithNoShows(); track client.clientId) {
+              <span>{{ 'SCHEDULE.NEW_APPOINTMENT.NO_SHOW_WARNING' | translate: { name: client.name, count: client.noShowCount } }}</span>
+            }
+          </div>
+        }
       </div>
 
       <div class="dl-form__field">
@@ -37,7 +44,7 @@
           fluid
           appendTo="body"
           formControlName="serviceId"
-          [options]="services()"
+          [options]="individualServices()"
           optionLabel="name"
           optionValue="id"
           [placeholder]="'SCHEDULE.NEW_APPOINTMENT.FIELD_SERVICE_PLACEHOLDER' | translate"
@@ -64,13 +71,6 @@
           <span class="dl-form__error">{{ 'SCHEDULE.NEW_APPOINTMENT.ERRORS.LOCATION_REQUIRED' | translate }}</span>
         }
       </div>
-
-      <app-available-slots-slider
-        [serviceId]="slotsServiceId()"
-        [companyId]="slotsCompanyId()"
-        [lockedEmployeeId]="slotsLockedEmployeeId()"
-        (slotSelected)="onSlotSelected($event)"
-      />
 
       <div class="dl-form__field">
         <label for="new-appt-trainer">{{ 'SCHEDULE.NEW_APPOINTMENT.FIELD_TRAINER' | translate }}</label>
@@ -113,6 +113,14 @@
           }
         }
       </div>
+
+      <app-available-slots-slider
+        [serviceId]="slotsServiceId()"
+        [companyId]="slotsCompanyId()"
+        [initialDate]="slotsInitialDate()"
+        [lockedEmployeeId]="slotsLockedEmployeeId()"
+        (slotSelected)="onSlotSelected($event)"
+      />
 
       <div class="dl-form__field">
         <label for="new-appt-note">{{ 'SCHEDULE.NEW_APPOINTMENT.FIELD_NOTE' | translate }}</label>

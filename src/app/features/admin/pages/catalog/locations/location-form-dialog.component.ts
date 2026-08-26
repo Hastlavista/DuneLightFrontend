@@ -6,11 +6,14 @@ import { ColorPicker } from 'primeng/colorpicker';
 import { Dialog } from 'primeng/dialog';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
+import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { Textarea } from 'primeng/textarea';
 import { finalize } from 'rxjs';
 import { LocationDto, LocationUpsertRequest } from '../../../../../core/models/location.model';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { LocationsService } from '../../../../../core/services/locations.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
+import { WorkingHoursTemplateEditorComponent } from '../../../../../shared/components/working-hours-template-editor/working-hours-template-editor.component';
 
 /** Olive-gold from the dune palette - a sensible default when creating a new
  * location, before the user picks their own color. */
@@ -18,12 +21,28 @@ const DEFAULT_COLOR_NO_HASH = '8F7A45';
 
 @Component({
   selector: 'app-location-form-dialog',
-  imports: [Dialog, ReactiveFormsModule, InputText, Textarea, InputNumber, ColorPicker, Button, TranslatePipe],
+  imports: [
+    Dialog,
+    ReactiveFormsModule,
+    InputText,
+    Textarea,
+    InputNumber,
+    ColorPicker,
+    Button,
+    Tabs,
+    TabList,
+    Tab,
+    TabPanels,
+    TabPanel,
+    TranslatePipe,
+    WorkingHoursTemplateEditorComponent,
+  ],
   templateUrl: './location-form-dialog.component.html',
 })
 export class LocationFormDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly locationsService = inject(LocationsService);
+  private readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
 
@@ -33,6 +52,41 @@ export class LocationFormDialogComponent {
 
   readonly saving = signal(false);
   readonly isEditMode = computed(() => this.location() !== null);
+  readonly activeTab = signal<'data' | 'workingHours'>('data');
+
+  /** Id of a location created during this dialog's current create-mode
+   * session - lets the "Radno vrijeme" tab unlock immediately after "Podaci"
+   * creates the location, same wizard mechanism as
+   * EmployeeFormComponent.editingId (see its own doc): a brand-new location
+   * has no id for the working-hours endpoint until this fires. */
+  readonly createdLocationId = signal<string | null>(null);
+
+  readonly currentLocationId = computed(() => this.location()?.id ?? this.createdLocationId());
+
+  /** True once "Podaci" has created the location within this open dialog
+   * session - drives the forced tab-advance to "Radno vrijeme" and the
+   * "Spremi i nastavi" button label, same as
+   * EmployeeFormComponent.justCreatedInWizard. A plain edit of an
+   * already-existing location never sets this - both tabs are simply usable
+   * independently from the moment the dialog opens. */
+  readonly justCreatedInWizard = signal(false);
+
+  /** roster.templates is its own grant, independent of catalog.companies.manage
+   * (see WorkingHoursTemplateEditorComponent's own doc) - hide the tab
+   * entirely for a user with neither, same as LocationsComponent's own
+   * canViewWorkingHours (that one still gates the now-removed standalone
+   * dialog's entry point in the row actions). */
+  readonly canViewWorkingHours = computed(() =>
+    this.currentEmployeeService.hasAnyGrant(['roster.templates.view', 'roster.templates.manage']),
+  );
+
+  readonly dataSaveLabelKey = computed(() =>
+    this.currentLocationId() ? 'COMMON.SAVE' : 'CATALOG.LOCATIONS.SAVE_AND_CONTINUE',
+  );
+
+  readonly workingHoursSaveLabelKey = computed(() =>
+    this.justCreatedInWizard() ? 'CATALOG.LOCATIONS.SAVE_AND_FINISH' : 'COMMON.SAVE',
+  );
 
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(255)]],
@@ -46,6 +100,9 @@ export class LocationFormDialogComponent {
   constructor() {
     effect(() => {
       if (this.visible()) {
+        this.activeTab.set('data');
+        this.createdLocationId.set(null);
+        this.justCreatedInWizard.set(false);
         this.resetForm(this.location());
       }
     });
@@ -74,11 +131,22 @@ export class LocationFormDialogComponent {
 
     this.saving.set(true);
     request$.pipe(finalize(() => this.saving.set(false))).subscribe({
-      next: () => {
+      next: (result) => {
         this.notifications.showSuccess(
           this.translate.instant(current ? 'CATALOG.LOCATIONS.UPDATED' : 'CATALOG.LOCATIONS.CREATED'),
         );
-        this.visible.set(false);
+        if (current) {
+          this.visible.set(false);
+        } else if (this.canViewWorkingHours()) {
+          // New location, "Radno vrijeme" tab available - stay open and walk
+          // into it next, same wizard shape as EmployeeFormComponent (see
+          // justCreatedInWizard's doc), instead of closing right away.
+          this.createdLocationId.set(result.id);
+          this.justCreatedInWizard.set(true);
+          this.activeTab.set('workingHours');
+        } else {
+          this.visible.set(false);
+        }
         this.saved.emit();
       },
       error: () => {},
@@ -87,6 +155,16 @@ export class LocationFormDialogComponent {
 
   onCancel(): void {
     this.visible.set(false);
+  }
+
+  /** Only closes the dialog when working hours were saved as the last step of
+   * the new-location wizard - editing an existing location's hours is just a
+   * self-contained tab save, no reason to close anything (see
+   * justCreatedInWizard's doc). */
+  onWorkingHoursSaved(): void {
+    if (this.justCreatedInWizard()) {
+      this.visible.set(false);
+    }
   }
 
   private resetForm(location: LocationDto | null): void {

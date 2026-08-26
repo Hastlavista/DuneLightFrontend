@@ -82,7 +82,7 @@
 
       @if (canManage()) {
         <div class="dl-form__actions">
-          <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+          <p-button type="submit" [label]="saveLabelKey() | translate" [loading]="saving()" />
         </div>
       }
     </form>
