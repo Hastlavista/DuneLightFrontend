@@ -22,6 +22,7 @@
       <p-tab value="data">{{ 'CLIENTS.FORM_TAB_DATA' | translate }}</p-tab>
       @if (isEditMode()) {
         <p-tab value="packages">{{ 'CLIENTS.FORM_TAB_PACKAGES' | translate }}</p-tab>
+        <p-tab value="appointments">{{ 'CLIENTS.FORM_TAB_APPOINTMENTS' | translate }}</p-tab>
       }
     </p-tablist>
     <p-tabpanels>
@@ -232,6 +233,9 @@
       @if (isEditMode()) {
         <p-tabpanel value="packages">
           <app-client-packages-tab [clientId]="editingId()!" />
+        </p-tabpanel>
+        <p-tabpanel value="appointments">
+          <app-client-appointments-tab [clientId]="editingId()!" />
         </p-tabpanel>
       }
     </p-tabpanels>

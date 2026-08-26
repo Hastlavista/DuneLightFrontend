@@ -268,7 +268,7 @@ export class AppointmentDetailDialogComponent {
       employeeId: appt.employeeId,
       companyId: appt.companyId,
       clientIds: appt.clients.map((client) => client.clientId),
-      amount: appt.price,
+      amount: appt.amount,
       note: appt.note ?? null,
       paymentMethod: method,
       packageSelections: method === 'Package' ? (this.buildBillingPackageSelections() ?? []) : [],

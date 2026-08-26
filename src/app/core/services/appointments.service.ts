@@ -12,6 +12,7 @@ import {
   AvailableSlotsResponseDto,
   RecurringAppointmentCreateRequest,
 } from '../models/appointment.model';
+import { PagedResult } from '../models/paged-result.model';
 import { ScheduleFeedDto } from '../models/schedule-break.model';
 import { SUPPRESS_ERROR_TOAST } from '../http/http-context.tokens';
 import { PlusSafeUrlCodec } from '../http/plus-safe-url-codec';
@@ -60,6 +61,16 @@ export class AppointmentsService {
 
   getById(id: string): Observable<AppointmentDto> {
     return this.http.get<AppointmentDto>(`${this.resourceUrl}/${id}`);
+  }
+
+  /** GET /api/appointments/by-client/{clientId} - paged appointment history for
+   * one client, individual and group termini together, newest first. A group
+   * row's `clientAttendance` reflects THIS client's own attendance/coverage on
+   * it (see AppointmentDto.clientAttendance) - feeds the client detail page's
+   * Termini tab. */
+  getByClient(clientId: string, query: { page: number; pageSize: number }): Observable<PagedResult<AppointmentDto>> {
+    const params = new HttpParams().set('page', query.page).set('pageSize', query.pageSize);
+    return this.http.get<PagedResult<AppointmentDto>>(`${this.resourceUrl}/by-client/${clientId}`, { params });
   }
 
   /** PATCH /api/appointments/{id}/move - called from AppointmentDetailDialog's

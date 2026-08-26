@@ -161,3 +161,17 @@ export interface GenerateGroupAppointmentsResult {
   skippedCount: number;
   created: GroupAppointmentCellDto[];
 }
+
+/** GET /api/clients/{clientId}/groups - groups the client is a member of,
+ * active and historical (client detail page's Termini tab). `slots` is active
+ * slots only (the client's current schedule) - unlike GroupDto.slots there's no
+ * need to manage removed slots in this read-only, client-facing view. */
+export interface ClientGroupMembershipDto {
+  groupId: string;
+  groupName: string;
+  serviceName: string;
+  companyName: string;
+  slots: GroupSlotDto[];
+  joinedAt: string;
+  isActive: boolean;
+}

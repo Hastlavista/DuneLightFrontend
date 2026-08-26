@@ -317,6 +317,7 @@
     "BACK_TO_LIST": "Natrag na popis",
     "FORM_TAB_DATA": "Podaci",
     "FORM_TAB_PACKAGES": "Paketi",
+    "FORM_TAB_APPOINTMENTS": "Termini",
     "INACTIVE_BADGE": "neaktivno",
     "ANONYMIZED_BANNER": "Ovaj klijent je anonimiziran (GDPR) i može se samo pregledavati.",
     "SECTION_BASIC": "Osnovno",
@@ -455,6 +456,22 @@
         "DEPLETED": "Iskorišten",
         "CANCELLED": "Otkazan"
       }
+    },
+    "APPOINTMENTS": {
+      "GROUPS_TITLE": "Moje grupe",
+      "GROUPS_EMPTY": "Klijent nije član nijedne grupe.",
+      "GROUP_JOINED": "Član od",
+      "HISTORY_TITLE": "Povijest termina",
+      "COL_DATETIME": "Datum i vrijeme",
+      "COL_TYPE": "Vrsta",
+      "COL_NAME": "Naziv",
+      "COL_CLIENTS": "Klijenti",
+      "COL_AMOUNT_COVERAGE": "Iznos / pokriće",
+      "TYPE_INDIVIDUAL": "Individualno",
+      "TYPE_GROUP": "Grupno",
+      "ATTENDED_YES": "Bio",
+      "ATTENDED_NO": "Nije bio",
+      "HISTORY_EMPTY": "Klijent još nema evidentiranih termina."
     }
   },
   "EMPLOYEES": {

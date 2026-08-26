@@ -1,0 +1,105 @@
+<div class="client-appointments-tab">
+  <section class="client-appointments-tab__section">
+    <h3>{{ 'CLIENTS.APPOINTMENTS.GROUPS_TITLE' | translate }}</h3>
+
+    @if (!groupsLoading() && groups().length === 0) {
+      <p class="client-appointments-tab__empty">{{ 'CLIENTS.APPOINTMENTS.GROUPS_EMPTY' | translate }}</p>
+    } @else {
+      <div class="client-appointments-tab__group-cards">
+        @for (group of groups(); track group.groupId) {
+          <div class="dl-card client-appointments-tab__group-card">
+            <div class="client-appointments-tab__group-card-header">
+              <strong>{{ group.groupName }}</strong>
+              <app-status-tag [active]="group.isActive" />
+            </div>
+            <div class="client-appointments-tab__group-card-meta">{{ group.serviceName }} · {{ group.companyName }}</div>
+            @if (group.slots.length > 0) {
+              <div class="client-appointments-tab__group-card-schedule">
+                @for (slot of group.slots; track slot.id) {
+                  <span class="client-appointments-tab__slot">
+                    {{ dayOfWeekShortTranslationKey(slot.dayOfWeek) | translate }} {{ slotTimeLabel(slot.startTime) }}
+                  </span>
+                }
+              </div>
+            }
+            <div class="client-appointments-tab__group-card-joined">
+              {{ 'CLIENTS.APPOINTMENTS.GROUP_JOINED' | translate }}: {{ group.joinedAt | hrDate }}
+            </div>
+          </div>
+        }
+      </div>
+    }
+  </section>
+
+  <section class="client-appointments-tab__section">
+    <h3>{{ 'CLIENTS.APPOINTMENTS.HISTORY_TITLE' | translate }}</h3>
+
+    <p-table
+      [value]="items()"
+      [lazy]="true"
+      (onLazyLoad)="onLazyLoad($event)"
+      [paginator]="true"
+      [rows]="rows()"
+      [totalRecords]="totalCount()"
+      [loading]="loading()"
+      [rowsPerPageOptions]="[20, 50, 100, 200]"
+      dataKey="id"
+      responsiveLayout="scroll"
+    >
+      <ng-template pTemplate="header">
+        <tr>
+          <th>{{ 'CLIENTS.APPOINTMENTS.COL_DATETIME' | translate }}</th>
+          <th>{{ 'CLIENTS.APPOINTMENTS.COL_TYPE' | translate }}</th>
+          <th>{{ 'CLIENTS.APPOINTMENTS.COL_NAME' | translate }}</th>
+          <th>{{ 'CLIENTS.APPOINTMENTS.COL_CLIENTS' | translate }}</th>
+          <th>{{ 'COMMON.COL_STATUS' | translate }}</th>
+          <th>{{ 'CLIENTS.APPOINTMENTS.COL_AMOUNT_COVERAGE' | translate }}</th>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="body" let-appt>
+        <tr>
+          <td>{{ dateTimeLabel(appt) }}</td>
+          <td>
+            <p-tag
+              [severity]="appt.form === 'Group' ? 'info' : 'secondary'"
+              [value]="(appt.form === 'Group' ? 'CLIENTS.APPOINTMENTS.TYPE_GROUP' : 'CLIENTS.APPOINTMENTS.TYPE_INDIVIDUAL') | translate"
+            />
+          </td>
+          <td>{{ appt.form === 'Group' ? appt.groupName : appt.serviceName }}</td>
+          <td>{{ appt.form === 'Group' ? '—' : clientNamesLabel(appt) }}</td>
+          <td>
+            @if (appt.form === 'Group') {
+              <p-tag
+                [severity]="appt.clientAttendance?.attended ? 'success' : 'warn'"
+                [value]="(appt.clientAttendance?.attended ? 'CLIENTS.APPOINTMENTS.ATTENDED_YES' : 'CLIENTS.APPOINTMENTS.ATTENDED_NO') | translate"
+              />
+            } @else {
+              <p-tag [severity]="appointmentStatusSeverity(appt.status)" [value]="appointmentStatusTranslationKey(appt.status) | translate" />
+            }
+          </td>
+          <td>
+            @if (appt.form === 'Group') {
+              @if (appt.clientAttendance?.coverageType; as coverage) {
+                {{ coverageTypeTranslationKey(coverage) | translate }}
+              } @else {
+                —
+              }
+            } @else {
+              {{ appt.amount | eurCurrency }}
+              @if (paymentLabel(appt.paymentMethod); as method) {
+                · {{ method | translate }}
+              }
+            }
+          </td>
+        </tr>
+      </ng-template>
+
+      <ng-template pTemplate="emptymessage">
+        <tr>
+          <td colspan="6" class="client-appointments-tab__empty">{{ 'CLIENTS.APPOINTMENTS.HISTORY_EMPTY' | translate }}</td>
+        </tr>
+      </ng-template>
+    </p-table>
+  </section>
+</div>

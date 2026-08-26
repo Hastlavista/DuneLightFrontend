@@ -1,3 +1,4 @@
+import { CoverageType } from './group-attendance.model';
 import { ServiceExecutionMode } from './service.model';
 
 /** Status values exactly as the backend sends/accepts them. Use these
@@ -87,6 +88,17 @@ export interface AppointmentClientRef {
   packageEntryReturned: boolean;
 }
 
+/** Attendance/coverage of ONE client on ONE group appointment - see
+ * AppointmentDto.clientAttendance. Only ever populated by GET .../by-client for
+ * a Form=Group row, and only when that client has a recorded attendance/absence
+ * on it (never present for an individual appointment, or a group appointment
+ * this client hasn't been checked in/out on yet). */
+export interface ClientAttendanceDto {
+  attended?: boolean;
+  coverageType?: CoverageType;
+  clientPackageId?: string;
+}
+
 /** GET /api/appointments/{id} and the body PATCH /{id}/move responds with (see
  * AppointmentsService.move). A superset of AppointmentScheduleCellDto's fields
  * plus price/payment/note/recurrence - the price/payment shape here is a single
@@ -113,11 +125,15 @@ export interface AppointmentDto {
   attendanceCount?: number;
   expectedCount?: number;
   clients: AppointmentClientRef[];
-  price: number;
+  amount: number;
   isPaid: boolean;
+  paymentMethod?: PaymentMethod;
   clientPackageId?: string;
   note?: string;
   recurrenceGroupId?: string;
+  /** Only ever populated by GET .../by-client for a Form=Group row where this
+   * client has a recorded attendance/absence - see ClientAttendanceDto. */
+  clientAttendance?: ClientAttendanceDto;
   warnings: string[];
 }
 

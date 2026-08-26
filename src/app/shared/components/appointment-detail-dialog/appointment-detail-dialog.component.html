@@ -91,7 +91,7 @@
       <div class="appointment-detail__row">
         <span class="appointment-detail__label">{{ 'SCHEDULE.DETAIL.PRICE' | translate }}</span>
         <span>
-          {{ appt.price | eurCurrency }} ·
+          {{ appt.amount | eurCurrency }} ·
           {{ (appt.isPaid ? 'SCHEDULE.DETAIL.PAID' : 'SCHEDULE.DETAIL.UNPAID') | translate }}
         </span>
       </div>

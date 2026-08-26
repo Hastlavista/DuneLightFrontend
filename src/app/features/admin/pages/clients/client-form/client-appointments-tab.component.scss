@@ -1,0 +1,60 @@
+.client-appointments-tab {
+  padding: 0.5rem 0 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+
+  &__section {
+    h3 {
+      margin: 0 0 1rem;
+    }
+  }
+
+  &__group-cards {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  &__group-card {
+    padding: 0.875rem 1rem;
+    min-width: 16rem;
+    flex: 1 1 16rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.375rem;
+  }
+
+  &__group-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  &__group-card-meta {
+    font-size: 0.85rem;
+    color: var(--clay-2);
+  }
+
+  &__group-card-schedule {
+    font-size: 0.85rem;
+  }
+
+  &__slot {
+    &:not(:first-child)::before {
+      content: ', ';
+    }
+  }
+
+  &__group-card-joined {
+    font-size: 0.8rem;
+    color: var(--olive-gold);
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 1rem 0;
+    color: var(--olive-gold);
+  }
+}

@@ -24,6 +24,7 @@ import { NotificationService } from '../../../../../core/services/notification.s
 import { toStartOfDayIso } from '../../../../../core/utils/date.util';
 import { translationReadySignal } from '../../../../../core/utils/translation-signal.util';
 import { ColorSwatchComponent } from '../../../../../shared/components/color-swatch/color-swatch.component';
+import { ClientAppointmentsTabComponent } from './client-appointments-tab.component';
 import { ClientPackagesTabComponent } from './client-packages-tab.component';
 
 /** Route param sentinel for create mode - see admin.routes.ts, same convention as
@@ -85,6 +86,7 @@ function gdprConsentDateValidator(group: AbstractControl): ValidationErrors | nu
     TranslatePipe,
     ColorSwatchComponent,
     ClientPackagesTabComponent,
+    ClientAppointmentsTabComponent,
   ],
   templateUrl: './client-form.component.html',
   styleUrl: './client-form.component.scss',
