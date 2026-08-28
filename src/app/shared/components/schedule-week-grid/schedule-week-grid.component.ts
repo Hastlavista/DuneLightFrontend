@@ -4,12 +4,14 @@ import { Button } from 'primeng/button';
 import { finalize, forkJoin } from 'rxjs';
 import { AppointmentScheduleCellDto, AppointmentStatus } from '../../../core/models/appointment.model';
 import { BirthdayDto } from '../../../core/models/client.model';
+import { CompanyHolidayDto } from '../../../core/models/company-holiday.model';
 import { dayOfWeekShortTranslationKey } from '../../../core/models/group.model';
 import { LocationDto } from '../../../core/models/location.model';
 import { ScheduleBreakCellDto } from '../../../core/models/schedule-break.model';
 import { ServiceExecutionMode } from '../../../core/models/service.model';
 import { AppointmentsService } from '../../../core/services/appointments.service';
 import { ClientsService } from '../../../core/services/clients.service';
+import { CompanyHolidaysService } from '../../../core/services/company-holidays.service';
 import { LocationContextService } from '../../../core/services/location-context.service';
 import { toEndOfDayIso, toStartOfDayIso } from '../../../core/utils/date.util';
 import { buildBirthdayLookup } from '../schedule-grid/schedule-birthday.util';
@@ -23,6 +25,7 @@ import {
   startOfWeek,
   weekRangeLabel,
 } from '../schedule-grid/schedule-date.util';
+import { buildHolidayLookup } from '../schedule-grid/schedule-holiday.util';
 import { ScheduleGridComponent } from '../schedule-grid/schedule-grid.component';
 import { ScheduleEmptySlotClickEvent, ScheduleGridCell, ScheduleGridColumn } from '../schedule-grid/schedule-grid.models';
 
@@ -68,6 +71,7 @@ interface ScheduleFilters {
 export class ScheduleWeekGridComponent {
   private readonly appointmentsService = inject(AppointmentsService);
   private readonly clientsService = inject(ClientsService);
+  private readonly companyHolidaysService = inject(CompanyHolidaysService);
   private readonly locationContext = inject(LocationContextService);
   private readonly translate = inject(TranslateService);
 
@@ -94,17 +98,28 @@ export class ScheduleWeekGridComponent {
     () => new Map(this.activeLocations().map((location) => [location.id, location.colorHex])),
   );
 
+  /** "Sve lokacije" (null) skips holiday marking entirely - there's no single
+   * company to check, and blending several locations' holidays into one
+   * column would misrepresent which one the day is actually closed for. */
+  private readonly rawHolidays = signal<CompanyHolidayDto[]>([]);
+  private readonly holidayLookup = computed(() => buildHolidayLookup(this.rawHolidays()));
+
   readonly columnWidthPx = WEEK_COLUMN_WIDTH_PX;
   readonly rangeLabel = computed(() => weekRangeLabel(this.weekStart()));
 
   readonly columns = computed<ScheduleGridColumn[]>(() => {
     const start = this.weekStart();
+    const holidays = this.holidayLookup();
     return Array.from({ length: 7 }, (_, i) => {
       const date = addDays(start, i);
+      const dateKey = localDateKey(date);
+      const holidayName = holidays.get(dateKey);
       return {
-        id: localDateKey(date),
+        id: dateKey,
         label: this.translate.instant(dayOfWeekShortTranslationKey(dayOfWeekFromDate(date))),
         subLabel: dayMonthLabel(date),
+        isHoliday: holidayName !== undefined,
+        holidayName,
       };
     });
   });
@@ -159,6 +174,11 @@ export class ScheduleWeekGridComponent {
       }
       this.fetch(employeeId, weekStart, filters);
     });
+
+    // Independent of employeeId - the holiday markers only depend on the
+    // visible week and the globally-selected location, fetched once per
+    // change rather than on every render (see class doc on rawHolidays).
+    effect(() => this.fetchHolidays(this.locationContext.selectedLocationId(), this.weekStart()));
   }
 
   goPrevWeek(): void {
@@ -229,5 +249,18 @@ export class ScheduleWeekGridComponent {
         this.rawBreaks.set(feed.breaks);
         this.rawBirthdays.set(birthdays);
       });
+  }
+
+  /** A week can span two calendar years (e.g. 29.12. - 4.1.) - fetch both
+   * years in that rare case rather than assuming one. */
+  private fetchHolidays(companyId: string | null, weekStart: Date): void {
+    if (!companyId) {
+      this.rawHolidays.set([]);
+      return;
+    }
+    const years = new Set([weekStart.getFullYear(), addDays(weekStart, 6).getFullYear()]);
+    forkJoin(Array.from(years).map((year) => this.companyHolidaysService.getForYear(companyId, year))).subscribe(
+      (results) => this.rawHolidays.set(results.flat()),
+    );
   }
 }

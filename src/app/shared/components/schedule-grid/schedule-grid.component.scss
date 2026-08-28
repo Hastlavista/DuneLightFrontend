@@ -47,6 +47,25 @@
     color: var(--clay-2);
   }
 
+  /* Holiday column (grid B only, see ScheduleGridColumn.isHoliday) - a subtle
+     amber tint rather than a loud warning color, so appointments that still
+     land here (booked before the holiday was recorded) stay perfectly
+     readable on top. */
+  &__col-header--holiday {
+    background: color-mix(in srgb, var(--ochre) 14%, var(--paper-2));
+    border-bottom: 2px solid var(--ochre);
+  }
+
+  &__col-header-holiday {
+    max-width: 100%;
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--ochre);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   &__body {
     display: flex;
     position: relative;
@@ -80,6 +99,10 @@
     flex: 0 0 auto;
     border-right: 1px solid var(--sand);
     cursor: pointer;
+
+    &--holiday {
+      background: color-mix(in srgb, var(--ochre) 7%, transparent);
+    }
   }
 
   &__hour-line {

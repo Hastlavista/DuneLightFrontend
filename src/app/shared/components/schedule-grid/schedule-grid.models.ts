@@ -8,6 +8,13 @@ export interface ScheduleGridColumn {
   id: string;
   label: string;
   subLabel?: string;
+  /** Grid B (week x days) only - true when this column's calendar day is a
+   * holiday for the selected location, see schedule-holiday.util.ts. Always
+   * false for grid A (day x trainers), whose columns are trainers, not days -
+   * that grid shows a banner above the whole grid instead, see
+   * ScheduleDayGridComponent. */
+  isHoliday?: boolean;
+  holidayName?: string;
 }
 
 /** One block on the grid, pre-resolved to display-ready strings by the parent

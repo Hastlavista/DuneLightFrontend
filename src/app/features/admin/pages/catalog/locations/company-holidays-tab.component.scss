@@ -1,0 +1,56 @@
+.company-holidays-tab {
+  padding: 0.5rem 0 1rem;
+
+  &__toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+
+  &__year-field {
+    max-width: 10rem;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+
+  &__hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    margin-bottom: 1rem;
+    background: var(--paper);
+    border: 1px solid var(--sand-deep);
+    border-radius: var(--radius-card);
+    font-size: 0.9rem;
+
+    a {
+      font-weight: 600;
+      text-decoration: underline;
+    }
+  }
+
+  &__add-form {
+    padding: 1rem;
+    margin-bottom: 1rem;
+    background: var(--paper);
+    border: 1px solid var(--sand);
+    border-radius: var(--radius-card);
+  }
+
+  &__actions-col {
+    width: 3rem;
+  }
+
+  &__empty {
+    text-align: center;
+    padding: 2rem 0;
+    color: var(--olive-gold);
+  }
+}

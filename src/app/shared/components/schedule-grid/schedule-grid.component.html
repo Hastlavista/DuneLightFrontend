@@ -3,10 +3,17 @@
     <div class="schedule-grid__header">
       <div class="schedule-grid__corner"></div>
       @for (column of columns(); track column.id) {
-        <div class="schedule-grid__col-header" [style.width.px]="columnWidthPx()">
+        <div
+          class="schedule-grid__col-header"
+          [class.schedule-grid__col-header--holiday]="column.isHoliday"
+          [style.width.px]="columnWidthPx()"
+        >
           <span class="schedule-grid__col-header-label">{{ column.label }}</span>
           @if (column.subLabel) {
             <span class="schedule-grid__col-header-sub">{{ column.subLabel }}</span>
+          }
+          @if (column.holidayName) {
+            <span class="schedule-grid__col-header-holiday" [title]="column.holidayName">{{ column.holidayName }}</span>
           }
         </div>
       }
@@ -24,6 +31,7 @@
       @for (column of columns(); track column.id) {
         <div
           class="schedule-grid__col-body"
+          [class.schedule-grid__col-body--holiday]="column.isHoliday"
           [style.width.px]="columnWidthPx()"
           [style.height.px]="totalHeightPx()"
           (click)="onColumnClick(column, $event)"

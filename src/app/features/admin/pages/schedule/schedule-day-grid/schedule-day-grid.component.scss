@@ -14,4 +14,17 @@
     padding: 2rem 0;
     color: var(--olive-gold);
   }
+
+  &__holiday-banner {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.6rem 1rem;
+    background: color-mix(in srgb, var(--ochre) 14%, var(--paper-2));
+    border: 1px solid var(--ochre);
+    border-radius: var(--radius-card);
+    color: var(--ochre);
+    font-weight: 600;
+    font-size: 0.85rem;
+  }
 }

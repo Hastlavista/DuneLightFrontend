@@ -6,6 +6,13 @@
     <p-button [label]="'SCHEDULE.TODAY' | translate" [text]="true" (onClick)="goToday()" />
   </div>
 
+  @if (todayHolidayName(); as holidayName) {
+    <div class="schedule-day-grid__holiday-banner">
+      <i class="pi pi-info-circle"></i>
+      {{ 'SCHEDULE.HOLIDAY_BANNER' | translate: { name: holidayName } }}
+    </div>
+  }
+
   @if (columns().length === 0) {
     <div class="schedule-day-grid__empty">{{ 'SCHEDULE.NO_TRAINERS' | translate }}</div>
   } @else {

@@ -7,6 +7,9 @@ export interface LocationDto {
   address: string | null;
   phone: string | null;
   colorHex: string | null;
+  /** ISO 3166-1 alpha-2 (e.g. "HR") - drives which holiday catalog "Generiraj
+   * standardne praznike" resolves for this location, see CompanyHolidayDto. */
+  country: string;
   isActive: boolean;
   note: string | null;
   sortOrder: number;
@@ -24,6 +27,7 @@ export interface LocationUpsertRequest {
   address: string | null;
   phone: string | null;
   colorHex: string | null;
+  country: string;
   note: string | null;
   sortOrder: number;
 }

@@ -68,6 +68,8 @@
     "APPOINTMENT_OVERLAP": "Termin se preklapa s postojećom obavezom trenera ili klijenta.",
     "RECURRING_CONFLICT": "Neki termini u nizu se sudaraju s postojećim obavezama. Provjerite označene datume.",
     "OUTSIDE_WORKING_HOURS": "Termin je izvan radnog vremena zaposlenika ili lokacije.",
+    "DUPLICATE_HOLIDAY_DATE": "Praznik za taj datum već postoji za ovu poslovnicu.",
+    "HOLIDAY_CATALOG_NOT_DEFINED_FOR_COUNTRY": "Praznici za ovu državu nisu unaprijed definirani. Dodajte ih ručno.",
 
     "LEAVE_FUND_TYPE_MUST_BE_ABSENCE": "Fond godišnjeg mogu trošiti samo vrste odsutnosti.",
     "LEAVE_FUND_ENTRY_REQUIRES_END_DATE": "Za godišnji odmor morate unijeti datum završetka.",
@@ -135,6 +137,7 @@
       "FIELD_ADDRESS": "Adresa",
       "FIELD_PHONE": "Telefon",
       "FIELD_COLOR": "Boja",
+      "FIELD_COUNTRY": "Država",
       "FIELD_NOTE": "Napomena",
       "FIELD_SORT_ORDER": "Redoslijed prikaza",
       "ERRORS": {
@@ -149,9 +152,31 @@
       "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati lokaciju \"{{name}}\"? Ova radnja je nepovratna.",
       "TAB_DATA": "Podaci",
       "TAB_WORKING_HOURS": "Radno vrijeme",
+      "TAB_HOLIDAYS": "Praznici",
       "WIZARD_LOCKED_HINT": "Ovaj tab bit će dostupan čim spremite osnovne podatke lokacije na tabu \"Podaci\".",
       "SAVE_AND_CONTINUE": "Spremi i nastavi",
-      "SAVE_AND_FINISH": "Spremi i završi"
+      "SAVE_AND_FINISH": "Spremi i završi",
+      "HOLIDAYS": {
+        "FIELD_YEAR": "Godina",
+        "GENERATE_BUTTON": "Generiraj standardne praznike",
+        "GENERATED": "Kreirano praznika: {{created}}, preskočeno (već postoje): {{skipped}}.",
+        "ADD_BUTTON": "Dodaj ručno",
+        "FIELD_DATE": "Datum",
+        "FIELD_NAME": "Naziv",
+        "ERRORS": {
+          "DATE_REQUIRED": "Datum je obavezan.",
+          "NAME_REQUIRED": "Naziv je obavezan."
+        },
+        "CREATED": "Praznik je dodan.",
+        "DELETED": "Praznik je izbrisan.",
+        "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati praznik \"{{name}}\"?",
+        "COL_DATE": "Datum",
+        "COL_NAME": "Naziv",
+        "COL_ORIGIN": "Izvor",
+        "ORIGIN_AUTO": "Automatski",
+        "ORIGIN_MANUAL": "Ručno",
+        "EMPTY": "Nema unesenih praznika za odabranu godinu."
+      }
     },
     "SERVICES": {
       "NEW": "Nova usluga",
@@ -829,6 +854,7 @@
     "SELECT_TRAINER": "Odaberite trenera",
     "SELECT_TRAINER_HINT": "Odaberite trenera za prikaz tjednog rasporeda.",
     "NO_TRAINERS": "Nema aktivnih trenera za odabranu lokaciju.",
+    "HOLIDAY_BANNER": "Praznik: {{name}}",
     "PREV_DAY": "Prethodni dan",
     "NEXT_DAY": "Sljedeći dan",
     "PREV_WEEK": "Prethodni tjedan",

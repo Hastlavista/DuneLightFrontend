@@ -6,17 +6,20 @@ import { DatePicker } from 'primeng/datepicker';
 import { finalize, forkJoin } from 'rxjs';
 import { AppointmentScheduleCellDto, AppointmentStatus } from '../../../../../core/models/appointment.model';
 import { BirthdayDto } from '../../../../../core/models/client.model';
+import { CompanyHolidayDto } from '../../../../../core/models/company-holiday.model';
 import { EmployeeColumnEntry } from '../../../../../core/models/employee.model';
 import { LocationDto } from '../../../../../core/models/location.model';
 import { ScheduleBreakCellDto } from '../../../../../core/models/schedule-break.model';
 import { ServiceExecutionMode } from '../../../../../core/models/service.model';
 import { AppointmentsService } from '../../../../../core/services/appointments.service';
 import { ClientsService } from '../../../../../core/services/clients.service';
+import { CompanyHolidaysService } from '../../../../../core/services/company-holidays.service';
 import { LocationContextService } from '../../../../../core/services/location-context.service';
 import { toEndOfDayIso, toStartOfDayIso } from '../../../../../core/utils/date.util';
 import { buildBirthdayLookup } from '../../../../../shared/components/schedule-grid/schedule-birthday.util';
 import { toScheduleBreakGridCell, toScheduleGridCell } from '../../../../../shared/components/schedule-grid/schedule-cell-view.util';
-import { startOfDay } from '../../../../../shared/components/schedule-grid/schedule-date.util';
+import { localDateKey, startOfDay } from '../../../../../shared/components/schedule-grid/schedule-date.util';
+import { buildHolidayLookup } from '../../../../../shared/components/schedule-grid/schedule-holiday.util';
 import { ScheduleGridComponent } from '../../../../../shared/components/schedule-grid/schedule-grid.component';
 import {
   ScheduleEmptySlotClickEvent,
@@ -67,6 +70,7 @@ interface ScheduleFilters {
 export class ScheduleDayGridComponent {
   private readonly appointmentsService = inject(AppointmentsService);
   private readonly clientsService = inject(ClientsService);
+  private readonly companyHolidaysService = inject(CompanyHolidaysService);
   private readonly locationContext = inject(LocationContextService);
   private readonly translate = inject(TranslateService);
 
@@ -92,6 +96,14 @@ export class ScheduleDayGridComponent {
   private readonly locationColors = computed<Map<string, string | null>>(
     () => new Map(this.activeLocations().map((location) => [location.id, location.colorHex])),
   );
+
+  /** "Sve lokacije" (null) skips the banner entirely - same reasoning as
+   * ScheduleWeekGridComponent's rawHolidays doc. Columns here are trainers,
+   * not days, so a holiday can't be a per-column highlight - see
+   * ScheduleGridColumn.isHoliday's doc. */
+  private readonly rawHolidays = signal<CompanyHolidayDto[]>([]);
+  private readonly holidayLookup = computed(() => buildHolidayLookup(this.rawHolidays()));
+  readonly todayHolidayName = computed(() => this.holidayLookup().get(localDateKey(this.selectedDate())) ?? null);
 
   readonly columnWidthPx = DAY_COLUMN_WIDTH_PX;
 
@@ -144,6 +156,11 @@ export class ScheduleDayGridComponent {
       };
       this.fetch(date, filters);
     });
+
+    // Independent of the trainer columns - only depends on the shown day and
+    // the globally-selected location, fetched once per change rather than on
+    // every render (see class doc on rawHolidays).
+    effect(() => this.fetchHolidays(this.locationContext.selectedLocationId(), this.selectedDate()));
   }
 
   onDateChange(date: Date): void {
@@ -219,5 +236,13 @@ export class ScheduleDayGridComponent {
     const result = new Date(date);
     result.setDate(result.getDate() + days);
     return result;
+  }
+
+  private fetchHolidays(companyId: string | null, date: Date): void {
+    if (!companyId) {
+      this.rawHolidays.set([]);
+      return;
+    }
+    this.companyHolidaysService.getForYear(companyId, date.getFullYear()).subscribe((holidays) => this.rawHolidays.set(holidays));
   }
 }

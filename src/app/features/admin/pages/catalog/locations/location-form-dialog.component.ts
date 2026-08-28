@@ -6,6 +6,7 @@ import { ColorPicker } from 'primeng/colorpicker';
 import { Dialog } from 'primeng/dialog';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
+import { Select } from 'primeng/select';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { Textarea } from 'primeng/textarea';
 import { finalize } from 'rxjs';
@@ -14,10 +15,25 @@ import { CurrentEmployeeService } from '../../../../../core/services/current-emp
 import { LocationsService } from '../../../../../core/services/locations.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { WorkingHoursTemplateEditorComponent } from '../../../../../shared/components/working-hours-template-editor/working-hours-template-editor.component';
+import { CompanyHolidaysTabComponent } from './company-holidays-tab.component';
 
 /** Olive-gold from the dune palette - a sensible default when creating a new
  * location, before the user picks their own color. */
 const DEFAULT_COLOR_NO_HASH = '8F7A45';
+
+/** ISO 3166-1 alpha-2 - a short, non-exhaustive list is enough here, not a
+ * full country picker. A location whose actual country is missing from this
+ * list just falls back to manual holiday entry - see
+ * CompanyHolidaysTabComponent's HOLIDAY_CATALOG_NOT_DEFINED_FOR_COUNTRY hint. */
+const COUNTRY_OPTIONS = [
+  { code: 'HR', name: 'Hrvatska' },
+  { code: 'SI', name: 'Slovenija' },
+  { code: 'BA', name: 'Bosna i Hercegovina' },
+  { code: 'RS', name: 'Srbija' },
+  { code: 'AT', name: 'Austrija' },
+  { code: 'DE', name: 'Njemačka' },
+  { code: 'IT', name: 'Italija' },
+];
 
 @Component({
   selector: 'app-location-form-dialog',
@@ -28,6 +44,7 @@ const DEFAULT_COLOR_NO_HASH = '8F7A45';
     Textarea,
     InputNumber,
     ColorPicker,
+    Select,
     Button,
     Tabs,
     TabList,
@@ -36,6 +53,7 @@ const DEFAULT_COLOR_NO_HASH = '8F7A45';
     TabPanel,
     TranslatePipe,
     WorkingHoursTemplateEditorComponent,
+    CompanyHolidaysTabComponent,
   ],
   templateUrl: './location-form-dialog.component.html',
 })
@@ -52,7 +70,9 @@ export class LocationFormDialogComponent {
 
   readonly saving = signal(false);
   readonly isEditMode = computed(() => this.location() !== null);
-  readonly activeTab = signal<'data' | 'workingHours'>('data');
+  readonly activeTab = signal<'data' | 'workingHours' | 'holidays'>('data');
+
+  readonly countryOptions = COUNTRY_OPTIONS;
 
   /** Id of a location created during this dialog's current create-mode
    * session - lets the "Radno vrijeme" tab unlock immediately after "Podaci"
@@ -80,6 +100,12 @@ export class LocationFormDialogComponent {
     this.currentEmployeeService.hasAnyGrant(['roster.templates.view', 'roster.templates.manage']),
   );
 
+  /** Same grant as "Radno vrijeme" (roster.templates.view/.manage) - Praznici
+   * lives under the same Roster module on the backend. */
+  readonly canViewHolidays = computed(() =>
+    this.currentEmployeeService.hasAnyGrant(['roster.templates.view', 'roster.templates.manage']),
+  );
+
   readonly dataSaveLabelKey = computed(() =>
     this.currentLocationId() ? 'COMMON.SAVE' : 'CATALOG.LOCATIONS.SAVE_AND_CONTINUE',
   );
@@ -93,6 +119,7 @@ export class LocationFormDialogComponent {
     address: ['', Validators.maxLength(500)],
     phone: ['', Validators.maxLength(50)],
     colorHex: [DEFAULT_COLOR_NO_HASH],
+    country: this.fb.nonNullable.control('HR', Validators.required),
     note: [''],
     sortOrder: [0],
   });
@@ -120,6 +147,7 @@ export class LocationFormDialogComponent {
       address: raw.address || null,
       phone: raw.phone || null,
       colorHex: raw.colorHex ? `#${raw.colorHex.replace('#', '').toUpperCase()}` : null,
+      country: raw.country,
       note: raw.note || null,
       sortOrder: raw.sortOrder,
     };
@@ -173,6 +201,7 @@ export class LocationFormDialogComponent {
       address: location?.address ?? '',
       phone: location?.phone ?? '',
       colorHex: location?.colorHex ? location.colorHex.replace('#', '') : DEFAULT_COLOR_NO_HASH,
+      country: location?.country ?? 'HR',
       note: location?.note ?? '',
       sortOrder: location?.sortOrder ?? 0,
     });

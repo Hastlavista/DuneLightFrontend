@@ -12,6 +12,11 @@
           {{ 'CATALOG.LOCATIONS.TAB_WORKING_HOURS' | translate }}
         </p-tab>
       }
+      @if (canViewHolidays()) {
+        <p-tab value="holidays" [disabled]="!currentLocationId()">
+          {{ 'CATALOG.LOCATIONS.TAB_HOLIDAYS' | translate }}
+        </p-tab>
+      }
     </p-tablist>
     <p-tabpanels>
       <p-tabpanel value="data">
@@ -37,6 +42,19 @@
           <div class="dl-form__field">
             <label for="location-color">{{ 'CATALOG.LOCATIONS.FIELD_COLOR' | translate }}</label>
             <p-colorpicker id="location-color" formControlName="colorHex" appendTo="body" />
+          </div>
+
+          <div class="dl-form__field">
+            <label for="location-country">{{ 'CATALOG.LOCATIONS.FIELD_COUNTRY' | translate }}</label>
+            <p-select
+              id="location-country"
+              fluid
+              appendTo="body"
+              formControlName="country"
+              [options]="countryOptions"
+              optionLabel="name"
+              optionValue="code"
+            />
           </div>
 
           <div class="dl-form__field">
@@ -70,6 +88,16 @@
               [saveLabelKey]="workingHoursSaveLabelKey()"
               (saved)="onWorkingHoursSaved()"
             />
+          } @else {
+            <p class="dl-form__hint">{{ 'CATALOG.LOCATIONS.WIZARD_LOCKED_HINT' | translate }}</p>
+          }
+        </p-tabpanel>
+      }
+
+      @if (canViewHolidays()) {
+        <p-tabpanel value="holidays">
+          @if (currentLocationId(); as id) {
+            <app-company-holidays-tab [companyId]="id" />
           } @else {
             <p class="dl-form__hint">{{ 'CATALOG.LOCATIONS.WIZARD_LOCKED_HINT' | translate }}</p>
           }
