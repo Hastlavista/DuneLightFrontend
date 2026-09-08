@@ -1,76 +1,69 @@
 <p-dialog
   [(visible)]="visible"
   [modal]="true"
-  [style]="{ width: '32rem' }"
-  [header]="'CLIENTS.PACKAGES.ISSUE_TITLE' | translate"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '43rem', maxWidth: 'calc(100vw - 1rem)', height: 'min(92vh, 47rem)' }"
+  styleClass="client-dialog client-dialog--issue-package"
   (onShow)="onDialogShow()"
 >
+  <ng-template #header>
+    <div class="issue-package-dialog__header">
+      <h2>{{ 'CLIENTS.PACKAGES.ISSUE_BUTTON' | translate }}</h2>
+      <p>{{ clientLabel() }}</p>
+    </div>
+  </ng-template>
+
   @if (dialogShown()) {
-  <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
-    <div class="dl-form__field">
-      <label for="issue-package-id">{{ 'CLIENTS.PACKAGES.FIELD_PACKAGE' | translate }}</label>
-      <p-select
-        id="issue-package-id"
-        fluid
-        appendTo="body"
-        formControlName="packageId"
-        [options]="activePackages()"
-        optionLabel="name"
-        optionValue="id"
-        [placeholder]="'CLIENTS.PACKAGES.FIELD_PACKAGE_PLACEHOLDER' | translate"
-      />
-      @if (form.controls.packageId.invalid && form.controls.packageId.touched) {
-        <span class="dl-form__error">{{ 'CLIENTS.PACKAGES.ERRORS.PACKAGE_REQUIRED' | translate }}</span>
-      }
-    </div>
+    <form [formGroup]="form" (ngSubmit)="onSave()" class="issue-package-dialog" novalidate>
+      <section class="issue-package-dialog__selection">
+        <span class="issue-package-dialog__selection-icon"><i class="pi pi-box"></i></span>
+        <div>
+          <strong>{{ selectedPackage() ? selectedPackage()!.name : 'Paket još nije odabran' }}</strong>
+          <small>{{ selectedPackage() ? packageSummary(selectedPackage()!) : 'Odaberi paket - cijena se povlači iz cjenika odabrane poslovnice.' }}</small>
+        </div>
+        <span>{{ selectedPackage() ? priceLabel(selectedPackage()!.defaultPrice) : '-' }}</span>
+      </section>
 
-    <div class="dl-form__field">
-      <label for="issue-company-id">{{ 'CLIENTS.PACKAGES.FIELD_COMPANY' | translate }}</label>
-      <p-select
-        id="issue-company-id"
-        fluid
-        appendTo="body"
-        [showClear]="true"
-        formControlName="companyId"
-        [options]="activeCompanies()"
-        optionLabel="name"
-        optionValue="id"
-        [placeholder]="'CLIENTS.PACKAGES.FIELD_COMPANY_PLACEHOLDER' | translate"
-      />
-      <span class="dl-form__hint">{{ 'CLIENTS.PACKAGES.COMPANY_HINT' | translate }}</span>
-    </div>
+      <section class="issue-package-dialog__section">
+        <div class="issue-package-dialog__label-row"><label>{{ 'CLIENTS.PACKAGES.FIELD_PACKAGE' | translate }}</label><span>Obavezno</span></div>
+        <div class="issue-package-dialog__package-grid">
+          @for (package of activePackages(); track package.id) {
+            <button type="button" class="issue-package-dialog__package-card" [class.issue-package-dialog__package-card--active]="form.controls.packageId.value === package.id" (click)="selectPackage(package.id)">
+              <strong>{{ package.name }}</strong><b>{{ priceLabel(package.defaultPrice) }}</b><small>{{ packageSummary(package) }}</small>
+            </button>
+          }
+        </div>
+        @if (form.controls.packageId.invalid && form.controls.packageId.touched) { <span class="dl-form__error">{{ 'CLIENTS.PACKAGES.ERRORS.PACKAGE_REQUIRED' | translate }}</span> }
+      </section>
 
-    <div class="dl-form__row">
-      <div class="dl-form__field">
-        <label for="issue-purchase-date">{{ 'CLIENTS.PACKAGES.FIELD_PURCHASE_DATE' | translate }}</label>
-        <p-datepicker
-          id="issue-purchase-date"
-          fluid
-          appendTo="body"
-          [showIcon]="true"
-          [showClear]="true"
-          formControlName="purchaseDate"
-          dateFormat="dd.mm.yy"
-        />
-      </div>
+      <section class="issue-package-dialog__section">
+        <label>{{ 'CLIENTS.PACKAGES.FIELD_COMPANY' | translate }}</label>
+        <div class="issue-package-dialog__chips">
+          @for (company of activeCompanies(); track company.id) {
+            <button type="button" [class.issue-package-dialog__chip--active]="form.controls.companyId.value === company.id" (click)="selectCompany(company.id)"><i class="pi pi-circle-fill" [style.color]="'#' + (company.colorHex || '545863')"></i>{{ company.name }}</button>
+          }
+        </div>
+        <small>{{ 'CLIENTS.PACKAGES.COMPANY_HINT' | translate }}</small>
+      </section>
 
-      <div class="dl-form__field">
-        <label for="issue-paid-price">{{ 'CLIENTS.PACKAGES.FIELD_PAID_PRICE' | translate }}</label>
-        <p-inputnumber id="issue-paid-price" fluid formControlName="paidPrice" mode="currency" currency="EUR" locale="hr-HR" />
-        <span class="dl-form__hint">{{ 'CLIENTS.PACKAGES.PAID_PRICE_HINT' | translate }}</span>
-      </div>
-    </div>
+      <section class="issue-package-dialog__purchase-grid">
+        <div class="issue-package-dialog__section">
+          <label>{{ 'CLIENTS.PACKAGES.FIELD_PURCHASE_DATE' | translate }}</label>
+          <div class="issue-package-dialog__date-shortcuts"><button type="button" [class.issue-package-dialog__shortcut--active]="isToday()" (click)="setPurchaseDate('today')">Danas</button><button type="button" (click)="setPurchaseDate('yesterday')">Jučer</button><button type="button" (click)="setPurchaseDate('monthStart')">Početak mjeseca</button></div>
+          <p-datepicker id="issue-purchase-date" fluid appendTo="body" [showIcon]="true" formControlName="purchaseDate" dateFormat="dd.mm.yy" />
+        </div>
+        <div class="issue-package-dialog__section">
+          <label for="issue-paid-price">{{ 'CLIENTS.PACKAGES.FIELD_PAID_PRICE' | translate }}</label>
+          <p-inputnumber id="issue-paid-price" fluid formControlName="paidPrice" mode="currency" currency="EUR" locale="hr-HR" [disabled]="!selectedPackage()" [placeholder]="selectedPackage() ? '' : 'Prvo odaberi paket'" />
+          <small>{{ 'CLIENTS.PACKAGES.PAID_PRICE_HINT' | translate }}</small>
+        </div>
+      </section>
 
-    <div class="dl-form__actions">
-      <p-button
-        type="button"
-        [text]="true"
-        severity="secondary"
-        [label]="'COMMON.CANCEL' | translate"
-        (onClick)="onCancel()"
-      />
-      <p-button type="submit" [label]="'CLIENTS.PACKAGES.ISSUE_BUTTON' | translate" [loading]="saving()" />
-    </div>
-  </form>
+      <footer class="issue-package-dialog__actions">
+        <span>{{ missingRequirements() }}</span>
+        <div><p-button type="button" severity="secondary" [outlined]="true" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" /><p-button type="submit" [label]="'CLIENTS.PACKAGES.ISSUE_BUTTON' | translate" [disabled]="form.invalid" [loading]="saving()" /></div>
+      </footer>
+    </form>
   }
 </p-dialog>

@@ -20,6 +20,7 @@ const DEFAULT_TAB = 'clients';
   selector: 'app-admin-clients',
   imports: [Tabs, TabList, Tab, TabPanels, TabPanel, TranslatePipe, ClientListComponent, ClientTagsComponent, BirthdaysComponent],
   templateUrl: './clients.component.html',
+  styleUrl: './clients.component.scss',
 })
 export class ClientsComponent {
   private readonly route = inject(ActivatedRoute);

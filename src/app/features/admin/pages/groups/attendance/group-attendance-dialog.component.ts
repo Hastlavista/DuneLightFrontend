@@ -2,7 +2,6 @@ import { Component, computed, effect, inject, input, model, signal } from '@angu
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AutoComplete, AutoCompleteCompleteEvent, AutoCompleteSelectEvent } from 'primeng/autocomplete';
-import { Checkbox } from 'primeng/checkbox';
 import { Dialog } from 'primeng/dialog';
 import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
@@ -58,7 +57,7 @@ export interface AttendanceRowVm {
  */
 @Component({
   selector: 'app-group-attendance-dialog',
-  imports: [Dialog, TableModule, Checkbox, FormsModule, AutoComplete, TranslatePipe, EligiblePackageSelectComponent],
+  imports: [Dialog, TableModule, FormsModule, AutoComplete, TranslatePipe, EligiblePackageSelectComponent],
   templateUrl: './group-attendance-dialog.component.html',
   styleUrl: './group-attendance-dialog.component.scss',
 })

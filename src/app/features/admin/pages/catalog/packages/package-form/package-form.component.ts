@@ -11,13 +11,11 @@ import {
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
-import { Checkbox } from 'primeng/checkbox';
 import { DatePicker } from 'primeng/datepicker';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { SelectButton } from 'primeng/selectbutton';
-import { Textarea } from 'primeng/textarea';
 import { finalize } from 'rxjs';
 import {
   entryModeTranslationKey,
@@ -76,12 +74,10 @@ function servicesArrayValidator(control: AbstractControl): ValidationErrors | nu
   imports: [
     ReactiveFormsModule,
     InputText,
-    Textarea,
     InputNumber,
     Select,
     SelectButton,
     DatePicker,
-    Checkbox,
     Button,
     TranslatePipe,
   ],

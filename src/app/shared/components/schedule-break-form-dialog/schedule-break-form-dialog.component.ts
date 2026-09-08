@@ -7,7 +7,6 @@ import { Button } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
 import { Dialog } from 'primeng/dialog';
 import { Select } from 'primeng/select';
-import { Textarea } from 'primeng/textarea';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { finalize } from 'rxjs';
 import { AppError } from '../../../core/models/api-error.model';
@@ -84,7 +83,6 @@ interface EmployeeSearchOption {
     AutoComplete,
     Select,
     DatePicker,
-    Textarea,
     ToggleSwitch,
     Button,
     TranslatePipe,

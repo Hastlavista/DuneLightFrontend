@@ -23,11 +23,11 @@
             <tr>
               <td>{{ row.clientName }}</td>
               <td>
-                <p-checkbox
-                  [binary]="true"
-                  [ngModel]="row.attended"
+                <input
+                  type="checkbox"
+                  [checked]="row.attended"
                   [disabled]="row.saving"
-                  (onChange)="onToggleAttended(row, $event.checked)"
+                  (change)="onToggleAttended(row, $any($event.target).checked)"
                 />
               </td>
               <td>
@@ -74,11 +74,11 @@
                 }
               </td>
               <td>
-                <p-checkbox
-                  [binary]="true"
-                  [ngModel]="row.attended"
+                <input
+                  type="checkbox"
+                  [checked]="row.attended"
                   [disabled]="row.saving"
-                  (onChange)="onToggleAttended(row, $event.checked)"
+                  (change)="onToggleAttended(row, $any($event.target).checked)"
                 />
               </td>
               <td>

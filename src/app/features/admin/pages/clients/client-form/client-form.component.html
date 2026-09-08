@@ -1,34 +1,21 @@
-<div class="dl-card client-form-page">
-  <div class="client-form-page__header">
-    <h2>{{ (isEditMode() ? 'CLIENTS.EDIT_TITLE' : 'CLIENTS.NEW_TITLE') | translate }}</h2>
-    <p-button
-      [text]="true"
-      severity="secondary"
-      icon="pi pi-arrow-left"
-      [label]="'CLIENTS.BACK_TO_LIST' | translate"
-      (onClick)="onCancel()"
-    />
-  </div>
+<div class="client-form-page">
+  <div class="client-form-page__panel">
+    @if (isAnonymized()) {
+      <div class="client-form-page__anonymized-banner">
+        <i class="pi pi-ban"></i>
+        {{ 'CLIENTS.ANONYMIZED_BANNER' | translate }}
+      </div>
+    }
 
-  @if (isAnonymized()) {
-    <div class="client-form-page__anonymized-banner">
-      <i class="pi pi-ban"></i>
-      {{ 'CLIENTS.ANONYMIZED_BANNER' | translate }}
-    </div>
-  }
-
-  <p-tabs value="data">
-    <p-tablist>
-      <p-tab value="data">{{ 'CLIENTS.FORM_TAB_DATA' | translate }}</p-tab>
-      @if (isEditMode()) {
-        <p-tab value="packages">{{ 'CLIENTS.FORM_TAB_PACKAGES' | translate }}</p-tab>
-        <p-tab value="appointments">{{ 'CLIENTS.FORM_TAB_APPOINTMENTS' | translate }}</p-tab>
-      }
-    </p-tablist>
-    <p-tabpanels>
-      <p-tabpanel value="data">
-        <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
-          <section class="client-form-page__section">
+    <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+          @if (isEditMode()) {
+            <div class="client-form-page__summary">
+              <span class="client-form-page__summary-icon"><i class="pi pi-user"></i></span>
+              <div><strong>{{ form.controls.firstName.value }} {{ form.controls.lastName.value }}</strong><small>{{ selectedCompanyName() }} · {{ selectedTrainerName() }} · {{ form.controls.tagIds.value.length }} oznaka</small></div>
+              <button type="button" class="client-form-page__back" (click)="onCancel()"><i class="pi pi-angle-left"></i>{{ 'CLIENTS.BACK_TO_LIST' | translate }}</button>
+            </div>
+          }
+          <section class="client-form-page__section client-form-page__section--identity">
             <h3>{{ 'CLIENTS.SECTION_BASIC' | translate }}</h3>
 
             <div class="dl-form__row">
@@ -92,7 +79,7 @@
             }
           </section>
 
-          <section class="client-form-page__section">
+          <section class="client-form-page__section client-form-page__section--assignment">
             <h3>{{ 'CLIENTS.SECTION_CONTACT' | translate }}</h3>
 
             <div class="dl-form__row">
@@ -112,81 +99,29 @@
           </section>
 
           <section class="client-form-page__section">
-            <h3>{{ 'CLIENTS.SECTION_NOTES' | translate }}</h3>
-
-            <div class="dl-form__field">
-              <label for="client-note">{{ 'CLIENTS.FIELD_NOTE' | translate }}</label>
-              <textarea id="client-note" pTextarea fluid rows="2" formControlName="note"></textarea>
-            </div>
-
-            <div class="dl-form__field client-form-page__health-note">
-              <label for="client-health-note">{{ 'CLIENTS.FIELD_HEALTH_NOTE' | translate }}</label>
-              <textarea id="client-health-note" pTextarea fluid rows="2" formControlName="healthNote"></textarea>
-              <span class="dl-form__hint">{{ 'CLIENTS.HEALTH_NOTE_HINT' | translate }}</span>
-            </div>
-          </section>
-
-          <section class="client-form-page__section">
             <h3>{{ 'CLIENTS.SECTION_ASSIGNMENT' | translate }}</h3>
 
-            <div class="dl-form__row">
-              <div class="dl-form__field">
-                <label for="client-home-company">{{ 'CLIENTS.FIELD_HOME_COMPANY' | translate }}</label>
-                <p-select
-                  id="client-home-company"
-                  fluid
-                  appendTo="body"
-                  [showClear]="true"
-                  formControlName="homeCompanyId"
-                  [options]="homeCompanyOptions()"
-                  optionLabel="name"
-                  optionValue="id"
-                  [placeholder]="'CLIENTS.FIELD_HOME_COMPANY_PLACEHOLDER' | translate"
-                />
-              </div>
-
-              <div class="dl-form__field">
-                <label for="client-home-trainer">{{ 'CLIENTS.FIELD_HOME_TRAINER' | translate }}</label>
-                <p-select
-                  id="client-home-trainer"
-                  fluid
-                  appendTo="body"
-                  [showClear]="true"
-                  formControlName="homeTrainerId"
-                  [options]="homeTrainerOptions()"
-                  optionLabel="name"
-                  optionValue="id"
-                  [placeholder]="'CLIENTS.FIELD_HOME_TRAINER_PLACEHOLDER' | translate"
-                />
-                <span class="dl-form__hint">{{ 'CLIENTS.HOME_TRAINER_HINT' | translate }}</span>
-              </div>
+            <div class="client-form-page__choice-group">
+              <label>{{ 'CLIENTS.FIELD_HOME_COMPANY' | translate }}</label>
+              <div>@for (company of homeCompanyOptions(); track company.id) { <button type="button" [class.client-form-page__choice--active]="form.controls.homeCompanyId.value === company.id" (click)="selectHomeCompany(company.id)"><i class="pi pi-circle-fill"></i>{{ company.name }}</button> }</div>
+              <small>Određuje čiji je klijent u statistici i gdje mu se prvo nude termini.</small>
+            </div>
+            <div class="client-form-page__choice-group">
+              <label>{{ 'CLIENTS.FIELD_HOME_TRAINER' | translate }}</label>
+              <div>@for (trainer of homeTrainerOptions(); track trainer.id) { <button type="button" [class.client-form-page__choice--active]="form.controls.homeTrainerId.value === trainer.id" (click)="selectHomeTrainer(trainer.id)">{{ trainer.name }}</button> }</div>
+              <small>{{ 'CLIENTS.HOME_TRAINER_HINT' | translate }}</small>
+            </div>
+            <div class="client-form-page__choice-group">
+              <label>{{ 'CLIENTS.SECTION_TAGS' | translate }}</label>
+              <div>@for (tag of tagOptions(); track tag.id) { <button type="button" [class.client-form-page__choice--active]="form.controls.tagIds.value.includes(tag.id)" (click)="toggleTag(tag.id)">{{ tag.name }}</button> }</div>
+              <small>Oznake filtriraju popis i mogu nositi popust na cjeniku.</small>
             </div>
           </section>
 
           <section class="client-form-page__section">
-            <h3>{{ 'CLIENTS.SECTION_TAGS' | translate }}</h3>
-
-            <div class="dl-form__field">
-              <label for="client-tags">{{ 'CLIENTS.FIELD_TAGS' | translate }}</label>
-              <p-multiselect
-                id="client-tags"
-                fluid
-                appendTo="body"
-                display="chip"
-                formControlName="tagIds"
-                [options]="tagOptions()"
-                optionLabel="name"
-                optionValue="id"
-                [placeholder]="'CLIENTS.FIELD_TAGS_PLACEHOLDER' | translate"
-              >
-                <ng-template let-tag pTemplate="item">
-                  <span class="client-form-page__tag-option">
-                    <app-color-swatch [colorHex]="tag.colorHex" />
-                    {{ tag.name }}
-                  </span>
-                </ng-template>
-              </p-multiselect>
-            </div>
+            <h3>{{ 'CLIENTS.SECTION_NOTES' | translate }}</h3>
+            <div class="dl-form__field"><label for="client-note">{{ 'CLIENTS.FIELD_NOTE' | translate }}</label><textarea id="client-note" rows="2" formControlName="note"></textarea></div>
+            <div class="dl-form__field client-form-page__health-note"><label for="client-health-note">{{ 'CLIENTS.FIELD_HEALTH_NOTE' | translate }}</label><textarea id="client-health-note" rows="2" formControlName="healthNote"></textarea><span class="dl-form__hint">{{ 'CLIENTS.HEALTH_NOTE_HINT' | translate }}</span></div>
           </section>
 
           <section class="client-form-page__section">
@@ -194,7 +129,7 @@
 
             <div class="dl-form__row">
               <div class="dl-form__field dl-form__field--checkbox">
-                <p-checkbox inputId="client-gdpr-given" formControlName="gdprConsentGiven" [binary]="true" />
+                <input id="client-gdpr-given" type="checkbox" formControlName="gdprConsentGiven" />
                 <label for="client-gdpr-given">{{ 'CLIENTS.FIELD_GDPR_CONSENT_GIVEN' | translate }}</label>
               </div>
 
@@ -217,27 +152,19 @@
 
           @if (!isAnonymized()) {
             <div class="dl-form__actions">
+              <span class="client-form-page__footer-hint">{{ 'CLIENTS.FORM_FOOTER_HINT' | translate }}</span>
+              <div class="client-form-page__footer-buttons">
               <p-button
                 type="button"
-                [text]="true"
                 severity="secondary"
+                [outlined]="true"
                 [label]="'COMMON.CANCEL' | translate"
                 (onClick)="onCancel()"
               />
-              <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+              <p-button type="submit" [label]="'CLIENTS.SAVE' | translate" [loading]="saving()" />
+              </div>
             </div>
           }
-        </form>
-      </p-tabpanel>
-
-      @if (isEditMode()) {
-        <p-tabpanel value="packages">
-          <app-client-packages-tab [clientId]="editingId()!" />
-        </p-tabpanel>
-        <p-tabpanel value="appointments">
-          <app-client-appointments-tab [clientId]="editingId()!" />
-        </p-tabpanel>
-      }
-    </p-tabpanels>
-  </p-tabs>
+    </form>
+  </div>
 </div>

@@ -173,11 +173,10 @@
             <p>{{ (mode() === 'cancel' ? 'SCHEDULE.CANCEL.CONFIRM_TITLE' : 'SCHEDULE.NO_SHOW.CONFIRM_TITLE') | translate }}</p>
             @for (client of returnableClients(); track client.clientId) {
               <label class="appointment-detail__return-entry-row">
-                <p-checkbox
-                  [binary]="true"
-                  [ngModel]="isReturnEntryChecked(client.clientId)"
-                  [ngModelOptions]="{ standalone: true }"
-                  (onChange)="onToggleReturnEntry(client.clientId, $event.checked)"
+                <input
+                  type="checkbox"
+                  [checked]="isReturnEntryChecked(client.clientId)"
+                  (change)="onToggleReturnEntry(client.clientId, $any($event.target).checked)"
                 />
                 <span>{{ client.clientName }} - {{ (mode() === 'cancel' ? 'SCHEDULE.CANCEL.RETURN_ENTRY_LABEL' : 'SCHEDULE.NO_SHOW.RETURN_ENTRY_LABEL') | translate }}</span>
               </label>

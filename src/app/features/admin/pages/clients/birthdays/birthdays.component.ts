@@ -1,17 +1,15 @@
 import { Component, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
-import { DatePicker } from 'primeng/datepicker';
-import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { BirthdayDto } from '../../../../../core/models/client.model';
 import { ClientsService } from '../../../../../core/services/clients.service';
 import { toEndOfDayIso, toStartOfDayIso } from '../../../../../core/utils/date.util';
-import { HrDatePipe } from '../../../../../shared/pipes/hr-date.pipe';
 
 type QuickRange = 'today' | 'week' | 'month' | 'custom';
+
+const DATE_FORMATTER = new Intl.DateTimeFormat('hr-HR', { day: '2-digit', month: '2-digit', year: 'numeric' });
 
 function startOfDay(date: Date): Date {
   const result = new Date(date);
@@ -46,7 +44,7 @@ function endOfMonth(date: Date): Date {
  * `nextOccurrence` (the actual date within [from, to]) is used for sorting/display. */
 @Component({
   selector: 'app-admin-birthdays',
-  imports: [FormsModule, TranslatePipe, TableModule, Button, DatePicker, HrDatePipe],
+  imports: [TranslatePipe, Button],
   templateUrl: './birthdays.component.html',
   styleUrl: './birthdays.component.scss',
 })
@@ -104,6 +102,22 @@ export class BirthdaysComponent {
 
   turningAge(item: BirthdayDto): number {
     return new Date(item.nextOccurrence).getFullYear() - new Date(item.dateOfBirth).getFullYear();
+  }
+
+  initials(item: BirthdayDto): string {
+    return `${item.firstName.charAt(0)}${item.lastName.charAt(0)}`.toUpperCase();
+  }
+
+  rangeLabel(): string {
+    return `${DATE_FORMATTER.format(this.customFrom())} – ${DATE_FORMATTER.format(this.customTo())}`;
+  }
+
+  whenLabel(item: BirthdayDto): string {
+    const today = startOfDay(new Date());
+    const birthday = startOfDay(new Date(item.nextOccurrence));
+    const days = Math.round((birthday.getTime() - today.getTime()) / 86_400_000);
+    const prefix = days === 0 ? 'Danas' : days === 1 ? 'Sutra' : `Za ${days} dana`;
+    return `${prefix} · ${DATE_FORMATTER.format(birthday)}`;
   }
 
   openClient(item: BirthdayDto): void {

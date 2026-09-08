@@ -138,6 +138,8 @@ export interface AppointmentDto {
   /** Only ever populated by GET .../by-client for a Form=Group row where this
    * client has a recorded attendance/absence - see ClientAttendanceDto. */
   clientAttendance?: ClientAttendanceDto;
+  /** Present only for Cancelled and NoShow rows returned by client history. */
+  cancellationReason?: string | null;
   warnings: string[];
 }
 
@@ -260,6 +262,7 @@ export interface RecurringAppointmentCreateRequest {
  * (silently no-op for a client who never had one deducted). */
 export interface AppointmentCancelRequest {
   returnEntryForClientIds: string[];
+  cancellationReason?: string | null;
 }
 
 /** Why one date in a POST /recurring request collided - see RecurringConflictDetail.

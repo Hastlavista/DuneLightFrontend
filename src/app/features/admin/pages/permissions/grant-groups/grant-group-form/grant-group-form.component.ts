@@ -4,7 +4,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Accordion, AccordionContent, AccordionHeader, AccordionPanel } from 'primeng/accordion';
 import { Button } from 'primeng/button';
-import { Checkbox } from 'primeng/checkbox';
 import { InputText } from 'primeng/inputtext';
 import { finalize, forkJoin, of } from 'rxjs';
 import { GrantDto, GrantGroupUpsertRequest } from '../../../../../../core/models/permissions.model';
@@ -31,7 +30,6 @@ interface ModuleGroup {
     ReactiveFormsModule,
     FormsModule,
     InputText,
-    Checkbox,
     Accordion,
     AccordionPanel,
     AccordionHeader,

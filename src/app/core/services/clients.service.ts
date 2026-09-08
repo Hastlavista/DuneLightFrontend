@@ -2,7 +2,7 @@ import { HttpClient, HttpContext, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { BirthdayDto, ClientDto, ClientUpsertRequest } from '../models/client.model';
+import { BirthdayDto, ClientDto, ClientHistorySummaryDto, ClientUpsertRequest } from '../models/client.model';
 import { SUPPRESS_ERROR_TOAST } from '../http/http-context.tokens';
 import { PlusSafeUrlCodec } from '../http/plus-safe-url-codec';
 import { PagedCrudService } from './paged-crud.service';
@@ -30,6 +30,10 @@ export class ClientsService extends PagedCrudService<ClientDto, ClientUpsertRequ
   getBirthdays(from: string, to: string): Observable<BirthdayDto[]> {
     const params = new HttpParams({ encoder: new PlusSafeUrlCodec() }).set('from', from).set('to', to);
     return this.http.get<BirthdayDto[]>(`${this.resourceUrl}/birthdays`, { params });
+  }
+
+  getHistorySummary(id: string): Observable<ClientHistorySummaryDto> {
+    return this.http.get<ClientHistorySummaryDto>(`${this.resourceUrl}/${id}/history-summary`);
   }
 
   /** POST /api/clients/{id}/anonymize - GDPR "right to be forgotten". Irreversible;

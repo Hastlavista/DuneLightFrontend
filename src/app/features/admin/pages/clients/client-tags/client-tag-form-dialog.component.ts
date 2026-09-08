@@ -2,9 +2,7 @@ import { Component, computed, effect, inject, input, model, output, signal } fro
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
-import { ColorPicker } from 'primeng/colorpicker';
 import { Dialog } from 'primeng/dialog';
-import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { finalize } from 'rxjs';
 import { ClientTagDto, ClientTagUpsertRequest } from '../../../../../core/models/client-tag.model';
@@ -13,7 +11,7 @@ import { NotificationService } from '../../../../../core/services/notification.s
 
 @Component({
   selector: 'app-client-tag-form-dialog',
-  imports: [Dialog, ReactiveFormsModule, InputText, InputNumber, ColorPicker, Button, TranslatePipe],
+  imports: [Dialog, ReactiveFormsModule, InputText, Button, TranslatePipe],
   templateUrl: './client-tag-form-dialog.component.html',
 })
 export class ClientTagFormDialogComponent {
@@ -28,6 +26,14 @@ export class ClientTagFormDialogComponent {
 
   readonly saving = signal(false);
   readonly isEditMode = computed(() => this.tag() !== null);
+  readonly colorOptions = [
+    { label: 'Teal', value: '0D5C63' },
+    { label: 'Svijetli teal', value: '128089' },
+    { label: 'Burgundy', value: '8E3A4A' },
+    { label: 'Dusty rose', value: '7A5D61' },
+    { label: 'Slate', value: '545863' },
+    { label: 'Mint', value: 'A8DCBE' },
+  ];
 
   /** See CategoryFormDialogComponent - only render the form once p-dialog's own
    * open transition has finished, to sidestep a PrimeNG/CDK timing issue. */
@@ -86,6 +92,18 @@ export class ClientTagFormDialogComponent {
 
   onCancel(): void {
     this.visible.set(false);
+  }
+
+  selectColor(color: string): void {
+    this.form.controls.colorHex.setValue(color);
+  }
+
+  selectSortOrder(value: number): void {
+    this.form.controls.sortOrder.setValue(value);
+  }
+
+  isReady(): boolean {
+    return Boolean(this.form.controls.name.value.trim() && this.form.controls.colorHex.value);
   }
 
   private resetForm(tag: ClientTagDto | null): void {

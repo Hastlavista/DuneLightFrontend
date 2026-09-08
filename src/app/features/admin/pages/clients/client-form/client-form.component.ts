@@ -3,14 +3,9 @@ import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Va
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
-import { Checkbox } from 'primeng/checkbox';
 import { DatePicker } from 'primeng/datepicker';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
-import { MultiSelect } from 'primeng/multiselect';
-import { Select } from 'primeng/select';
-import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
-import { Textarea } from 'primeng/textarea';
 import { finalize } from 'rxjs';
 import { ClientTagDto } from '../../../../../core/models/client-tag.model';
 import { ClientDto, ClientUpsertRequest } from '../../../../../core/models/client.model';
@@ -23,9 +18,6 @@ import { CompaniesService } from '../../../../../core/services/companies.service
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { toStartOfDayIso } from '../../../../../core/utils/date.util';
 import { translationReadySignal } from '../../../../../core/utils/translation-signal.util';
-import { ColorSwatchComponent } from '../../../../../shared/components/color-swatch/color-swatch.component';
-import { ClientAppointmentsTabComponent } from './client-appointments-tab.component';
-import { ClientPackagesTabComponent } from './client-packages-tab.component';
 
 /** Route param sentinel for create mode - see admin.routes.ts, same convention as
  * Zaposlenici/Paketi ('clients/:id' instead of a separate 'new' route). */
@@ -71,22 +63,10 @@ function gdprConsentDateValidator(group: AbstractControl): ValidationErrors | nu
   imports: [
     ReactiveFormsModule,
     InputText,
-    Textarea,
     InputNumber,
-    Select,
-    MultiSelect,
     DatePicker,
-    Checkbox,
     Button,
-    Tabs,
-    TabList,
-    Tab,
-    TabPanels,
-    TabPanel,
     TranslatePipe,
-    ColorSwatchComponent,
-    ClientPackagesTabComponent,
-    ClientAppointmentsTabComponent,
   ],
   templateUrl: './client-form.component.html',
   styleUrl: './client-form.component.scss',
@@ -155,6 +135,27 @@ export class ClientFormComponent {
       .map((tag) => ({ ...tag, name: `${tag.name} (${badge})` }));
     return [...active, ...grandfathered];
   });
+
+  selectHomeCompany(id: string): void {
+    this.form.controls.homeCompanyId.setValue(id);
+  }
+
+  selectHomeTrainer(id: string): void {
+    this.form.controls.homeTrainerId.setValue(id);
+  }
+
+  toggleTag(id: string): void {
+    const selected = this.form.controls.tagIds.value;
+    this.form.controls.tagIds.setValue(selected.includes(id) ? selected.filter((tagId) => tagId !== id) : [...selected, id]);
+  }
+
+  selectedCompanyName(): string {
+    return this.homeCompanyOptions().find((company) => company.id === this.form.controls.homeCompanyId.value)?.name ?? 'Bez poslovnice';
+  }
+
+  selectedTrainerName(): string {
+    return this.homeTrainerOptions().find((trainer) => trainer.id === this.form.controls.homeTrainerId.value)?.name ?? 'Bez trenera';
+  }
 
   readonly form = this.fb.nonNullable.group(
     {

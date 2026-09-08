@@ -1,0 +1,31 @@
+<p-dialog [(visible)]="visible" [modal]="true" [draggable]="false" [resizable]="false" [style]="{ width: '46rem', maxWidth: 'calc(100vw - 1rem)', height: 'min(92vh, 47rem)' }" styleClass="client-history-dialog" (onHide)="close()">
+  <ng-template #header>
+    <div class="client-history-dialog__header"><span>{{ initials() }}</span><div><h2>Povijest - {{ clientName() }}</h2><p>{{ clientMeta() }}</p></div></div>
+  </ng-template>
+
+  <div class="client-history-dialog__tabs">
+    <button type="button" [class.client-history-dialog__tab--active]="activeTab() === 'all'" (click)="selectTab('all')">Sve <span>{{ appointments().length }}</span></button>
+    <button type="button" [class.client-history-dialog__tab--active]="activeTab() === 'training'" (click)="selectTab('training')">Treninzi <span>{{ summary()?.completedVisitsCount ?? 0 }}</span></button>
+    <button type="button" [class.client-history-dialog__tab--active]="activeTab() === 'cancelled'" (click)="selectTab('cancelled')">Otkazano <span>{{ (summary()?.cancelledCount ?? 0) + (summary()?.noShowCount ?? 0) }}</span></button>
+    <button type="button" [class.client-history-dialog__tab--active]="activeTab() === 'packages'" (click)="selectTab('packages')">Paketi i dolasci <span>{{ packages().length + groups().length }}</span></button>
+  </div>
+
+  @if (loading()) { <div class="client-history-dialog__loading">Učitavanje povijesti...</div> }
+  @if (!loading() && summary(); as data) {
+    @if (activeTab() !== 'packages') {
+      <section class="client-history-dialog__summary"><span class="client-history-dialog__summary-icon"><i class="pi pi-chart-bar"></i></span><div><strong>{{ data.completedVisitsCount }} odrađenih treninga · {{ data.cancelledCount + data.noShowCount }} izostanka</strong><small>Klijent od {{ formatDate(data.clientSince) }} · zadnji {{ formatDate(data.lastVisitAt) }} · sljedeći {{ formatDate(data.nextVisitAt) }}</small></div><b>{{ completedHours().toFixed(1) }} h</b></section>
+      <div class="client-history-dialog__timeline">
+        @for (item of filteredAppointments(); track item.id) {
+          <article class="client-history-dialog__row"><span class="client-history-dialog__dot" [class.client-history-dialog__dot--cancelled]="item.status === 'Cancelled' || item.status === 'NoShow'"></span><time>{{ formatDate(item.startsAt) }}</time><div><strong>{{ item.form === 'Group' ? (item.groupName || item.serviceName) : item.serviceName }}</strong><small>{{ item.form === 'Group' ? 'Grupni termin' : clientNamesLabel(item) }} · {{ item.employeeName }} · {{ item.companyName }} · {{ timeRange(item) }}</small>@if (item.form === 'Group' && item.clientAttendance?.coverageType; as coverage) { <small>Pokriće: {{ coverageTypeTranslationKey(coverage) | translate }}</small> } @else if (item.paymentMethod) { <small>{{ priceLabel(item.amount) }} · {{ paymentMethodTranslationKey(item.paymentMethod) | translate }}</small> } @if (item.cancellationReason) { <em>{{ item.cancellationReason }}</em> }</div><span class="client-history-dialog__status" [class.client-history-dialog__status--cancelled]="item.status === 'Cancelled' || item.status === 'NoShow'">{{ item.form === 'Group' ? (item.clientAttendance?.attended ? 'Prisutan' : 'Nije prisutan') : (appointmentStatusTranslationKey(item.status) | translate) }}</span><b>{{ (item.durationMinutes / 60).toFixed(1) }} h</b></article>
+        } @empty { <p class="client-history-dialog__empty">Nema zapisa za odabrani prikaz.</p> }
+      </div>
+    } @else {
+      <div class="client-history-dialog__collections">
+        <section><h3>Paketi <small>{{ data.activePackagesCount }} aktivnih</small></h3>@for (packageItem of packages(); track packageItem.id) { <article><div class="client-history-dialog__collection-title"><strong>{{ packageItem.packageName }}</strong><span>{{ clientPackageStatusTranslationKey(packageItem.status) | translate }}</span></div><small>Kupnja {{ formatDate(packageItem.purchaseDate) }} · {{ priceLabel(packageItem.paidPrice) }} · vrijedi do {{ formatDate(packageItem.expiryDate) }}</small>@if (packageItem.entryMode === 'SharedPool') { <b>{{ packageUsage(packageItem) }}</b> } @else { <ul>@for (entry of packageItem.serviceEntries; track entry.serviceId) { <li>{{ entry.serviceName }}: {{ serviceEntryUsage(entry) }}</li> }</ul> }</article> } @empty { <p>Nema kupljenih paketa.</p> }</section>
+        <section><h3>Grupe <small>{{ data.activeGroupMembershipsCount }} aktivnih</small></h3>@for (group of groups(); track group.groupId + group.joinedAt) { <article><div class="client-history-dialog__collection-title"><strong>{{ group.groupName }}</strong><span>{{ group.isActive ? 'Aktivno članstvo' : 'Završeno članstvo' }}</span></div><small>{{ group.serviceName }} · {{ group.companyName }} · od {{ formatDate(group.joinedAt) }}</small>@if (group.slots.length) { <div class="client-history-dialog__slots">@for (slot of group.slots; track slot.id) { <span>{{ dayOfWeekShortTranslationKey(slot.dayOfWeek) | translate }} {{ slotTimeLabel(slot.startTime) }}</span> }</div> }</article> } @empty { <p>Nema članstava u grupama.</p> }</section>
+      </div>
+    }
+  }
+
+  <footer class="client-history-dialog__actions"><span>Datumi i detalji termina nalaze se u svakom retku.</span><p-button type="button" [label]="'COMMON.CLOSE' | translate" (onClick)="close()" /></footer>
+</p-dialog>

@@ -5,7 +5,6 @@ import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
-import { Textarea } from 'primeng/textarea';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { finalize } from 'rxjs';
 import { RoomDto, RoomUpsertRequest } from '../../../../../core/models/room.model';
@@ -17,7 +16,7 @@ import { RoomsService } from '../../../../../core/services/rooms.service';
  * current `companyId` instead of offering its own company picker. */
 @Component({
   selector: 'app-room-form-dialog',
-  imports: [Dialog, ReactiveFormsModule, FormsModule, InputText, Textarea, InputNumber, ToggleSwitch, Button, TranslatePipe],
+  imports: [Dialog, ReactiveFormsModule, FormsModule, InputText, InputNumber, ToggleSwitch, Button, TranslatePipe],
   templateUrl: './room-form-dialog.component.html',
 })
 export class RoomFormDialogComponent {

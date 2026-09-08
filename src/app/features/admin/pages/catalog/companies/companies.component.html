@@ -43,21 +43,14 @@
                     {{ company.phone }}
                   </span>
                 }
-                <span class="companies-page__chip">
-                  <i class="pi pi-calendar"></i>
-                  {{ 'CATALOG.COMPANIES.WEEK_SUMMARY' | translate }}
-                </span>
-                <span class="companies-page__chip">
-                  <i class="pi pi-th-large"></i>
-                  {{ 'CATALOG.COMPANIES.ROOMS_SUMMARY_PLACEHOLDER' | translate }}
-                </span>
               </div>
 
               <div class="companies-page__week">
-                @for (day of weekdays; track day; let last = $last) {
-                  <span class="companies-page__day">
-                    <i [style.background]="last ? 'var(--rose-border)' : companyColor(company)"></i>
-                    <small>{{ day }}</small>
+                @for (day of weekHours(company); track day.day) {
+                  <span class="companies-page__day" [class.companies-page__day--closed]="!day.isOpen">
+                    <i [style.background]="day.isOpen ? companyColor(company) : 'var(--rose-border)'"></i>
+                    <small>{{ day.label }}</small>
+                    <strong>{{ day.hours }}</strong>
                   </span>
                 }
               </div>
@@ -68,9 +61,9 @@
                 icon="pi pi-pencil"
                 [outlined]="true"
                 [rounded]="true"
+                [routerLink]="['/admin/companies', company.id]"
                 [ariaLabel]="'COMMON.EDIT' | translate"
                 [title]="'COMMON.EDIT' | translate"
-                (onClick)="openEdit(company)"
               />
               @if (company.isActive) {
                 <p-button
@@ -93,15 +86,15 @@
                   (onClick)="activate(company)"
                 />
               }
-            <p-button
-              icon="pi pi-trash"
-              severity="danger"
-              [outlined]="true"
-              [rounded]="true"
-              [ariaLabel]="'COMMON.DELETE' | translate"
-              [title]="'COMMON.DELETE' | translate"
-              (onClick)="confirmDelete(company)"
-            />
+              <p-button
+                icon="pi pi-trash"
+                severity="danger"
+                [outlined]="true"
+                [rounded]="true"
+                [ariaLabel]="'COMMON.DELETE' | translate"
+                [title]="'COMMON.DELETE' | translate"
+                (onClick)="confirmDelete(company)"
+              />
             </div>
           </article>
         </td>
@@ -120,4 +113,4 @@
   </div>
 </div>
 
-<app-company-form-dialog [(visible)]="dialogVisible" [company]="editingCompany()" (saved)="onSaved()" />
+<app-company-form-dialog [(visible)]="dialogVisible" [company]="null" (saved)="onSaved()" />

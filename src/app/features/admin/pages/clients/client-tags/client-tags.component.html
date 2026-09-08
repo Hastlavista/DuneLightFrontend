@@ -1,43 +1,20 @@
-<div class="dl-card client-tags-page">
-  <app-list-toolbar
-    [newLabelKey]="'CLIENTS.TAGS.NEW'"
-    [search]="search()"
-    [showInactive]="showInactive()"
-    (searchChange)="onSearchChange($event)"
-    (showInactiveChange)="onShowInactiveChange($event)"
-    (create)="openCreate()"
-  />
+<div class="client-tags-page">
+  <header class="client-tags-page__header">
+    <p>{{ totalCount() }} oznaka · {{ activeCount() }} aktivnih</p>
+    <p-button icon="pi pi-plus" [label]="'CLIENTS.TAGS.NEW' | translate" (onClick)="openCreate()" />
+  </header>
 
-  <p-table
-    #dt
-    [value]="items()"
-    [lazy]="true"
-    (onLazyLoad)="onLazyLoad($event)"
-    [paginator]="true"
-    [rows]="rows()"
-    [totalRecords]="totalCount()"
-    [loading]="loading()"
-    [rowsPerPageOptions]="[20, 50, 100, 200]"
-    dataKey="id"
-    responsiveLayout="scroll"
-  >
-    <ng-template pTemplate="header">
-      <tr>
-        <th>{{ 'CLIENTS.TAGS.COL_NAME' | translate }}</th>
-        <th>{{ 'CLIENTS.TAGS.COL_COLOR' | translate }}</th>
-        <th>{{ 'CLIENTS.TAGS.COL_SORT_ORDER' | translate }}</th>
-        <th>{{ 'COMMON.COL_STATUS' | translate }}</th>
-        <th class="client-tags-page__actions-col"></th>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="body" let-tag>
-      <tr [class.client-tags-page__row--inactive]="!tag.isActive">
-        <td>{{ tag.name }}</td>
-        <td><app-color-swatch [colorHex]="tag.colorHex" /></td>
-        <td>{{ tag.sortOrder }}</td>
-        <td><app-status-tag [active]="tag.isActive" /></td>
-        <td class="client-tags-page__actions">
+  @if (loading()) {
+    <div class="client-tags-page__empty">Učitavanje...</div>
+  } @else if (items().length) {
+    <div class="client-tags-page__grid">
+      @for (tag of items(); track tag.id) {
+        <article class="client-tags-page__card" [class.client-tags-page__card--inactive]="!tag.isActive" [style.border-left-color]="tag.colorHex || 'var(--teal)'">
+          <div class="client-tags-page__content">
+            <div><h3>{{ tag.name }}</h3><app-status-tag [active]="tag.isActive" /></div>
+            <span>Redoslijed {{ tag.sortOrder }}</span>
+          </div>
+          <div class="client-tags-page__actions">
           <p-button
             icon="pi pi-pencil"
             [text]="true"
@@ -76,16 +53,13 @@
             [title]="'COMMON.DELETE' | translate"
             (onClick)="confirmDelete(tag)"
           />
-        </td>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="emptymessage">
-      <tr>
-        <td colspan="5" class="client-tags-page__empty">{{ 'CLIENTS.TAGS.EMPTY' | translate }}</td>
-      </tr>
-    </ng-template>
-  </p-table>
+          </div>
+        </article>
+      }
+    </div>
+  } @else {
+    <div class="client-tags-page__empty">{{ 'CLIENTS.TAGS.EMPTY' | translate }}</div>
+  }
 </div>
 
 <app-client-tag-form-dialog [(visible)]="dialogVisible" [tag]="editingTag()" (saved)="onSaved()" />

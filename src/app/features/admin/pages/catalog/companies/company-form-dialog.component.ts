@@ -6,7 +6,6 @@ import { Dialog } from 'primeng/dialog';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
-import { Textarea } from 'primeng/textarea';
 import { finalize } from 'rxjs';
 import { CompanyDto, CompanyUpsertRequest } from '../../../../../core/models/company.model';
 import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
@@ -39,7 +38,6 @@ const COUNTRY_OPTIONS = [
     Dialog,
     ReactiveFormsModule,
     InputText,
-    Textarea,
     Select,
     Button,
     Tabs,

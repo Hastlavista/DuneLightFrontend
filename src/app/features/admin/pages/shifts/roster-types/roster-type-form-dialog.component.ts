@@ -2,7 +2,6 @@ import { Component, computed, effect, inject, input, model, output, signal } fro
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
-import { Checkbox } from 'primeng/checkbox';
 import { Dialog } from 'primeng/dialog';
 import { InputText } from 'primeng/inputtext';
 import { finalize } from 'rxjs';
@@ -15,7 +14,7 @@ const ROSTER_TYPE_COLORS = ['0D5C63', '128089', '8E3A4A', '7A5D61', '545863', 'A
 
 @Component({
   selector: 'app-roster-type-form-dialog',
-  imports: [Dialog, ReactiveFormsModule, InputText, Checkbox, Button, TranslatePipe],
+  imports: [Dialog, ReactiveFormsModule, InputText, Button, TranslatePipe],
   templateUrl: './roster-type-form-dialog.component.html',
 })
 export class RosterTypeFormDialogComponent {

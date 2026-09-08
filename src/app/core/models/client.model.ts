@@ -45,6 +45,19 @@ export interface ClientDto {
   updatedBy?: string;
 }
 
+/** GET /api/clients/{id}/history-summary - compact factual header for the
+ * client's history dialog. Detailed rows remain on their dedicated endpoints. */
+export interface ClientHistorySummaryDto {
+  clientSince: string;
+  completedVisitsCount: number;
+  noShowCount: number;
+  cancelledCount: number;
+  lastVisitAt: string | null;
+  nextVisitAt: string | null;
+  activePackagesCount: number;
+  activeGroupMembershipsCount: number;
+}
+
 /** Body for both POST and PUT /api/clients - identical shape. `tagIds` is a
  * full-replace of the client's tags on every save, same convention as
  * Zaposlenici's `companyIds`/`serviceIds`. `dateOfBirth`/`gdprConsentDate` -

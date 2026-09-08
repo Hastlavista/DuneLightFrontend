@@ -385,6 +385,8 @@
     "NEW_TITLE": "Novi klijent",
     "EDIT_TITLE": "Uredi klijenta",
     "BACK_TO_LIST": "Natrag na popis",
+    "SAVE": "Spremi klijenta",
+    "FORM_FOOTER_HINT": "Sve spremno - klijent odmah ulazi u popis i može dobiti termin.",
     "FORM_TAB_DATA": "Podaci",
     "FORM_TAB_PACKAGES": "Paketi",
     "FORM_TAB_APPOINTMENTS": "Povijest",

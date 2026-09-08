@@ -12,7 +12,6 @@ import { MultiSelect } from 'primeng/multiselect';
 import { Password } from 'primeng/password';
 import { Select } from 'primeng/select';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
-import { Textarea } from 'primeng/textarea';
 import { Observable, finalize, forkJoin, of } from 'rxjs';
 import {
   EmployeeDto,
@@ -87,7 +86,6 @@ function employmentDatesValidator(group: AbstractControl): ValidationErrors | nu
   imports: [
     ReactiveFormsModule,
     InputText,
-    Textarea,
     InputNumber,
     Select,
     MultiSelect,

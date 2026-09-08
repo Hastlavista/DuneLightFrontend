@@ -33,11 +33,10 @@
               <div class="grant-group-form-page__grant-list">
                 @for (grant of group.grants; track grant.key) {
                   <label class="grant-group-form-page__grant-row">
-                    <p-checkbox
-                      [binary]="true"
-                      [ngModel]="isChecked(grant.key)"
-                      [ngModelOptions]="{ standalone: true }"
-                      (ngModelChange)="onToggle(grant.key, $event)"
+                    <input
+                      type="checkbox"
+                      [checked]="isChecked(grant.key)"
+                      (change)="onToggle(grant.key, $any($event.target).checked)"
                     />
                     <span class="grant-group-form-page__grant-text">
                       <span class="grant-group-form-page__grant-key">{{ grant.key }}</span>

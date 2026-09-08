@@ -1,0 +1,46 @@
+.issue-package-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+
+  &__header h2 { margin: 0; color: var(--ink); font-family: var(--font-heading); font-size: 1.45rem; font-weight: 600; }
+  &__header p { margin: .25rem 0 0; color: var(--ink-muted); font-size: .76rem; }
+  &__selection { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .8rem; padding: .9rem 1rem; border: 1px solid var(--rose-border); border-radius: 14px; background: var(--surface-soft); }
+  &__selection-icon { display: inline-flex; width: 2.4rem; height: 2.4rem; align-items: center; justify-content: center; border: 1px solid var(--rose-border); border-radius: 9px; background: var(--surface-card); color: var(--ink-secondary); }
+  &__selection div { display: flex; min-width: 0; flex-direction: column; gap: .18rem; }
+  &__selection strong { overflow: hidden; font-family: var(--font-heading); font-size: 1rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+  &__selection small, &__section > small { color: var(--ink-muted); font-size: .73rem; }
+  &__selection > span:last-child { font-family: var(--font-heading); font-size: .95rem; font-weight: 600; white-space: nowrap; }
+  &__section { display: flex; flex-direction: column; gap: .5rem; }
+  &__section > label, &__label-row > label { color: var(--ink-secondary); font-size: .68rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+  &__label-row { display: flex; align-items: center; gap: .45rem; }
+  &__label-row span { padding: .15rem .5rem; border-radius: 999px; background: rgba(142, 58, 74, .12); color: var(--red); font-size: .68rem; font-weight: 700; }
+  &__package-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .5rem; }
+  &__package-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .35rem .5rem; min-height: 5.7rem; padding: .8rem; border: 1px solid var(--rose-border); border-radius: 13px; background: var(--surface-card); color: var(--ink); text-align: left; cursor: pointer; }
+  &__package-card strong { font-family: var(--font-heading); font-size: .9rem; font-weight: 600; }
+  &__package-card b { font-family: var(--font-heading); font-size: .85rem; white-space: nowrap; }
+  &__package-card small { grid-column: 1 / -1; color: var(--ink-muted); font-size: .7rem; line-height: 1.35; }
+  &__package-card--active { border-color: var(--teal); background: var(--mint-tint); box-shadow: inset 0 0 0 1px var(--teal); }
+  &__chips, &__date-shortcuts { display: flex; flex-wrap: wrap; gap: .45rem; }
+  &__chips button, &__date-shortcuts button { min-height: 2.15rem; padding: .3rem .7rem; border: 1px solid var(--rose-border); border-radius: 9px; background: var(--surface-card); color: var(--ink-secondary); font: inherit; font-size: .76rem; cursor: pointer; }
+  &__chips button i { margin-right: .35rem; font-size: .52rem; }
+  &__chips button.issue-package-dialog__chip--active, &__date-shortcuts button.issue-package-dialog__shortcut--active { border-color: var(--teal); background: var(--mint-tint); color: var(--teal-dark); font-weight: 600; }
+  &__purchase-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  &__actions { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: .1rem -1.3rem -1.25rem; padding: 1rem 1.3rem; border-top: 1px solid var(--rose-border); }
+  &__actions > span { color: var(--ink-muted); font-size: .75rem; }
+  &__actions > div { display: flex; gap: .55rem; }
+}
+
+:host ::ng-deep .client-dialog--issue-package {
+  .p-dialog-header { min-height: 5.8rem; padding: 1.1rem 1.35rem .9rem; }
+  .p-dialog-content { padding: 1rem 1.3rem 1.25rem; }
+  .p-inputnumber, .p-datepicker { border-color: var(--rose-border-strong); border-radius: 9px; background: var(--surface-warm); }
+  .p-button { min-height: 2.55rem; border-radius: 9px; padding-inline: 1rem; }
+}
+
+@media (max-width: 620px) {
+  .issue-package-dialog__package-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .issue-package-dialog__purchase-grid { grid-template-columns: 1fr; gap: .75rem; }
+  .issue-package-dialog__actions { align-items: stretch; flex-direction: column; }
+  .issue-package-dialog__actions > div { justify-content: flex-end; }
+}

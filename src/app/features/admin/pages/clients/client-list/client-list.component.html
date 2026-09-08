@@ -1,5 +1,6 @@
-<div class="dl-card client-list-page">
-  <app-list-toolbar
+<div class="client-list-page">
+  <div class="client-list-page__header">
+    <app-list-toolbar
     [newLabelKey]="'CLIENTS.NEW'"
     [search]="search()"
     [showInactive]="showInactive()"
@@ -7,31 +8,22 @@
     (showInactiveChange)="onShowInactiveChange($event)"
     (create)="openCreate()"
   >
-    <p-select
-      class="client-list-page__filter"
-      [options]="tagFilterOptions()"
-      optionLabel="label"
-      optionValue="value"
-      [ngModel]="tagFilter()"
-      (ngModelChange)="onTagFilterChange($event)"
-    />
-    <p-select
-      class="client-list-page__filter"
-      [options]="homeTrainerFilterOptions()"
-      optionLabel="label"
-      optionValue="value"
-      [ngModel]="homeTrainerFilter()"
-      (ngModelChange)="onHomeTrainerFilterChange($event)"
-    />
-    <p-select
-      class="client-list-page__filter"
-      [options]="homeCompanyFilterOptions()"
-      optionLabel="label"
-      optionValue="value"
-      [ngModel]="homeCompanyFilter()"
-      (ngModelChange)="onHomeCompanyFilterChange($event)"
-    />
-  </app-list-toolbar>
+      <div class="client-list-page__filter-group">
+        <span>Oznaka</span>
+        <div>
+          <button type="button" [class.client-list-page__filter-chip--active]="tagFilter() === null" (click)="selectTag(null)">Sve oznake</button>
+          @for (tag of activeTags(); track tag.id) { <button type="button" [class.client-list-page__filter-chip--active]="tagFilter() === tag.id" (click)="selectTag(tag.id)">{{ tag.name }}</button> }
+        </div>
+      </div>
+      <div class="client-list-page__filter-group">
+        <span>Matični trener</span>
+        <div>
+          <button type="button" [class.client-list-page__filter-chip--active]="homeTrainerFilter() === null" (click)="selectHomeTrainer(null)">Svi treneri</button>
+          @for (employee of activeEmployees(); track employee.id) { <button type="button" [class.client-list-page__filter-chip--active]="homeTrainerFilter() === employee.id" (click)="selectHomeTrainer(employee.id)">{{ employee.firstName }} {{ employee.lastName }}</button> }
+        </div>
+      </div>
+    </app-list-toolbar>
+  </div>
 
   <p-table
     #dt
@@ -46,52 +38,39 @@
     dataKey="id"
     responsiveLayout="scroll"
   >
-    <ng-template pTemplate="header">
-      <tr>
-        <th>{{ 'CLIENTS.COL_MEMBER_NUMBER' | translate }}</th>
-        <th>{{ 'CLIENTS.COL_NAME' | translate }}</th>
-        <th>{{ 'CLIENTS.COL_PHONE' | translate }}</th>
-        <th>{{ 'CLIENTS.COL_EMAIL' | translate }}</th>
-        <th>{{ 'CLIENTS.COL_HOME_TRAINER' | translate }}</th>
-        <th>{{ 'CLIENTS.COL_HOME_COMPANY' | translate }}</th>
-        <th>{{ 'CLIENTS.COL_TAGS' | translate }}</th>
-        <th>{{ 'COMMON.COL_STATUS' | translate }}</th>
-        <th class="client-list-page__actions-col"></th>
-      </tr>
-    </ng-template>
-
     <ng-template pTemplate="body" let-client>
       <tr [class.client-list-page__row--inactive]="!client.isActive">
-        <td>{{ client.memberNumber }}</td>
         <td>
-          {{ fullName(client) }}
-          @if (client.noShowCount > 0) {
-            <span class="client-list-page__no-show-badge" [title]="'CLIENTS.NO_SHOW_BADGE_TITLE' | translate: { count: client.noShowCount }">
-              {{ client.noShowCount }}
-            </span>
-          }
-        </td>
-        <td>{{ client.phone }}</td>
-        <td>{{ client.email }}</td>
-        <td>{{ client.homeTrainerName }}</td>
-        <td>{{ client.homeCompanyName }}</td>
-        <td>
-          <div class="client-list-page__tags">
-            @for (tag of client.tags; track tag.tagId) {
-              <span class="client-list-page__tag-chip" [style.background]="tag.colorHex ?? 'var(--sand)'">
-                {{ tag.name }}
-              </span>
-            }
-          </div>
-        </td>
-        <td>
-          @if (client.isAnonymized) {
-            <p-tag severity="danger" [value]="'CLIENTS.ANONYMIZED_BADGE' | translate" />
-          } @else {
-            <app-status-tag [active]="client.isActive" />
-          }
-        </td>
-        <td class="client-list-page__actions">
+          <article class="client-list-page__row" [style.border-left-color]="companyColor(client)">
+            <span class="client-list-page__avatar" [style.background]="companyColor(client)">{{ initials(client) }}</span>
+            <div class="client-list-page__row-main">
+              <div class="client-list-page__title-row">
+                <h3>{{ fullName(client) }}</h3>
+                @if (client.isAnonymized) {
+                  <p-tag severity="danger" [value]="'CLIENTS.ANONYMIZED_BADGE' | translate" />
+                } @else {
+                  <app-status-tag [active]="client.isActive" />
+                }
+                @if (client.noShowCount > 0) {
+                  <span class="client-list-page__no-show-badge" [title]="'CLIENTS.NO_SHOW_BADGE_TITLE' | translate: { count: client.noShowCount }">{{ client.noShowCount }}</span>
+                }
+              </div>
+              <div class="client-list-page__details">
+                <span>Broj člana {{ client.memberNumber }}</span>
+                @if (client.phone) { <span>{{ client.phone }}</span> }
+                @if (client.email) { <span>{{ client.email }}</span> }
+              </div>
+              @if (client.tags.length) {
+                <div class="client-list-page__tags">
+                  @for (tag of client.tags; track tag.tagId) { <span class="client-list-page__tag-chip" [style.border-color]="tag.colorHex ?? 'var(--rose-border)'">{{ tag.name }}</span> }
+                </div>
+              }
+            </div>
+            <div class="client-list-page__assignment">
+              @if (client.homeCompanyName) { <span><i class="pi pi-building"></i>{{ client.homeCompanyName }}</span> }
+              @if (client.homeTrainerName) { <span><i class="pi pi-user"></i>{{ client.homeTrainerName }}</span> }
+            </div>
+            <div class="client-list-page__actions">
           <p-button
             icon="pi pi-pencil"
             [text]="true"
@@ -99,6 +78,14 @@
             [ariaLabel]="'COMMON.EDIT' | translate"
             [title]="'COMMON.EDIT' | translate"
             (onClick)="openEdit(client)"
+          />
+          <p-button
+            icon="pi pi-history"
+            [text]="true"
+            [rounded]="true"
+            ariaLabel="Povijest klijenta"
+            title="Povijest klijenta"
+            (onClick)="openHistory(client)"
           />
           @if (!client.isAnonymized) {
             <p-button
@@ -155,13 +142,15 @@
               />
             }
           }
+            </div>
+          </article>
         </td>
       </tr>
     </ng-template>
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="9" class="client-list-page__empty">{{ 'CLIENTS.EMPTY' | translate }}</td>
+        <td class="client-list-page__empty">{{ 'CLIENTS.EMPTY' | translate }}</td>
       </tr>
     </ng-template>
   </p-table>
@@ -175,4 +164,5 @@
   (anonymized)="onAnonymized()"
 />
 
-<app-issue-package-dialog [(visible)]="issuePackageDialogVisible" [clientId]="issuePackageClient()?.id ?? ''" />
+<app-issue-package-dialog [(visible)]="issuePackageDialogVisible" [clientId]="issuePackageClient()?.id ?? ''" [client]="issuePackageClient()" />
+<app-client-history-dialog [(visible)]="historyDialogVisible" [client]="historyClient()" />

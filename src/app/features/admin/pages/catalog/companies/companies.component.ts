@@ -1,23 +1,45 @@
 import { Component, ViewChild, inject, signal } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
-import { finalize } from 'rxjs';
+import { catchError, finalize, forkJoin, of } from 'rxjs';
 import { CompaniesService } from '../../../../../core/services/companies.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { CompanyDto } from '../../../../../core/models/company.model';
+import { DAYS_OF_WEEK, DayOfWeek } from '../../../../../core/models/group.model';
+import { WorkingHoursTemplateDto } from '../../../../../core/models/working-hours.model';
 import { ListToolbarComponent } from '../../../../../shared/components/list-toolbar/list-toolbar.component';
 import { StatusTagComponent } from '../../../../../shared/components/status-tag/status-tag.component';
+import { WorkingHoursTemplateService } from '../../../../../core/services/working-hours-template.service';
+import { timeOfDayLabel } from '../../../../../core/utils/time-of-day.util';
 import { CompanyFormDialogComponent } from './company-form-dialog.component';
 
 const DEFAULT_PAGE_SIZE = 20;
+const WEEKDAY_LABELS: Record<DayOfWeek, string> = {
+  Monday: 'PON',
+  Tuesday: 'UTO',
+  Wednesday: 'SRI',
+  Thursday: 'ČET',
+  Friday: 'PET',
+  Saturday: 'SUB',
+  Sunday: 'NED',
+};
+
+interface CompanyDayHours {
+  day: DayOfWeek;
+  label: string;
+  hours: string;
+  isOpen: boolean;
+}
 
 @Component({
   selector: 'app-admin-companies',
   imports: [
     TableModule,
     Button,
+    RouterLink,
     TranslatePipe,
     ListToolbarComponent,
     StatusTagComponent,
@@ -28,6 +50,7 @@ const DEFAULT_PAGE_SIZE = 20;
 })
 export class CompaniesComponent {
   private readonly companiesService = inject(CompaniesService);
+  private readonly workingHoursService = inject(WorkingHoursTemplateService);
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
@@ -40,10 +63,9 @@ export class CompaniesComponent {
   readonly rows = signal(DEFAULT_PAGE_SIZE);
   readonly search = signal('');
   readonly showInactive = signal(false);
-  readonly weekdays = ['PON', 'UTO', 'SRI', 'ČET', 'PET', 'SUB', 'NED'];
+  readonly workingHoursByCompany = signal<Record<string, WorkingHoursTemplateDto | null>>({});
 
   readonly dialogVisible = signal(false);
-  readonly editingCompany = signal<CompanyDto | null>(null);
 
   onLazyLoad(event: TableLazyLoadEvent): void {
     const first = event.first ?? 0;
@@ -65,7 +87,6 @@ export class CompaniesComponent {
   }
 
   openCreate(): void {
-    this.editingCompany.set(null);
     this.dialogVisible.set(true);
   }
 
@@ -73,9 +94,21 @@ export class CompaniesComponent {
     return company.colorHex ?? 'var(--teal)';
   }
 
-  openEdit(company: CompanyDto): void {
-    this.editingCompany.set(company);
-    this.dialogVisible.set(true);
+  weekHours(company: CompanyDto): CompanyDayHours[] {
+    const template = this.workingHoursByCompany()[company.id];
+    return DAYS_OF_WEEK.map((day) => {
+      const intervals = (template?.intervals ?? [])
+        .filter((interval) => interval?.dayOfWeek === day && interval.startTime && interval.endTime)
+        .sort((a, b) => a.startTime.localeCompare(b.startTime));
+      const hours = intervals.map((interval) => `${timeOfDayLabel(interval.startTime)}-${timeOfDayLabel(interval.endTime)}`).join(', ');
+
+      return {
+        day,
+        label: WEEKDAY_LABELS[day],
+        hours: hours || 'Zatvoreno',
+        isOpen: intervals.length > 0,
+      };
+    });
   }
 
   onSaved(): void {
@@ -145,6 +178,28 @@ export class CompaniesComponent {
       .subscribe((result) => {
         this.items.set(result.items);
         this.totalCount.set(result.totalCount);
+        this.fetchWorkingHours(result.items);
       });
   }
+
+  private fetchWorkingHours(companies: CompanyDto[]): void {
+    if (companies.length === 0) {
+      this.workingHoursByCompany.set({});
+      return;
+    }
+
+    forkJoin(
+      companies.map((company) =>
+        this.workingHoursService.getForCompany(company.id, { suppressErrorToast: true }).pipe(catchError(() => of(null))),
+      ),
+    ).subscribe((templates) => {
+      this.workingHoursByCompany.set(
+        companies.reduce<Record<string, WorkingHoursTemplateDto | null>>((acc, company, index) => {
+          acc[company.id] = templates[index];
+          return acc;
+        }, {}),
+      );
+    });
+  }
+
 }

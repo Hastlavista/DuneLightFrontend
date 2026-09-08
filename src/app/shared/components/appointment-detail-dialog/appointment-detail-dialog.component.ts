@@ -2,7 +2,6 @@ import { Component, computed, effect, inject, input, model, output, signal } fro
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
-import { Checkbox } from 'primeng/checkbox';
 import { DatePicker } from 'primeng/datepicker';
 import { Dialog } from 'primeng/dialog';
 import { Select } from 'primeng/select';
@@ -85,7 +84,6 @@ type DetailMode = 'view' | 'billing' | 'cancel' | 'noShow';
     FormsModule,
     Select,
     DatePicker,
-    Checkbox,
     Button,
     TranslatePipe,
     EurCurrencyPipe,

@@ -346,7 +346,7 @@ a {
 }
 
 .company-form input[pInputText],
-.company-form textarea[pTextarea],
+.company-form textarea,
 .company-form .p-select {
   min-height: 2.4rem;
   border-color: var(--rose-border-strong);
@@ -355,9 +355,31 @@ a {
   color: var(--ink);
 }
 
-.company-form textarea[pTextarea] {
+.company-form textarea {
   min-height: 4.25rem;
   resize: vertical;
+}
+
+/* Native controls replace the PrimeNG textarea/checkbox directives here so
+   reactive forms stay stable across every lazy-loaded route. */
+.dl-form textarea,
+.company-detail textarea {
+  width: 100%;
+  min-height: 4.25rem;
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--rose-border-strong);
+  border-radius: 8px;
+  background: var(--surface-warm);
+  color: var(--ink);
+  font: inherit;
+  line-height: 1.4;
+  resize: vertical;
+}
+
+input[type='checkbox'] {
+  width: 1rem;
+  height: 1rem;
+  accent-color: var(--teal);
 }
 
 .company-form__actions .p-button {
@@ -365,3 +387,50 @@ a {
   border-radius: 8px;
   padding: 0.55rem 1rem;
 }
+
+/* Klijenti: shared modal framing for issue, anonymize and tag workflows. */
+.client-dialog {
+  overflow: hidden;
+  border: 1px solid var(--rose-border);
+  border-radius: 16px;
+  background: var(--surface-card);
+  box-shadow: 0 24px 48px -28px rgba(46, 50, 60, 0.24);
+}
+
+.client-dialog .p-dialog-header {
+  align-items: flex-start;
+  min-height: 4.75rem;
+  padding: 1.15rem 1.3rem .9rem;
+  border-bottom: 1px solid var(--rose-border);
+}
+
+.client-dialog .p-dialog-content { padding: 1.1rem 1.3rem 1.25rem; background: var(--surface-card); }
+.client-dialog .p-dialog-close-button { width: 2rem; height: 2rem; border: 1px solid var(--rose-border); border-radius: 999px; color: var(--ink-muted); }
+.client-dialog .dl-form { gap: .95rem; }
+.client-dialog input[pInputText], .client-dialog textarea, .client-dialog .p-select, .client-dialog .p-inputnumber { border-color: var(--rose-border-strong); border-radius: 8px; background: var(--surface-warm); }
+.client-dialog .dl-form__actions { padding-top: .25rem; }
+.client-dialog .dl-form__actions .p-button { min-height: 2.35rem; border-radius: 8px; padding: .55rem 1rem; }
+.client-dialog--anonymize .anonymize-dialog__warning { padding: .65rem .75rem; border-left: 3px solid var(--red); background: rgba(142, 58, 74, .08); }
+
+.client-dialog--tag .p-dialog-header { min-height: 5.75rem; padding: 1.1rem 1.35rem .9rem; }
+.client-dialog--tag .p-dialog-content { padding: 1rem 1.35rem 0; }
+.client-tag-dialog__header { display: flex; align-items: center; gap: .85rem; }
+.client-tag-dialog__header h2 { margin: 0; color: var(--ink); font-family: var(--font-heading); font-size: 1.35rem; font-weight: 600; }
+.client-tag-dialog__header p { margin: .25rem 0 0; color: var(--ink-muted); font-size: .76rem; }
+.client-tag-dialog__mark, .client-tag-dialog__preview { display: inline-flex; width: 2.45rem; height: 2.45rem; flex: 0 0 auto; border: 1px solid var(--rose-border); border-radius: 9px; }
+.client-tag-dialog__form { display: flex; flex-direction: column; gap: 1rem; }
+.client-tag-dialog__intro { display: flex; align-items: center; gap: .8rem; padding: .85rem .95rem; border: 1px solid var(--rose-border); border-radius: 14px; background: var(--surface-soft); }
+.client-tag-dialog__intro > div { display: flex; flex-direction: column; gap: .12rem; }
+.client-tag-dialog__intro strong { font-family: var(--font-heading); font-size: 1rem; font-weight: 600; }
+.client-tag-dialog__intro span, .client-tag-dialog__field small { color: var(--ink-muted); font-size: .73rem; }
+.client-tag-dialog__field { display: flex; flex-direction: column; gap: .38rem; }
+.client-tag-dialog__field > label { color: var(--ink-secondary); font-size: .68rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.client-tag-dialog__field input { min-height: 2.65rem; border-color: var(--rose-border-strong); border-radius: 10px; background: var(--surface-warm); }
+.client-tag-dialog__palette, .client-tag-dialog__sort-options { display: flex; flex-wrap: wrap; gap: .45rem; }
+.client-tag-dialog__palette button, .client-tag-dialog__sort-options button { display: inline-flex; min-height: 2.2rem; align-items: center; gap: .45rem; padding: .3rem .7rem; border: 1px solid var(--rose-border); border-radius: 9px; background: var(--surface-card); color: var(--ink-secondary); font: inherit; font-size: .76rem; cursor: pointer; }
+.client-tag-dialog__palette i { width: .85rem; height: .85rem; border-radius: 999px; }
+.client-tag-dialog__palette button.client-tag-dialog__choice--active, .client-tag-dialog__sort-options button.client-tag-dialog__choice--active { border-color: var(--teal); background: var(--mint-tint); color: var(--teal-dark); font-weight: 600; }
+.client-tag-dialog__actions { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: .1rem -1.35rem 0; padding: 1rem 1.35rem; border-top: 1px solid var(--rose-border); }
+.client-tag-dialog__actions > span { color: var(--ink-muted); font-size: .75rem; }
+.client-tag-dialog__actions > div { display: flex; gap: .55rem; }
+@media (max-width: 560px) { .client-tag-dialog__actions { align-items: stretch; flex-direction: column; } .client-tag-dialog__actions > div { justify-content: flex-end; } }

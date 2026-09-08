@@ -87,7 +87,7 @@
             [class.roster-type-form__option--active]="form.controls.countsAsWork.value"
             for="roster-type-counts-as-work"
           >
-            <p-checkbox inputId="roster-type-counts-as-work" formControlName="countsAsWork" [binary]="true" />
+            <input id="roster-type-counts-as-work" type="checkbox" formControlName="countsAsWork" />
             <span>
               <strong>{{ 'ROSTER.TYPES.FIELD_COUNTS_AS_WORK' | translate }}</strong>
               <small>{{ 'ROSTER.TYPES.COUNTS_AS_WORK_HINT' | translate }}</small>
@@ -99,7 +99,7 @@
             [class.roster-type-form__option--active]="form.controls.requiresTime.value"
             for="roster-type-requires-time"
           >
-            <p-checkbox inputId="roster-type-requires-time" formControlName="requiresTime" [binary]="true" />
+            <input id="roster-type-requires-time" type="checkbox" formControlName="requiresTime" />
             <span>
               <strong>{{ 'ROSTER.TYPES.FIELD_REQUIRES_TIME' | translate }}</strong>
               <small>{{ 'ROSTER.TYPES.REQUIRES_TIME_HINT_SHORT' | translate }}</small>
@@ -112,7 +112,7 @@
             [class.roster-type-form__option--disabled]="form.controls.deductsFromLeaveFund.disabled"
             for="roster-type-deducts-from-leave-fund"
           >
-            <p-checkbox inputId="roster-type-deducts-from-leave-fund" formControlName="deductsFromLeaveFund" [binary]="true" />
+            <input id="roster-type-deducts-from-leave-fund" type="checkbox" formControlName="deductsFromLeaveFund" />
             <span>
               <strong>{{ 'ROSTER.TYPES.FIELD_DEDUCTS_FROM_LEAVE_FUND' | translate }}</strong>
               <small>{{ 'ROSTER.TYPES.DEDUCTS_FROM_LEAVE_FUND_HINT_SHORT' | translate }}</small>

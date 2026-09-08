@@ -7,7 +7,6 @@ import { Dialog } from 'primeng/dialog';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
-import { Textarea } from 'primeng/textarea';
 import { finalize } from 'rxjs';
 import {
   EXECUTION_MODES,
@@ -36,7 +35,6 @@ interface ExecutionModeOption {
     Dialog,
     ReactiveFormsModule,
     InputText,
-    Textarea,
     InputNumber,
     ColorPicker,
     Select,

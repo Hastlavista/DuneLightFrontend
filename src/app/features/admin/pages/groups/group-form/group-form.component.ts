@@ -15,7 +15,6 @@ import { DatePicker } from 'primeng/datepicker';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
-import { Textarea } from 'primeng/textarea';
 import { finalize } from 'rxjs';
 import { EmployeeDto } from '../../../../../core/models/employee.model';
 import {
@@ -72,7 +71,6 @@ function slotsArrayValidator(control: AbstractControl): ValidationErrors | null 
   imports: [
     ReactiveFormsModule,
     InputText,
-    Textarea,
     InputNumber,
     Select,
     DatePicker,

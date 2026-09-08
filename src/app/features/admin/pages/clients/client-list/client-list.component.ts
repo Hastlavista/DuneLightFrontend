@@ -1,11 +1,9 @@
 import { Component, ViewChild, computed, inject, input, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ConfirmationService, MenuItem } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Menu } from 'primeng/menu';
-import { Select } from 'primeng/select';
 import { Tag } from 'primeng/tag';
 import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
@@ -24,6 +22,7 @@ import { ListToolbarComponent } from '../../../../../shared/components/list-tool
 import { StatusTagComponent } from '../../../../../shared/components/status-tag/status-tag.component';
 import { IssuePackageDialogComponent } from '../client-form/issue-package-dialog.component';
 import { AnonymizeClientDialogComponent } from './anonymize-client-dialog.component';
+import { ClientHistoryDialogComponent } from './client-history-dialog.component';
 
 const DEFAULT_PAGE_SIZE = 20;
 /** pageSize max is 200 - fetches the full active set in one page for the filter
@@ -40,15 +39,14 @@ interface FilterOption<T> {
   imports: [
     TableModule,
     Button,
-    Select,
     Menu,
     Tag,
-    FormsModule,
     TranslatePipe,
     ListToolbarComponent,
     StatusTagComponent,
     IssuePackageDialogComponent,
     AnonymizeClientDialogComponent,
+    ClientHistoryDialogComponent,
   ],
   templateUrl: './client-list.component.html',
   styleUrl: './client-list.component.scss',
@@ -145,6 +143,8 @@ export class ClientListComponent {
 
   readonly issuePackageDialogVisible = signal(false);
   readonly issuePackageClient = signal<ClientDto | null>(null);
+  readonly historyDialogVisible = signal(false);
+  readonly historyClient = signal<ClientDto | null>(null);
 
   constructor() {
     this.loadActiveTags();
@@ -177,10 +177,18 @@ export class ClientListComponent {
     this.fetch(0, this.rows());
   }
 
+  selectTag(tagId: string | null): void {
+    this.onTagFilterChange(tagId);
+  }
+
   onHomeTrainerFilterChange(trainerId: string | null): void {
     this.homeTrainerFilter.set(trainerId);
     this.table.first = 0;
     this.fetch(0, this.rows());
+  }
+
+  selectHomeTrainer(trainerId: string | null): void {
+    this.onHomeTrainerFilterChange(trainerId);
   }
 
   onHomeCompanyFilterChange(companyId: string | null): void {
@@ -213,6 +221,11 @@ export class ClientListComponent {
   openIssuePackage(client: ClientDto): void {
     this.issuePackageClient.set(client);
     this.issuePackageDialogVisible.set(true);
+  }
+
+  openHistory(client: ClientDto): void {
+    this.historyClient.set(client);
+    this.historyDialogVisible.set(true);
   }
 
   onAnonymized(): void {
@@ -270,6 +283,14 @@ export class ClientListComponent {
 
   fullName(client: ClientDto): string {
     return `${client.firstName} ${client.lastName}`;
+  }
+
+  initials(client: ClientDto): string {
+    return `${client.firstName.charAt(0)}${client.lastName.charAt(0)}`.toUpperCase();
+  }
+
+  companyColor(client: ClientDto): string {
+    return this.activeCompanies().find((company) => company.id === client.homeCompanyId)?.colorHex ?? 'var(--teal)';
   }
 
   private fetch(first: number, rows: number): void {

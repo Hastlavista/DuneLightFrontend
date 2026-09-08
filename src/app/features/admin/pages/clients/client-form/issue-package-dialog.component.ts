@@ -5,10 +5,10 @@ import { Button } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
 import { Dialog } from 'primeng/dialog';
 import { InputNumber } from 'primeng/inputnumber';
-import { Select } from 'primeng/select';
 import { finalize } from 'rxjs';
 import { ClientPackagePurchaseRequest } from '../../../../../core/models/client-package.model';
 import { CompanyDto } from '../../../../../core/models/company.model';
+import { ClientDto } from '../../../../../core/models/client.model';
 import { PackageDto } from '../../../../../core/models/package.model';
 import { ClientPackagesService } from '../../../../../core/services/client-packages.service';
 import { CompaniesService } from '../../../../../core/services/companies.service';
@@ -27,8 +27,9 @@ const LOOKUP_PAGE_SIZE = 200;
  */
 @Component({
   selector: 'app-issue-package-dialog',
-  imports: [Dialog, ReactiveFormsModule, Select, DatePicker, InputNumber, Button, TranslatePipe],
+  imports: [Dialog, ReactiveFormsModule, DatePicker, InputNumber, Button, TranslatePipe],
   templateUrl: './issue-package-dialog.component.html',
+  styleUrl: './issue-package-dialog.component.scss',
 })
 export class IssuePackageDialogComponent {
   private readonly fb = inject(FormBuilder);
@@ -41,6 +42,7 @@ export class IssuePackageDialogComponent {
 
   readonly visible = model(false);
   readonly clientId = input.required<string>();
+  readonly client = input<ClientDto | null>(null);
   readonly issued = output<void>();
 
   readonly saving = signal(false);
@@ -48,6 +50,7 @@ export class IssuePackageDialogComponent {
 
   readonly activePackages = signal<PackageDto[]>([]);
   readonly activeCompanies = signal<CompanyDto[]>([]);
+  readonly selectedPackage = signal<PackageDto | null>(null);
 
   readonly form = this.fb.nonNullable.group({
     packageId: this.fb.control<string | null>(null, Validators.required),
@@ -67,7 +70,10 @@ export class IssuePackageDialogComponent {
       }
     });
 
-    this.form.controls.packageId.valueChanges.subscribe(() => this.refreshSuggestedPrice());
+    this.form.controls.packageId.valueChanges.subscribe((packageId) => {
+      this.selectedPackage.set(this.activePackages().find((item) => item.id === packageId) ?? null);
+      this.refreshSuggestedPrice();
+    });
     this.form.controls.companyId.valueChanges.subscribe(() => this.refreshSuggestedPrice());
     this.form.controls.purchaseDate.valueChanges.subscribe(() => this.refreshSuggestedPrice());
   }
@@ -108,15 +114,69 @@ export class IssuePackageDialogComponent {
     this.visible.set(false);
   }
 
+  selectPackage(packageId: string): void {
+    this.form.controls.packageId.setValue(packageId);
+  }
+
+  selectCompany(companyId: string): void {
+    this.form.controls.companyId.setValue(companyId);
+  }
+
+  setPurchaseDate(shortcut: 'today' | 'yesterday' | 'monthStart'): void {
+    const date = new Date();
+    if (shortcut === 'yesterday') {
+      date.setDate(date.getDate() - 1);
+    } else if (shortcut === 'monthStart') {
+      date.setDate(1);
+    }
+    this.form.controls.purchaseDate.setValue(date);
+  }
+
+  isToday(): boolean {
+    const purchaseDate = this.form.controls.purchaseDate.value;
+    return !!purchaseDate && purchaseDate.toDateString() === new Date().toDateString();
+  }
+
+  clientLabel(): string {
+    const client = this.client();
+    return client
+      ? `${client.firstName} ${client.lastName} - broj člana ${client.memberNumber} - paket i poslovnica su obavezni`
+      : 'Odaberi paket i poslovnicu za izdavanje.';
+  }
+
+  priceLabel(price: number): string {
+    return `${new Intl.NumberFormat('hr-HR', { maximumFractionDigits: 2 }).format(price)} €`;
+  }
+
+  packageSummary(packageItem: PackageDto): string {
+    const entries = packageItem.entryMode === 'SharedPool'
+      ? (packageItem.totalEntryCount ? `${packageItem.totalEntryCount} dolazaka` : 'Neograničen ulaz')
+      : `${packageItem.services.length} usluga`;
+    const validity = packageItem.validityType === 'DayCount'
+      ? `${packageItem.validityDays ?? 0} dana`
+      : packageItem.validityType === 'EndOfMonth' ? 'do kraja mjeseca' : 'do odabranog datuma';
+    return `${entries} - vrijedi ${validity}`;
+  }
+
+  missingRequirements(): string {
+    return this.form.controls.packageId.value ? 'Sve spremno za izdavanje paketa.' : 'Za izdavanje još treba: paket.';
+  }
+
   private refreshSuggestedPrice(): void {
     const packageId = this.form.controls.packageId.value;
     const companyId = this.form.controls.companyId.value;
     const date = this.form.controls.purchaseDate.value ?? new Date();
-    if (!packageId || !companyId) {
+    const packageItem = this.activePackages().find((item) => item.id === packageId) ?? null;
+    if (!packageItem) {
+      this.form.controls.paidPrice.setValue(null, { emitEvent: false });
+      return;
+    }
+    if (!companyId) {
+      this.form.controls.paidPrice.setValue(packageItem.defaultPrice, { emitEvent: false });
       return;
     }
     this.priceListService
-      .resolve({ subjectType: 'Package', subjectId: packageId, companyId: companyId, date: toStartOfDayIso(date) })
+      .resolve({ subjectType: 'Package', subjectId: packageItem.id, companyId: companyId, date: toStartOfDayIso(date) })
       .subscribe({
         next: (result) => this.form.controls.paidPrice.setValue(result.price, { emitEvent: false }),
         error: () => {},
@@ -126,10 +186,11 @@ export class IssuePackageDialogComponent {
   private resetForm(): void {
     this.form.reset({
       packageId: null,
-      companyId: null,
+      companyId: this.client()?.homeCompanyId ?? null,
       purchaseDate: new Date(),
       paidPrice: null,
     });
+    this.selectedPackage.set(null);
   }
 
   private loadActivePackages(): void {

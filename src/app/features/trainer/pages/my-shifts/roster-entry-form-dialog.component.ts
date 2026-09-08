@@ -6,7 +6,6 @@ import { Button } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
 import { Dialog } from 'primeng/dialog';
 import { Select } from 'primeng/select';
-import { Textarea } from 'primeng/textarea';
 import { finalize } from 'rxjs';
 import { AppError } from '../../../../core/models/api-error.model';
 import { EmployeeSummary } from '../../../../core/models/employee.model';
@@ -62,7 +61,7 @@ export interface RosterEntryFormInitial {
  */
 @Component({
   selector: 'app-roster-entry-form-dialog',
-  imports: [Dialog, ReactiveFormsModule, Select, DatePicker, Textarea, Button, TranslatePipe],
+  imports: [Dialog, ReactiveFormsModule, Select, DatePicker, Button, TranslatePipe],
   templateUrl: './roster-entry-form-dialog.component.html',
 })
 export class RosterEntryFormDialogComponent {

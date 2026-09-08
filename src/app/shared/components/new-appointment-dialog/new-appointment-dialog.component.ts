@@ -8,7 +8,6 @@ import { DatePicker } from 'primeng/datepicker';
 import { Dialog } from 'primeng/dialog';
 import { InputNumber } from 'primeng/inputnumber';
 import { Select } from 'primeng/select';
-import { Textarea } from 'primeng/textarea';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { finalize } from 'rxjs';
 import { AppError } from '../../../core/models/api-error.model';
@@ -120,7 +119,6 @@ export interface NewAppointmentInitial {
     Select,
     DatePicker,
     InputNumber,
-    Textarea,
     ToggleSwitch,
     AutoComplete,
     Button,

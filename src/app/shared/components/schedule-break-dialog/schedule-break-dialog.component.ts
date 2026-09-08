@@ -6,7 +6,6 @@ import { Button } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
 import { Dialog } from 'primeng/dialog';
 import { InputNumber } from 'primeng/inputnumber';
-import { Textarea } from 'primeng/textarea';
 import { finalize } from 'rxjs';
 import { ScheduleBreakDto, ScheduleBreakUpdateRequest } from '../../../core/models/schedule-break.model';
 import { NotificationService } from '../../../core/services/notification.service';
@@ -42,7 +41,7 @@ const BREAK_TIME_FORMATTER = new Intl.DateTimeFormat('hr-HR', {
  */
 @Component({
   selector: 'app-schedule-break-dialog',
-  imports: [Dialog, ReactiveFormsModule, DatePicker, InputNumber, Textarea, Button, TranslatePipe],
+  imports: [Dialog, ReactiveFormsModule, DatePicker, InputNumber, Button, TranslatePipe],
   templateUrl: './schedule-break-dialog.component.html',
   styleUrl: './schedule-break-dialog.component.scss',
 })

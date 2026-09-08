@@ -1,39 +1,63 @@
 <p-dialog
   [(visible)]="visible"
   [modal]="true"
-  [style]="{ width: '28rem' }"
-  [header]="(isEditMode() ? 'CLIENTS.TAGS.EDIT_TITLE' : 'CLIENTS.TAGS.NEW_TITLE') | translate"
+  [style]="{ width: '35rem', maxWidth: 'calc(100vw - 2rem)' }"
+  styleClass="client-dialog client-dialog--tag"
   (onShow)="onDialogShow()"
 >
+  <ng-template #header>
+    <div class="client-tag-dialog__header">
+      <span class="client-tag-dialog__mark" [style.background]="'#' + (form.controls.colorHex.value || 'F4F1F2')"></span>
+      <div>
+        <h2>{{ (isEditMode() ? 'CLIENTS.TAGS.EDIT_TITLE' : 'CLIENTS.TAGS.NEW_TITLE') | translate }}</h2>
+        <p>Naziv i boja su obavezni — redoslijed možeš ostaviti kakav jest.</p>
+      </div>
+    </div>
+  </ng-template>
   @if (dialogShown()) {
-  <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
-    <div class="dl-form__field">
-      <label for="client-tag-name">{{ 'CLIENTS.TAGS.FIELD_NAME' | translate }}</label>
+  <form [formGroup]="form" (ngSubmit)="onSave()" class="client-tag-dialog__form" novalidate>
+    <div class="client-tag-dialog__intro">
+      <span class="client-tag-dialog__preview" [style.background]="'#' + (form.controls.colorHex.value || 'F4F1F2')"></span>
+      <div><strong>Naziv oznake</strong><span>Odaberi boju iz palete sustava</span></div>
+    </div>
+
+    <div class="client-tag-dialog__field">
+      <label for="client-tag-name">Naziv</label>
       <input id="client-tag-name" type="text" pInputText fluid formControlName="name" maxlength="255" />
       @if (form.controls.name.invalid && form.controls.name.touched) {
         <span class="dl-form__error">{{ 'CLIENTS.TAGS.ERRORS.NAME_REQUIRED' | translate }}</span>
       }
+      <small>Vidi se kao oznaka na kartici klijenta i u filtru popisa.</small>
     </div>
 
-    <div class="dl-form__field">
-      <label for="client-tag-color">{{ 'CLIENTS.TAGS.FIELD_COLOR' | translate }}</label>
-      <p-colorpicker id="client-tag-color" formControlName="colorHex" appendTo="body" />
+    <div class="client-tag-dialog__field">
+      <label>Boja</label>
+      <div class="client-tag-dialog__palette">
+        @for (color of colorOptions; track color.value) {
+          <button type="button" [class.client-tag-dialog__choice--active]="form.controls.colorHex.value === color.value" (click)="selectColor(color.value)">
+            <i [style.background]="'#' + color.value"></i>{{ color.label }}
+          </button>
+        }
+      </div>
+      <small>Boje sustava jamče čitljivost oznaka na svijetloj pozadini.</small>
     </div>
 
-    <div class="dl-form__field">
-      <label for="client-tag-sort-order">{{ 'CLIENTS.TAGS.FIELD_SORT_ORDER' | translate }}</label>
-      <p-inputnumber id="client-tag-sort-order" fluid formControlName="sortOrder" [showButtons]="true" />
+    <div class="client-tag-dialog__field">
+      <label>Redoslijed prikaza</label>
+      <div class="client-tag-dialog__sort-options">
+        <button type="button" [class.client-tag-dialog__choice--active]="form.controls.sortOrder.value === 0" (click)="selectSortOrder(0)">Na vrh</button>
+        <button type="button" [class.client-tag-dialog__choice--active]="form.controls.sortOrder.value === 100" (click)="selectSortOrder(100)">Po abecedi</button>
+        <button type="button" [class.client-tag-dialog__choice--active]="form.controls.sortOrder.value === 1000" (click)="selectSortOrder(1000)">Na dno</button>
+      </div>
+      <small>Redoslijed {{ form.controls.sortOrder.value }} određuje mjesto oznake u popisu.</small>
     </div>
 
-    <div class="dl-form__actions">
-      <p-button
-        type="button"
-        [text]="true"
-        severity="secondary"
-        [label]="'COMMON.CANCEL' | translate"
-        (onClick)="onCancel()"
-      />
-      <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+    <div class="client-tag-dialog__actions">
+      <span>{{ isReady() ? 'Spremno za spremanje.' : 'Nedostaje naziv ili boja.' }}</span>
+      <div>
+        <p-button type="button" [outlined]="true" severity="secondary" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" />
+        <p-button type="submit" [label]="'COMMON.SAVE' | translate" [disabled]="!isReady()" [loading]="saving()" />
+      </div>
     </div>
   </form>
   }

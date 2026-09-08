@@ -1,0 +1,129 @@
+<div class="company-detail">
+  @if (company(); as company) {
+    <header class="company-detail__header">
+      <button type="button" class="company-detail__back" (click)="goBack()" aria-label="Natrag">
+        <i class="pi pi-arrow-left"></i>
+      </button>
+      <span class="company-detail__mark" [style.background-color]="form.controls.colorHex.value ? '#' + form.controls.colorHex.value : '#0D5C63'"></span>
+      <div>
+        <h2>{{ form.controls.name.value || company.name }}</h2>
+        <p>{{ form.controls.address.value || company.address || '—' }}</p>
+      </div>
+    </header>
+
+    <p-tabs [(value)]="activeTab" styleClass="company-detail__tabs">
+      <p-tablist>
+        <p-tab value="data">{{ 'CATALOG.COMPANIES.TAB_DATA' | translate }}</p-tab>
+        @if (canViewWorkingHours()) {
+          <p-tab value="workingHours">{{ 'CATALOG.COMPANIES.TAB_WORKING_HOURS' | translate }}</p-tab>
+        }
+        @if (canViewHolidays()) {
+          <p-tab value="holidays">{{ 'CATALOG.COMPANIES.TAB_HOLIDAYS' | translate }}</p-tab>
+        }
+        @if (canViewRooms()) {
+          <p-tab value="rooms">{{ 'CATALOG.COMPANIES.TAB_ROOMS' | translate }}</p-tab>
+        }
+      </p-tablist>
+
+      <p-tabpanels>
+        <p-tabpanel value="data">
+          <form [formGroup]="form" (ngSubmit)="onSave()" class="company-detail__form" novalidate>
+            <div class="company-detail__grid">
+              <div class="company-detail__field">
+                <label for="company-detail-name">{{ 'CATALOG.COMPANIES.FIELD_NAME' | translate }}</label>
+                <input id="company-detail-name" type="text" pInputText formControlName="name" maxlength="255" />
+                @if (form.controls.name.invalid && form.controls.name.touched) {
+                  <span>{{ 'CATALOG.COMPANIES.ERRORS.NAME_REQUIRED' | translate }}</span>
+                }
+              </div>
+
+              <div class="company-detail__field">
+                <label for="company-detail-phone">{{ 'CATALOG.COMPANIES.FIELD_PHONE' | translate }}</label>
+                <input id="company-detail-phone" type="text" pInputText formControlName="phone" maxlength="50" />
+              </div>
+
+              <div class="company-detail__field company-detail__field--wide">
+                <label for="company-detail-address">{{ 'CATALOG.COMPANIES.FIELD_ADDRESS' | translate }}</label>
+                <input id="company-detail-address" type="text" pInputText formControlName="address" maxlength="500" />
+              </div>
+
+              <div class="company-detail__field">
+                <label for="company-detail-country">{{ 'CATALOG.COMPANIES.FIELD_COUNTRY' | translate }}</label>
+                <p-select
+                  id="company-detail-country"
+                  appendTo="body"
+                  formControlName="country"
+                  [options]="countryOptions"
+                  optionLabel="name"
+                  optionValue="code"
+                />
+                <small>{{ 'CATALOG.COMPANIES.COUNTRY_HINT' | translate }}</small>
+              </div>
+
+              <div class="company-detail__sort">
+                <label for="company-detail-sort-order">{{ 'CATALOG.COMPANIES.FIELD_SORT_ORDER' | translate }}</label>
+                <div>
+                  <button type="button" (click)="decrementSortOrder()" aria-label="Smanji redoslijed">−</button>
+                  <input id="company-detail-sort-order" type="number" formControlName="sortOrder" />
+                  <button type="button" (click)="incrementSortOrder()" aria-label="Povećaj redoslijed">+</button>
+                </div>
+                <small>{{ 'CATALOG.COMPANIES.SORT_ORDER_HINT' | translate }}</small>
+              </div>
+
+              <div class="company-detail__field company-detail__field--wide">
+                <label>{{ 'CATALOG.COMPANIES.FIELD_COLOR' | translate }}</label>
+                <div class="company-detail__swatches">
+                  @for (color of colorOptions; track color) {
+                    <button
+                      type="button"
+                      class="company-detail__swatch"
+                      [class.company-detail__swatch--active]="form.controls.colorHex.value === color"
+                      [style.background-color]="'#' + color"
+                      (click)="selectColor(color)"
+                      [attr.aria-label]="('#' + color)"
+                    >
+                      @if (form.controls.colorHex.value === color) {
+                        <i class="pi pi-check"></i>
+                      }
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <div class="company-detail__field company-detail__field--wide">
+                <label for="company-detail-note">{{ 'CATALOG.COMPANIES.FIELD_NOTE' | translate }}</label>
+                <textarea id="company-detail-note" rows="4" formControlName="note"></textarea>
+              </div>
+            </div>
+
+            <div class="company-detail__actions">
+              <span>{{ 'CATALOG.COMPANIES.MODAL_FOOTER_HINT' | translate }}</span>
+              <p-button type="button" severity="secondary" [outlined]="true" [label]="'COMMON.CANCEL' | translate" (onClick)="goBack()" />
+              <p-button type="submit" [label]="'CATALOG.COMPANIES.SAVE_CHANGES' | translate" [loading]="saving()" />
+            </div>
+          </form>
+        </p-tabpanel>
+
+        @if (canViewWorkingHours()) {
+          <p-tabpanel value="workingHours">
+            <app-working-hours-template-editor [owner]="{ type: 'company', companyId: company.id }" />
+          </p-tabpanel>
+        }
+
+        @if (canViewHolidays()) {
+          <p-tabpanel value="holidays">
+            <app-company-holidays-tab [companyId]="company.id" />
+          </p-tabpanel>
+        }
+
+        @if (canViewRooms()) {
+          <p-tabpanel value="rooms">
+            <app-rooms-tab [companyId]="company.id" />
+          </p-tabpanel>
+        }
+      </p-tabpanels>
+    </p-tabs>
+  } @else if (loading()) {
+    <div class="company-detail__loading">{{ 'WORKING_HOURS.LOADING' | translate }}</div>
+  }
+</div>

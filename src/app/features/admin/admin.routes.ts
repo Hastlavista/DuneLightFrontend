@@ -25,6 +25,12 @@ export const ADMIN_ROUTES: Routes = [
     data: { titleKey: 'NAV.ADMIN.COMPANIES' },
   },
   {
+    path: 'companies/:id',
+    loadComponent: () =>
+      import('./pages/catalog/companies/company-detail.component').then((m) => m.CompanyDetailComponent),
+    data: { titleKey: 'NAV.ADMIN.COMPANIES' },
+  },
+  {
     path: 'clients',
     loadComponent: () => import('./pages/clients/clients.component').then((m) => m.ClientsComponent),
     data: { titleKey: 'NAV.ADMIN.CLIENTS' },

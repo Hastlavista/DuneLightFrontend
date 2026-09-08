@@ -21,7 +21,7 @@
 
     <div class="dl-form__field">
       <label for="package-description">{{ 'CATALOG.PACKAGES.FIELD_DESCRIPTION' | translate }}</label>
-      <textarea id="package-description" pTextarea fluid rows="3" formControlName="description"></textarea>
+      <textarea id="package-description" rows="3" formControlName="description"></textarea>
     </div>
 
     <div class="dl-form__row">
@@ -79,7 +79,7 @@
         </div>
 
         <div class="dl-form__field dl-form__field--checkbox">
-          <p-checkbox inputId="package-unlimited" formControlName="unlimited" [binary]="true" />
+          <input id="package-unlimited" type="checkbox" formControlName="unlimited" />
           <label for="package-unlimited">{{ 'CATALOG.PACKAGES.FIELD_UNLIMITED' | translate }}</label>
         </div>
       </div>
