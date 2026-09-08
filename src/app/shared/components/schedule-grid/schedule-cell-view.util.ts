@@ -5,10 +5,10 @@ import { ScheduleBreakCellDto } from '../../../core/models/schedule-break.model'
 import { localDateKey } from './schedule-date.util';
 import { ScheduleGridCell } from './schedule-grid.models';
 
-const DEFAULT_COLOR_HEX = '#c9b487';
+const DEFAULT_COLOR_HEX = '#C1A5A9';
 /** Neutral, not-a-service-category color for a break cell's border/tint -
  * deliberately not any real category color, see toScheduleBreakGridCell. */
-const BREAK_COLOR_HEX = '#7c5647';
+const BREAK_COLOR_HEX = '#7A5D61';
 
 function pad(value: number): string {
   return value.toString().padStart(2, '0');
@@ -39,7 +39,7 @@ function pad(value: number): string {
 export function toScheduleGridCell(
   dto: AppointmentScheduleCellDto,
   columnId: string,
-  locationColorHex: string | null | undefined,
+  companyColorHex: string | null | undefined,
   translate: TranslateService,
   birthdayDateByClientId: ReadonlyMap<string, string> = new Map(),
 ): ScheduleGridCell {
@@ -69,9 +69,10 @@ export function toScheduleGridCell(
     startMinutes,
     durationMinutes: dto.durationMinutes,
     colorHex: dto.serviceCategoryColorHex ?? DEFAULT_COLOR_HEX,
-    locationColorHex,
+    companyColorHex,
     title,
     subtitle: dto.serviceName,
+    roomName: dto.roomName,
     noShow: dto.status === 'NoShow',
     status: dto.status,
     hasBirthday,
@@ -87,7 +88,7 @@ export function toScheduleGridCell(
 export function toScheduleBreakGridCell(
   dto: ScheduleBreakCellDto,
   columnId: string,
-  locationColorHex: string | null | undefined,
+  companyColorHex: string | null | undefined,
   translate: TranslateService,
 ): ScheduleGridCell {
   const startsAt = new Date(dto.startsAt);
@@ -100,7 +101,7 @@ export function toScheduleBreakGridCell(
     startMinutes,
     durationMinutes: dto.durationMinutes,
     colorHex: BREAK_COLOR_HEX,
-    locationColorHex,
+    companyColorHex,
     title: translate.instant('SCHEDULE.BREAK.LABEL'),
     subtitle: dto.note ?? '',
     noShow: false,

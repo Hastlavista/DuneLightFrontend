@@ -16,20 +16,20 @@ import { Textarea } from 'primeng/textarea';
 import { Observable, finalize, forkJoin, of } from 'rxjs';
 import {
   EmployeeDto,
-  EmployeeLocation,
+  EmployeeCompany,
   EmployeeServiceLink,
   EmployeeUpsertRequest,
   EmployeeWithLoginRequest,
 } from '../../../../../core/models/employee.model';
 import { EngagementTypeDto } from '../../../../../core/models/engagement-type.model';
-import { LocationDto } from '../../../../../core/models/location.model';
+import { CompanyDto } from '../../../../../core/models/company.model';
 import { GrantGroupDto, RoleDto } from '../../../../../core/models/permissions.model';
 import { ServiceDto } from '../../../../../core/models/service.model';
 import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { EmployeesService } from '../../../../../core/services/employees.service';
 import { EngagementTypesService } from '../../../../../core/services/engagement-types.service';
 import { GrantGroupsService } from '../../../../../core/services/grant-groups.service';
-import { LocationsService } from '../../../../../core/services/locations.service';
+import { CompaniesService } from '../../../../../core/services/companies.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { PermissionRolesService } from '../../../../../core/services/permission-roles.service';
 import { ServicesService } from '../../../../../core/services/services.service';
@@ -43,7 +43,7 @@ import { EmployeeLeaveFundTabComponent } from './employee-leave-fund-tab.compone
 const NEW_ID = 'new';
 
 /** pageSize max is 200 - fetches the full active set in one page for the
- * location/service/engagement-type pickers. */
+ * company/service/engagement-type pickers. */
 const LOOKUP_PAGE_SIZE = 200;
 
 export interface EmployeeOption {
@@ -51,8 +51,8 @@ export interface EmployeeOption {
   name: string;
 }
 
-/** Array-level: at least one location must be selected. */
-function requiredLocationsValidator(control: AbstractControl): ValidationErrors | null {
+/** Array-level: at least one company must be selected. */
+function requiredCompaniesValidator(control: AbstractControl): ValidationErrors | null {
   const ids = (control.value as string[]) ?? [];
   return ids.length > 0 ? null : { required: true };
 }
@@ -66,13 +66,13 @@ function oibValidator(control: AbstractControl): ValidationErrors | null {
   return /^\d{11}$/.test(value) ? null : { oibInvalid: true };
 }
 
-/** Group-level: the primary location must be one of the selected locations -
+/** Group-level: the primary company must be one of the selected companies -
  * the backend enforces this too (VALIDATION_ERROR) but the form blocks it
  * first. */
-function primaryLocationValidator(group: AbstractControl): ValidationErrors | null {
-  const locationIds = (group.get('locationIds')?.value as string[]) ?? [];
-  const primaryLocationId = group.get('primaryLocationId')?.value as string | null;
-  return primaryLocationId && locationIds.includes(primaryLocationId) ? null : { primaryNotSelected: true };
+function primaryCompanyValidator(group: AbstractControl): ValidationErrors | null {
+  const companyIds = (group.get('companyIds')?.value as string[]) ?? [];
+  const primaryCompanyId = group.get('primaryCompanyId')?.value as string | null;
+  return primaryCompanyId && companyIds.includes(primaryCompanyId) ? null : { primaryNotSelected: true };
 }
 
 /** Group-level: employment end can't be before employment start. */
@@ -110,7 +110,7 @@ function employmentDatesValidator(group: AbstractControl): ValidationErrors | nu
 export class EmployeeFormComponent {
   private readonly fb = inject(FormBuilder);
   private readonly employeesService = inject(EmployeesService);
-  private readonly locationsService = inject(LocationsService);
+  private readonly companiesService = inject(CompaniesService);
   private readonly servicesService = inject(ServicesService);
   private readonly engagementTypesService = inject(EngagementTypesService);
   private readonly grantGroupsService = inject(GrantGroupsService);
@@ -184,18 +184,18 @@ export class EmployeeFormComponent {
     this.isEditMode() && !this.justCreatedInWizard() ? 'EMPLOYEES.EDIT_TITLE' : 'EMPLOYEES.NEW_TITLE',
   );
 
-  readonly activeLocations = signal<LocationDto[]>([]);
+  readonly activeCompanies = signal<CompanyDto[]>([]);
   readonly activeServices = signal<ServiceDto[]>([]);
   readonly activeEngagementTypes = signal<EngagementTypeDto[]>([]);
   readonly activeGrantGroups = signal<GrantGroupDto[]>([]);
   readonly activeRoles = signal<RoleDto[]>([]);
 
-  /** Locations/services/engagement type linked to the employee being edited
+  /** Companies/services/engagement type linked to the employee being edited
    * that have since been deactivated - kept visible in their picker (with a
    * badge) instead of silently dropped. Derived, not set directly, so it stays
    * correct regardless of whether the employee or the active-list fetch
    * finishes loading first (see PackageFormComponent for the same pattern). */
-  private readonly loadedEmployeeLocations = signal<EmployeeLocation[]>([]);
+  private readonly loadedEmployeeCompanies = signal<EmployeeCompany[]>([]);
   private readonly loadedEmployeeServices = signal<EmployeeServiceLink[]>([]);
   private readonly loadedEmployeeEngagementType = signal<EmployeeOption | null>(null);
 
@@ -206,9 +206,9 @@ export class EmployeeFormComponent {
 
   private readonly translationsReady = translationReadySignal(this.translate);
 
-  readonly locationOptions = computed<EmployeeOption[]>(() => this.mergeOptions(
-    this.activeLocations().map((location) => ({ id: location.id, name: location.name })),
-    this.loadedEmployeeLocations().map((link) => ({ id: link.companyId, name: link.companyName })),
+  readonly companyOptions = computed<EmployeeOption[]>(() => this.mergeOptions(
+    this.activeCompanies().map((company) => ({ id: company.id, name: company.name })),
+    this.loadedEmployeeCompanies().map((link) => ({ id: link.companyId, name: link.companyName })),
   ));
 
   readonly serviceOptions = computed<EmployeeOption[]>(() => this.mergeOptions(
@@ -257,14 +257,14 @@ export class EmployeeFormComponent {
       employmentStartDate: this.fb.control<Date | null>(null, Validators.required),
       employmentEndDate: this.fb.control<Date | null>(null),
       engagementTypeId: ['', Validators.required],
-      locationIds: this.fb.nonNullable.control<string[]>([], requiredLocationsValidator),
-      primaryLocationId: this.fb.control<string | null>(null),
+      companyIds: this.fb.nonNullable.control<string[]>([], requiredCompaniesValidator),
+      primaryCompanyId: this.fb.control<string | null>(null),
       serviceIds: this.fb.nonNullable.control<string[]>([]),
       password: [''],
       grantGroupIds: this.fb.nonNullable.control<string[]>([]),
       roleIds: this.fb.nonNullable.control<string[]>([]),
     },
-    { validators: [primaryLocationValidator, employmentDatesValidator] },
+    { validators: [primaryCompanyValidator, employmentDatesValidator] },
   );
 
   constructor() {
@@ -272,7 +272,7 @@ export class EmployeeFormComponent {
     const id = idParam && idParam !== NEW_ID ? idParam : null;
     this.editingId.set(id);
 
-    this.loadActiveLocations();
+    this.loadActiveCompanies();
     this.loadActiveServices();
     this.loadActiveEngagementTypes();
     this.loadActiveGrantGroups();
@@ -299,21 +299,21 @@ export class EmployeeFormComponent {
       control.updateValueAndValidity({ emitEvent: false });
     });
 
-    // If the user deselects the current primary location from the multiselect,
-    // don't leave a now-invalid primaryLocationId silently selected.
-    this.form.controls.locationIds.valueChanges.subscribe((ids) => {
-      const primary = this.form.controls.primaryLocationId.value;
+    // If the user deselects the current primary company from the multiselect,
+    // don't leave a now-invalid primaryCompanyId silently selected.
+    this.form.controls.companyIds.valueChanges.subscribe((ids) => {
+      const primary = this.form.controls.primaryCompanyId.value;
       if (primary && !ids.includes(primary)) {
-        this.form.controls.primaryLocationId.setValue(null);
+        this.form.controls.primaryCompanyId.setValue(null);
       }
     });
   }
 
-  /** Options for the primary-location select: only locations currently picked
-   * in the locationIds multiselect. */
-  primaryLocationOptions(): EmployeeOption[] {
-    const selected = new Set(this.form.controls.locationIds.value);
-    return this.locationOptions().filter((option) => selected.has(option.id));
+  /** Options for the primary-company select: only companies currently picked
+   * in the companyIds multiselect. */
+  primaryCompanyOptions(): EmployeeOption[] {
+    const selected = new Set(this.form.controls.companyIds.value);
+    return this.companyOptions().filter((option) => selected.has(option.id));
   }
 
   onSave(): void {
@@ -436,8 +436,8 @@ export class EmployeeFormComponent {
       employmentStartDate: toStartOfDayIso(raw.employmentStartDate as Date),
       employmentEndDate: raw.employmentEndDate ? toStartOfDayIso(raw.employmentEndDate) : null,
       engagementTypeId: raw.engagementTypeId,
-      companyIds: raw.locationIds,
-      primaryCompanyId: raw.primaryLocationId as string,
+      companyIds: raw.companyIds,
+      primaryCompanyId: raw.primaryCompanyId as string,
       serviceIds: raw.serviceIds,
     };
   }
@@ -458,10 +458,10 @@ export class EmployeeFormComponent {
     };
   }
 
-  private loadActiveLocations(): void {
-    this.locationsService
+  private loadActiveCompanies(): void {
+    this.companiesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeLocations.set(result.items));
+      .subscribe((result) => this.activeCompanies.set(result.items));
   }
 
   private loadActiveServices(): void {
@@ -498,7 +498,7 @@ export class EmployeeFormComponent {
   }
 
   private applyEmployee(employee: EmployeeDto): void {
-    this.loadedEmployeeLocations.set(employee.companies);
+    this.loadedEmployeeCompanies.set(employee.companies);
     this.loadedEmployeeServices.set(employee.services);
     this.loadedEmployeeEngagementType.set(
       employee.engagementTypeName ? { id: employee.engagementTypeId, name: employee.engagementTypeName } : null,
@@ -523,8 +523,8 @@ export class EmployeeFormComponent {
         employmentStartDate: new Date(employee.employmentStartDate),
         employmentEndDate: employee.employmentEndDate ? new Date(employee.employmentEndDate) : null,
         engagementTypeId: employee.engagementTypeId,
-        locationIds: employee.companies.map((company) => company.companyId),
-        primaryLocationId: primary?.companyId ?? null,
+        companyIds: employee.companies.map((company) => company.companyId),
+        primaryCompanyId: primary?.companyId ?? null,
         serviceIds: employee.services.map((service) => service.serviceId),
         password: '',
         grantGroupIds: [],

@@ -6,13 +6,13 @@ import { Select } from 'primeng/select';
 import { APPOINTMENT_STATUSES, AppointmentScheduleCellDto, AppointmentStatus, appointmentStatusTranslationKey } from '../../../../core/models/appointment.model';
 import { EmployeeColumnEntry, EmployeeDirectoryDto } from '../../../../core/models/employee.model';
 import { GroupAppointmentCellDto, GroupDto } from '../../../../core/models/group.model';
-import { LocationDto } from '../../../../core/models/location.model';
+import { CompanyDto } from '../../../../core/models/company.model';
 import { ScheduleBreakCellDto } from '../../../../core/models/schedule-break.model';
 import { EXECUTION_MODES, ServiceDto, ServiceExecutionMode, executionModeTranslationKey } from '../../../../core/models/service.model';
 import { EmployeesService } from '../../../../core/services/employees.service';
 import { GroupsService } from '../../../../core/services/groups.service';
-import { LocationContextService } from '../../../../core/services/location-context.service';
-import { LocationsService } from '../../../../core/services/locations.service';
+import { CompanyContextService } from '../../../../core/services/company-context.service';
+import { CompaniesService } from '../../../../core/services/companies.service';
 import { ServicesService } from '../../../../core/services/services.service';
 import { translationReadySignal } from '../../../../core/utils/translation-signal.util';
 import { AppointmentDetailDialogComponent } from '../../../../shared/components/appointment-detail-dialog/appointment-detail-dialog.component';
@@ -61,8 +61,8 @@ interface FilterOption<T> {
 export class TodayComponent {
   private readonly employeesService = inject(EmployeesService);
   private readonly groupsService = inject(GroupsService);
-  private readonly locationContext = inject(LocationContextService);
-  private readonly locationsService = inject(LocationsService);
+  private readonly companyContext = inject(CompanyContextService);
+  private readonly companiesService = inject(CompaniesService);
   private readonly servicesService = inject(ServicesService);
   private readonly translate = inject(TranslateService);
 
@@ -74,7 +74,7 @@ export class TodayComponent {
 
   readonly activeEmployees = signal<EmployeeDirectoryDto[]>([]);
   readonly activeServices = signal<ServiceDto[]>([]);
-  readonly activeLocations = signal<LocationDto[]>([]);
+  readonly activeCompanies = signal<CompanyDto[]>([]);
 
   readonly detailVisible = signal(false);
   readonly detailAppointmentId = signal<string | null>(null);
@@ -94,21 +94,21 @@ export class TodayComponent {
 
   private readonly translationsReady = translationReadySignal(this.translate);
 
-  /** ScheduleDayGridComponent's columns need per-location ids to filter by the
-   * globally-selected location - EmployeeDirectoryDto only carries location
+  /** ScheduleDayGridComponent's columns need per-company ids to filter by the
+   * globally-selected company - EmployeeDirectoryDto only carries company
    * NAMES (no ids, see its own doc comment), so this resolves each name
-   * against the already-fetched activeLocations() list before handing the
+   * against the already-fetched activeCompanies() list before handing the
    * grid anything. A name with no match (shouldn't happen - the directory and
-   * locations endpoints describe the same studio) is simply dropped rather
+   * companies endpoints describe the same studio) is simply dropped rather
    * than crashing. */
   readonly employeeColumns = computed<EmployeeColumnEntry[]>(() => {
-    const locationIdByName = new Map(this.activeLocations().map((location) => [location.name, location.id]));
+    const companyIdByName = new Map(this.activeCompanies().map((company) => [company.name, company.id]));
     return this.activeEmployees().map((employee) => ({
       id: employee.id,
       firstName: employee.firstName,
       lastName: employee.lastName,
       companyIds: employee.companies
-        .map((name) => locationIdByName.get(name))
+        .map((name) => companyIdByName.get(name))
         .filter((id): id is string => id !== undefined),
     }));
   });
@@ -147,7 +147,7 @@ export class TodayComponent {
   constructor() {
     this.loadActiveEmployees();
     this.loadActiveServices();
-    this.loadActiveLocations();
+    this.loadActiveCompanies();
   }
 
   onAppointmentClicked(appointment: AppointmentScheduleCellDto): void {
@@ -165,7 +165,7 @@ export class TodayComponent {
   }
 
   openNewAppointment(): void {
-    this.newAppointmentInitial.set({ startsAt: new Date(), employeeId: null, companyId: this.locationContext.selectedLocationId() });
+    this.newAppointmentInitial.set({ startsAt: new Date(), employeeId: null, companyId: this.companyContext.selectedCompanyId() });
     this.newAppointmentVisible.set(true);
   }
 
@@ -175,7 +175,7 @@ export class TodayComponent {
   }
 
   openNewBreak(): void {
-    this.newBreakInitial.set({ startsAt: new Date(), employeeId: null, companyId: this.locationContext.selectedLocationId() });
+    this.newBreakInitial.set({ startsAt: new Date(), employeeId: null, companyId: this.companyContext.selectedCompanyId() });
     this.newBreakVisible.set(true);
   }
 
@@ -216,9 +216,9 @@ export class TodayComponent {
       .subscribe((result) => this.activeServices.set(result.items));
   }
 
-  private loadActiveLocations(): void {
-    this.locationsService
+  private loadActiveCompanies(): void {
+    this.companiesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeLocations.set(result.items));
+      .subscribe((result) => this.activeCompanies.set(result.items));
   }
 }

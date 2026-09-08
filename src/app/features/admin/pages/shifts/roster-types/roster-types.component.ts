@@ -7,7 +7,6 @@ import { finalize } from 'rxjs';
 import { RosterTypeDto } from '../../../../../core/models/roster.model';
 import { RosterTypesService } from '../../../../../core/services/roster-types.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
-import { ColorSwatchComponent } from '../../../../../shared/components/color-swatch/color-swatch.component';
 import { ListToolbarComponent } from '../../../../../shared/components/list-toolbar/list-toolbar.component';
 import { StatusTagComponent } from '../../../../../shared/components/status-tag/status-tag.component';
 import { RosterTypeFormDialogComponent } from './roster-type-form-dialog.component';
@@ -26,7 +25,6 @@ const DEFAULT_PAGE_SIZE = 20;
     TranslatePipe,
     ListToolbarComponent,
     StatusTagComponent,
-    ColorSwatchComponent,
     RosterTypeFormDialogComponent,
   ],
   templateUrl: './roster-types.component.html',

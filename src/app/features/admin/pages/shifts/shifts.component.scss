@@ -1,0 +1,48 @@
+.shifts-page {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0 0 1rem;
+}
+
+:host ::ng-deep {
+  .shifts-page__tabs {
+    display: block;
+    overflow: hidden;
+  }
+
+  .shifts-page__tabs .p-tablist {
+    border-bottom: 1px solid var(--rose-border);
+    background: var(--surface-card);
+  }
+
+  .shifts-page__tabs .p-tablist-content {
+    background: var(--surface-card);
+  }
+
+  .shifts-page__tabs .p-tab {
+    gap: 0.45rem;
+    padding: 0.5rem 0.75rem;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: transparent;
+    color: var(--ink-secondary);
+    font-family: var(--font-body);
+    font-size: 0.82rem;
+    font-weight: 600;
+  }
+
+  .shifts-page__tabs .p-tab.p-tab-active {
+    border-bottom-color: var(--teal);
+    color: var(--teal-dark);
+  }
+
+  .shifts-page__tabs .p-tabpanels {
+    padding: 0.65rem 0.65rem 0.75rem;
+    background: var(--surface-page);
+  }
+
+  .shifts-page__tabs .p-tabpanel {
+    background: transparent;
+  }
+}

@@ -15,11 +15,11 @@ import { finalize } from 'rxjs';
 import { ClientTagDto } from '../../../../../core/models/client-tag.model';
 import { ClientDto, ClientUpsertRequest } from '../../../../../core/models/client.model';
 import { EmployeeDirectoryDto } from '../../../../../core/models/employee.model';
-import { LocationDto } from '../../../../../core/models/location.model';
+import { CompanyDto } from '../../../../../core/models/company.model';
 import { ClientTagsService } from '../../../../../core/services/client-tags.service';
 import { ClientsService } from '../../../../../core/services/clients.service';
 import { EmployeesService } from '../../../../../core/services/employees.service';
-import { LocationsService } from '../../../../../core/services/locations.service';
+import { CompaniesService } from '../../../../../core/services/companies.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { toStartOfDayIso } from '../../../../../core/utils/date.util';
 import { translationReadySignal } from '../../../../../core/utils/translation-signal.util';
@@ -32,7 +32,7 @@ import { ClientPackagesTabComponent } from './client-packages-tab.component';
 const NEW_ID = 'new';
 
 /** pageSize max is 200 - fetches the full active set in one page for the
- * location/trainer/tag pickers. */
+ * company/trainer/tag pickers. */
 const LOOKUP_PAGE_SIZE = 200;
 
 export interface ClientRefOption {
@@ -94,7 +94,7 @@ function gdprConsentDateValidator(group: AbstractControl): ValidationErrors | nu
 export class ClientFormComponent {
   private readonly fb = inject(FormBuilder);
   private readonly clientsService = inject(ClientsService);
-  private readonly locationsService = inject(LocationsService);
+  private readonly companiesService = inject(CompaniesService);
   private readonly employeesService = inject(EmployeesService);
   private readonly clientTagsService = inject(ClientTagsService);
   private readonly notifications = inject(NotificationService);
@@ -116,25 +116,25 @@ export class ClientFormComponent {
   readonly isAnonymized = computed(() => this.loadedClient()?.isAnonymized ?? false);
   readonly noShowCount = computed(() => this.loadedClient()?.noShowCount ?? 0);
 
-  readonly activeLocations = signal<LocationDto[]>([]);
+  readonly activeCompanies = signal<CompanyDto[]>([]);
   readonly activeEmployees = signal<EmployeeDirectoryDto[]>([]);
   readonly activeTags = signal<ClientTagDto[]>([]);
 
-  /** Home location/trainer/tags the client being edited already has, even if
+  /** Home company/trainer/tags the client being edited already has, even if
    * since deactivated - kept visible in their picker (with a badge) instead of
    * silently dropped, same pattern as EmployeeFormComponent. Unlike Zaposlenici
    * there's no activity check on save either way - this is purely a display
    * nicety, not a validation concern. */
-  private readonly loadedHomeLocation = signal<ClientRefOption | null>(null);
+  private readonly loadedHomeCompany = signal<ClientRefOption | null>(null);
   private readonly loadedHomeTrainer = signal<ClientRefOption | null>(null);
   private readonly loadedTags = signal<ClientTagOption[]>([]);
 
   private readonly translationsReady = translationReadySignal(this.translate);
 
-  readonly homeLocationOptions = computed<ClientRefOption[]>(() =>
+  readonly homeCompanyOptions = computed<ClientRefOption[]>(() =>
     this.mergeOptions(
-      this.activeLocations().map((location) => ({ id: location.id, name: location.name })),
-      this.loadedHomeLocation() ? [this.loadedHomeLocation()!] : [],
+      this.activeCompanies().map((company) => ({ id: company.id, name: company.name })),
+      this.loadedHomeCompany() ? [this.loadedHomeCompany()!] : [],
     ),
   );
 
@@ -167,7 +167,7 @@ export class ClientFormComponent {
       email: ['', [Validators.maxLength(255), Validators.email]],
       note: [''],
       healthNote: [''],
-      homeLocationId: this.fb.control<string | null>(null),
+      homeCompanyId: this.fb.control<string | null>(null),
       homeTrainerId: this.fb.control<string | null>(null),
       tagIds: this.fb.nonNullable.control<string[]>([]),
       gdprConsentGiven: [false],
@@ -181,7 +181,7 @@ export class ClientFormComponent {
     const id = idParam && idParam !== NEW_ID ? idParam : null;
     this.editingId.set(id);
 
-    this.loadActiveLocations();
+    this.loadActiveCompanies();
     this.loadActiveEmployees();
     this.loadActiveTags();
 
@@ -248,7 +248,7 @@ export class ClientFormComponent {
       healthNote: raw.healthNote || null,
       gdprConsentGiven: raw.gdprConsentGiven,
       gdprConsentDate: raw.gdprConsentGiven && raw.gdprConsentDate ? toStartOfDayIso(raw.gdprConsentDate) : null,
-      homeCompanyId: raw.homeLocationId || null,
+      homeCompanyId: raw.homeCompanyId || null,
       homeTrainerId: raw.homeTrainerId || null,
       tagIds: raw.tagIds,
     };
@@ -258,10 +258,10 @@ export class ClientFormComponent {
     this.clientsService.getNextMemberNumber().subscribe((next) => this.form.controls.memberNumber.setValue(next));
   }
 
-  private loadActiveLocations(): void {
-    this.locationsService
+  private loadActiveCompanies(): void {
+    this.companiesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeLocations.set(result.items));
+      .subscribe((result) => this.activeCompanies.set(result.items));
   }
 
   /** GET /api/employees/directory, not getPage()/`/api/employees` - only feeds
@@ -293,7 +293,7 @@ export class ClientFormComponent {
 
   private applyClient(client: ClientDto): void {
     this.loadedClient.set(client);
-    this.loadedHomeLocation.set(
+    this.loadedHomeCompany.set(
       client.homeCompanyId ? { id: client.homeCompanyId, name: client.homeCompanyName ?? '' } : null,
     );
     this.loadedHomeTrainer.set(
@@ -312,7 +312,7 @@ export class ClientFormComponent {
         email: client.email ?? '',
         note: client.note ?? '',
         healthNote: client.healthNote ?? '',
-        homeLocationId: client.homeCompanyId ?? null,
+        homeCompanyId: client.homeCompanyId ?? null,
         homeTrainerId: client.homeTrainerId ?? null,
         tagIds: client.tags.map((tag) => tag.tagId),
         gdprConsentGiven: client.gdprConsentGiven,

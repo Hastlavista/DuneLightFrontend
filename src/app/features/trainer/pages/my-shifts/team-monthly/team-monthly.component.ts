@@ -4,7 +4,7 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
 import { finalize } from 'rxjs';
-import { LocationDto } from '../../../../../core/models/location.model';
+import { CompanyDto } from '../../../../../core/models/company.model';
 import {
   RosterDayEntryDto,
   RosterDaySource,
@@ -23,7 +23,7 @@ import {
   todayDayOfMonth,
 } from '../roster-month.util';
 
-interface LocationOption {
+interface CompanyOption {
   label: string;
   value: string | null;
 }
@@ -52,7 +52,7 @@ export interface TeamMonthlyCellClickEvent {
 
 /**
  * Ekran 2 - employees (retci) x dani mjeseca (stupci). Self-contained: owns
- * its own month navigation and location filter, fetches
+ * its own month navigation and company filter, fetches
  * GET /roster/team-monthly directly (same "dumb grid vs. self-fetching
  * component" spectrum as ScheduleWeekGridComponent - this one is closer to
  * self-fetching since there's no absolute-positioned time axis to keep
@@ -72,12 +72,12 @@ export class TeamMonthlyComponent {
 
   readonly currentEmployeeId = input<string | null>(null);
   readonly isAdmin = input.required<boolean>();
-  readonly activeLocations = input<LocationDto[]>([]);
+  readonly activeCompanies = input<CompanyDto[]>([]);
 
   readonly cellClick = output<TeamMonthlyCellClickEvent>();
 
   readonly yearMonth = signal<YearMonth>(currentYearMonth());
-  readonly locationId = signal<string | null>(null);
+  readonly companyId = signal<string | null>(null);
   readonly employees = signal<TeamMonthlyEmployeeDto[]>([]);
   readonly loading = signal(false);
 
@@ -88,9 +88,9 @@ export class TeamMonthlyComponent {
     Array.from({ length: daysInMonth(this.yearMonth().year, this.yearMonth().month) }, (_, i) => i + 1),
   );
 
-  readonly locationOptions = computed<LocationOption[]>(() => [
-    { label: this.translate.instant('ROSTER.TEAM_MONTHLY.ALL_LOCATIONS'), value: null },
-    ...this.activeLocations().map((location) => ({ label: location.name, value: location.id })),
+  readonly companyOptions = computed<CompanyOption[]>(() => [
+    { label: this.translate.instant('ROSTER.TEAM_MONTHLY.ALL_COMPANIES'), value: null },
+    ...this.activeCompanies().map((company) => ({ label: company.name, value: company.id })),
   ]);
 
   constructor() {
@@ -112,8 +112,8 @@ export class TeamMonthlyComponent {
     this.fetch();
   }
 
-  onLocationChange(value: string | null): void {
-    this.locationId.set(value);
+  onCompanyChange(value: string | null): void {
+    this.companyId.set(value);
     this.fetch();
   }
 
@@ -205,7 +205,7 @@ export class TeamMonthlyComponent {
   private fetch(): void {
     this.loading.set(true);
     this.rosterEntriesService
-      .teamMonthly({ year: this.yearMonth().year, month: this.yearMonth().month, companyId: this.locationId() })
+      .teamMonthly({ year: this.yearMonth().year, month: this.yearMonth().month, companyId: this.companyId() })
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe((result) => this.employees.set(result.employees));
   }

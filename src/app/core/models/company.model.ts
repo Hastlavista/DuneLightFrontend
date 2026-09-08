@@ -1,14 +1,12 @@
-/** GET /api/catalog/companies/{id} and the items of its paged list (backend
- * route/entity is "Company" - kept named Location on the frontend since the
- * user-facing concept and screen stay "Lokacije"). */
-export interface LocationDto {
+/** GET /api/catalog/companies/{id} and the items of its paged list. */
+export interface CompanyDto {
   id: string;
   name: string;
   address: string | null;
   phone: string | null;
   colorHex: string | null;
   /** ISO 3166-1 alpha-2 (e.g. "HR") - drives which holiday catalog "Generiraj
-   * standardne praznike" resolves for this location, see CompanyHolidayDto. */
+   * standardne praznike" resolves for this company, see CompanyHolidayDto. */
   country: string;
   isActive: boolean;
   note: string | null;
@@ -22,7 +20,7 @@ export interface LocationDto {
 /** Body for both POST /api/catalog/companies and PUT /api/catalog/companies/{id} -
  * the two requests are identical; `isActive` is never sent, it has its own
  * activate/deactivate endpoints. */
-export interface LocationUpsertRequest {
+export interface CompanyUpsertRequest {
   name: string;
   address: string | null;
   phone: string | null;
@@ -32,12 +30,12 @@ export interface LocationUpsertRequest {
   sortOrder: number;
 }
 
-/** Minimal shape the global location switcher (topbar) needs. */
-export interface StudioLocation {
+/** Minimal shape the global company switcher (topbar) needs. */
+export interface StudioCompany {
   id: string;
   name: string;
 }
 
-export function toStudioLocation(dto: LocationDto): StudioLocation {
+export function toStudioCompany(dto: CompanyDto): StudioCompany {
   return { id: dto.id, name: dto.name };
 }

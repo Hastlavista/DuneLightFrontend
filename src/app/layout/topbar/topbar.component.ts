@@ -1,25 +1,27 @@
 import { Component, computed, inject, input, output } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { RouterLink, RouterLinkActive } from '@angular/router';
+import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Select } from 'primeng/select';
+import { Popover } from 'primeng/popover';
 import { AuthService } from '../../core/auth/auth.service';
-import { LocationContextService } from '../../core/services/location-context.service';
+import { CompanyContextService } from '../../core/services/company-context.service';
+import { CurrentEmployeeService } from '../../core/services/current-employee.service';
 
-interface LocationOption {
+interface CompanyOption {
   label: string;
   value: string | null;
 }
 
 @Component({
   selector: 'app-topbar',
-  imports: [RouterLink, RouterLinkActive, FormsModule, Select, TranslatePipe],
+  imports: [RouterLink, RouterLinkActive, TranslatePipe, Popover],
   templateUrl: './topbar.component.html',
   styleUrl: './topbar.component.scss',
 })
 export class TopbarComponent {
   private readonly authService = inject(AuthService);
-  private readonly locationContextService = inject(LocationContextService);
+  private readonly companyContextService = inject(CompanyContextService);
+  private readonly currentEmployeeService = inject(CurrentEmployeeService);
+  private readonly router = inject(Router);
   private readonly translate = inject(TranslateService);
 
   readonly section = input.required<'admin' | 'trainer'>();
@@ -27,17 +29,65 @@ export class TopbarComponent {
   readonly menuToggle = output<void>();
 
   readonly isAdmin = computed(() => this.authService.currentRole() === 'Admin');
+  readonly basePath = computed(() => (this.section() === 'admin' ? '/admin' : '/app'));
 
-  readonly locationOptions = computed<LocationOption[]>(() => [
-    { label: this.translate.instant('LAYOUT.TOPBAR.ALL_LOCATIONS'), value: null },
-    ...this.locationContextService
-      .locations()
-      .map((location) => ({ label: location.name, value: location.id })),
+  readonly user = this.authService.currentUser;
+  readonly employee = this.currentEmployeeService.employee;
+
+  readonly displayName = computed(() => {
+    const employee = this.employee();
+    if (employee) {
+      return `${employee.firstName} ${employee.lastName}`.trim();
+    }
+    return this.user()?.email ?? '';
+  });
+
+  readonly email = computed(() => this.user()?.email ?? '');
+
+  readonly initials = computed(() => {
+    const employee = this.employee();
+    if (employee) {
+      return `${employee.firstName.charAt(0)}${employee.lastName.charAt(0)}`.toUpperCase();
+    }
+    const email = this.user()?.email ?? '';
+    return email.slice(0, 2).toUpperCase();
+  });
+
+  readonly avatarColor = computed(() => this.employee()?.colorHex || 'var(--teal)');
+
+  readonly companyOptions = computed<CompanyOption[]>(() => [
+    { label: this.translate.instant('LAYOUT.TOPBAR.ALL_COMPANIES'), value: null },
+    ...this.companyContextService
+      .companies()
+      .map((company) => ({ label: company.name, value: company.id })),
   ]);
 
-  readonly selectedLocationId = this.locationContextService.selectedLocationId;
+  readonly selectedCompanyId = this.companyContextService.selectedCompanyId;
 
-  onLocationChange(locationId: string | null): void {
-    this.locationContextService.selectLocation(locationId);
+  onCompanyChange(companyId: string | null): void {
+    this.companyContextService.selectCompany(companyId);
+  }
+
+  openProfile(): void {
+    this.router.navigate([this.basePath(), 'profile']);
+  }
+
+  openAccountSettings(): void {
+    this.openProfile();
+  }
+
+  logout(): void {
+    this.endSession();
+    this.router.navigate(['/login'], { queryParams: { mode: 'full' } });
+  }
+
+  switchUser(): void {
+    this.endSession();
+    this.router.navigate(['/login']);
+  }
+
+  private endSession(): void {
+    this.authService.logout();
+    this.currentEmployeeService.clear();
   }
 }

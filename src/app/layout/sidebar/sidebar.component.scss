@@ -2,51 +2,36 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--paper-2);
-  color: var(--clay);
-  border-right: 1px solid var(--sand);
+  background: #DBD1D3;
+  color: var(--ink);
+  border-right: 1px solid var(--rose-border-strong);
 
   &--admin {
-    background: linear-gradient(180deg, var(--clay) 0%, #5a2f2b 100%);
-    color: var(--paper);
-    border-right-color: var(--clay-2);
+    background: #DBD1D3;
+    color: var(--ink);
+    border-right-color: var(--rose-border-strong);
 
     .sidebar__brand-name {
-      color: var(--paper);
+      color: var(--ink);
     }
 
     .sidebar__nav-item {
-      color: var(--paper-2);
+      color: var(--ink);
 
       &:hover {
-        background: rgba(251, 246, 231, 0.08);
+        background: rgba(255, 255, 255, 0.38);
       }
 
       &--active {
-        background: linear-gradient(135deg, var(--gold), var(--ochre));
-        color: var(--clay);
+        background: var(--mint-light);
+        color: var(--teal-dark);
       }
     }
 
-    .sidebar__user {
-      border-top-color: var(--clay-2);
+    .sidebar__nav-group-label {
+      color: var(--ink-sidebar);
     }
 
-    .sidebar__user-name {
-      color: var(--paper);
-    }
-
-    .sidebar__user-role {
-      color: var(--sand);
-    }
-
-    .sidebar__logout {
-      color: var(--paper-2);
-
-      &:hover {
-        color: var(--gold);
-      }
-    }
   }
 }
 
@@ -54,7 +39,7 @@
   display: flex;
   align-items: center;
   gap: 0.625rem;
-  padding: 1.25rem 1.25rem 1rem;
+  padding: 1.5rem 1.5rem 1.15rem;
 }
 
 .sidebar__brand-mark {
@@ -63,9 +48,9 @@
   justify-content: center;
   width: 2.25rem;
   height: 2.25rem;
-  border-radius: 10px;
-  background: linear-gradient(135deg, var(--gold), var(--ochre));
-  color: var(--clay);
+  border-radius: 9px;
+  background: var(--ink);
+  color: #FFFFFF;
   font-family: var(--font-heading);
   font-weight: 700;
   font-size: 0.95rem;
@@ -74,27 +59,53 @@
 .sidebar__brand-name {
   font-family: var(--font-heading);
   font-weight: 600;
-  font-size: 1.15rem;
-  color: var(--clay);
+  font-size: 1.12rem;
+  color: var(--ink);
+}
+
+/* Organization logo replaces the DL mark+name when branding is set. On the dark
+   admin sidebar we can't assume contrast, so give it a soft light backing the
+   way the plain text/nav do. */
+.sidebar__brand-logo {
+  max-height: 2rem;
+  max-width: 9rem;
+  object-fit: contain;
 }
 
 .sidebar__nav {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 0.125rem;
-  padding: 0.5rem 0.75rem;
+  gap: 0.875rem;
+  padding: 0.25rem 1rem 0.9rem;
   overflow-y: auto;
+  scrollbar-color: #FFFFFF transparent;
+  scrollbar-width: thin;
+}
+
+.sidebar__nav-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+.sidebar__nav-group-label {
+  padding: 0.85rem 0.5rem 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  text-transform: uppercase;
+  color: var(--ink-sidebar);
 }
 
 .sidebar__nav-item {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.6rem 0.75rem;
-  border-radius: 10px;
+  padding: 0.62rem 0.75rem;
+  border-radius: 8px;
   text-decoration: none;
-  color: var(--clay);
+  color: var(--ink);
   font-size: 0.9rem;
   font-weight: 500;
   transition: background-color 0.15s ease;
@@ -106,109 +117,13 @@
   }
 
   &:hover {
-    background: var(--sand);
+    background: rgba(255, 255, 255, 0.38);
   }
 
   &--active {
-    background: linear-gradient(135deg, var(--gold), var(--ochre));
-    color: var(--clay);
+    background: var(--mint-light);
+    color: var(--teal-dark);
     font-weight: 600;
   }
 }
 
-.sidebar__user {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 1rem 1.25rem;
-  border-top: 1px solid var(--sand);
-}
-
-.sidebar__avatar {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 50%;
-  color: var(--clay);
-  font-weight: 600;
-  font-size: 0.8rem;
-}
-
-.sidebar__user-info {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
-  flex: 1;
-}
-
-.sidebar__user-name {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--clay);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.sidebar__user-role {
-  font-size: 0.75rem;
-  color: var(--olive-gold);
-}
-
-.sidebar__logout {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 2rem;
-  height: 2rem;
-  border: none;
-  background: transparent;
-  color: var(--clay-2);
-  border-radius: 8px;
-  cursor: pointer;
-
-  &:hover {
-    color: var(--red);
-    background: rgba(195, 38, 36, 0.08);
-  }
-}
-
-.sidebar__user-menu {
-  display: flex;
-  flex-direction: column;
-  min-width: 11rem;
-}
-
-.sidebar__user-menu-item {
-  display: flex;
-  align-items: center;
-  gap: 0.625rem;
-  padding: 0.55rem 0.75rem;
-  border: none;
-  background: transparent;
-  border-radius: 8px;
-  color: var(--clay);
-  font-size: 0.85rem;
-  font-weight: 500;
-  text-align: left;
-  cursor: pointer;
-
-  i {
-    font-size: 0.9rem;
-    width: 1rem;
-    text-align: center;
-  }
-
-  &:hover {
-    background: var(--sand);
-  }
-
-  &:last-child:hover {
-    color: var(--red);
-    background: rgba(195, 38, 36, 0.08);
-  }
-}

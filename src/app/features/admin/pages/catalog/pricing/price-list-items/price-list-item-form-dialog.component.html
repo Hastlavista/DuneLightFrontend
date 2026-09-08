@@ -61,13 +61,13 @@
     }
 
     <div class="dl-form__field">
-      <label for="price-list-location">{{ 'CATALOG.PRICING.FIELD_LOCATION' | translate }}</label>
+      <label for="price-list-company">{{ 'CATALOG.PRICING.FIELD_COMPANY' | translate }}</label>
       <p-select
-        id="price-list-location"
+        id="price-list-company"
         fluid
         appendTo="body"
-        formControlName="locationId"
-        [options]="locationOptions()"
+        formControlName="companyId"
+        [options]="companyOptions()"
         optionLabel="label"
         optionValue="value"
       />

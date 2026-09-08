@@ -4,14 +4,17 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  background: var(--paper);
+  background: var(--surface-page);
   padding: 1.5rem;
 }
 
 .login-card {
   width: 100%;
   max-width: 380px;
-  padding: 2.25rem 2rem;
+  padding: 2rem 1.8rem;
+  background: #FFFFFF;
+  border-color: var(--rose-border);
+  box-shadow: var(--shadow-card);
 }
 
 .login-card__brand {
@@ -29,8 +32,8 @@
   width: 3rem;
   height: 3rem;
   border-radius: 12px;
-  background: linear-gradient(135deg, var(--gold), var(--ochre));
-  color: var(--clay);
+  background: var(--teal);
+  color: #FFFFFF;
   font-family: var(--font-heading);
   font-weight: 700;
   font-size: 1.25rem;
@@ -40,7 +43,15 @@
   font-family: var(--font-heading);
   font-weight: 600;
   font-size: 1.4rem;
-  color: var(--clay);
+  color: var(--ink);
+}
+
+/* Organization logo replaces the DL mark when branding is set - keep it
+   contained within the brand column (space reserved for mark+name above). */
+.login-card__logo {
+  max-width: 180px;
+  max-height: 4.5rem;
+  object-fit: contain;
 }
 
 .login-form {
@@ -57,7 +68,7 @@
   label {
     font-size: 0.85rem;
     font-weight: 500;
-    color: var(--clay-2);
+    color: var(--ink);
   }
 }
 
@@ -69,8 +80,8 @@
 .login-form__server-error {
   padding: 0.625rem 0.75rem;
   border-radius: 10px;
-  background: rgba(195, 38, 36, 0.08);
-  border: 1px solid rgba(195, 38, 36, 0.25);
+  background: rgba(142, 58, 74, 0.08);
+  border: 1px solid rgba(142, 58, 74, 0.25);
   color: var(--red);
   font-size: 0.85rem;
 }
@@ -78,12 +89,12 @@
 .login-page__switch {
   margin-top: 1.5rem;
   font-size: 0.85rem;
-  color: var(--clay-2);
+  color: var(--rose-text);
 }
 
 .login-page__switch-link {
   margin-left: 0.35rem;
-  color: var(--ochre);
+  color: var(--teal);
   font-weight: 600;
   text-decoration: none;
 
@@ -111,7 +122,7 @@
   text-align: center;
   font-family: var(--font-heading);
   font-size: 1.1rem;
-  color: var(--clay);
+  color: var(--ink);
 }
 
 .chooser__list {
@@ -121,12 +132,14 @@
 }
 
 .chooser-item {
-  border: 1px solid var(--sand);
+  border: 1px solid var(--rose-border);
   border-radius: 12px;
   overflow: hidden;
+  background: var(--surface-card);
 
   &--active {
-    border-color: var(--ochre);
+    border-color: var(--rose-border-strong);
+    box-shadow: 0 8px 18px -16px rgba(46, 50, 60, 0.16);
   }
 }
 
@@ -137,12 +150,12 @@
   width: 100%;
   padding: 0.75rem 0.9rem;
   border: none;
-  background: var(--paper);
+  background: var(--surface-card);
   cursor: pointer;
   text-align: left;
 
   &:hover {
-    background: var(--sand);
+    background: var(--surface-soft);
   }
 }
 
@@ -154,7 +167,7 @@
   width: 2.25rem;
   height: 2.25rem;
   border-radius: 50%;
-  color: var(--clay);
+  color: var(--ink);
   font-weight: 600;
   font-size: 0.8rem;
 }
@@ -163,7 +176,7 @@
   flex: 1;
   font-size: 0.9rem;
   font-weight: 600;
-  color: var(--clay);
+  color: var(--ink);
 }
 
 .chooser-item__remove {
@@ -175,13 +188,13 @@
   height: 1.75rem;
   border: none;
   background: transparent;
-  color: var(--clay-2);
+  color: var(--ink-muted);
   border-radius: 6px;
   cursor: pointer;
 
   &:hover {
     color: var(--red);
-    background: rgba(195, 38, 36, 0.08);
+    background: rgba(142, 58, 74, 0.08);
   }
 }
 

@@ -102,6 +102,8 @@ export interface GroupDto {
   capacity: number;
   defaultTrainerId: string | null;
   defaultTrainerName: string | null;
+  defaultRoomId: string | null;
+  defaultRoomName: string | null;
   isActive: boolean;
   note: string | null;
   slots: GroupSlotDto[];
@@ -131,6 +133,10 @@ export interface GroupCreateRequest {
   companyId: string;
   capacity: number;
   defaultTrainerId: string | null;
+  /** Prostorije suggestion - snapshotted onto each appointment generated from
+   * this group (Appointment.RoomId), not re-resolved later, so changing it
+   * here doesn't retroactively touch already-generated termini. */
+  defaultRoomId: string | null;
   note: string | null;
   slots: GroupSlotRequest[];
 }
@@ -144,6 +150,7 @@ export interface GroupUpdateRequest {
   companyId: string;
   capacity: number;
   defaultTrainerId: string | null;
+  defaultRoomId: string | null;
   note: string | null;
 }
 

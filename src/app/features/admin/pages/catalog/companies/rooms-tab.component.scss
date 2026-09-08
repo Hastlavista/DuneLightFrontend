@@ -1,8 +1,8 @@
-.locations-page {
-  padding: 1.25rem;
+.rooms-tab {
+  padding: 0 0 1rem;
 
   &__actions-col {
-    width: 8rem;
+    width: 7rem;
   }
 
   &__actions {
@@ -19,6 +19,6 @@
   &__empty {
     text-align: center;
     padding: 2rem 0;
-    color: var(--olive-gold);
+    color: var(--ink-muted);
   }
 }

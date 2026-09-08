@@ -2,27 +2,25 @@ import { Component, computed, effect, inject, input, model, output, signal } fro
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
-import { ColorPicker } from 'primeng/colorpicker';
 import { Dialog } from 'primeng/dialog';
-import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { Textarea } from 'primeng/textarea';
 import { finalize } from 'rxjs';
-import { LocationDto, LocationUpsertRequest } from '../../../../../core/models/location.model';
+import { CompanyDto, CompanyUpsertRequest } from '../../../../../core/models/company.model';
 import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
-import { LocationsService } from '../../../../../core/services/locations.service';
+import { CompaniesService } from '../../../../../core/services/companies.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { WorkingHoursTemplateEditorComponent } from '../../../../../shared/components/working-hours-template-editor/working-hours-template-editor.component';
 import { CompanyHolidaysTabComponent } from './company-holidays-tab.component';
+import { RoomsTabComponent } from './rooms-tab.component';
 
-/** Olive-gold from the dune palette - a sensible default when creating a new
- * location, before the user picks their own color. */
-const DEFAULT_COLOR_NO_HASH = '8F7A45';
+const DEFAULT_COLOR_NO_HASH = '0D5C63';
+const COMPANY_COLORS = ['0D5C63', '128089', '8E3A4A', '7A5D61', '545863', 'A8DCBE'];
 
 /** ISO 3166-1 alpha-2 - a short, non-exhaustive list is enough here, not a
- * full country picker. A location whose actual country is missing from this
+ * full country picker. A company whose actual country is missing from this
  * list just falls back to manual holiday entry - see
  * CompanyHolidaysTabComponent's HOLIDAY_CATALOG_NOT_DEFINED_FOR_COUNTRY hint. */
 const COUNTRY_OPTIONS = [
@@ -36,14 +34,12 @@ const COUNTRY_OPTIONS = [
 ];
 
 @Component({
-  selector: 'app-location-form-dialog',
+  selector: 'app-company-form-dialog',
   imports: [
     Dialog,
     ReactiveFormsModule,
     InputText,
     Textarea,
-    InputNumber,
-    ColorPicker,
     Select,
     Button,
     Tabs,
@@ -54,46 +50,48 @@ const COUNTRY_OPTIONS = [
     TranslatePipe,
     WorkingHoursTemplateEditorComponent,
     CompanyHolidaysTabComponent,
+    RoomsTabComponent,
   ],
-  templateUrl: './location-form-dialog.component.html',
+  templateUrl: './company-form-dialog.component.html',
 })
-export class LocationFormDialogComponent {
+export class CompanyFormDialogComponent {
   private readonly fb = inject(FormBuilder);
-  private readonly locationsService = inject(LocationsService);
+  private readonly companiesService = inject(CompaniesService);
   private readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
 
   readonly visible = model(false);
-  readonly location = input<LocationDto | null>(null);
+  readonly company = input<CompanyDto | null>(null);
   readonly saved = output<void>();
 
   readonly saving = signal(false);
-  readonly isEditMode = computed(() => this.location() !== null);
-  readonly activeTab = signal<'data' | 'workingHours' | 'holidays'>('data');
+  readonly isEditMode = computed(() => this.company() !== null);
+  readonly activeTab = signal<'data' | 'workingHours' | 'holidays' | 'rooms'>('data');
 
   readonly countryOptions = COUNTRY_OPTIONS;
+  readonly colorOptions = COMPANY_COLORS;
 
-  /** Id of a location created during this dialog's current create-mode
+  /** Id of a company created during this dialog's current create-mode
    * session - lets the "Radno vrijeme" tab unlock immediately after "Podaci"
-   * creates the location, same wizard mechanism as
-   * EmployeeFormComponent.editingId (see its own doc): a brand-new location
+   * creates the company, same wizard mechanism as
+   * EmployeeFormComponent.editingId (see its own doc): a brand-new company
    * has no id for the working-hours endpoint until this fires. */
-  readonly createdLocationId = signal<string | null>(null);
+  readonly createdCompanyId = signal<string | null>(null);
 
-  readonly currentLocationId = computed(() => this.location()?.id ?? this.createdLocationId());
+  readonly currentCompanyId = computed(() => this.company()?.id ?? this.createdCompanyId());
 
-  /** True once "Podaci" has created the location within this open dialog
+  /** True once "Podaci" has created the company within this open dialog
    * session - drives the forced tab-advance to "Radno vrijeme" and the
    * "Spremi i nastavi" button label, same as
    * EmployeeFormComponent.justCreatedInWizard. A plain edit of an
-   * already-existing location never sets this - both tabs are simply usable
+   * already-existing company never sets this - both tabs are simply usable
    * independently from the moment the dialog opens. */
   readonly justCreatedInWizard = signal(false);
 
   /** roster.templates is its own grant, independent of catalog.companies.manage
    * (see WorkingHoursTemplateEditorComponent's own doc) - hide the tab
-   * entirely for a user with neither, same as LocationsComponent's own
+   * entirely for a user with neither, same as CompaniesComponent's own
    * canViewWorkingHours (that one still gates the now-removed standalone
    * dialog's entry point in the row actions). */
   readonly canViewWorkingHours = computed(() =>
@@ -106,12 +104,17 @@ export class LocationFormDialogComponent {
     this.currentEmployeeService.hasAnyGrant(['roster.templates.view', 'roster.templates.manage']),
   );
 
+  /** catalog.rooms.view/.manage - its own grant, independent of the tabs above. */
+  readonly canViewRooms = computed(() =>
+    this.currentEmployeeService.hasAnyGrant(['catalog.rooms.view', 'catalog.rooms.manage']),
+  );
+
   readonly dataSaveLabelKey = computed(() =>
-    this.currentLocationId() ? 'COMMON.SAVE' : 'CATALOG.LOCATIONS.SAVE_AND_CONTINUE',
+    this.currentCompanyId() ? 'COMMON.SAVE' : 'CATALOG.COMPANIES.SAVE_AND_CONTINUE',
   );
 
   readonly workingHoursSaveLabelKey = computed(() =>
-    this.justCreatedInWizard() ? 'CATALOG.LOCATIONS.SAVE_AND_FINISH' : 'COMMON.SAVE',
+    this.justCreatedInWizard() ? 'CATALOG.COMPANIES.SAVE_AND_FINISH' : 'COMMON.SAVE',
   );
 
   readonly form = this.fb.nonNullable.group({
@@ -128,9 +131,9 @@ export class LocationFormDialogComponent {
     effect(() => {
       if (this.visible()) {
         this.activeTab.set('data');
-        this.createdLocationId.set(null);
+        this.createdCompanyId.set(null);
         this.justCreatedInWizard.set(false);
-        this.resetForm(this.location());
+        this.resetForm(this.company());
       }
     });
   }
@@ -142,7 +145,7 @@ export class LocationFormDialogComponent {
     }
 
     const raw = this.form.getRawValue();
-    const request: LocationUpsertRequest = {
+    const request: CompanyUpsertRequest = {
       name: raw.name,
       address: raw.address || null,
       phone: raw.phone || null,
@@ -152,24 +155,24 @@ export class LocationFormDialogComponent {
       sortOrder: raw.sortOrder,
     };
 
-    const current = this.location();
+    const current = this.company();
     const request$ = current
-      ? this.locationsService.update(current.id, request)
-      : this.locationsService.create(request);
+      ? this.companiesService.update(current.id, request)
+      : this.companiesService.create(request);
 
     this.saving.set(true);
     request$.pipe(finalize(() => this.saving.set(false))).subscribe({
       next: (result) => {
         this.notifications.showSuccess(
-          this.translate.instant(current ? 'CATALOG.LOCATIONS.UPDATED' : 'CATALOG.LOCATIONS.CREATED'),
+          this.translate.instant(current ? 'CATALOG.COMPANIES.UPDATED' : 'CATALOG.COMPANIES.CREATED'),
         );
         if (current) {
           this.visible.set(false);
         } else if (this.canViewWorkingHours()) {
-          // New location, "Radno vrijeme" tab available - stay open and walk
+          // New company, "Radno vrijeme" tab available - stay open and walk
           // into it next, same wizard shape as EmployeeFormComponent (see
           // justCreatedInWizard's doc), instead of closing right away.
-          this.createdLocationId.set(result.id);
+          this.createdCompanyId.set(result.id);
           this.justCreatedInWizard.set(true);
           this.activeTab.set('workingHours');
         } else {
@@ -185,8 +188,33 @@ export class LocationFormDialogComponent {
     this.visible.set(false);
   }
 
+  selectColor(color: string): void {
+    this.form.controls.colorHex.setValue(color);
+  }
+
+  decrementSortOrder(): void {
+    this.form.controls.sortOrder.setValue(this.form.controls.sortOrder.value - 1);
+  }
+
+  incrementSortOrder(): void {
+    this.form.controls.sortOrder.setValue(this.form.controls.sortOrder.value + 1);
+  }
+
+  headerTitle(): string {
+    return this.translate.instant(this.isEditMode() ? 'CATALOG.COMPANIES.EDIT_TITLE' : 'CATALOG.COMPANIES.NEW_TITLE');
+  }
+
+  headerSubtitle(): string {
+    const name = this.form.controls.name.value.trim();
+    const address = this.form.controls.address.value.trim();
+    if (name && address) {
+      return `${name} · ${address}`;
+    }
+    return this.translate.instant('CATALOG.COMPANIES.MODAL_SUBTITLE');
+  }
+
   /** Only closes the dialog when working hours were saved as the last step of
-   * the new-location wizard - editing an existing location's hours is just a
+   * the new-company wizard - editing an existing company's hours is just a
    * self-contained tab save, no reason to close anything (see
    * justCreatedInWizard's doc). */
   onWorkingHoursSaved(): void {
@@ -195,15 +223,15 @@ export class LocationFormDialogComponent {
     }
   }
 
-  private resetForm(location: LocationDto | null): void {
+  private resetForm(company: CompanyDto | null): void {
     this.form.reset({
-      name: location?.name ?? '',
-      address: location?.address ?? '',
-      phone: location?.phone ?? '',
-      colorHex: location?.colorHex ? location.colorHex.replace('#', '') : DEFAULT_COLOR_NO_HASH,
-      country: location?.country ?? 'HR',
-      note: location?.note ?? '',
-      sortOrder: location?.sortOrder ?? 0,
+      name: company?.name ?? '',
+      address: company?.address ?? '',
+      phone: company?.phone ?? '',
+      colorHex: company?.colorHex ? company.colorHex.replace('#', '') : DEFAULT_COLOR_NO_HASH,
+      country: company?.country ?? 'HR',
+      note: company?.note ?? '',
+      sortOrder: company?.sortOrder ?? 0,
     });
   }
 }

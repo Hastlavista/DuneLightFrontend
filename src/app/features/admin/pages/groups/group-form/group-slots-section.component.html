@@ -20,7 +20,7 @@
     <ng-template pTemplate="body" let-slot>
       <tr>
         <td>{{ dayOfWeekTranslationKey(slot.dayOfWeek) | translate }}</td>
-        <td>{{ slot.startTime.slice(0, 5) }}</td>
+        <td>{{ timeOfDayLabel(slot.startTime, '—') }}</td>
         @if (!readOnly()) {
           <td class="group-slots-section__actions">
             <p-button

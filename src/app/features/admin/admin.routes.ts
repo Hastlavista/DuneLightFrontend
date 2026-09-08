@@ -19,10 +19,10 @@ export const ADMIN_ROUTES: Routes = [
     data: { titleKey: 'NAV.ADMIN.SHIFTS' },
   },
   {
-    path: 'locations',
+    path: 'companies',
     loadComponent: () =>
-      import('./pages/catalog/locations/locations.component').then((m) => m.LocationsComponent),
-    data: { titleKey: 'NAV.ADMIN.LOCATIONS' },
+      import('./pages/catalog/companies/companies.component').then((m) => m.CompaniesComponent),
+    data: { titleKey: 'NAV.ADMIN.COMPANIES' },
   },
   {
     path: 'clients',
@@ -88,6 +88,11 @@ export const ADMIN_ROUTES: Routes = [
     canActivate: [ownerGuard],
     loadComponent: () => import('./pages/permissions/permissions.component').then((m) => m.PermissionsComponent),
     data: { titleKey: 'NAV.ADMIN.PERMISSIONS' },
+  },
+  {
+    path: 'branding',
+    loadComponent: () => import('./pages/branding/branding.component').then((m) => m.BrandingComponent),
+    data: { titleKey: 'NAV.ADMIN.BRANDING' },
   },
   {
     // Same convention as 'employees/:id' - separate routed page, `:id` is

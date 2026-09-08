@@ -3,6 +3,16 @@
     <h2 class="onboarding-checklist__title">{{ 'DASHBOARD.ONBOARDING.TITLE' | translate }}</h2>
     <p class="onboarding-checklist__intro">{{ 'DASHBOARD.ONBOARDING.INTRO' | translate }}</p>
 
+    @if (organizationSlug()) {
+      <div class="onboarding-checklist__org-id">
+        <i class="pi pi-key"></i>
+        <div class="onboarding-checklist__org-id-text">
+          <strong>{{ 'DASHBOARD.ONBOARDING.ORG_ID_LABEL' | translate }}: {{ organizationSlug() }}</strong>
+          <span>{{ 'DASHBOARD.ONBOARDING.ORG_ID_DESC' | translate }}</span>
+        </div>
+      </div>
+    }
+
     <ol class="onboarding-checklist__list">
       @for (step of steps(); track step.id; let i = $index) {
         <li

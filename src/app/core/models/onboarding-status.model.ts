@@ -3,7 +3,7 @@
  * Every flag is a simple existence check within the caller's organization -
  * none of them consider whether the underlying record is active or inactive. */
 export interface OnboardingStatusDto {
-  hasLocation: boolean;
+  hasCompany: boolean;
   hasEngagementType: boolean;
   hasService: boolean;
   hasOwnerProfile: boolean;

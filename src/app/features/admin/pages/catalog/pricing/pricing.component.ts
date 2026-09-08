@@ -7,7 +7,7 @@ import { PriceListItemsComponent } from './price-list-items/price-list-items.com
 /**
  * "Cjenik" tab (inside "Usluge i cjenik" - see ServicesComponent for the parent
  * shell). Two sub-tabs: raw CRUD over price list rows ("Stavke cjenika") vs. the
- * read-only resolved view for a given location+date ("Trenutni cjenik").
+ * read-only resolved view for a given company+date ("Trenutni cjenik").
  */
 @Component({
   selector: 'app-admin-pricing',

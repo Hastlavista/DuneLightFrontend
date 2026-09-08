@@ -11,7 +11,7 @@ import { ServiceDto } from '../../../core/models/service.model';
     <div class="schedule-legend">
       @for (service of services(); track service.id) {
         <span class="schedule-legend__item">
-          <span class="schedule-legend__swatch" [style.background]="service.colorHex ?? '#c9b487'"></span>
+          <span class="schedule-legend__swatch" [style.background]="service.colorHex ?? '#C1A5A9'"></span>
           {{ service.name }}
         </span>
       }
@@ -22,14 +22,16 @@ import { ServiceDto } from '../../../core/models/service.model';
       display: flex;
       flex-wrap: wrap;
       gap: 0.25rem 1rem;
-      padding: 0 0.25rem;
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid var(--rose-border);
+      background: var(--surface-card);
 
       &__item {
         display: inline-flex;
         align-items: center;
         gap: 0.35rem;
         font-size: 0.8rem;
-        color: var(--clay-2);
+        color: var(--ink-muted);
       }
 
       &__swatch {
@@ -37,7 +39,7 @@ import { ServiceDto } from '../../../core/models/service.model';
         width: 0.7rem;
         height: 0.7rem;
         border-radius: 3px;
-        border: 1px solid var(--sand-deep);
+        border: 1px solid var(--rose-border-strong);
       }
     }
   `,

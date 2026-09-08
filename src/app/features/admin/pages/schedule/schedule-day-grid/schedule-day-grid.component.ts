@@ -8,13 +8,13 @@ import { AppointmentScheduleCellDto, AppointmentStatus } from '../../../../../co
 import { BirthdayDto } from '../../../../../core/models/client.model';
 import { CompanyHolidayDto } from '../../../../../core/models/company-holiday.model';
 import { EmployeeColumnEntry } from '../../../../../core/models/employee.model';
-import { LocationDto } from '../../../../../core/models/location.model';
+import { CompanyDto } from '../../../../../core/models/company.model';
 import { ScheduleBreakCellDto } from '../../../../../core/models/schedule-break.model';
 import { ServiceExecutionMode } from '../../../../../core/models/service.model';
 import { AppointmentsService } from '../../../../../core/services/appointments.service';
 import { ClientsService } from '../../../../../core/services/clients.service';
 import { CompanyHolidaysService } from '../../../../../core/services/company-holidays.service';
-import { LocationContextService } from '../../../../../core/services/location-context.service';
+import { CompanyContextService } from '../../../../../core/services/company-context.service';
 import { toEndOfDayIso, toStartOfDayIso } from '../../../../../core/utils/date.util';
 import { buildBirthdayLookup } from '../../../../../shared/components/schedule-grid/schedule-birthday.util';
 import { toScheduleBreakGridCell, toScheduleGridCell } from '../../../../../shared/components/schedule-grid/schedule-cell-view.util';
@@ -27,7 +27,7 @@ import {
   ScheduleGridColumn,
 } from '../../../../../shared/components/schedule-grid/schedule-grid.models';
 
-const DAY_COLUMN_WIDTH_PX = 170;
+const DAY_COLUMN_WIDTH_PX = 220;
 
 /** Consumed by ScheduleComponent to open NewAppointmentDialogComponent
  * prefilled with the clicked column/row - see ScheduleEmptySlotClickEvent. */
@@ -42,16 +42,17 @@ interface ScheduleFilters {
   executionMode: ServiceExecutionMode | null;
   service: string | null;
   companyId: string | null;
+  roomId: string | null;
 }
 
 /**
  * Grid A - one day x every trainer, the admin "Raspored" default view.
  * Trainer columns are the active employees, narrowed to whichever ones are
- * assigned to the globally-selected location (LocationContextService) - "sve
+ * assigned to the globally-selected company (CompanyContextService) - "sve
  * lokacije" shows every active trainer, since the same trainer can work both
- * locations. Location itself is NOT a column split - a trainer's appointments
- * from either location land in the same column, distinguished only by the
- * small location-colored dot on the block (see toScheduleGridCell).
+ * companies. Company itself is NOT a column split - a trainer's appointments
+ * from either company land in the same column, distinguished only by the
+ * small company-colored dot on the block (see toScheduleGridCell).
  *
  * This component only positions/fetches cells and reports clicks via
  * `appointmentClicked` - it deliberately owns no dialog (neither the
@@ -71,17 +72,18 @@ export class ScheduleDayGridComponent {
   private readonly appointmentsService = inject(AppointmentsService);
   private readonly clientsService = inject(ClientsService);
   private readonly companyHolidaysService = inject(CompanyHolidaysService);
-  private readonly locationContext = inject(LocationContextService);
+  private readonly companyContext = inject(CompanyContextService);
   private readonly translate = inject(TranslateService);
 
   readonly employees = input.required<EmployeeColumnEntry[]>();
   readonly statusFilter = input<AppointmentStatus | null>(null);
   readonly executionModeFilter = input<ServiceExecutionMode | null>(null);
   readonly serviceFilter = input<string | null>(null);
+  readonly roomFilter = input<string | null>(null);
   /** Fetched once by ScheduleComponent and shared with both grids - see
    * MyShiftsComponent for the same "fetch once, pass down via @Input" pattern
    * applied to Roster's team/personal tabs. */
-  readonly activeLocations = input<LocationDto[]>([]);
+  readonly activeCompanies = input<CompanyDto[]>([]);
 
   readonly emptySlotClick = output<DayEmptySlotEvent>();
   readonly appointmentClicked = output<AppointmentScheduleCellDto>();
@@ -93,8 +95,8 @@ export class ScheduleDayGridComponent {
   private readonly rawBreaks = signal<ScheduleBreakCellDto[]>([]);
   private readonly rawBirthdays = signal<BirthdayDto[]>([]);
   private readonly birthdayLookup = computed(() => buildBirthdayLookup(this.rawBirthdays()));
-  private readonly locationColors = computed<Map<string, string | null>>(
-    () => new Map(this.activeLocations().map((location) => [location.id, location.colorHex])),
+  private readonly companyColors = computed<Map<string, string | null>>(
+    () => new Map(this.activeCompanies().map((company) => [company.id, company.colorHex])),
   );
 
   /** "Sve lokacije" (null) skips the banner entirely - same reasoning as
@@ -104,11 +106,19 @@ export class ScheduleDayGridComponent {
   private readonly rawHolidays = signal<CompanyHolidayDto[]>([]);
   private readonly holidayLookup = computed(() => buildHolidayLookup(this.rawHolidays()));
   readonly todayHolidayName = computed(() => this.holidayLookup().get(localDateKey(this.selectedDate())) ?? null);
+  readonly selectedDateLabel = computed(() =>
+    new Intl.DateTimeFormat('hr-HR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    }).format(this.selectedDate()),
+  );
 
   readonly columnWidthPx = DAY_COLUMN_WIDTH_PX;
 
   readonly columns = computed<ScheduleGridColumn[]>(() => {
-    const companyId = this.locationContext.selectedLocationId();
+    const companyId = this.companyContext.selectedCompanyId();
     return this.employees()
       .filter((employee) => !companyId || employee.companyIds.includes(companyId))
       .map((employee) => ({ id: employee.id, label: `${employee.firstName} ${employee.lastName}` }));
@@ -120,8 +130,8 @@ export class ScheduleDayGridComponent {
    * struck-through, see toScheduleGridCell) since that status stays visible
    * by design. */
   readonly gridCells = computed<ScheduleGridCell[]>(() => {
-    const showLocationBadge = this.locationContext.selectedLocationId() === null;
-    const colors = this.locationColors();
+    const showCompanyBadge = this.companyContext.selectedCompanyId() === null;
+    const colors = this.companyColors();
     const birthdays = this.birthdayLookup();
     const appointmentCells = this.rawCells()
       .filter((dto) => dto.status !== 'Cancelled')
@@ -129,7 +139,7 @@ export class ScheduleDayGridComponent {
         toScheduleGridCell(
           dto,
           dto.employeeId,
-          showLocationBadge ? (colors.get(dto.companyId) ?? null) : null,
+          showCompanyBadge ? (colors.get(dto.companyId) ?? null) : null,
           this.translate,
           birthdays,
         ),
@@ -138,7 +148,7 @@ export class ScheduleDayGridComponent {
       toScheduleBreakGridCell(
         dto,
         dto.employeeId,
-        showLocationBadge ? (colors.get(dto.companyId) ?? null) : null,
+        showCompanyBadge ? (colors.get(dto.companyId) ?? null) : null,
         this.translate,
       ),
     );
@@ -152,15 +162,16 @@ export class ScheduleDayGridComponent {
         status: this.statusFilter(),
         executionMode: this.executionModeFilter(),
         service: this.serviceFilter(),
-        companyId: this.locationContext.selectedLocationId(),
+        companyId: this.companyContext.selectedCompanyId(),
+        roomId: this.roomFilter(),
       };
       this.fetch(date, filters);
     });
 
     // Independent of the trainer columns - only depends on the shown day and
-    // the globally-selected location, fetched once per change rather than on
+    // the globally-selected company, fetched once per change rather than on
     // every render (see class doc on rawHolidays).
-    effect(() => this.fetchHolidays(this.locationContext.selectedLocationId(), this.selectedDate()));
+    effect(() => this.fetchHolidays(this.companyContext.selectedCompanyId(), this.selectedDate()));
   }
 
   onDateChange(date: Date): void {
@@ -193,7 +204,7 @@ export class ScheduleDayGridComponent {
     this.emptySlotClick.emit({
       startsAt: date,
       employeeId: event.columnId,
-      companyId: this.locationContext.selectedLocationId(),
+      companyId: this.companyContext.selectedCompanyId(),
     });
   }
 
@@ -205,7 +216,8 @@ export class ScheduleDayGridComponent {
       status: this.statusFilter(),
       executionMode: this.executionModeFilter(),
       service: this.serviceFilter(),
-      companyId: this.locationContext.selectedLocationId(),
+      companyId: this.companyContext.selectedCompanyId(),
+      roomId: this.roomFilter(),
     });
   }
 
@@ -221,6 +233,7 @@ export class ScheduleDayGridComponent {
         status: filters.status ?? undefined,
         executionMode: filters.executionMode ?? undefined,
         serviceId: filters.service ?? undefined,
+        roomId: filters.roomId ?? undefined,
       }),
       birthdays: this.clientsService.getBirthdays(from, to),
     })

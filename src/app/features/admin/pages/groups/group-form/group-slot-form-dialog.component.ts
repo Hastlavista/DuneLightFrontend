@@ -60,7 +60,7 @@ export class GroupSlotFormDialogComponent {
         this.isEditMode.set(slot !== null);
         this.form.reset({
           dayOfWeek: slot?.dayOfWeek ?? 'Monday',
-          startTime: slot ? parseTimeOfDay(slot.startTime) : null,
+          startTime: slot?.startTime ? parseTimeOfDay(slot.startTime) : null,
         });
       } else {
         this.dialogShown.set(false);
@@ -79,7 +79,12 @@ export class GroupSlotFormDialogComponent {
     }
 
     const raw = this.form.getRawValue();
-    const request = { dayOfWeek: raw.dayOfWeek, startTime: toTimeOfDayString(raw.startTime as Date) };
+    if (!raw.startTime) {
+      this.form.controls.startTime.markAsTouched();
+      return;
+    }
+
+    const request = { dayOfWeek: raw.dayOfWeek, startTime: toTimeOfDayString(raw.startTime) };
     const slot = this.slot();
 
     this.saving.set(true);

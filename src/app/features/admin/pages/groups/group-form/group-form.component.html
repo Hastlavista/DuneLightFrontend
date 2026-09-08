@@ -41,19 +41,19 @@
         </div>
 
         <div class="dl-form__field">
-          <label for="group-location">{{ 'GROUPS.FIELD_LOCATION' | translate }}</label>
+          <label for="group-company">{{ 'GROUPS.FIELD_COMPANY' | translate }}</label>
           <p-select
-            id="group-location"
+            id="group-company"
             fluid
             appendTo="body"
-            formControlName="locationId"
-            [options]="locationOptions()"
+            formControlName="companyId"
+            [options]="companyOptions()"
             optionLabel="name"
             optionValue="id"
-            [placeholder]="'GROUPS.FIELD_LOCATION_PLACEHOLDER' | translate"
+            [placeholder]="'GROUPS.FIELD_COMPANY_PLACEHOLDER' | translate"
           />
-          @if (form.controls.locationId.invalid && form.controls.locationId.touched) {
-            <span class="dl-form__error">{{ 'GROUPS.ERRORS.LOCATION_REQUIRED' | translate }}</span>
+          @if (form.controls.companyId.invalid && form.controls.companyId.touched) {
+            <span class="dl-form__error">{{ 'GROUPS.ERRORS.COMPANY_REQUIRED' | translate }}</span>
           }
         </div>
       </div>
@@ -79,6 +79,21 @@
             optionLabel="name"
             optionValue="id"
             [placeholder]="'GROUPS.FIELD_TRAINER_PLACEHOLDER' | translate"
+          />
+        </div>
+
+        <div class="dl-form__field">
+          <label for="group-room">{{ 'GROUPS.FIELD_ROOM' | translate }}</label>
+          <p-select
+            id="group-room"
+            fluid
+            appendTo="body"
+            [showClear]="true"
+            formControlName="defaultRoomId"
+            [options]="roomOptions()"
+            optionLabel="name"
+            optionValue="id"
+            [placeholder]="'GROUPS.FIELD_ROOM_PLACEHOLDER' | translate"
           />
         </div>
       </div>

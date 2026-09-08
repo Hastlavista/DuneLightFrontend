@@ -32,6 +32,7 @@
 export const ADMIN_AREA_GRANTS: string[] = [
   // Katalog (Lokacije + Usluge i cjenik tabs)
   'catalog.companies.manage',
+  'catalog.rooms.manage',
   'catalog.services.manage',
   'catalog.packages.manage',
   'catalog.price-list.manage',

@@ -17,11 +17,11 @@
     />
     <p-select
       class="price-list-page__filter"
-      [options]="locationFilterOptions()"
+      [options]="companyFilterOptions()"
       optionLabel="label"
       optionValue="value"
-      [ngModel]="locationFilter()"
-      (ngModelChange)="onLocationFilterChange($event)"
+      [ngModel]="companyFilter()"
+      (ngModelChange)="onCompanyFilterChange($event)"
     />
   </app-list-toolbar>
 
@@ -41,7 +41,7 @@
     <ng-template pTemplate="header">
       <tr>
         <th>{{ 'CATALOG.PRICING.COL_SUBJECT' | translate }}</th>
-        <th>{{ 'CATALOG.PRICING.COL_LOCATION' | translate }}</th>
+        <th>{{ 'CATALOG.PRICING.COL_COMPANY' | translate }}</th>
         <th>{{ 'CATALOG.PRICING.COL_PRICE' | translate }}</th>
         <th>{{ 'CATALOG.PRICING.COL_VALID_FROM' | translate }}</th>
         <th>{{ 'CATALOG.PRICING.COL_VALID_TO' | translate }}</th>
@@ -63,7 +63,7 @@
             }})
           </span>
         </td>
-        <td>{{ item.companyName ?? ('CATALOG.PRICING.ALL_LOCATIONS' | translate) }}</td>
+        <td>{{ item.companyName ?? ('CATALOG.PRICING.ALL_COMPANIES' | translate) }}</td>
         <td>{{ item.price | eurCurrency }}</td>
         <td>{{ item.validFrom | hrDate }}</td>
         <td>{{ item.validTo ? (item.validTo | hrDate) : ('CATALOG.PRICING.UNLIMITED' | translate) }}</td>
@@ -124,6 +124,6 @@
   [item]="editingItem()"
   [activeServices]="activeServices()"
   [activePackages]="activePackages()"
-  [activeLocations]="activeLocations()"
+  [activeCompanies]="activeCompanies()"
   (saved)="onSaved()"
 />

@@ -57,8 +57,8 @@
               [style.background]="cell.kind === 'break' ? null : cellBackground(cell.colorHex)"
               (click)="onCellClick(cell, $event)"
             >
-              @if (cell.locationColorHex) {
-                <span class="schedule-grid__cell-loc" [style.background]="cell.locationColorHex"></span>
+              @if (cell.companyColorHex) {
+                <span class="schedule-grid__cell-loc" [style.background]="cell.companyColorHex"></span>
               }
               <span class="schedule-grid__cell-title">
                 @if (cell.kind === 'break') {
@@ -69,6 +69,9 @@
                 {{ cell.title }}
               </span>
               <span class="schedule-grid__cell-subtitle">{{ cell.subtitle }}</span>
+              @if (cell.roomName) {
+                <span class="schedule-grid__cell-room">{{ cell.roomName }}</span>
+              }
             </div>
           }
         </div>

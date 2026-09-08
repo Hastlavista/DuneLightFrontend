@@ -54,7 +54,7 @@
   @if (data(); as personal) {
     <div class="personal-roster__summary">
       <div class="personal-roster__summary-item">
-        <strong>{{ personal.totalWorkHours }}h</strong>
+        <strong>{{ formattedHours(personal.totalWorkHours) }}h</strong>
         <span>{{ 'ROSTER.PERSONAL.TOTAL_WORK_HOURS' | translate }}</span>
       </div>
       @for (item of personal.workHoursByType; track item.rosterTypeId) {
@@ -62,7 +62,7 @@
           class="personal-roster__summary-item"
           [class.personal-roster__summary-item--assumed]="isAssumedSummaryRow(item)"
         >
-          <strong>{{ item.hours }}h</strong>
+          <strong>{{ formattedHours(item.hours) }}h</strong>
           <span>{{ item.rosterTypeName }}</span>
         </div>
       }
@@ -89,7 +89,7 @@
           @if (row.kind === 'actual') {
             <tr>
               <td>
-                <span class="personal-roster__type-swatch" [style.background]="row.entry.rosterTypeColorHex ?? 'var(--olive-gold)'"></span>
+                <span class="personal-roster__type-swatch" [style.background]="row.entry.rosterTypeColorHex ?? 'var(--teal)'"></span>
                 {{ row.entry.rosterTypeName }}
               </td>
               <td>

@@ -1,19 +1,19 @@
 :host {
-  --schedule-axis-width: 3.5rem;
+  --schedule-axis-width: 3rem;
   display: block;
 }
 
 .schedule-grid {
   &__scroll {
     overflow-x: auto;
-    border: 1px solid var(--sand);
-    border-radius: var(--radius-card);
-    background: var(--paper-2);
+    border: none;
+    border-radius: 0;
+    background: var(--surface-warm);
   }
 
   &__header {
     display: flex;
-    border-bottom: 1px solid var(--sand-deep);
+    border-bottom: 1px solid var(--mint-border);
   }
 
   &__corner {
@@ -21,8 +21,8 @@
     position: sticky;
     left: 0;
     z-index: 2;
-    background: var(--paper-2);
-    border-right: 1px solid var(--sand-deep);
+    background: var(--surface-warm);
+    border-right: 1px solid var(--mint-border);
   }
 
   &__col-header {
@@ -31,20 +31,39 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 0.1rem;
-    padding: 0.5rem 0.25rem;
-    border-right: 1px solid var(--sand);
+    gap: 0.08rem;
+    min-height: 3.1rem;
+    padding: 0.55rem 0.35rem;
+    border-right: 1px solid var(--mint-border);
+    background: var(--surface-warm);
     text-align: center;
   }
 
   &__col-header-label {
-    font-weight: 600;
-    font-size: 0.85rem;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    color: var(--ink);
+    font-family: var(--font-heading);
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+
+    &::before {
+      content: '';
+      width: 0.4rem;
+      height: 0.4rem;
+      border-radius: 999px;
+      background: var(--teal);
+    }
   }
 
   &__col-header-sub {
-    font-size: 0.72rem;
-    color: var(--clay-2);
+    color: var(--ink-muted);
+    font-size: 0.66rem;
+    font-weight: 600;
+    text-transform: uppercase;
   }
 
   /* Holiday column (grid B only, see ScheduleGridColumn.isHoliday) - a subtle
@@ -52,15 +71,15 @@
      land here (booked before the holiday was recorded) stay perfectly
      readable on top. */
   &__col-header--holiday {
-    background: color-mix(in srgb, var(--ochre) 14%, var(--paper-2));
-    border-bottom: 2px solid var(--ochre);
+    background: color-mix(in srgb, var(--mint) 26%, var(--surface-warm));
+    border-bottom: 2px solid var(--teal);
   }
 
   &__col-header-holiday {
     max-width: 100%;
     font-size: 0.68rem;
     font-weight: 600;
-    color: var(--ochre);
+    color: var(--teal-dark);
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -76,41 +95,43 @@
     position: sticky;
     left: 0;
     z-index: 1;
-    background: var(--paper-2);
-    border-right: 1px solid var(--sand-deep);
+    background: var(--surface-warm);
+    border-right: 1px solid var(--mint-border);
   }
 
   &__hour-row {
     box-sizing: border-box;
-    border-bottom: 1px dashed var(--sand);
+    border-bottom: 1px solid var(--mint-border);
     display: flex;
     align-items: flex-start;
     justify-content: flex-end;
   }
 
   &__hour-label {
-    font-size: 0.7rem;
-    color: var(--clay-2);
+    color: var(--rose-text);
+    font-family: var(--font-heading);
+    font-size: 0.66rem;
+    font-weight: 600;
     padding: 0.15rem 0.35rem 0 0;
   }
 
   &__col-body {
     position: relative;
     flex: 0 0 auto;
-    border-right: 1px solid var(--sand);
+    border-right: 1px solid var(--mint-border);
     cursor: pointer;
 
     &--holiday {
-      background: color-mix(in srgb, var(--ochre) 7%, transparent);
+      background: color-mix(in srgb, var(--mint) 14%, transparent);
     }
   }
 
   &__hour-line {
     box-sizing: border-box;
-    border-bottom: 1px dashed var(--sand);
+    border-bottom: 1px solid var(--mint-border);
 
     &--quarter {
-      border-bottom: 1px dotted color-mix(in srgb, var(--sand) 55%, transparent);
+      border-bottom: 1px solid color-mix(in srgb, var(--mint-border) 36%, transparent);
     }
   }
 
@@ -118,12 +139,13 @@
     position: absolute;
     box-sizing: border-box;
     overflow: hidden;
-    inset-inline: 1px;
-    border: 1.5px solid var(--gold);
-    background: var(--paper);
-    border-radius: 6px;
-    box-shadow: var(--shadow-soft);
-    padding: 0.15rem 0.4rem;
+    inset-inline: 4px;
+    border: 1px solid var(--mint-border);
+    background: var(--mint-light);
+    border-left: 3px solid var(--teal);
+    border-radius: 7px;
+    box-shadow: none;
+    padding: 0.22rem 0.45rem;
     cursor: pointer;
     display: flex;
     flex-direction: column;
@@ -143,21 +165,17 @@
      * "unavailable" rather than "booked", distinct from any appointment card
      * at a glance. */
     &--break {
-      border: 1.5px dashed var(--clay-2);
-      background: repeating-linear-gradient(
-        135deg,
-        var(--paper-2),
-        var(--paper-2) 6px,
-        var(--sand) 6px,
-        var(--sand) 12px
-      );
-      color: var(--clay-2);
+      border: 1px solid var(--rose-border-strong);
+      border-left: 3px solid var(--rose-text);
+      background: var(--surface-soft);
+      color: var(--ink-muted);
     }
   }
 
   &__cell-title {
-    font-weight: 600;
-    font-size: 0.76rem;
+    color: var(--ink);
+    font-weight: 700;
+    font-size: 0.72rem;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -165,19 +183,29 @@
 
   &__cell-birthday {
     font-size: 0.68rem;
-    color: var(--gold);
+    color: var(--teal);
     margin-right: 0.15rem;
   }
 
   &__cell-break-icon {
     font-size: 0.68rem;
-    color: var(--clay-2);
+    color: var(--rose-text);
     margin-right: 0.15rem;
   }
 
   &__cell-subtitle {
-    color: var(--clay-2);
-    font-size: 0.68rem;
+    color: var(--ink-muted);
+    font-size: 0.66rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__cell-room {
+    display: block;
+    color: var(--ink-muted);
+    font-size: 0.65rem;
+    font-style: italic;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -190,6 +218,6 @@
     width: 7px;
     height: 7px;
     border-radius: 50%;
-    border: 1px solid var(--paper);
+    border: 1px solid #FFFFFF;
   }
 }

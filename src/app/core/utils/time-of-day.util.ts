@@ -17,3 +17,7 @@ export function parseTimeOfDay(value: string): Date {
   date.setHours(hours, minutes, 0, 0);
   return date;
 }
+
+export function timeOfDayLabel(value: string | null | undefined, fallback = ''): string {
+  return value ? value.slice(0, 5) : fallback;
+}

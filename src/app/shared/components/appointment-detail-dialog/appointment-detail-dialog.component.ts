@@ -23,14 +23,18 @@ import {
 } from '../../../core/models/appointment.model';
 import { ClientPackageDto } from '../../../core/models/client-package.model';
 import { EmployeeSummary } from '../../../core/models/employee.model';
-import { LocationDto } from '../../../core/models/location.model';
+import { CompanyDto } from '../../../core/models/company.model';
+import { RoomDto } from '../../../core/models/room.model';
 import { AppointmentsService } from '../../../core/services/appointments.service';
 import { ClientPackagesService } from '../../../core/services/client-packages.service';
 import { NotificationService } from '../../../core/services/notification.service';
+import { RoomsService } from '../../../core/services/rooms.service';
 import { toLocalIsoFromDate } from '../../../core/utils/date.util';
 import { translationReadySignal } from '../../../core/utils/translation-signal.util';
 import { EligiblePackageSelectComponent } from '../eligible-package-select/eligible-package-select.component';
 import { EurCurrencyPipe } from '../../pipes/eur-currency.pipe';
+
+const ROOM_LOOKUP_PAGE_SIZE = 200;
 
 interface SelectOption {
   label: string;
@@ -46,7 +50,7 @@ type DetailMode = 'view' | 'billing' | 'cancel' | 'noShow';
 
 /**
  * Appointment detail (GET /api/appointments/{id}) plus:
- * - an inline edit form for moving it - time/trainer/location are the only
+ * - an inline edit form for moving it - time/trainer/company are the only
  *   editable fields there, everything else (service, clients, price, status,
  *   note) stays read-only. "Spremi" calls the same PATCH /{id}/move endpoint
  *   ScheduleGridComponent's drag & drop used to call directly; a modal form is
@@ -94,13 +98,14 @@ export class AppointmentDetailDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly appointmentsService = inject(AppointmentsService);
   private readonly clientPackagesService = inject(ClientPackagesService);
+  private readonly roomsService = inject(RoomsService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
 
   readonly visible = model(false);
   readonly appointmentId = input<string | null>(null);
   readonly employees = input<EmployeeSummary[]>([]);
-  readonly locations = input<LocationDto[]>([]);
+  readonly companies = input<CompanyDto[]>([]);
   readonly allowEmployeeChange = input(false);
 
   readonly saved = output<void>();
@@ -139,9 +144,15 @@ export class AppointmentDetailDialogComponent {
     this.employees().map((employee) => ({ label: `${employee.firstName} ${employee.lastName}`, value: employee.id })),
   );
 
-  readonly locationOptions = computed<SelectOption[]>(() =>
-    this.locations().map((location) => ({ label: location.name, value: location.id })),
+  readonly companyOptions = computed<SelectOption[]>(() =>
+    this.companies().map((company) => ({ label: company.name, value: company.id })),
   );
+
+  /** Rooms of the move form's currently-picked company - same trigger/shape
+   * as NewAppointmentDialogComponent.roomsForCompany. */
+  readonly roomsForCompany = signal<RoomDto[]>([]);
+
+  readonly roomOptions = computed<SelectOption[]>(() => this.roomsForCompany().map((room) => ({ label: room.name, value: room.id })));
 
   readonly paymentMethodOptions = computed<SelectOption[]>(() => {
     this.translationsReady();
@@ -151,7 +162,8 @@ export class AppointmentDetailDialogComponent {
   readonly form = this.fb.nonNullable.group({
     startsAt: this.fb.control<Date | null>(null, Validators.required),
     employeeId: this.fb.nonNullable.control<string>('', Validators.required),
-    locationId: this.fb.nonNullable.control<string>('', Validators.required),
+    companyId: this.fb.nonNullable.control<string>('', Validators.required),
+    roomId: this.fb.control<string | null>(null),
   });
 
   constructor() {
@@ -161,10 +173,13 @@ export class AppointmentDetailDialogComponent {
         this.fetch(id);
       } else if (!this.visible()) {
         this.appointment.set(null);
-        this.form.reset({ startsAt: null, employeeId: '', locationId: '' });
+        this.form.reset({ startsAt: null, employeeId: '', companyId: '', roomId: null });
+        this.roomsForCompany.set([]);
         this.mode.set('view');
       }
     });
+
+    this.form.controls.companyId.valueChanges.subscribe(() => this.refreshRooms());
   }
 
   onCancel(): void {
@@ -179,9 +194,15 @@ export class AppointmentDetailDialogComponent {
     }
 
     const raw = this.form.getRawValue();
+    // roomId is always resent (like companyId, unlike the opt-in employeeId) -
+    // per the backend contract a null value here means "leave unchanged," not
+    // "clear," so picking "bez prostorije" on an appointment that already has
+    // a room assigned is a no-op, not a clear - that would need a PUT this
+    // dialog doesn't call (see AppointmentMoveRequest.roomId's doc comment).
     const request = {
       startsAt: toLocalIsoFromDate(raw.startsAt as Date),
-      companyId: raw.locationId,
+      companyId: raw.companyId,
+      roomId: raw.roomId || null,
       ...(this.allowEmployeeChange() ? { employeeId: raw.employeeId } : {}),
     };
 
@@ -430,6 +451,20 @@ export class AppointmentDetailDialogComponent {
     }
   }
 
+  private refreshRooms(): void {
+    const companyId = this.form.controls.companyId.value;
+    if (!companyId) {
+      this.roomsForCompany.set([]);
+      return;
+    }
+    this.roomsService
+      .getPage({ page: 1, pageSize: ROOM_LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true, extraParams: { companyId: companyId } })
+      .subscribe({
+        next: (result) => this.roomsForCompany.set(result.items),
+        error: () => this.roomsForCompany.set([]),
+      });
+  }
+
   private fetch(id: string): void {
     this.loading.set(true);
     this.appointment.set(null);
@@ -442,7 +477,8 @@ export class AppointmentDetailDialogComponent {
         this.form.reset({
           startsAt: new Date(dto.startsAt),
           employeeId: dto.employeeId,
-          locationId: dto.companyId,
+          companyId: dto.companyId,
+          roomId: dto.roomId ?? null,
         });
         if (dto.status === 'Cancelled' || dto.status === 'NoShow') {
           this.form.disable();

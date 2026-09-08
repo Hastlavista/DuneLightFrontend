@@ -25,11 +25,11 @@
     />
     <p-select
       class="client-list-page__filter"
-      [options]="homeLocationFilterOptions()"
+      [options]="homeCompanyFilterOptions()"
       optionLabel="label"
       optionValue="value"
-      [ngModel]="homeLocationFilter()"
-      (ngModelChange)="onHomeLocationFilterChange($event)"
+      [ngModel]="homeCompanyFilter()"
+      (ngModelChange)="onHomeCompanyFilterChange($event)"
     />
   </app-list-toolbar>
 
@@ -53,7 +53,7 @@
         <th>{{ 'CLIENTS.COL_PHONE' | translate }}</th>
         <th>{{ 'CLIENTS.COL_EMAIL' | translate }}</th>
         <th>{{ 'CLIENTS.COL_HOME_TRAINER' | translate }}</th>
-        <th>{{ 'CLIENTS.COL_HOME_LOCATION' | translate }}</th>
+        <th>{{ 'CLIENTS.COL_HOME_COMPANY' | translate }}</th>
         <th>{{ 'CLIENTS.COL_TAGS' | translate }}</th>
         <th>{{ 'COMMON.COL_STATUS' | translate }}</th>
         <th class="client-list-page__actions-col"></th>

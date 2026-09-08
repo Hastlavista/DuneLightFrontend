@@ -5,7 +5,7 @@ import { ScheduleEmptySlotClickEvent, ScheduleGridCell, ScheduleGridColumn } fro
 
 const DEFAULT_START_HOUR = 7;
 const DEFAULT_END_HOUR = 21;
-const DEFAULT_ROW_HEIGHT_PX = 60;
+const DEFAULT_ROW_HEIGHT_PX = 52;
 const DEFAULT_COLUMN_WIDTH_PX = 160;
 const MIN_CELL_HEIGHT_PX = 18;
 const SNAP_MINUTES = 15;
@@ -127,7 +127,7 @@ export class ScheduleGridComponent {
    * whole card reads as "this category" at a glance while staying light enough
    * for the client/service text to stay readable on top. */
   cellBackground(colorHex: string): string {
-    return `color-mix(in srgb, ${colorHex} 18%, var(--paper))`;
+    return `color-mix(in srgb, ${colorHex} 14%, var(--mint-light))`;
   }
 
   onColumnClick(column: ScheduleGridColumn, event: MouseEvent): void {

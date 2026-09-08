@@ -53,6 +53,9 @@ export class AppointmentsService {
     if (query.status) {
       params = params.set('status', query.status);
     }
+    if (query.roomId) {
+      params = params.set('roomId', query.roomId);
+    }
     return this.http.get<ScheduleFeedDto>(`${this.resourceUrl}/schedule`, {
       params,
       context: new HttpContext().set(SUPPRESS_ERROR_TOAST, options?.suppressErrorToast ?? false),

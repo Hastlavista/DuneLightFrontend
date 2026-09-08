@@ -3,21 +3,19 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
 import { Checkbox } from 'primeng/checkbox';
-import { ColorPicker } from 'primeng/colorpicker';
 import { Dialog } from 'primeng/dialog';
-import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { finalize } from 'rxjs';
 import { RosterTypeDto, RosterTypeUpsertRequest } from '../../../../../core/models/roster.model';
 import { RosterTypesService } from '../../../../../core/services/roster-types.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 
-/** Olive-gold from the dune palette - same default as CategoryFormDialogComponent. */
-const DEFAULT_COLOR_NO_HASH = '8F7A45';
+const DEFAULT_COLOR_NO_HASH = '0D5C63';
+const ROSTER_TYPE_COLORS = ['0D5C63', '128089', '8E3A4A', '7A5D61', '545863', 'A8DCBE'];
 
 @Component({
   selector: 'app-roster-type-form-dialog',
-  imports: [Dialog, ReactiveFormsModule, InputText, InputNumber, ColorPicker, Checkbox, Button, TranslatePipe],
+  imports: [Dialog, ReactiveFormsModule, InputText, Checkbox, Button, TranslatePipe],
   templateUrl: './roster-type-form-dialog.component.html',
 })
 export class RosterTypeFormDialogComponent {
@@ -32,6 +30,7 @@ export class RosterTypeFormDialogComponent {
 
   readonly saving = signal(false);
   readonly isEditMode = computed(() => this.rosterType() !== null);
+  readonly colorOptions = ROSTER_TYPE_COLORS;
 
   /** See CategoryFormDialogComponent - only render the form once p-dialog's
    * own open transition has finished (its (onShow) event), to sidestep a
@@ -109,6 +108,34 @@ export class RosterTypeFormDialogComponent {
 
   onCancel(): void {
     this.visible.set(false);
+  }
+
+  selectColor(color: string): void {
+    this.form.controls.colorHex.setValue(color);
+  }
+
+  setAbsenceMode(isAbsence: boolean): void {
+    this.form.controls.isAbsence.setValue(isAbsence);
+  }
+
+  decrementSortOrder(): void {
+    this.form.controls.sortOrder.setValue(this.form.controls.sortOrder.value - 1);
+  }
+
+  incrementSortOrder(): void {
+    this.form.controls.sortOrder.setValue(this.form.controls.sortOrder.value + 1);
+  }
+
+  previewName(): string {
+    return this.form.controls.name.value.trim() || this.translate.instant('ROSTER.TYPES.PREVIEW_FALLBACK_NAME');
+  }
+
+  previewKindLabel(): string {
+    return this.translate.instant(this.form.controls.isAbsence.value ? 'ROSTER.TYPES.ABSENCE' : 'ROSTER.TYPES.PRESENCE');
+  }
+
+  previewWorkLabel(): string {
+    return this.translate.instant(this.form.controls.countsAsWork.value ? 'ROSTER.TYPES.PREVIEW_COUNTS' : 'ROSTER.TYPES.PREVIEW_NOT_COUNTS');
   }
 
   private resetForm(type: RosterTypeDto | null): void {

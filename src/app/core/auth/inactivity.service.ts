@@ -15,7 +15,7 @@ const ACTIVITY_EVENTS = ['click', 'keydown', 'touchstart'] as const;
  * user to /login - which shows the "Odaberi korisnika" chooser by default
  * when known users exist, since this never touches the known-users
  * localStorage list. Started/stopped from ShellComponent, the existing
- * per-session bootstrap location.
+ * per-session bootstrap company.
  */
 @Injectable({ providedIn: 'root' })
 export class InactivityService {

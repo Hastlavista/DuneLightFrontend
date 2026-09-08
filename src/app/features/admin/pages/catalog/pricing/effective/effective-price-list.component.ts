@@ -7,7 +7,7 @@ import { Select } from 'primeng/select';
 import { SelectButton } from 'primeng/selectbutton';
 import { Tag } from 'primeng/tag';
 import { finalize } from 'rxjs';
-import { LocationDto } from '../../../../../../core/models/location.model';
+import { CompanyDto } from '../../../../../../core/models/company.model';
 import { PackageDto } from '../../../../../../core/models/package.model';
 import {
   EffectivePriceRow,
@@ -16,7 +16,7 @@ import {
   ResolvePriceResult,
 } from '../../../../../../core/models/price-list.model';
 import { ServiceDto } from '../../../../../../core/models/service.model';
-import { LocationsService } from '../../../../../../core/services/locations.service';
+import { CompaniesService } from '../../../../../../core/services/companies.service';
 import { PackagesService } from '../../../../../../core/services/packages.service';
 import { PriceListService } from '../../../../../../core/services/price-list.service';
 import { ServicesService } from '../../../../../../core/services/services.service';
@@ -45,17 +45,17 @@ export class EffectivePriceListComponent {
   private readonly priceListService = inject(PriceListService);
   private readonly servicesService = inject(ServicesService);
   private readonly packagesService = inject(PackagesService);
-  private readonly locationsService = inject(LocationsService);
+  private readonly companiesService = inject(CompaniesService);
   private readonly translate = inject(TranslateService);
 
   private readonly activeServices = signal<ServiceDto[]>([]);
   private readonly activePackages = signal<PackageDto[]>([]);
-  private readonly activeLocations = signal<LocationDto[]>([]);
+  private readonly activeCompanies = signal<CompanyDto[]>([]);
 
   private readonly translationsReady = translationReadySignal(this.translate);
 
-  readonly locationOptions = computed<SelectOption[]>(() =>
-    this.activeLocations().map((location) => ({ label: location.name, value: location.id })),
+  readonly companyOptions = computed<SelectOption[]>(() =>
+    this.activeCompanies().map((company) => ({ label: company.name, value: company.id })),
   );
 
   readonly subjectTypeOptions = computed(() => {
@@ -73,7 +73,7 @@ export class EffectivePriceListComponent {
   });
 
   // "Trenutni cjenik" view state
-  readonly effectiveLocationId = signal<string | null>(null);
+  readonly effectiveCompanyId = signal<string | null>(null);
   readonly effectiveDate = signal<Date>(new Date());
   readonly effectiveRows = signal<EffectivePriceRow[]>([]);
   readonly effectiveLoading = signal(false);
@@ -81,7 +81,7 @@ export class EffectivePriceListComponent {
   // "Provjeri cijenu" resolve panel state
   readonly resolveSubjectType = signal<PriceListSubjectType>('Service');
   readonly resolveSubjectId = signal<string | null>(null);
-  readonly resolveLocationId = signal<string | null>(null);
+  readonly resolveCompanyId = signal<string | null>(null);
   readonly resolveDate = signal<Date>(new Date());
   readonly resolveResult = signal<ResolvePriceResult | null>(null);
   readonly resolving = signal(false);
@@ -96,8 +96,8 @@ export class EffectivePriceListComponent {
     this.loadLookups();
   }
 
-  onEffectiveLocationChange(locationId: string | null): void {
-    this.effectiveLocationId.set(locationId);
+  onEffectiveCompanyChange(companyId: string | null): void {
+    this.effectiveCompanyId.set(companyId);
     this.fetchEffective();
   }
 
@@ -117,8 +117,8 @@ export class EffectivePriceListComponent {
     this.resolveResult.set(null);
   }
 
-  onResolveLocationChange(locationId: string | null): void {
-    this.resolveLocationId.set(locationId);
+  onResolveCompanyChange(companyId: string | null): void {
+    this.resolveCompanyId.set(companyId);
     this.resolveResult.set(null);
   }
 
@@ -129,8 +129,8 @@ export class EffectivePriceListComponent {
 
   onCheckPrice(): void {
     const subjectId = this.resolveSubjectId();
-    const locationId = this.resolveLocationId();
-    if (!subjectId || !locationId) {
+    const companyId = this.resolveCompanyId();
+    if (!subjectId || !companyId) {
       return;
     }
 
@@ -139,7 +139,7 @@ export class EffectivePriceListComponent {
       .resolve({
         subjectType: this.resolveSubjectType(),
         subjectId,
-        companyId: locationId,
+        companyId: companyId,
         date: toStartOfDayIso(this.resolveDate()),
       })
       .pipe(finalize(() => this.resolving.set(false)))
@@ -165,15 +165,15 @@ export class EffectivePriceListComponent {
   }
 
   private fetchEffective(): void {
-    const locationId = this.effectiveLocationId();
-    if (!locationId) {
+    const companyId = this.effectiveCompanyId();
+    if (!companyId) {
       this.effectiveRows.set([]);
       return;
     }
 
     this.effectiveLoading.set(true);
     this.priceListService
-      .getEffective(locationId, toStartOfDayIso(this.effectiveDate()))
+      .getEffective(companyId, toStartOfDayIso(this.effectiveDate()))
       .pipe(finalize(() => this.effectiveLoading.set(false)))
       .subscribe((rows) => this.effectiveRows.set(rows));
   }
@@ -185,14 +185,14 @@ export class EffectivePriceListComponent {
     this.packagesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
       .subscribe((result) => this.activePackages.set(result.items));
-    this.locationsService
+    this.companiesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
       .subscribe((result) => {
-        this.activeLocations.set(result.items);
+        this.activeCompanies.set(result.items);
         const first = result.items[0];
         if (first) {
-          this.effectiveLocationId.set(first.id);
-          this.resolveLocationId.set(first.id);
+          this.effectiveCompanyId.set(first.id);
+          this.resolveCompanyId.set(first.id);
           this.fetchEffective();
         }
       });

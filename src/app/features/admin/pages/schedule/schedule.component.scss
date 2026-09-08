@@ -1,27 +1,102 @@
 .schedule-page {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
-  padding: 1.25rem;
+  padding: 0;
+
+  &__calendar {
+    overflow: hidden;
+  }
 
   &__toolbar {
     display: flex;
     flex-wrap: wrap;
     align-items: center;
+    justify-content: space-between;
     gap: 0.75rem;
-    padding: 1rem;
+    padding: 0.75rem 0.85rem;
+    border-bottom: 1px solid var(--rose-border);
+  }
+
+  &__filters,
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.7rem;
   }
 
   &__view-toggle {
     display: flex;
     gap: 0.25rem;
+    padding: 0.2rem;
+    border: 1px solid var(--rose-border);
+    border-radius: 8px;
+    background: var(--surface-soft-2);
   }
 
   &__filter {
-    min-width: 12rem;
+    min-width: 11.5rem;
+  }
+}
+
+:host ::ng-deep {
+  .schedule-page__view-toggle .p-button {
+    min-height: 2rem;
+    border-radius: 8px;
+    padding: 0.35rem 0.75rem;
   }
 
-  &__new-appointment {
-    margin-left: auto;
+  .schedule-page__view-toggle .p-button:not(.p-button-outlined) {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: #FFFFFF;
+  }
+
+  .schedule-page__view-toggle .p-button.p-button-outlined {
+    background: transparent;
+    border-color: transparent;
+    color: var(--teal-dark);
+  }
+
+  .schedule-page__filter .p-select {
+    min-height: 2.35rem;
+    border-color: var(--rose-border);
+    border-radius: 8px;
+    background: var(--surface-warm);
+    color: var(--ink);
+    box-shadow: none;
+  }
+
+  .schedule-page__filter .p-select:not(.p-disabled):hover {
+    border-color: var(--rose-border-strong);
+  }
+
+  .schedule-page__new-appointment .p-button {
+    background: var(--teal);
+    border-color: var(--teal);
+  }
+
+  .schedule-page__new-break .p-button {
+    border-color: var(--rose-border-strong);
+    color: var(--teal-dark);
+  }
+}
+
+@media (max-width: 900px) {
+  .schedule-page {
+    padding: 0;
+
+    &__toolbar {
+      align-items: stretch;
+    }
+
+    &__filters,
+    &__actions {
+      width: 100%;
+    }
+
+    &__filter {
+      flex: 1 1 11rem;
+    }
   }
 }

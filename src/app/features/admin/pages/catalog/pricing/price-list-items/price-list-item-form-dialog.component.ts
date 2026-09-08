@@ -14,7 +14,7 @@ import { InputNumber } from 'primeng/inputnumber';
 import { Select } from 'primeng/select';
 import { SelectButton } from 'primeng/selectbutton';
 import { finalize } from 'rxjs';
-import { LocationDto } from '../../../../../../core/models/location.model';
+import { CompanyDto } from '../../../../../../core/models/company.model';
 import { PackageDto } from '../../../../../../core/models/package.model';
 import {
   PriceListCreateRequest,
@@ -33,22 +33,22 @@ interface SubjectTypeOption {
   value: PriceListSubjectType;
 }
 
-interface LocationOption {
+interface CompanyOption {
   label: string;
   value: string;
 }
 
-/** "" = "sve lokacije" - a real, sendable value (locationId omitted), not "no
+/** "" = "sve lokacije" - a real, sendable value (companyId omitted), not "no
  * selection". Deliberately not `null`: p-select's value matching gets unreliable
  * once one of the option values is null (it also uses null/undefined internally
  * to mean "nothing selected yet"). */
-const ALL_LOCATIONS_VALUE = '';
+const ALL_COMPANIES_VALUE = '';
 
 interface PriceListFormRawValue {
   subjectType: PriceListSubjectType;
   serviceId: string | null;
   packageId: string | null;
-  locationId: string;
+  companyId: string;
   price: number;
   validFrom: Date;
   validTo: Date | null;
@@ -96,7 +96,7 @@ export class PriceListItemFormDialogComponent {
    * these). */
   readonly activeServices = input<ServiceDto[]>([]);
   readonly activePackages = input<PackageDto[]>([]);
-  readonly activeLocations = input<LocationDto[]>([]);
+  readonly activeCompanies = input<CompanyDto[]>([]);
   readonly saved = output<void>();
 
   readonly saving = signal(false);
@@ -104,7 +104,7 @@ export class PriceListItemFormDialogComponent {
 
   /** True only once p-dialog's own open transition has actually finished (its
    * (onShow) event). Fields created in the SAME tick as that transition (e.g.
-   * the very first render of the always-mounted serviceId/locationId selects)
+   * the very first render of the always-mounted serviceId/companyId selects)
    * end up with a ControlValueAccessor that doesn't register clicks - a real,
    * reproducible PrimeNG/CDK timing issue in this app's version, not a forms
    * logic bug (already ruled out: validators, sentinel values, appendTo). Only
@@ -121,11 +121,11 @@ export class PriceListItemFormDialogComponent {
     ];
   });
 
-  readonly locationOptions = computed<LocationOption[]>(() => {
+  readonly companyOptions = computed<CompanyOption[]>(() => {
     this.translationsReady();
     return [
-      { label: this.translate.instant('CATALOG.PRICING.ALL_LOCATIONS'), value: ALL_LOCATIONS_VALUE },
-      ...this.activeLocations().map((location) => ({ label: location.name, value: location.id })),
+      { label: this.translate.instant('CATALOG.PRICING.ALL_COMPANIES'), value: ALL_COMPANIES_VALUE },
+      ...this.activeCompanies().map((company) => ({ label: company.name, value: company.id })),
     ];
   });
 
@@ -134,7 +134,7 @@ export class PriceListItemFormDialogComponent {
       subjectType: this.fb.nonNullable.control<PriceListSubjectType>('Service', Validators.required),
       serviceId: this.fb.control<string | null>(null),
       packageId: this.fb.control<string | null>(null),
-      locationId: this.fb.nonNullable.control<string>(ALL_LOCATIONS_VALUE),
+      companyId: this.fb.nonNullable.control<string>(ALL_COMPANIES_VALUE),
       price: [0, [Validators.required, Validators.min(0)]],
       validFrom: this.fb.nonNullable.control<Date>(new Date(), Validators.required),
       validTo: this.fb.control<Date | null>(null),
@@ -200,7 +200,7 @@ export class PriceListItemFormDialogComponent {
       subjectType: raw.subjectType,
       serviceId: raw.subjectType === 'Service' ? (raw.serviceId ?? undefined) : undefined,
       packageId: raw.subjectType === 'Package' ? (raw.packageId ?? undefined) : undefined,
-      companyId: raw.locationId || undefined,
+      companyId: raw.companyId || undefined,
       price: raw.price,
       validFrom: toStartOfDayIso(raw.validFrom),
       validTo: raw.validTo ? toEndOfDayIso(raw.validTo) : undefined,
@@ -223,7 +223,7 @@ export class PriceListItemFormDialogComponent {
         subjectType,
         serviceId: item?.serviceId ?? null,
         packageId: item?.packageId ?? null,
-        locationId: item?.companyId ?? ALL_LOCATIONS_VALUE,
+        companyId: item?.companyId ?? ALL_COMPANIES_VALUE,
         price: item?.price ?? 0,
         validFrom: item ? new Date(item.validFrom) : new Date(),
         validTo: item?.validTo ? new Date(item.validTo) : null,
@@ -231,13 +231,13 @@ export class PriceListItemFormDialogComponent {
       { emitEvent: false },
     );
 
-    // Subject and location are immutable after creation - lock them in edit
+    // Subject and company are immutable after creation - lock them in edit
     // mode instead of sending them in PriceListUpdateRequest.
     const lockedFields = [
       this.form.controls.subjectType,
       this.form.controls.serviceId,
       this.form.controls.packageId,
-      this.form.controls.locationId,
+      this.form.controls.companyId,
     ];
     for (const control of lockedFields) {
       if (item) {

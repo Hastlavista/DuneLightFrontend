@@ -1,0 +1,39 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '28rem' }"
+  [header]="(isEditMode() ? 'CATALOG.ROOMS.EDIT_TITLE' : 'CATALOG.ROOMS.NEW_TITLE') | translate"
+  (onShow)="onDialogShow()"
+>
+  @if (dialogShown()) {
+    <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+      <div class="dl-form__field">
+        <label for="room-name">{{ 'CATALOG.ROOMS.FIELD_NAME' | translate }}</label>
+        <input id="room-name" type="text" pInputText fluid formControlName="name" maxlength="255" />
+        @if (form.controls.name.invalid && form.controls.name.touched) {
+          <span class="dl-form__error">{{ 'CATALOG.ROOMS.ERRORS.NAME_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <label class="dl-form__field dl-form__field--checkbox">
+        <p-toggleswitch formControlName="allowConcurrentBookings" />
+        <span>{{ 'CATALOG.ROOMS.FIELD_ALLOW_CONCURRENT' | translate }}</span>
+      </label>
+
+      <div class="dl-form__field">
+        <label for="room-note">{{ 'CATALOG.ROOMS.FIELD_NOTE' | translate }}</label>
+        <textarea id="room-note" pTextarea fluid rows="3" formControlName="note"></textarea>
+      </div>
+
+      <div class="dl-form__field">
+        <label for="room-sort-order">{{ 'CATALOG.ROOMS.FIELD_SORT_ORDER' | translate }}</label>
+        <p-inputnumber id="room-sort-order" fluid formControlName="sortOrder" [showButtons]="true" />
+      </div>
+
+      <div class="dl-form__actions">
+        <p-button type="button" [text]="true" severity="secondary" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" />
+        <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+      </div>
+    </form>
+  }
+</p-dialog>

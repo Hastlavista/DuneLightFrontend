@@ -1,6 +1,6 @@
 import { Component, input } from '@angular/core';
 
-/** Small color square used in šifrarnik tables (location/category color column)
+/** Small color square used in šifrarnik tables (company/category color column)
  * and next to the color picker in their forms. */
 @Component({
   selector: 'app-color-swatch',

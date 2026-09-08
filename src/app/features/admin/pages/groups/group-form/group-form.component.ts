@@ -27,12 +27,14 @@ import {
   GroupUpdateRequest,
   dayOfWeekTranslationKey,
 } from '../../../../../core/models/group.model';
-import { LocationDto } from '../../../../../core/models/location.model';
+import { CompanyDto } from '../../../../../core/models/company.model';
+import { RoomDto } from '../../../../../core/models/room.model';
 import { ServiceDto } from '../../../../../core/models/service.model';
 import { EmployeesService } from '../../../../../core/services/employees.service';
 import { GroupsService } from '../../../../../core/services/groups.service';
-import { LocationsService } from '../../../../../core/services/locations.service';
+import { CompaniesService } from '../../../../../core/services/companies.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
+import { RoomsService } from '../../../../../core/services/rooms.service';
 import { ServicesService } from '../../../../../core/services/services.service';
 import { toTimeOfDayString } from '../../../../../core/utils/time-of-day.util';
 import { translationReadySignal } from '../../../../../core/utils/translation-signal.util';
@@ -45,7 +47,7 @@ import { GroupSlotsSectionComponent } from './group-slots-section.component';
 const NEW_ID = 'new';
 
 /** pageSize max is 200 - fetches the full active set in one page for the
- * service/location/trainer pickers. */
+ * service/company/trainer pickers. */
 const LOOKUP_PAGE_SIZE = 200;
 
 export interface RefOption {
@@ -87,8 +89,9 @@ export class GroupFormComponent {
   private readonly fb = inject(FormBuilder);
   private readonly groupsService = inject(GroupsService);
   private readonly servicesService = inject(ServicesService);
-  private readonly locationsService = inject(LocationsService);
+  private readonly companiesService = inject(CompaniesService);
   private readonly employeesService = inject(EmployeesService);
+  private readonly roomsService = inject(RoomsService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
@@ -102,8 +105,9 @@ export class GroupFormComponent {
   readonly loadedGroup = signal<GroupDetailDto | null>(null);
 
   readonly activeServices = signal<ServiceDto[]>([]);
-  readonly activeLocations = signal<LocationDto[]>([]);
+  readonly activeCompanies = signal<CompanyDto[]>([]);
   readonly activeTrainers = signal<EmployeeDto[]>([]);
+  readonly activeRooms = signal<RoomDto[]>([]);
 
   private readonly translationsReady = translationReadySignal(this.translate);
 
@@ -119,9 +123,9 @@ export class GroupFormComponent {
     ),
   );
 
-  readonly locationOptions = computed<RefOption[]>(() =>
+  readonly companyOptions = computed<RefOption[]>(() =>
     this.mergeOptions(
-      this.activeLocations().map((location) => ({ id: location.id, name: location.name })),
+      this.activeCompanies().map((company) => ({ id: company.id, name: company.name })),
       this.groupRefOption((group) => ({ id: group.companyId, name: group.companyName })),
     ),
   );
@@ -135,12 +139,20 @@ export class GroupFormComponent {
     ),
   );
 
+  readonly roomOptions = computed<RefOption[]>(() =>
+    this.mergeOptions(
+      this.activeRooms().map((room) => ({ id: room.id, name: room.name })),
+      this.groupRefOption((group) => (group.defaultRoomId ? { id: group.defaultRoomId, name: group.defaultRoomName ?? '' } : null)),
+    ),
+  );
+
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(255)]],
     serviceId: this.fb.control<string | null>(null, Validators.required),
-    locationId: this.fb.control<string | null>(null, Validators.required),
+    companyId: this.fb.control<string | null>(null, Validators.required),
     capacity: this.fb.control<number | null>(1, [Validators.required, Validators.min(1)]),
     defaultTrainerId: this.fb.control<string | null>(null),
+    defaultRoomId: this.fb.control<string | null>(null),
     note: [''],
     slots: this.fb.array<FormGroup>([], slotsArrayValidator),
   });
@@ -155,8 +167,15 @@ export class GroupFormComponent {
     this.editingId.set(id);
 
     this.loadActiveServices();
-    this.loadActiveLocations();
+    this.loadActiveCompanies();
     this.loadActiveTrainers();
+
+    // Rooms belong to one company - reload whenever the picked company
+    // changes (same trigger as NewAppointmentDialogComponent.refreshRooms).
+    // No initial call needed: create mode starts with no company picked
+    // (loadActiveRooms would just no-op), edit mode's applyGroup() resets
+    // companyId to the loaded group's companyId, which fires this itself.
+    this.form.controls.companyId.valueChanges.subscribe(() => this.loadActiveRooms());
 
     if (id) {
       // Slots aren't part of the edit-mode form at all (see
@@ -236,14 +255,23 @@ export class GroupFormComponent {
     }
   }
 
-  private toCommonRequest(): { name: string; serviceId: string; companyId: string; capacity: number; defaultTrainerId: string | null; note: string | null } {
+  private toCommonRequest(): {
+    name: string;
+    serviceId: string;
+    companyId: string;
+    capacity: number;
+    defaultTrainerId: string | null;
+    defaultRoomId: string | null;
+    note: string | null;
+  } {
     const raw = this.form.getRawValue();
     return {
       name: raw.name,
       serviceId: raw.serviceId as string,
-      companyId: raw.locationId as string,
+      companyId: raw.companyId as string,
       capacity: raw.capacity as number,
       defaultTrainerId: raw.defaultTrainerId,
+      defaultRoomId: raw.defaultRoomId,
       note: raw.note || null,
     };
   }
@@ -281,16 +309,27 @@ export class GroupFormComponent {
       .subscribe((result) => this.activeServices.set(result.items));
   }
 
-  private loadActiveLocations(): void {
-    this.locationsService
+  private loadActiveCompanies(): void {
+    this.companiesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeLocations.set(result.items));
+      .subscribe((result) => this.activeCompanies.set(result.items));
   }
 
   private loadActiveTrainers(): void {
     this.employeesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
       .subscribe((result) => this.activeTrainers.set(result.items));
+  }
+
+  private loadActiveRooms(): void {
+    const companyId = this.form.controls.companyId.value;
+    if (!companyId) {
+      this.activeRooms.set([]);
+      return;
+    }
+    this.roomsService
+      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true, extraParams: { companyId } })
+      .subscribe((result) => this.activeRooms.set(result.items));
   }
 
   private loadGroup(id: string, options?: { quiet?: boolean }): void {
@@ -317,9 +356,10 @@ export class GroupFormComponent {
       {
         name: group.name,
         serviceId: group.serviceId,
-        locationId: group.companyId,
+        companyId: group.companyId,
         capacity: group.capacity,
         defaultTrainerId: group.defaultTrainerId,
+        defaultRoomId: group.defaultRoomId,
         note: group.note ?? '',
         slots: [],
       },

@@ -12,14 +12,14 @@
       />
     </div>
 
-    @if (activeLocations().length > 0) {
+    @if (activeCompanies().length > 0) {
       <p-select
-        class="team-monthly__location-filter"
-        [options]="locationOptions()"
+        class="team-monthly__company-filter"
+        [options]="companyOptions()"
         optionLabel="label"
         optionValue="value"
-        [ngModel]="locationId()"
-        (ngModelChange)="onLocationChange($event)"
+        [ngModel]="companyId()"
+        (ngModelChange)="onCompanyChange($event)"
       />
     }
   </div>
@@ -59,7 +59,7 @@
                   <span
                     class="team-monthly__entry"
                     [class.team-monthly__entry--absence]="entry.isAbsence"
-                    [style.background]="entry.rosterTypeColorHex ?? 'var(--olive-gold)'"
+                    [style.background]="entry.rosterTypeColorHex ?? 'var(--teal)'"
                     [title]="entryTooltip(entry)"
                     (click)="onCellClick(employee, day, entry.rosterEntryId); $event.stopPropagation()"
                   >
@@ -70,7 +70,7 @@
                   @for (interval of plannedIntervals(employee, day); track interval.start + interval.end) {
                     <span
                       class="team-monthly__entry"
-                      [style.background]="'var(--olive-gold)'"
+                      [style.background]="'var(--mint)'"
                       [title]="assumedTooltip(interval)"
                       (click)="onCellClick(employee, day, null, interval); $event.stopPropagation()"
                     >

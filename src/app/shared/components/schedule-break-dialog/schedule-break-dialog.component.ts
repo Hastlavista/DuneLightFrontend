@@ -13,6 +13,14 @@ import { NotificationService } from '../../../core/services/notification.service
 import { ScheduleBreaksService } from '../../../core/services/schedule-breaks.service';
 import { toLocalIsoFromDate } from '../../../core/utils/date.util';
 
+const BREAK_TIME_FORMATTER = new Intl.DateTimeFormat('hr-HR', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
 /**
  * View/edit/delete for a single existing break (frontend #22) - deliberately
  * NOT AppointmentDetailDialogComponent, which assumes a service/clients/price
@@ -25,8 +33,8 @@ import { toLocalIsoFromDate } from '../../../core/utils/date.util';
  * the feed's lightweight ScheduleBreakCellDto, which lacks
  * `recurrenceGroupId`.
  *
- * Trainer/location are shown read-only (this simple dialog never moves a
- * break to a different trainer/location, only its time/duration/note) -
+ * Trainer/company are shown read-only (this simple dialog never moves a
+ * break to a different trainer/company, only its time/duration/note) -
  * PUT still resends them unchanged since the endpoint is a full replace.
  *
  * Delete is a real delete (no "trag ostaje" note like cancelling a termin) -
@@ -134,6 +142,12 @@ export class ScheduleBreakDialogComponent {
           });
       },
     });
+  }
+
+  timeRangeLabel(scheduleBreak: ScheduleBreakDto): string {
+    const start = new Date(scheduleBreak.startsAt);
+    const end = new Date(start.getTime() + scheduleBreak.durationMinutes * 60_000);
+    return `${BREAK_TIME_FORMATTER.format(start)} - ${BREAK_TIME_FORMATTER.format(end)}`;
   }
 
   private fetch(id: string): void {

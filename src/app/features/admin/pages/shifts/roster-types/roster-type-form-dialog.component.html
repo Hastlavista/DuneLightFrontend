@@ -1,64 +1,145 @@
 <p-dialog
   [(visible)]="visible"
   [modal]="true"
-  [style]="{ width: '30rem' }"
-  [header]="(isEditMode() ? 'ROSTER.TYPES.EDIT_TITLE' : 'ROSTER.TYPES.NEW_TITLE') | translate"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '31rem', maxWidth: 'calc(100vw - 2rem)' }"
+  styleClass="roster-type-dialog"
   (onShow)="onDialogShow()"
 >
+  <ng-template #header>
+    <div class="roster-type-dialog__header">
+      <h2>{{ (isEditMode() ? 'ROSTER.TYPES.EDIT_TITLE' : 'ROSTER.TYPES.NEW_TITLE') | translate }}</h2>
+      <p>{{ 'ROSTER.TYPES.MODAL_SUBTITLE' | translate }}</p>
+    </div>
+  </ng-template>
+
   @if (dialogShown()) {
-  <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
-    <div class="dl-form__field">
-      <label for="roster-type-name">{{ 'ROSTER.TYPES.FIELD_NAME' | translate }}</label>
-      <input id="roster-type-name" type="text" pInputText fluid formControlName="name" maxlength="255" />
-      @if (form.controls.name.invalid && form.controls.name.touched) {
-        <span class="dl-form__error">{{ 'ROSTER.TYPES.ERRORS.NAME_REQUIRED' | translate }}</span>
-      }
-    </div>
+    <form [formGroup]="form" (ngSubmit)="onSave()" class="roster-type-form" novalidate>
+      <section class="roster-type-form__preview">
+        <span>{{ 'ROSTER.TYPES.PREVIEW_LABEL' | translate }}</span>
+        <strong [style.background-color]="'#' + form.controls.colorHex.value">
+          <i></i>
+          {{ previewName() }}
+        </strong>
+        <small>{{ previewKindLabel() }} · {{ previewWorkLabel() }}</small>
+      </section>
 
-    <div class="dl-form__field">
-      <label for="roster-type-color">{{ 'ROSTER.TYPES.FIELD_COLOR' | translate }}</label>
-      <p-colorpicker id="roster-type-color" formControlName="colorHex" appendTo="body" />
-    </div>
-
-    <div class="dl-form__row">
-      <div class="dl-form__field dl-form__field--checkbox">
-        <p-checkbox inputId="roster-type-counts-as-work" formControlName="countsAsWork" [binary]="true" />
-        <label for="roster-type-counts-as-work">{{ 'ROSTER.TYPES.FIELD_COUNTS_AS_WORK' | translate }}</label>
+      <div class="roster-type-form__field">
+        <label for="roster-type-name">{{ 'ROSTER.TYPES.FIELD_NAME' | translate }}</label>
+        <input id="roster-type-name" type="text" pInputText fluid formControlName="name" maxlength="255" />
+        @if (form.controls.name.invalid && form.controls.name.touched) {
+          <span class="roster-type-form__error">{{ 'ROSTER.TYPES.ERRORS.NAME_REQUIRED' | translate }}</span>
+        }
       </div>
 
-      <div class="dl-form__field dl-form__field--checkbox">
-        <p-checkbox inputId="roster-type-is-absence" formControlName="isAbsence" [binary]="true" />
-        <label for="roster-type-is-absence">{{ 'ROSTER.TYPES.FIELD_IS_ABSENCE' | translate }}</label>
+      <div class="roster-type-form__field">
+        <label>{{ 'ROSTER.TYPES.FIELD_COLOR' | translate }}</label>
+        <div class="roster-type-form__swatches">
+          @for (color of colorOptions; track color) {
+            <button
+              type="button"
+              class="roster-type-form__swatch"
+              [class.roster-type-form__swatch--active]="form.controls.colorHex.value === color"
+              [style.background-color]="'#' + color"
+              (click)="selectColor(color)"
+              [attr.aria-label]="('#' + color)"
+            >
+              @if (form.controls.colorHex.value === color) {
+                <i class="pi pi-check"></i>
+              }
+            </button>
+          }
+        </div>
       </div>
-    </div>
 
-    <div class="dl-form__field dl-form__field--checkbox">
-      <p-checkbox inputId="roster-type-requires-time" formControlName="requiresTime" [binary]="true" />
-      <label for="roster-type-requires-time">{{ 'ROSTER.TYPES.FIELD_REQUIRES_TIME' | translate }}</label>
-    </div>
-    <span class="dl-form__hint">{{ 'ROSTER.TYPES.REQUIRES_TIME_HINT' | translate }}</span>
+      <div class="roster-type-form__field">
+        <label>{{ 'ROSTER.TYPES.RECORD_SHAPE' | translate }}</label>
+        <div class="roster-type-form__mode-grid">
+          <button
+            type="button"
+            class="roster-type-form__mode"
+            [class.roster-type-form__mode--active]="!form.controls.isAbsence.value"
+            (click)="setAbsenceMode(false)"
+          >
+            <span></span>
+            <strong>{{ 'ROSTER.TYPES.PRESENCE' | translate }}</strong>
+            <small>{{ 'ROSTER.TYPES.PRESENCE_HINT' | translate }}</small>
+          </button>
+          <button
+            type="button"
+            class="roster-type-form__mode"
+            [class.roster-type-form__mode--active]="form.controls.isAbsence.value"
+            (click)="setAbsenceMode(true)"
+          >
+            <span></span>
+            <strong>{{ 'ROSTER.TYPES.ABSENCE' | translate }}</strong>
+            <small>{{ 'ROSTER.TYPES.ABSENCE_HINT' | translate }}</small>
+          </button>
+        </div>
+      </div>
 
-    <div class="dl-form__field dl-form__field--checkbox">
-      <p-checkbox inputId="roster-type-deducts-from-leave-fund" formControlName="deductsFromLeaveFund" [binary]="true" />
-      <label for="roster-type-deducts-from-leave-fund">{{ 'ROSTER.TYPES.FIELD_DEDUCTS_FROM_LEAVE_FUND' | translate }}</label>
-    </div>
-    <span class="dl-form__hint">{{ 'ROSTER.TYPES.DEDUCTS_FROM_LEAVE_FUND_HINT' | translate }}</span>
+      <div class="roster-type-form__field">
+        <label>{{ 'ROSTER.TYPES.OPTIONS_LABEL' | translate }}</label>
+        <div class="roster-type-form__option-list">
+          <label
+            class="roster-type-form__option"
+            [class.roster-type-form__option--active]="form.controls.countsAsWork.value"
+            for="roster-type-counts-as-work"
+          >
+            <p-checkbox inputId="roster-type-counts-as-work" formControlName="countsAsWork" [binary]="true" />
+            <span>
+              <strong>{{ 'ROSTER.TYPES.FIELD_COUNTS_AS_WORK' | translate }}</strong>
+              <small>{{ 'ROSTER.TYPES.COUNTS_AS_WORK_HINT' | translate }}</small>
+            </span>
+          </label>
 
-    <div class="dl-form__field">
-      <label for="roster-type-sort-order">{{ 'ROSTER.TYPES.FIELD_SORT_ORDER' | translate }}</label>
-      <p-inputnumber id="roster-type-sort-order" fluid formControlName="sortOrder" [showButtons]="true" />
-    </div>
+          <label
+            class="roster-type-form__option"
+            [class.roster-type-form__option--active]="form.controls.requiresTime.value"
+            for="roster-type-requires-time"
+          >
+            <p-checkbox inputId="roster-type-requires-time" formControlName="requiresTime" [binary]="true" />
+            <span>
+              <strong>{{ 'ROSTER.TYPES.FIELD_REQUIRES_TIME' | translate }}</strong>
+              <small>{{ 'ROSTER.TYPES.REQUIRES_TIME_HINT_SHORT' | translate }}</small>
+            </span>
+          </label>
 
-    <div class="dl-form__actions">
-      <p-button
-        type="button"
-        [text]="true"
-        severity="secondary"
-        [label]="'COMMON.CANCEL' | translate"
-        (onClick)="onCancel()"
-      />
-      <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
-    </div>
-  </form>
+          <label
+            class="roster-type-form__option"
+            [class.roster-type-form__option--active]="form.controls.deductsFromLeaveFund.value"
+            [class.roster-type-form__option--disabled]="form.controls.deductsFromLeaveFund.disabled"
+            for="roster-type-deducts-from-leave-fund"
+          >
+            <p-checkbox inputId="roster-type-deducts-from-leave-fund" formControlName="deductsFromLeaveFund" [binary]="true" />
+            <span>
+              <strong>{{ 'ROSTER.TYPES.FIELD_DEDUCTS_FROM_LEAVE_FUND' | translate }}</strong>
+              <small>{{ 'ROSTER.TYPES.DEDUCTS_FROM_LEAVE_FUND_HINT_SHORT' | translate }}</small>
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="roster-type-form__sort">
+        <div class="roster-type-form__sort-control">
+          <button type="button" (click)="decrementSortOrder()" aria-label="Smanji redoslijed">−</button>
+          <input id="roster-type-sort-order" type="number" formControlName="sortOrder" />
+          <button type="button" (click)="incrementSortOrder()" aria-label="Povećaj redoslijed">+</button>
+        </div>
+        <p>{{ 'ROSTER.TYPES.SORT_ORDER_HINT' | translate }}</p>
+      </div>
+
+      <div class="roster-type-form__actions">
+        <p-button
+          type="button"
+          severity="secondary"
+          [outlined]="true"
+          [label]="'COMMON.CANCEL' | translate"
+          (onClick)="onCancel()"
+        />
+        <p-button type="submit" [label]="'ROSTER.TYPES.SAVE_BUTTON' | translate" [loading]="saving()" />
+      </div>
+    </form>
   }
 </p-dialog>

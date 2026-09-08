@@ -1,6 +1,6 @@
 import { UserRole } from './role';
 
-export interface EmployeeLocation {
+export interface EmployeeCompany {
   companyId: string;
   companyName: string;
   isPrimary: boolean;
@@ -20,7 +20,7 @@ export interface CurrentEmployee {
    * check isOwner first rather than expecting it to appear here too. */
   grants: string[];
   colorHex: string | null;
-  companies: EmployeeLocation[];
+  companies: EmployeeCompany[];
   /** Whether this user has a PIN set for fast device switching (PinLogin) -
    * drives Profile's "Postavi PIN" vs "Promijeni PIN" section choice. */
   hasPinSet: boolean;
@@ -41,7 +41,7 @@ export interface EmployeeServiceLink {
  * grid, filter dropdown, or picker. `colorHex` is omitted entirely (not even
  * `null`) when the employee has none - always read it via `?? null`.
  * `companies` here is a flat array of company NAMES, not the full
- * `EmployeeLocation[]` the admin EmployeeDto carries (no ids, no isPrimary) -
+ * `EmployeeCompany[]` the admin EmployeeDto carries (no ids, no isPrimary) -
  * a real difference from EmployeeDto, not just a subset, so anything that
  * needs to match by company id (see ScheduleDayGridComponent's columns) must
  * resolve these names against an already-fetched company list first, it
@@ -62,7 +62,7 @@ export interface EmployeeDirectoryDto {
  * both the full EmployeeDto and the lighter EmployeeDirectoryDto above, so
  * these shared components can be fed either without duplicating them per
  * section (admin passes EmployeeDto[], trainer screens pass
- * EmployeeDirectoryDto[]). Deliberately excludes `locations` - EmployeeDto and
+ * EmployeeDirectoryDto[]). Deliberately excludes `companies` - EmployeeDto and
  * EmployeeDirectoryDto disagree on that field's shape (objects vs. plain
  * names), see EmployeeColumnEntry for the one place that needs it. */
 export interface EmployeeSummary {
@@ -72,8 +72,8 @@ export interface EmployeeSummary {
 }
 
 /** Normalized shape ScheduleDayGridComponent needs for its "day x every
- * trainer" columns, filterable by the globally-selected location id
- * (LocationContextService.selectedLocationId). Each host maps its own
+ * trainer" columns, filterable by the globally-selected company id
+ * (CompanyContextService.selectedCompanyId). Each host maps its own
  * employee source into this: admin's ScheduleComponent has the full
  * EmployeeDto (companies already carry a companyId), the trainer's
  * TodayComponent has the lighter EmployeeDirectoryDto (companies are plain
@@ -114,7 +114,7 @@ export interface EmployeeDto {
    * per-row lookup (see EmployeeListComponent). */
   grantGroupNames: string[];
   roleNames: string[];
-  companies: EmployeeLocation[];
+  companies: EmployeeCompany[];
   services: EmployeeServiceLink[];
   createdAt: string;
   createdBy: string | null;

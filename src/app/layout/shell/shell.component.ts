@@ -5,8 +5,9 @@ import { filter, map, startWith } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { InactivityService } from '../../core/auth/inactivity.service';
 import { KnownUsersService } from '../../core/auth/known-users.service';
+import { BrandingService } from '../../core/services/branding.service';
 import { CurrentEmployeeService } from '../../core/services/current-employee.service';
-import { LocationContextService } from '../../core/services/location-context.service';
+import { CompanyContextService } from '../../core/services/company-context.service';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { TopbarComponent } from '../topbar/topbar.component';
 
@@ -34,13 +35,25 @@ export class ShellComponent {
   );
 
   constructor(
-    private readonly locationContextService: LocationContextService,
+    private readonly companyContextService: CompanyContextService,
     private readonly currentEmployeeService: CurrentEmployeeService,
     private readonly authService: AuthService,
     private readonly knownUsersService: KnownUsersService,
     private readonly inactivityService: InactivityService,
+    private readonly brandingService: BrandingService,
   ) {
-    this.locationContextService.loadLocations();
+    this.companyContextService.loadCompanies();
+    // Apply the org's branding (colors, logo, favicon) across the whole app
+    // after login. Uses the no-auth public endpoint so every role gets the
+    // look applied, not just the Owner (the owner-only /api/organization/
+    // branding endpoint is for the settings page's form).
+    const slug = this.authService.organizationSlug();
+    if (slug) {
+      this.brandingService.getPublicBranding(slug).subscribe({
+        next: (branding) => this.brandingService.apply(branding),
+        error: () => {},
+      });
+    }
     // ensureLoaded(), not load() - a guard on this navigation (adminGuard/
     // ownerGuard) may have already triggered and awaited the fetch before
     // this component ever got constructed; avoid a redundant second call.

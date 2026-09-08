@@ -69,8 +69,8 @@ export class ClientAppointmentsTabComponent {
   }
 
   /** "17:00" from a TimeSpan string ("HH:mm:ss") - see GroupSlotDto.startTime. */
-  slotTimeLabel(startTime: string): string {
-    return startTime.slice(0, 5);
+  slotTimeLabel(startTime: string | null | undefined): string {
+    return startTime?.slice(0, 5) ?? '';
   }
 
   /** "23.07.2026. 17:00" - hrDate has no time component, so this combines it

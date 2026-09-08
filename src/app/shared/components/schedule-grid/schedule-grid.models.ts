@@ -9,7 +9,7 @@ export interface ScheduleGridColumn {
   label: string;
   subLabel?: string;
   /** Grid B (week x days) only - true when this column's calendar day is a
-   * holiday for the selected location, see schedule-holiday.util.ts. Always
+   * holiday for the selected company, see schedule-holiday.util.ts. Always
    * false for grid A (day x trainers), whose columns are trainers, not days -
    * that grid shows a banner above the whole grid instead, see
    * ScheduleDayGridComponent. */
@@ -34,9 +34,11 @@ export interface ScheduleGridCell {
   durationMinutes: number;
   colorHex: string;
   /** Only set when "sve lokacije" is selected - renders as a small colored dot. */
-  locationColorHex?: string | null;
+  companyColorHex?: string | null;
   title: string;
   subtitle: string;
+  /** Only set for `kind === 'appointment'` when a room is assigned. */
+  roomName?: string;
   /** True only for an appointment's `NoShow` status - `Cancelled` appointments
    * never reach the grid at all (filtered out before toScheduleGridCell() is
    * called, see ScheduleDayGridComponent/ScheduleWeekGridComponent's
@@ -56,7 +58,7 @@ export interface ScheduleGridCell {
 /** Emitted on a click that lands on empty grid space (not an appointment
  * block) - opens NewAppointmentDialogComponent, see
  * DayEmptySlotEvent/WeekEmptySlotEvent for how each grid resolves this into
- * a full date/trainer/location. */
+ * a full date/trainer/company. */
 export interface ScheduleEmptySlotClickEvent {
   columnId: string;
   startMinutes: number;

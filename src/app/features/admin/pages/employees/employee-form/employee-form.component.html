@@ -174,40 +174,40 @@
     </section>
 
     <section class="employee-form-page__section">
-      <h3>{{ 'EMPLOYEES.SECTION_LOCATIONS' | translate }}</h3>
+      <h3>{{ 'EMPLOYEES.SECTION_COMPANIES' | translate }}</h3>
 
       <div class="dl-form__field">
-        <label for="employee-locations">{{ 'EMPLOYEES.FIELD_LOCATIONS' | translate }}</label>
+        <label for="employee-companies">{{ 'EMPLOYEES.FIELD_COMPANIES' | translate }}</label>
         <p-multiselect
-          id="employee-locations"
+          id="employee-companies"
           fluid
           appendTo="body"
           display="chip"
-          formControlName="locationIds"
-          [options]="locationOptions()"
+          formControlName="companyIds"
+          [options]="companyOptions()"
           optionLabel="name"
           optionValue="id"
-          [placeholder]="'EMPLOYEES.FIELD_LOCATIONS_PLACEHOLDER' | translate"
+          [placeholder]="'EMPLOYEES.FIELD_COMPANIES_PLACEHOLDER' | translate"
         />
-        @if (form.controls.locationIds.invalid && form.controls.locationIds.touched) {
-          <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.LOCATIONS_REQUIRED' | translate }}</span>
+        @if (form.controls.companyIds.invalid && form.controls.companyIds.touched) {
+          <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.COMPANIES_REQUIRED' | translate }}</span>
         }
       </div>
 
       <div class="dl-form__field">
-        <label for="employee-primary-location">{{ 'EMPLOYEES.FIELD_PRIMARY_LOCATION' | translate }}</label>
+        <label for="employee-primary-company">{{ 'EMPLOYEES.FIELD_PRIMARY_COMPANY' | translate }}</label>
         <p-select
-          id="employee-primary-location"
+          id="employee-primary-company"
           fluid
           appendTo="body"
-          formControlName="primaryLocationId"
-          [options]="primaryLocationOptions()"
+          formControlName="primaryCompanyId"
+          [options]="primaryCompanyOptions()"
           optionLabel="name"
           optionValue="id"
-          [placeholder]="'EMPLOYEES.FIELD_PRIMARY_LOCATION_PLACEHOLDER' | translate"
+          [placeholder]="'EMPLOYEES.FIELD_PRIMARY_COMPANY_PLACEHOLDER' | translate"
         />
-        @if (form.errors?.['primaryNotSelected'] && form.controls.primaryLocationId.touched) {
-          <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.PRIMARY_LOCATION_REQUIRED' | translate }}</span>
+        @if (form.errors?.['primaryNotSelected'] && form.controls.primaryCompanyId.touched) {
+          <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.PRIMARY_COMPANY_REQUIRED' | translate }}</span>
         }
       </div>
     </section>

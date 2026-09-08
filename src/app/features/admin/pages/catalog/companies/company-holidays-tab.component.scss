@@ -1,5 +1,5 @@
 .company-holidays-tab {
-  padding: 0.5rem 0 1rem;
+  padding: 0 0 1rem;
 
   &__toolbar {
     display: flex;
@@ -7,7 +7,7 @@
     align-items: flex-end;
     flex-wrap: wrap;
     gap: 1rem;
-    margin-bottom: 1rem;
+    margin-bottom: 0.8rem;
   }
 
   &__year-field {
@@ -25,9 +25,9 @@
     gap: 0.5rem;
     padding: 0.75rem 1rem;
     margin-bottom: 1rem;
-    background: var(--paper);
-    border: 1px solid var(--sand-deep);
-    border-radius: var(--radius-card);
+    background: var(--mint-tint);
+    border: 1px solid var(--mint-border);
+    border-radius: 8px;
     font-size: 0.9rem;
 
     a {
@@ -39,9 +39,9 @@
   &__add-form {
     padding: 1rem;
     margin-bottom: 1rem;
-    background: var(--paper);
-    border: 1px solid var(--sand);
-    border-radius: var(--radius-card);
+    background: var(--surface-warm);
+    border: 1px solid var(--rose-border);
+    border-radius: 8px;
   }
 
   &__actions-col {
@@ -51,6 +51,6 @@
   &__empty {
     text-align: center;
     padding: 2rem 0;
-    color: var(--olive-gold);
+    color: var(--ink-muted);
   }
 }

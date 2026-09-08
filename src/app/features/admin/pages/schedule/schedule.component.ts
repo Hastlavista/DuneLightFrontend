@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
@@ -6,13 +6,15 @@ import { Select } from 'primeng/select';
 import { APPOINTMENT_STATUSES, AppointmentScheduleCellDto, AppointmentStatus, appointmentStatusTranslationKey } from '../../../../core/models/appointment.model';
 import { EmployeeColumnEntry, EmployeeDto } from '../../../../core/models/employee.model';
 import { GroupAppointmentCellDto, GroupDto } from '../../../../core/models/group.model';
-import { LocationDto } from '../../../../core/models/location.model';
+import { CompanyDto } from '../../../../core/models/company.model';
+import { RoomDto } from '../../../../core/models/room.model';
 import { EXECUTION_MODES, ServiceDto, ServiceExecutionMode, executionModeTranslationKey } from '../../../../core/models/service.model';
 import { ScheduleBreakCellDto } from '../../../../core/models/schedule-break.model';
 import { EmployeesService } from '../../../../core/services/employees.service';
 import { GroupsService } from '../../../../core/services/groups.service';
-import { LocationContextService } from '../../../../core/services/location-context.service';
-import { LocationsService } from '../../../../core/services/locations.service';
+import { CompanyContextService } from '../../../../core/services/company-context.service';
+import { CompaniesService } from '../../../../core/services/companies.service';
+import { RoomsService } from '../../../../core/services/rooms.service';
 import { ServicesService } from '../../../../core/services/services.service';
 import { translationReadySignal } from '../../../../core/utils/translation-signal.util';
 import { AppointmentDetailDialogComponent } from '../../../../shared/components/appointment-detail-dialog/appointment-detail-dialog.component';
@@ -38,7 +40,7 @@ interface FilterOption<T> {
  * Admin "Raspored" - grid A (day x every trainer) by default, switchable to
  * grid B (week x days) for a single chosen trainer. Both grids share the
  * status/service/execution-mode filters and the color legend defined here;
- * location itself is the global topbar switcher (LocationContextService),
+ * company itself is the global topbar switcher (CompanyContextService),
  * not a filter owned by this page - see ScheduleDayGridComponent/
  * ScheduleWeekGridComponent, which each react to it directly.
  *
@@ -50,7 +52,7 @@ interface FilterOption<T> {
  * group's serviceId the dialog needs for eligible-package lookups. A click on
  * *empty* grid space (`emptySlotClick`) or the toolbar's "Novi termin" button
  * both open NewAppointmentDialogComponent, prefilled from the click's
- * date/trainer/location where there is one. `#dayGrid`/`#weekGrid` let this
+ * date/trainer/company where there is one. `#dayGrid`/`#weekGrid` let this
  * component call `refetch()` back on whichever grid is currently rendered
  * once any of these dialogs closes.
  */
@@ -76,8 +78,9 @@ interface FilterOption<T> {
 export class ScheduleComponent {
   private readonly employeesService = inject(EmployeesService);
   private readonly groupsService = inject(GroupsService);
-  private readonly locationContext = inject(LocationContextService);
-  private readonly locationsService = inject(LocationsService);
+  private readonly companyContext = inject(CompanyContextService);
+  private readonly companiesService = inject(CompaniesService);
+  private readonly roomsService = inject(RoomsService);
   private readonly servicesService = inject(ServicesService);
   private readonly translate = inject(TranslateService);
 
@@ -90,10 +93,12 @@ export class ScheduleComponent {
   readonly statusFilter = signal<AppointmentStatus | null>(null);
   readonly executionModeFilter = signal<ServiceExecutionMode | null>(null);
   readonly serviceFilter = signal<string | null>(null);
+  readonly roomFilter = signal<string | null>(null);
 
   readonly activeEmployees = signal<EmployeeDto[]>([]);
   readonly activeServices = signal<ServiceDto[]>([]);
-  readonly activeLocations = signal<LocationDto[]>([]);
+  readonly activeCompanies = signal<CompanyDto[]>([]);
+  readonly activeRooms = signal<RoomDto[]>([]);
 
   readonly detailVisible = signal(false);
   readonly detailAppointmentId = signal<string | null>(null);
@@ -113,8 +118,8 @@ export class ScheduleComponent {
 
   private readonly translationsReady = translationReadySignal(this.translate);
 
-  /** ScheduleDayGridComponent's columns need per-location ids to filter by the
-   * globally-selected location, which EmployeeDto already carries directly
+  /** ScheduleDayGridComponent's columns need per-company ids to filter by the
+   * globally-selected company, which EmployeeDto already carries directly
    * (unlike the trainer-safe EmployeeDirectoryDto used by TodayComponent, see
    * EmployeeColumnEntry's doc comment). */
   readonly employeeColumns = computed<EmployeeColumnEntry[]>(() =>
@@ -165,10 +170,27 @@ export class ScheduleComponent {
     ];
   });
 
+  readonly roomFilterOptions = computed<FilterOption<string>[]>(() => {
+    this.translationsReady();
+    return [
+      { label: this.translate.instant('SCHEDULE.FILTER_ROOM_ALL'), value: null },
+      ...this.activeRooms().map((room) => ({ label: room.name, value: room.id })),
+    ];
+  });
+
   constructor() {
     this.loadActiveEmployees();
     this.loadActiveServices();
-    this.loadActiveLocations();
+    this.loadActiveCompanies();
+
+    // Rooms are company-scoped, unlike the other three lookups above (loaded
+    // once) - reload whenever the global company switcher changes, and clear
+    // any room filter that no longer applies to the newly-selected company.
+    effect(() => {
+      const companyId = this.companyContext.selectedCompanyId();
+      this.roomFilter.set(null);
+      this.loadActiveRooms(companyId);
+    });
   }
 
   setViewMode(mode: ViewMode): void {
@@ -197,9 +219,9 @@ export class ScheduleComponent {
   }
 
   /** "Novi termin" toolbar button - no cell context, so only startsAt (now)
-   * and the global location switcher's current selection are prefilled. */
+   * and the global company switcher's current selection are prefilled. */
   openNewAppointment(): void {
-    this.newAppointmentInitial.set({ startsAt: new Date(), employeeId: null, companyId: this.locationContext.selectedLocationId() });
+    this.newAppointmentInitial.set({ startsAt: new Date(), employeeId: null, companyId: this.companyContext.selectedCompanyId() });
     this.newAppointmentVisible.set(true);
   }
 
@@ -215,7 +237,7 @@ export class ScheduleComponent {
 
   /** "+ Pauza" toolbar button - same prefill convention as "Novi termin". */
   openNewBreak(): void {
-    this.newBreakInitial.set({ startsAt: new Date(), employeeId: null, companyId: this.locationContext.selectedLocationId() });
+    this.newBreakInitial.set({ startsAt: new Date(), employeeId: null, companyId: this.companyContext.selectedCompanyId() });
     this.newBreakVisible.set(true);
   }
 
@@ -257,9 +279,19 @@ export class ScheduleComponent {
       .subscribe((result) => this.activeServices.set(result.items));
   }
 
-  private loadActiveLocations(): void {
-    this.locationsService
+  private loadActiveCompanies(): void {
+    this.companiesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeLocations.set(result.items));
+      .subscribe((result) => this.activeCompanies.set(result.items));
+  }
+
+  private loadActiveRooms(companyId: string | null): void {
+    if (!companyId) {
+      this.activeRooms.set([]);
+      return;
+    }
+    this.roomsService
+      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true, extraParams: { companyId } })
+      .subscribe((result) => this.activeRooms.set(result.items));
   }
 }

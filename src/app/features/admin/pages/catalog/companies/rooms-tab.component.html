@@ -1,6 +1,6 @@
-<div class="dl-card locations-page">
+<div class="rooms-tab">
   <app-list-toolbar
-    [newLabelKey]="'CATALOG.LOCATIONS.NEW'"
+    [newLabelKey]="'CATALOG.ROOMS.NEW'"
     [search]="search()"
     [showInactive]="showInactive()"
     (searchChange)="onSearchChange($event)"
@@ -23,32 +23,28 @@
   >
     <ng-template pTemplate="header">
       <tr>
-        <th>{{ 'CATALOG.LOCATIONS.COL_NAME' | translate }}</th>
-        <th>{{ 'CATALOG.LOCATIONS.COL_ADDRESS' | translate }}</th>
-        <th>{{ 'CATALOG.LOCATIONS.COL_PHONE' | translate }}</th>
-        <th>{{ 'CATALOG.LOCATIONS.COL_COLOR' | translate }}</th>
+        <th>{{ 'CATALOG.ROOMS.COL_NAME' | translate }}</th>
+        <th>{{ 'CATALOG.ROOMS.COL_ALLOW_CONCURRENT' | translate }}</th>
         <th>{{ 'COMMON.COL_STATUS' | translate }}</th>
-        <th class="locations-page__actions-col"></th>
+        <th class="rooms-tab__actions-col"></th>
       </tr>
     </ng-template>
 
-    <ng-template pTemplate="body" let-location>
-      <tr [class.locations-page__row--inactive]="!location.isActive">
-        <td>{{ location.name }}</td>
-        <td>{{ location.address || '—' }}</td>
-        <td>{{ location.phone || '—' }}</td>
-        <td><app-color-swatch [colorHex]="location.colorHex" /></td>
-        <td><app-status-tag [active]="location.isActive" /></td>
-        <td class="locations-page__actions">
+    <ng-template pTemplate="body" let-room>
+      <tr [class.rooms-tab__row--inactive]="!room.isActive">
+        <td>{{ room.name }}</td>
+        <td>{{ (room.allowConcurrentBookings ? 'COMMON.YES' : 'COMMON.NO') | translate }}</td>
+        <td><app-status-tag [active]="room.isActive" /></td>
+        <td class="rooms-tab__actions">
           <p-button
             icon="pi pi-pencil"
             [text]="true"
             [rounded]="true"
             [ariaLabel]="'COMMON.EDIT' | translate"
             [title]="'COMMON.EDIT' | translate"
-            (onClick)="openEdit(location)"
+            (onClick)="openEdit(room)"
           />
-          @if (location.isActive) {
+          @if (room.isActive) {
             <p-button
               icon="pi pi-eye-slash"
               severity="warn"
@@ -56,7 +52,7 @@
               [rounded]="true"
               [ariaLabel]="'COMMON.DEACTIVATE' | translate"
               [title]="'COMMON.DEACTIVATE' | translate"
-              (onClick)="confirmDeactivate(location)"
+              (onClick)="confirmDeactivate(room)"
             />
           } @else {
             <p-button
@@ -66,7 +62,7 @@
               [rounded]="true"
               [ariaLabel]="'COMMON.ACTIVATE' | translate"
               [title]="'COMMON.ACTIVATE' | translate"
-              (onClick)="activate(location)"
+              (onClick)="activate(room)"
             />
           }
           <p-button
@@ -76,7 +72,7 @@
             [rounded]="true"
             [ariaLabel]="'COMMON.DELETE' | translate"
             [title]="'COMMON.DELETE' | translate"
-            (onClick)="confirmDelete(location)"
+            (onClick)="confirmDelete(room)"
           />
         </td>
       </tr>
@@ -84,10 +80,10 @@
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="6" class="locations-page__empty">{{ 'CATALOG.LOCATIONS.EMPTY' | translate }}</td>
+        <td colspan="4" class="rooms-tab__empty">{{ 'CATALOG.ROOMS.EMPTY' | translate }}</td>
       </tr>
     </ng-template>
   </p-table>
 </div>
 
-<app-location-form-dialog [(visible)]="dialogVisible" [location]="editingLocation()" (saved)="onSaved()" />
+<app-room-form-dialog [(visible)]="dialogVisible" [companyId]="companyId()" [room]="editingRoom()" (saved)="onSaved()" />

@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
@@ -6,10 +6,11 @@ import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { Password } from 'primeng/password';
-import { finalize } from 'rxjs';
+import { Subscription, distinctUntilChanged, finalize, map, startWith } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { KnownDeviceUser, KnownUsersService } from '../../../core/auth/known-users.service';
 import { AppError } from '../../../core/models/api-error.model';
+import { BrandingService, resolveBrandingAssetUrl } from '../../../core/services/branding.service';
 import { resolveErrorMessage } from '../../../core/utils/error-translation.util';
 
 const PIN_PATTERN = /^\d{4,6}$/;
@@ -28,6 +29,13 @@ export class LoginComponent {
   private readonly route = inject(ActivatedRoute);
   private readonly translate = inject(TranslateService);
   private readonly confirmationService = inject(ConfirmationService);
+  private readonly brandingService = inject(BrandingService);
+
+  /** Branding for the current slug (from prefill or typing), fetched without
+   * auth. Used to swap the login logo and apply the org's colors/favicon.
+   * Read from the shared service signal so the login screen and the post-login
+   * shell agree on what's currently applied. */
+  readonly branding = this.brandingService.branding;
 
   /** "Odjava" (sidebar) links here with ?mode=full to force the plain login
    * form even when this device has known users - see SidebarComponent.logout(). */
@@ -58,6 +66,39 @@ export class LoginComponent {
   readonly pinForm = this.fb.nonNullable.group({
     pin: ['', [Validators.required, Validators.pattern(PIN_PATTERN)]],
   });
+
+  /** `<img src>`-ready URL for the current branding logo (or null when unset) -
+   * resolved against the API origin, since the backend serves uploaded assets
+   * itself rather than the Angular app. */
+  readonly logoUrl = computed(() => resolveBrandingAssetUrl(this.branding()?.logo));
+
+  constructor() {
+    // Leaving the app (logout / switch user) resets branding to platform
+    // defaults; this screen then re-applies the new org's look as the slug
+    // becomes known below.
+    this.brandingService.reset();
+
+    // Fetch public branding for whatever slug is being typed/prefilled. A
+    // result only takes effect if the slug is still the same when the response
+    // lands, so out-of-order responses can't win.
+    const brandingSub = this.form.controls.organizationSlug.valueChanges
+      .pipe(startWith(this.form.controls.organizationSlug.value ?? ''), map((v) => v?.trim() ?? ''), distinctUntilChanged())
+      .subscribe((slug) => {
+        if (!slug) {
+          this.brandingService.clear();
+          return;
+        }
+        this.brandingService.getPublicBranding(slug).subscribe({
+          next: (b) => {
+            if (this.form.controls.organizationSlug.value?.trim() === slug) {
+              this.brandingService.apply(b);
+            }
+          },
+          error: () => {},
+        });
+      });
+    inject(DestroyRef).onDestroy(() => brandingSub.unsubscribe());
+  }
 
   onSubmit(): void {
     if (this.form.invalid) {
@@ -96,7 +137,7 @@ export class LoginComponent {
   }
 
   colorFor(user: KnownDeviceUser): string {
-    return user.colorHex || 'var(--gold)';
+    return user.colorHex || 'var(--teal)';
   }
 
   submitPin(): void {

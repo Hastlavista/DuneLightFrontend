@@ -1,42 +1,43 @@
-import { Component, ViewChild, inject, signal } from '@angular/core';
+import { Component, ViewChild, effect, inject, input, signal } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
-import { LocationsService } from '../../../../../core/services/locations.service';
+import { RoomDto } from '../../../../../core/models/room.model';
 import { NotificationService } from '../../../../../core/services/notification.service';
-import { LocationDto } from '../../../../../core/models/location.model';
-import { ColorSwatchComponent } from '../../../../../shared/components/color-swatch/color-swatch.component';
+import { RoomsService } from '../../../../../core/services/rooms.service';
 import { ListToolbarComponent } from '../../../../../shared/components/list-toolbar/list-toolbar.component';
 import { StatusTagComponent } from '../../../../../shared/components/status-tag/status-tag.component';
-import { LocationFormDialogComponent } from './location-form-dialog.component';
+import { RoomFormDialogComponent } from './room-form-dialog.component';
 
 const DEFAULT_PAGE_SIZE = 20;
 
+/** "Prostorije" tab on the company form dialog (see CompanyFormDialogComponent) -
+ * same self-contained-per-owner shape as CompanyHolidaysTabComponent, but a
+ * full šifrarnik (edit/activate/deactivate/delete, not just add+delete) so it
+ * mirrors CompaniesComponent/CatalogServicesComponent's table+dialog pair
+ * instead. No internal manage-vs-view action gating, same as those two - only
+ * the tab's own visibility is grant-gated (see CompanyFormDialogComponent.canViewRooms),
+ * per-action gating isn't done anywhere in this app yet (see nav-items.ts's
+ * own doc comment on that). */
 @Component({
-  selector: 'app-admin-locations',
-  imports: [
-    TableModule,
-    Button,
-    TranslatePipe,
-    ListToolbarComponent,
-    StatusTagComponent,
-    ColorSwatchComponent,
-    LocationFormDialogComponent,
-  ],
-  templateUrl: './locations.component.html',
-  styleUrl: './locations.component.scss',
+  selector: 'app-rooms-tab',
+  imports: [TableModule, Button, TranslatePipe, ListToolbarComponent, StatusTagComponent, RoomFormDialogComponent],
+  templateUrl: './rooms-tab.component.html',
+  styleUrl: './rooms-tab.component.scss',
 })
-export class LocationsComponent {
-  private readonly locationsService = inject(LocationsService);
+export class RoomsTabComponent {
+  private readonly roomsService = inject(RoomsService);
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
 
+  readonly companyId = input.required<string>();
+
   @ViewChild('dt') private table!: Table;
 
-  readonly items = signal<LocationDto[]>([]);
+  readonly items = signal<RoomDto[]>([]);
   readonly totalCount = signal(0);
   readonly loading = signal(false);
   readonly rows = signal(DEFAULT_PAGE_SIZE);
@@ -44,7 +45,17 @@ export class LocationsComponent {
   readonly showInactive = signal(false);
 
   readonly dialogVisible = signal(false);
-  readonly editingLocation = signal<LocationDto | null>(null);
+  readonly editingRoom = signal<RoomDto | null>(null);
+
+  constructor() {
+    effect(() => {
+      // Re-fetch from row 0 whenever the owning company changes (in practice
+      // only once, right after this tab unlocks post-create - see
+      // CompanyFormDialogComponent.createdCompanyId).
+      this.companyId();
+      this.fetch(0, this.rows());
+    });
+  }
 
   onLazyLoad(event: TableLazyLoadEvent): void {
     const first = event.first ?? 0;
@@ -66,12 +77,12 @@ export class LocationsComponent {
   }
 
   openCreate(): void {
-    this.editingLocation.set(null);
+    this.editingRoom.set(null);
     this.dialogVisible.set(true);
   }
 
-  openEdit(location: LocationDto): void {
-    this.editingLocation.set(location);
+  openEdit(room: RoomDto): void {
+    this.editingRoom.set(room);
     this.dialogVisible.set(true);
   }
 
@@ -79,27 +90,27 @@ export class LocationsComponent {
     this.fetch(this.table?.first ?? 0, this.rows());
   }
 
-  activate(location: LocationDto): void {
-    this.locationsService.activate(location.id).subscribe({
+  activate(room: RoomDto): void {
+    this.roomsService.activate(room.id).subscribe({
       next: () => {
-        this.notifications.showSuccess(this.translate.instant('CATALOG.LOCATIONS.ACTIVATED'));
+        this.notifications.showSuccess(this.translate.instant('CATALOG.ROOMS.ACTIVATED'));
         this.fetch(this.table?.first ?? 0, this.rows());
       },
       error: () => {},
     });
   }
 
-  confirmDeactivate(location: LocationDto): void {
+  confirmDeactivate(room: RoomDto): void {
     this.confirmationService.confirm({
       header: this.translate.instant('COMMON.CONFIRM_HEADER'),
-      message: this.translate.instant('CATALOG.LOCATIONS.CONFIRM_DEACTIVATE', { name: location.name }),
+      message: this.translate.instant('CATALOG.ROOMS.CONFIRM_DEACTIVATE', { name: room.name }),
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: this.translate.instant('COMMON.YES'),
       rejectLabel: this.translate.instant('COMMON.NO'),
       accept: () => {
-        this.locationsService.deactivate(location.id).subscribe({
+        this.roomsService.deactivate(room.id).subscribe({
           next: () => {
-            this.notifications.showSuccess(this.translate.instant('CATALOG.LOCATIONS.DEACTIVATED'));
+            this.notifications.showSuccess(this.translate.instant('CATALOG.ROOMS.DEACTIVATED'));
             this.fetch(this.table?.first ?? 0, this.rows());
           },
           error: () => {},
@@ -108,18 +119,18 @@ export class LocationsComponent {
     });
   }
 
-  confirmDelete(location: LocationDto): void {
+  confirmDelete(room: RoomDto): void {
     this.confirmationService.confirm({
       header: this.translate.instant('COMMON.CONFIRM_HEADER'),
-      message: this.translate.instant('CATALOG.LOCATIONS.CONFIRM_DELETE', { name: location.name }),
+      message: this.translate.instant('CATALOG.ROOMS.CONFIRM_DELETE', { name: room.name }),
       icon: 'pi pi-trash',
       acceptLabel: this.translate.instant('COMMON.YES'),
       rejectLabel: this.translate.instant('COMMON.NO'),
       acceptButtonProps: { severity: 'danger' },
       accept: () => {
-        this.locationsService.delete(location.id).subscribe({
+        this.roomsService.delete(room.id).subscribe({
           next: () => {
-            this.notifications.showSuccess(this.translate.instant('CATALOG.LOCATIONS.DELETED'));
+            this.notifications.showSuccess(this.translate.instant('CATALOG.ROOMS.DELETED'));
             this.fetch(this.table?.first ?? 0, this.rows());
           },
           error: () => {},
@@ -131,13 +142,16 @@ export class LocationsComponent {
   private fetch(first: number, rows: number): void {
     this.loading.set(true);
     const page = Math.floor(first / rows) + 1;
-    this.locationsService
-      .getPage({
-        page,
-        pageSize: rows,
-        search: this.search() || undefined,
-        isActive: this.showInactive() ? undefined : true,
-      })
+    this.roomsService
+      .getPage(
+        {
+          page,
+          pageSize: rows,
+          search: this.search() || undefined,
+          isActive: this.showInactive() ? undefined : true,
+        },
+        { extraParams: { companyId: this.companyId() } },
+      )
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe((result) => {
         this.items.set(result.items);

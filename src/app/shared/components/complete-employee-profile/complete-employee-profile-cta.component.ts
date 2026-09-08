@@ -39,14 +39,14 @@ export class CompleteEmployeeProfileCtaComponent {
   );
 
   readonly dialogVisible = signal(false);
-  /** Set once openDialog() finds hasLocation/hasEngagementType unmet - the form
+  /** Set once openDialog() finds hasCompany/hasEngagementType unmet - the form
    * has no explanation for its own three dropdowns, so it must not open onto
    * an empty, unusable state (frontend #25). */
   readonly prerequisitesMissing = signal(false);
 
   openDialog(): void {
     this.onboardingStatusService.getStatus().subscribe((status) => {
-      if (status.hasLocation && status.hasEngagementType) {
+      if (status.hasCompany && status.hasEngagementType) {
         this.prerequisitesMissing.set(false);
         this.dialogVisible.set(true);
       } else {

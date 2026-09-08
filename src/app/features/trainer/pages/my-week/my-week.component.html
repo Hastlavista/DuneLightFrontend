@@ -8,7 +8,7 @@
     <app-schedule-week-grid
       #weekGrid
       [employeeId]="currentEmployeeId()"
-      [activeLocations]="activeLocations()"
+      [activeCompanies]="activeCompanies()"
       (appointmentClicked)="onAppointmentClicked($event)"
       (breakClicked)="onBreakClicked($event)"
       (emptySlotClick)="onEmptySlotClick($event)"
@@ -22,7 +22,7 @@
   [(visible)]="detailVisible"
   [appointmentId]="detailAppointmentId()"
   [employees]="[]"
-  [locations]="activeLocations()"
+  [companies]="activeCompanies()"
   [allowEmployeeChange]="false"
   (saved)="refreshGrid()"
 />
@@ -37,7 +37,7 @@
 <app-new-appointment-dialog
   [(visible)]="newAppointmentVisible"
   [employees]="activeEmployees()"
-  [locations]="activeLocations()"
+  [companies]="activeCompanies()"
   [services]="activeServices()"
   [initial]="newAppointmentInitial()"
   (created)="refreshGrid()"
@@ -52,7 +52,7 @@
 <app-schedule-break-form-dialog
   [(visible)]="newBreakVisible"
   [employees]="activeEmployees()"
-  [locations]="activeLocations()"
+  [companies]="activeCompanies()"
   [initial]="newBreakInitial()"
   (created)="refreshGrid()"
 />

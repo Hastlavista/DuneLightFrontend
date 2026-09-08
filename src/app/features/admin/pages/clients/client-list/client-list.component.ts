@@ -13,11 +13,11 @@ import { AuthService } from '../../../../../core/auth/auth.service';
 import { ClientTagDto } from '../../../../../core/models/client-tag.model';
 import { ClientDto } from '../../../../../core/models/client.model';
 import { EmployeeDirectoryDto } from '../../../../../core/models/employee.model';
-import { LocationDto } from '../../../../../core/models/location.model';
+import { CompanyDto } from '../../../../../core/models/company.model';
 import { ClientTagsService } from '../../../../../core/services/client-tags.service';
 import { ClientsService } from '../../../../../core/services/clients.service';
 import { EmployeesService } from '../../../../../core/services/employees.service';
-import { LocationsService } from '../../../../../core/services/locations.service';
+import { CompaniesService } from '../../../../../core/services/companies.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { translationReadySignal } from '../../../../../core/utils/translation-signal.util';
 import { ListToolbarComponent } from '../../../../../shared/components/list-toolbar/list-toolbar.component';
@@ -57,7 +57,7 @@ export class ClientListComponent {
   private readonly clientsService = inject(ClientsService);
   private readonly clientTagsService = inject(ClientTagsService);
   private readonly employeesService = inject(EmployeesService);
-  private readonly locationsService = inject(LocationsService);
+  private readonly companiesService = inject(CompaniesService);
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
@@ -91,11 +91,11 @@ export class ClientListComponent {
 
   readonly tagFilter = signal<string | null>(null);
   readonly homeTrainerFilter = signal<string | null>(null);
-  readonly homeLocationFilter = signal<string | null>(null);
+  readonly homeCompanyFilter = signal<string | null>(null);
 
   readonly activeTags = signal<ClientTagDto[]>([]);
   readonly activeEmployees = signal<EmployeeDirectoryDto[]>([]);
-  readonly activeLocations = signal<LocationDto[]>([]);
+  readonly activeCompanies = signal<CompanyDto[]>([]);
 
   private readonly translationsReady = translationReadySignal(this.translate);
 
@@ -118,11 +118,11 @@ export class ClientListComponent {
     ];
   });
 
-  readonly homeLocationFilterOptions = computed<FilterOption<string>[]>(() => {
+  readonly homeCompanyFilterOptions = computed<FilterOption<string>[]>(() => {
     this.translationsReady();
     return [
-      { label: this.translate.instant('CLIENTS.FILTER_LOCATION_ALL'), value: null },
-      ...this.activeLocations().map((location) => ({ label: location.name, value: location.id })),
+      { label: this.translate.instant('CLIENTS.FILTER_COMPANY_ALL'), value: null },
+      ...this.activeCompanies().map((company) => ({ label: company.name, value: company.id })),
     ];
   });
 
@@ -149,7 +149,7 @@ export class ClientListComponent {
   constructor() {
     this.loadActiveTags();
     this.loadActiveEmployees();
-    this.loadActiveLocations();
+    this.loadActiveCompanies();
   }
 
   onLazyLoad(event: TableLazyLoadEvent): void {
@@ -183,8 +183,8 @@ export class ClientListComponent {
     this.fetch(0, this.rows());
   }
 
-  onHomeLocationFilterChange(locationId: string | null): void {
-    this.homeLocationFilter.set(locationId);
+  onHomeCompanyFilterChange(companyId: string | null): void {
+    this.homeCompanyFilter.set(companyId);
     this.table.first = 0;
     this.fetch(0, this.rows());
   }
@@ -287,7 +287,7 @@ export class ClientListComponent {
           extraParams: {
             tagId: this.tagFilter(),
             homeTrainerId: this.homeTrainerFilter(),
-            homeCompanyId: this.homeLocationFilter(),
+            homeCompanyId: this.homeCompanyFilter(),
             mineFirst: this.mineFirst() || undefined,
           },
         },
@@ -315,9 +315,9 @@ export class ClientListComponent {
       .subscribe((result) => this.activeEmployees.set(result));
   }
 
-  private loadActiveLocations(): void {
-    this.locationsService
+  private loadActiveCompanies(): void {
+    this.companiesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeLocations.set(result.items));
+      .subscribe((result) => this.activeCompanies.set(result.items));
   }
 }

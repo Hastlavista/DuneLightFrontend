@@ -6,13 +6,13 @@ import { AppointmentScheduleCellDto, AppointmentStatus } from '../../../core/mod
 import { BirthdayDto } from '../../../core/models/client.model';
 import { CompanyHolidayDto } from '../../../core/models/company-holiday.model';
 import { dayOfWeekShortTranslationKey } from '../../../core/models/group.model';
-import { LocationDto } from '../../../core/models/location.model';
+import { CompanyDto } from '../../../core/models/company.model';
 import { ScheduleBreakCellDto } from '../../../core/models/schedule-break.model';
 import { ServiceExecutionMode } from '../../../core/models/service.model';
 import { AppointmentsService } from '../../../core/services/appointments.service';
 import { ClientsService } from '../../../core/services/clients.service';
 import { CompanyHolidaysService } from '../../../core/services/company-holidays.service';
-import { LocationContextService } from '../../../core/services/location-context.service';
+import { CompanyContextService } from '../../../core/services/company-context.service';
 import { toEndOfDayIso, toStartOfDayIso } from '../../../core/utils/date.util';
 import { buildBirthdayLookup } from '../schedule-grid/schedule-birthday.util';
 import { toScheduleBreakGridCell, toScheduleGridCell } from '../schedule-grid/schedule-cell-view.util';
@@ -44,6 +44,7 @@ interface ScheduleFilters {
   executionMode: ServiceExecutionMode | null;
   service: string | null;
   companyId: string | null;
+  roomId: string | null;
 }
 
 /**
@@ -72,17 +73,18 @@ export class ScheduleWeekGridComponent {
   private readonly appointmentsService = inject(AppointmentsService);
   private readonly clientsService = inject(ClientsService);
   private readonly companyHolidaysService = inject(CompanyHolidaysService);
-  private readonly locationContext = inject(LocationContextService);
+  private readonly companyContext = inject(CompanyContextService);
   private readonly translate = inject(TranslateService);
 
   readonly employeeId = input<string | null>(null);
   readonly statusFilter = input<AppointmentStatus | null>(null);
   readonly executionModeFilter = input<ServiceExecutionMode | null>(null);
   readonly serviceFilter = input<string | null>(null);
+  readonly roomFilter = input<string | null>(null);
   /** Fetched once by ScheduleComponent and shared with both grids - see
    * MyShiftsComponent for the same "fetch once, pass down via @Input" pattern
    * applied to Roster's team/personal tabs. */
-  readonly activeLocations = input<LocationDto[]>([]);
+  readonly activeCompanies = input<CompanyDto[]>([]);
 
   readonly emptySlotClick = output<WeekEmptySlotEvent>();
   readonly appointmentClicked = output<AppointmentScheduleCellDto>();
@@ -94,12 +96,12 @@ export class ScheduleWeekGridComponent {
   private readonly rawBreaks = signal<ScheduleBreakCellDto[]>([]);
   private readonly rawBirthdays = signal<BirthdayDto[]>([]);
   private readonly birthdayLookup = computed(() => buildBirthdayLookup(this.rawBirthdays()));
-  private readonly locationColors = computed<Map<string, string | null>>(
-    () => new Map(this.activeLocations().map((location) => [location.id, location.colorHex])),
+  private readonly companyColors = computed<Map<string, string | null>>(
+    () => new Map(this.activeCompanies().map((company) => [company.id, company.colorHex])),
   );
 
   /** "Sve lokacije" (null) skips holiday marking entirely - there's no single
-   * company to check, and blending several locations' holidays into one
+   * company to check, and blending several companies' holidays into one
    * column would misrepresent which one the day is actually closed for. */
   private readonly rawHolidays = signal<CompanyHolidayDto[]>([]);
   private readonly holidayLookup = computed(() => buildHolidayLookup(this.rawHolidays()));
@@ -130,8 +132,8 @@ export class ScheduleWeekGridComponent {
    * struck-through, see toScheduleGridCell) since that status stays visible
    * by design. */
   readonly gridCells = computed<ScheduleGridCell[]>(() => {
-    const showLocationBadge = this.locationContext.selectedLocationId() === null;
-    const colors = this.locationColors();
+    const showCompanyBadge = this.companyContext.selectedCompanyId() === null;
+    const colors = this.companyColors();
     const birthdays = this.birthdayLookup();
     const appointmentCells = this.rawCells()
       .filter((dto) => dto.status !== 'Cancelled')
@@ -139,7 +141,7 @@ export class ScheduleWeekGridComponent {
         toScheduleGridCell(
           dto,
           localDateKey(new Date(dto.startsAt)),
-          showLocationBadge ? (colors.get(dto.companyId) ?? null) : null,
+          showCompanyBadge ? (colors.get(dto.companyId) ?? null) : null,
           this.translate,
           birthdays,
         ),
@@ -148,7 +150,7 @@ export class ScheduleWeekGridComponent {
       toScheduleBreakGridCell(
         dto,
         localDateKey(new Date(dto.startsAt)),
-        showLocationBadge ? (colors.get(dto.companyId) ?? null) : null,
+        showCompanyBadge ? (colors.get(dto.companyId) ?? null) : null,
         this.translate,
       ),
     );
@@ -163,7 +165,8 @@ export class ScheduleWeekGridComponent {
         status: this.statusFilter(),
         executionMode: this.executionModeFilter(),
         service: this.serviceFilter(),
-        companyId: this.locationContext.selectedLocationId(),
+        companyId: this.companyContext.selectedCompanyId(),
+        roomId: this.roomFilter(),
       };
 
       if (!employeeId) {
@@ -176,9 +179,9 @@ export class ScheduleWeekGridComponent {
     });
 
     // Independent of employeeId - the holiday markers only depend on the
-    // visible week and the globally-selected location, fetched once per
+    // visible week and the globally-selected company, fetched once per
     // change rather than on every render (see class doc on rawHolidays).
-    effect(() => this.fetchHolidays(this.locationContext.selectedLocationId(), this.weekStart()));
+    effect(() => this.fetchHolidays(this.companyContext.selectedCompanyId(), this.weekStart()));
   }
 
   goPrevWeek(): void {
@@ -208,7 +211,7 @@ export class ScheduleWeekGridComponent {
     }
     const date = dateFromLocalKey(event.columnId);
     date.setHours(Math.floor(event.startMinutes / 60), event.startMinutes % 60, 0, 0);
-    this.emptySlotClick.emit({ startsAt: date, employeeId, companyId: this.locationContext.selectedLocationId() });
+    this.emptySlotClick.emit({ startsAt: date, employeeId, companyId: this.companyContext.selectedCompanyId() });
   }
 
   /** Public so ScheduleComponent can trigger a reload after closing whichever
@@ -223,7 +226,8 @@ export class ScheduleWeekGridComponent {
       status: this.statusFilter(),
       executionMode: this.executionModeFilter(),
       service: this.serviceFilter(),
-      companyId: this.locationContext.selectedLocationId(),
+      companyId: this.companyContext.selectedCompanyId(),
+      roomId: this.roomFilter(),
     });
   }
 
@@ -240,6 +244,7 @@ export class ScheduleWeekGridComponent {
         status: filters.status ?? undefined,
         executionMode: filters.executionMode ?? undefined,
         serviceId: filters.service ?? undefined,
+        roomId: filters.roomId ?? undefined,
       }),
       birthdays: this.clientsService.getBirthdays(from, to),
     })

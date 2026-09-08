@@ -58,7 +58,7 @@ export class ProfileComponent {
     return role ? roleTranslationKey(role) : '';
   });
 
-  readonly locationNames = computed(() => this.employee()?.companies.map((company) => company.companyName) ?? []);
+  readonly companyNames = computed(() => this.employee()?.companies.map((company) => company.companyName) ?? []);
   readonly hasPinSet = computed(() => this.employee()?.hasPinSet ?? false);
 
   readonly saving = signal(false);

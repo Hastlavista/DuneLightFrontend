@@ -131,17 +131,17 @@
 
             <div class="dl-form__row">
               <div class="dl-form__field">
-                <label for="client-home-location">{{ 'CLIENTS.FIELD_HOME_LOCATION' | translate }}</label>
+                <label for="client-home-company">{{ 'CLIENTS.FIELD_HOME_COMPANY' | translate }}</label>
                 <p-select
-                  id="client-home-location"
+                  id="client-home-company"
                   fluid
                   appendTo="body"
                   [showClear]="true"
-                  formControlName="homeLocationId"
-                  [options]="homeLocationOptions()"
+                  formControlName="homeCompanyId"
+                  [options]="homeCompanyOptions()"
                   optionLabel="name"
                   optionValue="id"
-                  [placeholder]="'CLIENTS.FIELD_HOME_LOCATION_PLACEHOLDER' | translate"
+                  [placeholder]="'CLIENTS.FIELD_HOME_COMPANY_PLACEHOLDER' | translate"
                 />
               </div>
 

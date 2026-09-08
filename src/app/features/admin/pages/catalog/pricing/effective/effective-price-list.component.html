@@ -4,15 +4,15 @@
 
     <div class="pricing-effective__controls">
       <div class="dl-form__field">
-        <label for="effective-location">{{ 'CATALOG.PRICING.FIELD_LOCATION' | translate }}</label>
+        <label for="effective-company">{{ 'CATALOG.PRICING.FIELD_COMPANY' | translate }}</label>
         <p-select
-          id="effective-location"
-          [options]="locationOptions()"
+          id="effective-company"
+          [options]="companyOptions()"
           optionLabel="label"
           optionValue="value"
-          [ngModel]="effectiveLocationId()"
-          (ngModelChange)="onEffectiveLocationChange($event)"
-          [placeholder]="'CATALOG.PRICING.FIELD_LOCATION_PLACEHOLDER' | translate"
+          [ngModel]="effectiveCompanyId()"
+          (ngModelChange)="onEffectiveCompanyChange($event)"
+          [placeholder]="'CATALOG.PRICING.FIELD_COMPANY_PLACEHOLDER' | translate"
         />
       </div>
       <div class="dl-form__field">
@@ -29,8 +29,8 @@
 
     @if (effectiveLoading()) {
       <p class="pricing-effective__hint">{{ 'CATALOG.PRICING.LOADING' | translate }}</p>
-    } @else if (!effectiveLocationId()) {
-      <p class="pricing-effective__hint">{{ 'CATALOG.PRICING.SELECT_LOCATION_HINT' | translate }}</p>
+    } @else if (!effectiveCompanyId()) {
+      <p class="pricing-effective__hint">{{ 'CATALOG.PRICING.SELECT_COMPANY_HINT' | translate }}</p>
     } @else if (effectiveRows().length === 0) {
       <p class="pricing-effective__hint">{{ 'CATALOG.PRICING.EFFECTIVE_EMPTY' | translate }}</p>
     } @else {
@@ -102,15 +102,15 @@
         />
       </div>
       <div class="dl-form__field">
-        <label for="resolve-location">{{ 'CATALOG.PRICING.FIELD_LOCATION' | translate }}</label>
+        <label for="resolve-company">{{ 'CATALOG.PRICING.FIELD_COMPANY' | translate }}</label>
         <p-select
-          id="resolve-location"
-          [options]="locationOptions()"
+          id="resolve-company"
+          [options]="companyOptions()"
           optionLabel="label"
           optionValue="value"
-          [ngModel]="resolveLocationId()"
-          (ngModelChange)="onResolveLocationChange($event)"
-          [placeholder]="'CATALOG.PRICING.FIELD_LOCATION_PLACEHOLDER' | translate"
+          [ngModel]="resolveCompanyId()"
+          (ngModelChange)="onResolveCompanyChange($event)"
+          [placeholder]="'CATALOG.PRICING.FIELD_COMPANY_PLACEHOLDER' | translate"
         />
       </div>
       <div class="dl-form__field">
@@ -126,7 +126,7 @@
       <p-button
         [label]="'CATALOG.PRICING.CHECK_PRICE' | translate"
         [loading]="resolving()"
-        [disabled]="!resolveSubjectId() || !resolveLocationId()"
+        [disabled]="!resolveSubjectId() || !resolveCompanyId()"
         (onClick)="onCheckPrice()"
       />
     </div>

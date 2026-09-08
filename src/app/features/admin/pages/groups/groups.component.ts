@@ -8,6 +8,7 @@ import { finalize } from 'rxjs';
 import { DAYS_OF_WEEK, GroupDto, dayOfWeekShortTranslationKey } from '../../../../core/models/group.model';
 import { GroupsService } from '../../../../core/services/groups.service';
 import { NotificationService } from '../../../../core/services/notification.service';
+import { timeOfDayLabel } from '../../../../core/utils/time-of-day.util';
 import { ListToolbarComponent } from '../../../../shared/components/list-toolbar/list-toolbar.component';
 import { StatusTagComponent } from '../../../../shared/components/status-tag/status-tag.component';
 import { GenerateAppointmentsDialogComponent } from './generate-appointments-dialog.component';
@@ -93,9 +94,9 @@ export class GroupsComponent {
 
   slotsSummary(group: GroupDto): string {
     return group.slots
-      .filter((slot) => slot.isActive)
+      .filter((slot) => slot?.isActive && slot.startTime)
       .sort((a, b) => DAYS_OF_WEEK.indexOf(a.dayOfWeek) - DAYS_OF_WEEK.indexOf(b.dayOfWeek))
-      .map((slot) => `${this.translate.instant(dayOfWeekShortTranslationKey(slot.dayOfWeek))} ${slot.startTime.slice(0, 5)}`)
+      .map((slot) => `${this.translate.instant(dayOfWeekShortTranslationKey(slot.dayOfWeek))} ${timeOfDayLabel(slot.startTime)}`)
       .join(', ');
   }
 

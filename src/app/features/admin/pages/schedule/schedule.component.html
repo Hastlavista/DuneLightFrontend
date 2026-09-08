@@ -1,96 +1,112 @@
 <div class="schedule-page">
-  <div class="dl-card schedule-page__toolbar">
-    <div class="schedule-page__view-toggle">
-      <p-button [outlined]="viewMode() !== 'day'" [label]="'SCHEDULE.VIEW_DAY' | translate" (onClick)="setViewMode('day')" />
-      <p-button [outlined]="viewMode() !== 'week'" [label]="'SCHEDULE.VIEW_WEEK' | translate" (onClick)="setViewMode('week')" />
+  <section class="schedule-page__calendar">
+    <div class="schedule-page__toolbar">
+      <div class="schedule-page__filters">
+        <div class="schedule-page__view-toggle">
+          <p-button [outlined]="viewMode() !== 'day'" [label]="'SCHEDULE.VIEW_DAY' | translate" (onClick)="setViewMode('day')" />
+          <p-button [outlined]="viewMode() !== 'week'" [label]="'SCHEDULE.VIEW_WEEK' | translate" (onClick)="setViewMode('week')" />
+        </div>
+
+        @if (viewMode() === 'week') {
+          <p-select
+            class="schedule-page__filter"
+            [options]="trainerOptions()"
+            optionLabel="label"
+            optionValue="value"
+            [ngModel]="selectedTrainerId()"
+            (ngModelChange)="selectedTrainerId.set($event)"
+            [placeholder]="'SCHEDULE.SELECT_TRAINER' | translate"
+          />
+        }
+
+        <p-select
+          class="schedule-page__filter"
+          [options]="statusFilterOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="statusFilter()"
+          (ngModelChange)="statusFilter.set($event)"
+        />
+        <p-select
+          class="schedule-page__filter"
+          [options]="executionModeFilterOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="executionModeFilter()"
+          (ngModelChange)="executionModeFilter.set($event)"
+        />
+        <p-select
+          class="schedule-page__filter"
+          [options]="serviceFilterOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="serviceFilter()"
+          (ngModelChange)="serviceFilter.set($event)"
+        />
+        <p-select
+          class="schedule-page__filter"
+          [options]="roomFilterOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="roomFilter()"
+          (ngModelChange)="roomFilter.set($event)"
+        />
+      </div>
+
+      <div class="schedule-page__actions">
+        <p-button
+          class="schedule-page__new-appointment"
+          icon="pi pi-plus"
+          [label]="'SCHEDULE.NEW_APPOINTMENT_BUTTON' | translate"
+          (onClick)="openNewAppointment()"
+        />
+        <p-button
+          class="schedule-page__new-break"
+          [outlined]="true"
+          icon="pi pi-pause"
+          [label]="'SCHEDULE.BREAK.NEW_BUTTON' | translate"
+          (onClick)="openNewBreak()"
+        />
+      </div>
     </div>
 
-    @if (viewMode() === 'week') {
-      <p-select
-        class="schedule-page__filter"
-        [options]="trainerOptions()"
-        optionLabel="label"
-        optionValue="value"
-        [ngModel]="selectedTrainerId()"
-        (ngModelChange)="selectedTrainerId.set($event)"
-        [placeholder]="'SCHEDULE.SELECT_TRAINER' | translate"
+    <app-schedule-legend [services]="activeServices()" />
+
+    @if (viewMode() === 'day') {
+      <app-admin-schedule-day-grid
+        #dayGrid
+        [employees]="employeeColumns()"
+        [statusFilter]="statusFilter()"
+        [executionModeFilter]="executionModeFilter()"
+        [serviceFilter]="serviceFilter()"
+        [roomFilter]="roomFilter()"
+        [activeCompanies]="activeCompanies()"
+        (appointmentClicked)="onAppointmentClicked($event)"
+        (breakClicked)="onBreakClicked($event)"
+        (emptySlotClick)="onEmptySlotClick($event)"
+      />
+    } @else {
+      <app-schedule-week-grid
+        #weekGrid
+        [employeeId]="selectedTrainerId()"
+        [statusFilter]="statusFilter()"
+        [executionModeFilter]="executionModeFilter()"
+        [serviceFilter]="serviceFilter()"
+        [roomFilter]="roomFilter()"
+        [activeCompanies]="activeCompanies()"
+        (appointmentClicked)="onAppointmentClicked($event)"
+        (breakClicked)="onBreakClicked($event)"
+        (emptySlotClick)="onEmptySlotClick($event)"
       />
     }
-
-    <p-select
-      class="schedule-page__filter"
-      [options]="statusFilterOptions()"
-      optionLabel="label"
-      optionValue="value"
-      [ngModel]="statusFilter()"
-      (ngModelChange)="statusFilter.set($event)"
-    />
-    <p-select
-      class="schedule-page__filter"
-      [options]="executionModeFilterOptions()"
-      optionLabel="label"
-      optionValue="value"
-      [ngModel]="executionModeFilter()"
-      (ngModelChange)="executionModeFilter.set($event)"
-    />
-    <p-select
-      class="schedule-page__filter"
-      [options]="serviceFilterOptions()"
-      optionLabel="label"
-      optionValue="value"
-      [ngModel]="serviceFilter()"
-      (ngModelChange)="serviceFilter.set($event)"
-    />
-
-    <p-button
-      class="schedule-page__new-appointment"
-      icon="pi pi-plus"
-      [label]="'SCHEDULE.NEW_APPOINTMENT_BUTTON' | translate"
-      (onClick)="openNewAppointment()"
-    />
-    <p-button
-      class="schedule-page__new-break"
-      [outlined]="true"
-      icon="pi pi-pause"
-      [label]="'SCHEDULE.BREAK.NEW_BUTTON' | translate"
-      (onClick)="openNewBreak()"
-    />
-  </div>
-
-  <app-schedule-legend [services]="activeServices()" />
-
-  @if (viewMode() === 'day') {
-    <app-admin-schedule-day-grid
-      #dayGrid
-      [employees]="employeeColumns()"
-      [statusFilter]="statusFilter()"
-      [executionModeFilter]="executionModeFilter()"
-      [serviceFilter]="serviceFilter()"
-      [activeLocations]="activeLocations()"
-      (appointmentClicked)="onAppointmentClicked($event)"
-      (breakClicked)="onBreakClicked($event)"
-      (emptySlotClick)="onEmptySlotClick($event)"
-    />
-  } @else {
-    <app-schedule-week-grid
-      #weekGrid
-      [employeeId]="selectedTrainerId()"
-      [statusFilter]="statusFilter()"
-      [executionModeFilter]="executionModeFilter()"
-      [serviceFilter]="serviceFilter()"
-      [activeLocations]="activeLocations()"
-      (appointmentClicked)="onAppointmentClicked($event)"
-      (breakClicked)="onBreakClicked($event)"
-      (emptySlotClick)="onEmptySlotClick($event)"
-    />
-  }
+  </section>
 </div>
 
 <app-appointment-detail-dialog
   [(visible)]="detailVisible"
   [appointmentId]="detailAppointmentId()"
   [employees]="viewMode() === 'day' ? activeEmployees() : []"
-  [locations]="activeLocations()"
+  [companies]="activeCompanies()"
   [allowEmployeeChange]="viewMode() === 'day'"
   (saved)="refreshActiveGrid()"
 />
@@ -105,7 +121,7 @@
 <app-new-appointment-dialog
   [(visible)]="newAppointmentVisible"
   [employees]="activeEmployees()"
-  [locations]="activeLocations()"
+  [companies]="activeCompanies()"
   [services]="activeServices()"
   [initial]="newAppointmentInitial()"
   (created)="refreshActiveGrid()"
@@ -120,7 +136,7 @@
 <app-schedule-break-form-dialog
   [(visible)]="newBreakVisible"
   [employees]="activeEmployees()"
-  [locations]="activeLocations()"
+  [companies]="activeCompanies()"
   [initial]="newBreakInitial()"
   (created)="refreshActiveGrid()"
 />

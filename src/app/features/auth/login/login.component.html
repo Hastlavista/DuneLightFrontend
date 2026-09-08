@@ -2,8 +2,12 @@
   @if (showChooser()) {
     <div class="dl-card login-card chooser-card">
       <div class="login-card__brand">
-        <span class="login-card__brand-mark">DL</span>
-        <span class="login-card__brand-name">DuneLight</span>
+        @if (logoUrl(); as url) {
+          <img class="login-card__logo" [src]="url" alt="Organization logo" />
+        } @else {
+          <span class="login-card__brand-mark">DL</span>
+          <span class="login-card__brand-name">DuneLight</span>
+        }
       </div>
 
       <h2 class="chooser__title">{{ 'AUTH.PIN_LOGIN.TITLE' | translate }}</h2>
@@ -87,8 +91,12 @@
   } @else {
     <div class="dl-card login-card">
       <div class="login-card__brand">
-        <span class="login-card__brand-mark">DL</span>
-        <span class="login-card__brand-name">DuneLight</span>
+        @if (logoUrl(); as url) {
+          <img class="login-card__logo" [src]="url" alt="Organization logo" />
+        } @else {
+          <span class="login-card__brand-mark">DL</span>
+          <span class="login-card__brand-name">DuneLight</span>
+        }
       </div>
 
       <form [formGroup]="form" (ngSubmit)="onSubmit()" class="login-form" novalidate>

@@ -64,7 +64,7 @@ function noOverlapValidator(array: AbstractControl): ValidationErrors | null {
  * Weekly working-hours template editor (frontend #16) - one grid of day x
  * cycle-week rows, each holding zero or more start/end intervals (empty =
  * not working that day). Reused as-is for both an Employee's tab and a
- * Location's dedicated dialog, parameterized by `owner` (never duplicated per
+ * Company's dedicated dialog, parameterized by `owner` (never duplicated per
  * screen). Self-contained: loads on every `owner` change and owns its own
  * save button - hosts just place it and optionally listen to `saved`.
  *
@@ -213,8 +213,18 @@ export class WorkingHoursTemplateEditorComponent {
     for (let i = 0; i < cycleWeekCount(dto.cycleType); i++) {
       this.weeksArray.push(this.buildWeekGroup());
     }
-    for (const interval of dto.intervals) {
-      this.intervalsFor(interval.cycleWeekIndex, interval.dayOfWeek)?.push(
+    for (const interval of dto.intervals ?? []) {
+      if (
+        !interval?.startTime ||
+        !interval.endTime ||
+        interval.cycleWeekIndex < 0 ||
+        interval.cycleWeekIndex >= this.weeksArray.length ||
+        !DAYS_OF_WEEK.includes(interval.dayOfWeek)
+      ) {
+        continue;
+      }
+
+      this.intervalsFor(interval.cycleWeekIndex, interval.dayOfWeek).push(
         this.buildIntervalGroup(parseTimeOfDay(interval.startTime), parseTimeOfDay(interval.endTime)),
       );
     }
@@ -267,6 +277,10 @@ export class WorkingHoursTemplateEditorComponent {
         const array = (weekGroup as FormGroup).get(day) as FormArray;
         for (const intervalGroup of array.controls) {
           const raw = intervalGroup.getRawValue() as { startTime: Date; endTime: Date };
+          if (!raw.startTime || !raw.endTime) {
+            continue;
+          }
+
           intervals.push({
             cycleWeekIndex: weekIndex,
             dayOfWeek: day,

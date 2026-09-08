@@ -2,6 +2,7 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
+import { AuthService } from '../../../../../core/auth/auth.service';
 import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { OnboardingStatusDto } from '../../../../../core/models/onboarding-status.model';
 import { OnboardingStatusService } from '../../../../../core/services/onboarding-status.service';
@@ -31,7 +32,7 @@ type ChecklistStep = LinkStep | ProfileStep;
 
 /**
  * "Checklist za početak" (frontend #25) - a self-contained widget on the admin
- * dashboard that guides a freshly-registered organization (no locations,
+ * dashboard that guides a freshly-registered organization (no companies,
  * engagement types, services, ...) through setup in the right order. Fetches
  * GET /api/onboarding-status once and hides itself entirely once every flag
  * is true - unlike CompleteEmployeeProfileCtaComponent, this is not
@@ -49,10 +50,17 @@ type ChecklistStep = LinkStep | ProfileStep;
 export class OnboardingChecklistComponent {
   private readonly onboardingStatusService = inject(OnboardingStatusService);
   private readonly currentEmployeeService = inject(CurrentEmployeeService);
+  private readonly authService = inject(AuthService);
 
   private readonly status = signal<OnboardingStatusDto | null>(null);
 
   readonly isOwner = this.currentEmployeeService.isOwner;
+
+  /** Shown in a callout above the checklist - this is the only place a
+   * freshly-registered Owner can see the slug they'll need on every future
+   * login (register() goes straight into the app, no confirmation screen).
+   * Will eventually also be emailed to them; for now this is the only copy. */
+  readonly organizationSlug = this.authService.organizationSlug;
 
   readonly steps = computed<ChecklistStep[]>(() => {
     const status = this.status();
@@ -62,12 +70,12 @@ export class OnboardingChecklistComponent {
     return [
       {
         kind: 'link',
-        id: 'hasLocation',
-        titleKey: 'DASHBOARD.ONBOARDING.LOCATION_TITLE',
-        descriptionKey: 'DASHBOARD.ONBOARDING.LOCATION_DESC',
-        routerLink: ['/admin/locations'],
-        actionKey: 'DASHBOARD.ONBOARDING.LOCATION_ACTION',
-        done: status.hasLocation,
+        id: 'hasCompany',
+        titleKey: 'DASHBOARD.ONBOARDING.COMPANY_TITLE',
+        descriptionKey: 'DASHBOARD.ONBOARDING.COMPANY_DESC',
+        routerLink: ['/admin/companies'],
+        actionKey: 'DASHBOARD.ONBOARDING.COMPANY_ACTION',
+        done: status.hasCompany,
       },
       {
         kind: 'link',
@@ -127,7 +135,7 @@ export class OnboardingChecklistComponent {
 
   readonly profileDialogVisible = signal(false);
   /** Same rule as CompleteEmployeeProfileCtaComponent.openDialog(): the
-   * "Dovrši profil" form's dropdowns are useless until a location and
+   * "Dovrši profil" form's dropdowns are useless until a company and
    * engagement type exist, so don't open it onto an empty, unexplained state. */
   readonly profilePrerequisitesMissing = signal(false);
 
@@ -140,7 +148,7 @@ export class OnboardingChecklistComponent {
     if (!status) {
       return;
     }
-    if (status.hasLocation && status.hasEngagementType) {
+    if (status.hasCompany && status.hasEngagementType) {
       this.profilePrerequisitesMissing.set(false);
       this.profileDialogVisible.set(true);
     } else {

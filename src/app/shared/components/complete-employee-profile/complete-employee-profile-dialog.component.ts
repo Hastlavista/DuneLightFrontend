@@ -15,7 +15,7 @@ import { CompleteOwnEmployeeRequest } from '../../../core/models/employee.model'
 import { CurrentEmployeeService } from '../../../core/services/current-employee.service';
 import { EmployeesService } from '../../../core/services/employees.service';
 import { EngagementTypesService } from '../../../core/services/engagement-types.service';
-import { LocationsService } from '../../../core/services/locations.service';
+import { CompaniesService } from '../../../core/services/companies.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { ServicesService } from '../../../core/services/services.service';
 import { toStartOfDayIso } from '../../../core/utils/date.util';
@@ -27,19 +27,19 @@ export interface CompleteProfileOption {
   name: string;
 }
 
-/** Array-level: at least one location must be selected. Same rule as
- * EmployeeFormComponent's requiredLocationsValidator - duplicated here rather
+/** Array-level: at least one company must be selected. Same rule as
+ * EmployeeFormComponent's requiredCompaniesValidator - duplicated here rather
  * than shared since this form's field set is deliberately smaller. */
-function requiredLocationsValidator(control: AbstractControl): ValidationErrors | null {
+function requiredCompaniesValidator(control: AbstractControl): ValidationErrors | null {
   const ids = (control.value as string[]) ?? [];
   return ids.length > 0 ? null : { required: true };
 }
 
-/** Group-level: the primary location must be one of the selected locations. */
-function primaryLocationValidator(group: AbstractControl): ValidationErrors | null {
-  const locationIds = (group.get('locationIds')?.value as string[]) ?? [];
-  const primaryLocationId = group.get('primaryLocationId')?.value as string | null;
-  return primaryLocationId && locationIds.includes(primaryLocationId) ? null : { primaryNotSelected: true };
+/** Group-level: the primary company must be one of the selected companies. */
+function primaryCompanyValidator(group: AbstractControl): ValidationErrors | null {
+  const companyIds = (group.get('companyIds')?.value as string[]) ?? [];
+  const primaryCompanyId = group.get('primaryCompanyId')?.value as string | null;
+  return primaryCompanyId && companyIds.includes(primaryCompanyId) ? null : { primaryNotSelected: true };
 }
 
 /**
@@ -64,7 +64,7 @@ export class CompleteEmployeeProfileDialogComponent {
   private readonly authService = inject(AuthService);
   private readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly employeesService = inject(EmployeesService);
-  private readonly locationsService = inject(LocationsService);
+  private readonly companiesService = inject(CompaniesService);
   private readonly servicesService = inject(ServicesService);
   private readonly engagementTypesService = inject(EngagementTypesService);
   private readonly notifications = inject(NotificationService);
@@ -76,7 +76,7 @@ export class CompleteEmployeeProfileDialogComponent {
   readonly saving = signal(false);
   readonly dialogShown = signal(false);
 
-  readonly locationOptions = signal<CompleteProfileOption[]>([]);
+  readonly companyOptions = signal<CompleteProfileOption[]>([]);
   readonly serviceOptions = signal<CompleteProfileOption[]>([]);
   readonly engagementTypeOptions = signal<CompleteProfileOption[]>([]);
 
@@ -88,20 +88,20 @@ export class CompleteEmployeeProfileDialogComponent {
       email: [''],
       employmentStartDate: this.fb.control<Date | null>(new Date(), Validators.required),
       engagementTypeId: ['', Validators.required],
-      locationIds: this.fb.nonNullable.control<string[]>([], requiredLocationsValidator),
-      primaryLocationId: this.fb.control<string | null>(null),
+      companyIds: this.fb.nonNullable.control<string[]>([], requiredCompaniesValidator),
+      primaryCompanyId: this.fb.control<string | null>(null),
       serviceIds: this.fb.nonNullable.control<string[]>([]),
       colorHex: [''],
       sortOrder: [0],
     },
-    { validators: [primaryLocationValidator] },
+    { validators: [primaryCompanyValidator] },
   );
 
   constructor() {
-    this.form.controls.locationIds.valueChanges.subscribe((ids) => {
-      const primary = this.form.controls.primaryLocationId.value;
+    this.form.controls.companyIds.valueChanges.subscribe((ids) => {
+      const primary = this.form.controls.primaryCompanyId.value;
       if (primary && !ids.includes(primary)) {
-        this.form.controls.primaryLocationId.setValue(null);
+        this.form.controls.primaryCompanyId.setValue(null);
       }
     });
   }
@@ -109,7 +109,7 @@ export class CompleteEmployeeProfileDialogComponent {
   onDialogShow(): void {
     this.dialogShown.set(true);
     this.resetForm();
-    this.loadActiveLocations();
+    this.loadActiveCompanies();
     this.loadActiveServices();
     this.loadActiveEngagementTypes();
   }
@@ -118,11 +118,11 @@ export class CompleteEmployeeProfileDialogComponent {
     this.dialogShown.set(false);
   }
 
-  /** Options for the primary-location select: only locations currently picked
-   * in the locationIds multiselect (same pattern as EmployeeFormComponent). */
-  primaryLocationOptions(): CompleteProfileOption[] {
-    const selected = new Set(this.form.controls.locationIds.value);
-    return this.locationOptions().filter((option) => selected.has(option.id));
+  /** Options for the primary-company select: only companies currently picked
+   * in the companyIds multiselect (same pattern as EmployeeFormComponent). */
+  primaryCompanyOptions(): CompleteProfileOption[] {
+    const selected = new Set(this.form.controls.companyIds.value);
+    return this.companyOptions().filter((option) => selected.has(option.id));
   }
 
   onSave(): void {
@@ -153,8 +153,8 @@ export class CompleteEmployeeProfileDialogComponent {
       employmentStartDate: toStartOfDayIso(raw.employmentStartDate as Date),
       employmentEndDate: null,
       engagementTypeId: raw.engagementTypeId,
-      companyIds: raw.locationIds,
-      primaryCompanyId: raw.primaryLocationId as string,
+      companyIds: raw.companyIds,
+      primaryCompanyId: raw.primaryCompanyId as string,
       serviceIds: raw.serviceIds,
     };
 
@@ -188,19 +188,19 @@ export class CompleteEmployeeProfileDialogComponent {
       email: '',
       employmentStartDate: new Date(),
       engagementTypeId: '',
-      locationIds: [],
-      primaryLocationId: null,
+      companyIds: [],
+      primaryCompanyId: null,
       serviceIds: [],
       colorHex: '',
       sortOrder: 0,
     });
   }
 
-  private loadActiveLocations(): void {
-    this.locationsService
+  private loadActiveCompanies(): void {
+    this.companiesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
       .subscribe((result) =>
-        this.locationOptions.set(result.items.map((location) => ({ id: location.id, name: location.name }))),
+        this.companyOptions.set(result.items.map((company) => ({ id: company.id, name: company.name }))),
       );
   }
 

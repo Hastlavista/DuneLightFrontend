@@ -6,7 +6,7 @@ import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
 import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
-import { LocationDto } from '../../../../../../core/models/location.model';
+import { CompanyDto } from '../../../../../../core/models/company.model';
 import {
   PriceListItemDto,
   PriceListSubjectType,
@@ -14,7 +14,7 @@ import {
 } from '../../../../../../core/models/price-list.model';
 import { ActivePackagesStore } from '../../../../../../core/services/active-packages.store';
 import { ActiveServicesStore } from '../../../../../../core/services/active-services.store';
-import { LocationsService } from '../../../../../../core/services/locations.service';
+import { CompaniesService } from '../../../../../../core/services/companies.service';
 import { NotificationService } from '../../../../../../core/services/notification.service';
 import { PriceListService } from '../../../../../../core/services/price-list.service';
 import { translationReadySignal } from '../../../../../../core/utils/translation-signal.util';
@@ -56,7 +56,7 @@ export class PriceListItemsComponent {
   private readonly priceListService = inject(PriceListService);
   private readonly activeServicesStore = inject(ActiveServicesStore);
   private readonly activePackagesStore = inject(ActivePackagesStore);
-  private readonly locationsService = inject(LocationsService);
+  private readonly companiesService = inject(CompaniesService);
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
@@ -69,25 +69,25 @@ export class PriceListItemsComponent {
   readonly rows = signal(DEFAULT_PAGE_SIZE);
   readonly search = signal('');
   readonly showInactive = signal(false);
-  readonly locationFilter = signal<string | null>(null);
+  readonly companyFilter = signal<string | null>(null);
   readonly subjectTypeFilter = signal<PriceListSubjectType | null>(null);
 
   /** Services/packages preloaded via shared stores (see ActiveServicesStore /
    * ActivePackagesStore) so a create/activate/deactivate/delete on Usluge or
-   * Paketi is reflected here without a page reload. Locations aren't shared
+   * Paketi is reflected here without a page reload. Companies aren't shared
    * that way - Lokacije lives on a separate route, so this screen is always
    * freshly mounted (and this fetched fresh) whenever that could matter. */
   readonly activeServices = this.activeServicesStore.services;
   readonly activePackages = this.activePackagesStore.packages;
-  readonly activeLocations = signal<LocationDto[]>([]);
+  readonly activeCompanies = signal<CompanyDto[]>([]);
 
   private readonly translationsReady = translationReadySignal(this.translate);
 
-  readonly locationFilterOptions = computed<FilterOption<string>[]>(() => {
+  readonly companyFilterOptions = computed<FilterOption<string>[]>(() => {
     this.translationsReady();
     return [
-      { label: this.translate.instant('CATALOG.PRICING.ALL_LOCATIONS'), value: null },
-      ...this.activeLocations().map((location) => ({ label: location.name, value: location.id })),
+      { label: this.translate.instant('CATALOG.PRICING.ALL_COMPANIES'), value: null },
+      ...this.activeCompanies().map((company) => ({ label: company.name, value: company.id })),
     ];
   });
 
@@ -128,8 +128,8 @@ export class PriceListItemsComponent {
     this.fetch(0, this.rows());
   }
 
-  onLocationFilterChange(locationId: string | null): void {
-    this.locationFilter.set(locationId);
+  onCompanyFilterChange(companyId: string | null): void {
+    this.companyFilter.set(companyId);
     this.table.first = 0;
     this.fetch(0, this.rows());
   }
@@ -220,7 +220,7 @@ export class PriceListItemsComponent {
         },
         {
           extraParams: {
-            companyId: this.locationFilter(),
+            companyId: this.companyFilter(),
             subjectType: this.subjectTypeFilter(),
           },
         },
@@ -233,8 +233,8 @@ export class PriceListItemsComponent {
   }
 
   private loadLookups(): void {
-    this.locationsService
+    this.companiesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeLocations.set(result.items));
+      .subscribe((result) => this.activeCompanies.set(result.items));
   }
 }

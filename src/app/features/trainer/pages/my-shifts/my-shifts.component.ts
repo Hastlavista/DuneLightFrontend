@@ -2,11 +2,11 @@ import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { EmployeeDirectoryDto } from '../../../../core/models/employee.model';
-import { LocationDto } from '../../../../core/models/location.model';
+import { CompanyDto } from '../../../../core/models/company.model';
 import { RosterEntryDto, RosterTypeDto } from '../../../../core/models/roster.model';
 import { CurrentEmployeeService } from '../../../../core/services/current-employee.service';
 import { EmployeesService } from '../../../../core/services/employees.service';
-import { LocationsService } from '../../../../core/services/locations.service';
+import { CompaniesService } from '../../../../core/services/companies.service';
 import { RosterEntriesService } from '../../../../core/services/roster-entries.service';
 import { RosterTypesService } from '../../../../core/services/roster-types.service';
 import { CompleteEmployeeProfileCtaComponent } from '../../../../shared/components/complete-employee-profile/complete-employee-profile-cta.component';
@@ -24,7 +24,7 @@ const DEFAULT_TAB = 'team';
  * than under /admin: both must be visible to Member too, and /admin is
  * Admin-only. Owns the one entry-form dialog both tabs share (mirrors
  * ScheduleComponent owning dialogs both grids open), plus the active
- * employees/roster-types/locations lookups the dialog and the two tabs need.
+ * employees/roster-types/companies lookups the dialog and the two tabs need.
  *
  * "Moj pregled" is hidden when the viewer has no Employee profile - same
  * reasoning as ShiftsComponent's hasEmployeeProfile: an Owner/Admin account
@@ -54,7 +54,7 @@ export class MyShiftsComponent {
   private readonly employeesService = inject(EmployeesService);
   private readonly rosterTypesService = inject(RosterTypesService);
   private readonly rosterEntriesService = inject(RosterEntriesService);
-  private readonly locationsService = inject(LocationsService);
+  private readonly companiesService = inject(CompaniesService);
   private readonly currentEmployeeService = inject(CurrentEmployeeService);
 
   readonly initialTab = DEFAULT_TAB;
@@ -64,7 +64,7 @@ export class MyShiftsComponent {
 
   readonly activeEmployees = signal<EmployeeDirectoryDto[]>([]);
   readonly activeRosterTypes = signal<RosterTypeDto[]>([]);
-  readonly activeLocations = signal<LocationDto[]>([]);
+  readonly activeCompanies = signal<CompanyDto[]>([]);
 
   readonly isAdmin = computed(() => this.currentEmployeeService.employee()?.role === 'Admin');
   readonly currentEmployeeId = computed(() => this.currentEmployeeService.employee()?.employeeId ?? null);
@@ -77,7 +77,7 @@ export class MyShiftsComponent {
   constructor() {
     this.loadActiveEmployees();
     this.loadActiveRosterTypes();
-    this.loadActiveLocations();
+    this.loadActiveCompanies();
   }
 
   onTeamCellClick(event: TeamMonthlyCellClickEvent): void {
@@ -131,9 +131,9 @@ export class MyShiftsComponent {
       .subscribe((result) => this.activeRosterTypes.set(result.items));
   }
 
-  private loadActiveLocations(): void {
-    this.locationsService
+  private loadActiveCompanies(): void {
+    this.companiesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeLocations.set(result.items));
+      .subscribe((result) => this.activeCompanies.set(result.items));
   }
 }

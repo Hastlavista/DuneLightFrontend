@@ -25,19 +25,19 @@
     </div>
 
     <div class="dl-form__field">
-      <label for="issue-location-id">{{ 'CLIENTS.PACKAGES.FIELD_LOCATION' | translate }}</label>
+      <label for="issue-company-id">{{ 'CLIENTS.PACKAGES.FIELD_COMPANY' | translate }}</label>
       <p-select
-        id="issue-location-id"
+        id="issue-company-id"
         fluid
         appendTo="body"
         [showClear]="true"
-        formControlName="locationId"
-        [options]="activeLocations()"
+        formControlName="companyId"
+        [options]="activeCompanies()"
         optionLabel="name"
         optionValue="id"
-        [placeholder]="'CLIENTS.PACKAGES.FIELD_LOCATION_PLACEHOLDER' | translate"
+        [placeholder]="'CLIENTS.PACKAGES.FIELD_COMPANY_PLACEHOLDER' | translate"
       />
-      <span class="dl-form__hint">{{ 'CLIENTS.PACKAGES.LOCATION_HINT' | translate }}</span>
+      <span class="dl-form__hint">{{ 'CLIENTS.PACKAGES.COMPANY_HINT' | translate }}</span>
     </div>
 
     <div class="dl-form__row">

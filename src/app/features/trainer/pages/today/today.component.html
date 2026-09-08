@@ -48,7 +48,7 @@
     [statusFilter]="statusFilter()"
     [executionModeFilter]="executionModeFilter()"
     [serviceFilter]="serviceFilter()"
-    [activeLocations]="activeLocations()"
+    [activeCompanies]="activeCompanies()"
     (appointmentClicked)="onAppointmentClicked($event)"
     (breakClicked)="onBreakClicked($event)"
     (emptySlotClick)="onEmptySlotClick($event)"
@@ -59,7 +59,7 @@
   [(visible)]="detailVisible"
   [appointmentId]="detailAppointmentId()"
   [employees]="activeEmployees()"
-  [locations]="activeLocations()"
+  [companies]="activeCompanies()"
   [allowEmployeeChange]="true"
   (saved)="refreshGrid()"
 />
@@ -74,7 +74,7 @@
 <app-new-appointment-dialog
   [(visible)]="newAppointmentVisible"
   [employees]="activeEmployees()"
-  [locations]="activeLocations()"
+  [companies]="activeCompanies()"
   [services]="activeServices()"
   [initial]="newAppointmentInitial()"
   (created)="refreshGrid()"
@@ -89,7 +89,7 @@
 <app-schedule-break-form-dialog
   [(visible)]="newBreakVisible"
   [employees]="activeEmployees()"
-  [locations]="activeLocations()"
+  [companies]="activeCompanies()"
   [initial]="newBreakInitial()"
   (created)="refreshGrid()"
 />

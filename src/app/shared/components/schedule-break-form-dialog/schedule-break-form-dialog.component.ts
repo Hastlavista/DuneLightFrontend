@@ -1,10 +1,11 @@
 import { Component, computed, effect, inject, input, model, output, signal } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { AutoComplete, AutoCompleteCompleteEvent, AutoCompleteSelectEvent } from 'primeng/autocomplete';
 import { Button } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
 import { Dialog } from 'primeng/dialog';
-import { InputNumber } from 'primeng/inputnumber';
 import { Select } from 'primeng/select';
 import { Textarea } from 'primeng/textarea';
 import { ToggleSwitch } from 'primeng/toggleswitch';
@@ -18,7 +19,7 @@ import {
   recurringConflictReasonTranslationKey,
 } from '../../../core/models/appointment.model';
 import { EmployeeSummary } from '../../../core/models/employee.model';
-import { LocationDto } from '../../../core/models/location.model';
+import { CompanyDto } from '../../../core/models/company.model';
 import {
   RecurringScheduleBreakCreateRequest,
   ScheduleBreakCreateRequest,
@@ -31,6 +32,7 @@ import { translationReadySignal } from '../../../core/utils/translation-signal.u
 import { NewAppointmentInitial } from '../new-appointment-dialog/new-appointment-dialog.component';
 
 const DEFAULT_DURATION_MINUTES = 30;
+const DURATION_OPTIONS = [15, 30, 45, 60, 90];
 
 const CONFLICT_DATE_FORMATTER = new Intl.DateTimeFormat('hr-HR', {
   day: '2-digit',
@@ -39,10 +41,19 @@ const CONFLICT_DATE_FORMATTER = new Intl.DateTimeFormat('hr-HR', {
   hour: '2-digit',
   minute: '2-digit',
 });
+const DATE_FORMATTER = new Intl.DateTimeFormat('hr-HR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+const TIME_FORMATTER = new Intl.DateTimeFormat('hr-HR', { hour: '2-digit', minute: '2-digit' });
 
 interface SelectOption {
   label: string;
   value: string;
+}
+
+interface EmployeeSearchOption {
+  employeeId: string;
+  name: string;
+  subtitle: string;
+  initials: string;
 }
 
 /**
@@ -70,9 +81,9 @@ interface SelectOption {
     Dialog,
     ReactiveFormsModule,
     FormsModule,
+    AutoComplete,
     Select,
     DatePicker,
-    InputNumber,
     Textarea,
     ToggleSwitch,
     Button,
@@ -90,7 +101,7 @@ export class ScheduleBreakFormDialogComponent {
 
   readonly visible = model(false);
   readonly employees = input<EmployeeSummary[]>([]);
-  readonly locations = input<LocationDto[]>([]);
+  readonly companies = input<CompanyDto[]>([]);
   readonly initial = input<NewAppointmentInitial | null>(null);
 
   readonly created = output<void>();
@@ -100,6 +111,10 @@ export class ScheduleBreakFormDialogComponent {
   readonly attemptedSubmit = signal(false);
   readonly isRecurring = signal(false);
   readonly recurringConflicts = signal<RecurringConflictDetail[] | null>(null);
+  readonly employeeResults = signal<EmployeeSearchOption[]>([]);
+  readonly employeeSearchTerm = signal('');
+
+  selectedEmployeeOption: EmployeeSearchOption | null = null;
 
   readonly recurringConflictReasonTranslationKey = recurringConflictReasonTranslationKey;
 
@@ -122,9 +137,11 @@ export class ScheduleBreakFormDialogComponent {
     }));
   });
 
+  readonly durationOptions = DURATION_OPTIONS;
+
   readonly form = this.fb.nonNullable.group({
     employeeId: this.fb.nonNullable.control<string>('', Validators.required),
-    locationId: this.fb.nonNullable.control<string>('', Validators.required),
+    companyId: this.fb.nonNullable.control<string>('', Validators.required),
     startsAt: this.fb.control<Date | null>(null, Validators.required),
     durationMinutes: this.fb.nonNullable.control<number>(DEFAULT_DURATION_MINUTES, [
       Validators.required,
@@ -133,6 +150,37 @@ export class ScheduleBreakFormDialogComponent {
     note: this.fb.nonNullable.control<string>(''),
     recurrenceType: this.fb.control<RecurrenceType | null>(null),
     endDate: this.fb.control<Date | null>(null),
+  });
+
+  private readonly selectedEmployeeId = toSignal(this.form.controls.employeeId.valueChanges, {
+    initialValue: this.form.controls.employeeId.value,
+  });
+  private readonly selectedCompanyId = toSignal(this.form.controls.companyId.valueChanges, {
+    initialValue: this.form.controls.companyId.value,
+  });
+  private readonly selectedStartsAt = toSignal(this.form.controls.startsAt.valueChanges, {
+    initialValue: this.form.controls.startsAt.value,
+  });
+  private readonly selectedDuration = toSignal(this.form.controls.durationMinutes.valueChanges, {
+    initialValue: this.form.controls.durationMinutes.value,
+  });
+
+  readonly selectedEmployee = computed(() => this.employees().find((employee) => employee.id === this.selectedEmployeeId()) ?? null);
+  readonly selectedCompany = computed(() => this.companies().find((company) => company.id === this.selectedCompanyId()) ?? null);
+  readonly dateLabel = computed(() => {
+    const startsAt = this.selectedStartsAt();
+    return startsAt ? DATE_FORMATTER.format(startsAt) : '';
+  });
+  readonly startTimeLabel = computed(() => {
+    const startsAt = this.selectedStartsAt();
+    return startsAt ? TIME_FORMATTER.format(startsAt) : '';
+  });
+  readonly endTimeLabel = computed(() => {
+    const startsAt = this.selectedStartsAt();
+    if (!startsAt) {
+      return '';
+    }
+    return TIME_FORMATTER.format(new Date(startsAt.getTime() + this.selectedDuration() * 60_000));
   });
 
   constructor() {
@@ -157,6 +205,65 @@ export class ScheduleBreakFormDialogComponent {
     this.isRecurring.set(value);
   }
 
+  selectEmployee(employeeId: string): void {
+    if (this.form.controls.employeeId.disabled) {
+      return;
+    }
+    this.form.controls.employeeId.setValue(employeeId);
+    this.form.controls.employeeId.markAsTouched();
+  }
+
+  onEmployeeSearch(event: AutoCompleteCompleteEvent): void {
+    const term = event.query.trim().toLocaleLowerCase('hr-HR');
+    this.employeeSearchTerm.set(term);
+    if (!term) {
+      this.employeeResults.set([]);
+      return;
+    }
+    this.employeeResults.set(
+      this.employees()
+        .map((employee) => this.toEmployeeOption(employee))
+        .filter((employee) => employee.name.toLocaleLowerCase('hr-HR').includes(term))
+        .slice(0, 8),
+    );
+  }
+
+  onEmployeeSelected(event: AutoCompleteSelectEvent): void {
+    const option = event.value as EmployeeSearchOption;
+    this.selectEmployee(option.employeeId);
+    this.selectedEmployeeOption = null;
+    this.employeeResults.set([]);
+    this.employeeSearchTerm.set('');
+  }
+
+  selectCompany(companyId: string): void {
+    this.form.controls.companyId.setValue(companyId);
+    this.form.controls.companyId.markAsTouched();
+  }
+
+  selectDuration(minutes: number): void {
+    this.form.controls.durationMinutes.setValue(minutes);
+    this.form.controls.durationMinutes.markAsTouched();
+  }
+
+  employeeInitials(employee: EmployeeSummary): string {
+    return `${employee.firstName[0] ?? ''}${employee.lastName[0] ?? ''}`.toUpperCase();
+  }
+
+  employeeOptionById(employeeId: string): EmployeeSearchOption | null {
+    const employee = this.employees().find((item) => item.id === employeeId);
+    return employee ? this.toEmployeeOption(employee) : null;
+  }
+
+  durationLabel(minutes: number): string {
+    if (minutes < 60) {
+      return `${minutes} min`;
+    }
+    const hours = Math.floor(minutes / 60);
+    const remainder = minutes % 60;
+    return remainder ? `${hours} h ${remainder} min` : `${hours} h`;
+  }
+
   conflictDateLabel(iso: string): string {
     return CONFLICT_DATE_FORMATTER.format(new Date(iso));
   }
@@ -166,7 +273,7 @@ export class ScheduleBreakFormDialogComponent {
 
     if (
       this.form.controls.employeeId.invalid ||
-      this.form.controls.locationId.invalid ||
+      this.form.controls.companyId.invalid ||
       this.form.controls.startsAt.invalid ||
       this.form.controls.durationMinutes.invalid
     ) {
@@ -188,7 +295,7 @@ export class ScheduleBreakFormDialogComponent {
     const raw = this.form.getRawValue();
     const request: ScheduleBreakCreateRequest = {
       employeeId: raw.employeeId,
-      companyId: raw.locationId,
+      companyId: raw.companyId,
       startsAt: toLocalIsoFromDate(raw.startsAt as Date),
       durationMinutes: raw.durationMinutes,
       note: raw.note || null,
@@ -213,7 +320,7 @@ export class ScheduleBreakFormDialogComponent {
     const request: RecurringScheduleBreakCreateRequest = {
       recurrenceType: raw.recurrenceType as RecurrenceType,
       employeeId: raw.employeeId,
-      companyId: raw.locationId,
+      companyId: raw.companyId,
       firstOccurrenceStartsAt: toLocalIsoFromDate(raw.startsAt as Date),
       durationMinutes: raw.durationMinutes,
       endDate: toEndOfDayIso(raw.endDate as Date),
@@ -253,8 +360,8 @@ export class ScheduleBreakFormDialogComponent {
     const selfId = this.currentEmployeeService.employee()?.employeeId ?? '';
 
     this.form.reset({
-      employeeId: locked ? selfId : (init?.employeeId ?? ''),
-      locationId: init?.companyId ?? '',
+      employeeId: locked ? selfId : (init?.employeeId ?? selfId),
+      companyId: init?.companyId ?? '',
       startsAt: init?.startsAt ?? new Date(),
       durationMinutes: DEFAULT_DURATION_MINUTES,
       note: '',
@@ -271,5 +378,17 @@ export class ScheduleBreakFormDialogComponent {
     this.isRecurring.set(false);
     this.recurringConflicts.set(null);
     this.attemptedSubmit.set(false);
+    this.selectedEmployeeOption = null;
+    this.employeeResults.set([]);
+    this.employeeSearchTerm.set('');
+  }
+
+  private toEmployeeOption(employee: EmployeeSummary): EmployeeSearchOption {
+    return {
+      employeeId: employee.id,
+      name: `${employee.firstName} ${employee.lastName}`,
+      subtitle: this.translate.instant('SCHEDULE.BREAK.FORM.TRAINER_LABEL'),
+      initials: this.employeeInitials(employee),
+    };
   }
 }

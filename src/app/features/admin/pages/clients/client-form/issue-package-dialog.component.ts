@@ -8,10 +8,10 @@ import { InputNumber } from 'primeng/inputnumber';
 import { Select } from 'primeng/select';
 import { finalize } from 'rxjs';
 import { ClientPackagePurchaseRequest } from '../../../../../core/models/client-package.model';
-import { LocationDto } from '../../../../../core/models/location.model';
+import { CompanyDto } from '../../../../../core/models/company.model';
 import { PackageDto } from '../../../../../core/models/package.model';
 import { ClientPackagesService } from '../../../../../core/services/client-packages.service';
-import { LocationsService } from '../../../../../core/services/locations.service';
+import { CompaniesService } from '../../../../../core/services/companies.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { PackagesService } from '../../../../../core/services/packages.service';
 import { PriceListService } from '../../../../../core/services/price-list.service';
@@ -21,7 +21,7 @@ const LOOKUP_PAGE_SIZE = 200;
 
 /**
  * "Izdaj paket" modal on the client's Paketi tab - POST /api/clients/{clientId}/packages.
- * `locationId` here is only ever used to resolve a suggested price (via
+ * `companyId` here is only ever used to resolve a suggested price (via
  * PriceListService.resolve, same call as the Cjenik "provjeri cijenu" panel) -
  * it isn't sent as part of the sold package's own data beyond that suggestion.
  */
@@ -34,7 +34,7 @@ export class IssuePackageDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly clientPackagesService = inject(ClientPackagesService);
   private readonly packagesService = inject(PackagesService);
-  private readonly locationsService = inject(LocationsService);
+  private readonly companiesService = inject(CompaniesService);
   private readonly priceListService = inject(PriceListService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
@@ -47,11 +47,11 @@ export class IssuePackageDialogComponent {
   readonly dialogShown = signal(false);
 
   readonly activePackages = signal<PackageDto[]>([]);
-  readonly activeLocations = signal<LocationDto[]>([]);
+  readonly activeCompanies = signal<CompanyDto[]>([]);
 
   readonly form = this.fb.nonNullable.group({
     packageId: this.fb.control<string | null>(null, Validators.required),
-    locationId: this.fb.control<string | null>(null),
+    companyId: this.fb.control<string | null>(null),
     purchaseDate: this.fb.control<Date | null>(new Date()),
     paidPrice: this.fb.control<number | null>(null),
   });
@@ -61,14 +61,14 @@ export class IssuePackageDialogComponent {
       if (this.visible()) {
         this.resetForm();
         this.loadActivePackages();
-        this.loadActiveLocations();
+        this.loadActiveCompanies();
       } else {
         this.dialogShown.set(false);
       }
     });
 
     this.form.controls.packageId.valueChanges.subscribe(() => this.refreshSuggestedPrice());
-    this.form.controls.locationId.valueChanges.subscribe(() => this.refreshSuggestedPrice());
+    this.form.controls.companyId.valueChanges.subscribe(() => this.refreshSuggestedPrice());
     this.form.controls.purchaseDate.valueChanges.subscribe(() => this.refreshSuggestedPrice());
   }
 
@@ -87,7 +87,7 @@ export class IssuePackageDialogComponent {
       packageId: raw.packageId as string,
       purchaseDate: raw.purchaseDate ? toStartOfDayIso(raw.purchaseDate) : null,
       paidPrice: raw.paidPrice,
-      companyId: raw.locationId,
+      companyId: raw.companyId,
     };
 
     this.saving.set(true);
@@ -110,13 +110,13 @@ export class IssuePackageDialogComponent {
 
   private refreshSuggestedPrice(): void {
     const packageId = this.form.controls.packageId.value;
-    const locationId = this.form.controls.locationId.value;
+    const companyId = this.form.controls.companyId.value;
     const date = this.form.controls.purchaseDate.value ?? new Date();
-    if (!packageId || !locationId) {
+    if (!packageId || !companyId) {
       return;
     }
     this.priceListService
-      .resolve({ subjectType: 'Package', subjectId: packageId, companyId: locationId, date: toStartOfDayIso(date) })
+      .resolve({ subjectType: 'Package', subjectId: packageId, companyId: companyId, date: toStartOfDayIso(date) })
       .subscribe({
         next: (result) => this.form.controls.paidPrice.setValue(result.price, { emitEvent: false }),
         error: () => {},
@@ -126,7 +126,7 @@ export class IssuePackageDialogComponent {
   private resetForm(): void {
     this.form.reset({
       packageId: null,
-      locationId: null,
+      companyId: null,
       purchaseDate: new Date(),
       paidPrice: null,
     });
@@ -138,9 +138,9 @@ export class IssuePackageDialogComponent {
       .subscribe((result) => this.activePackages.set(result.items));
   }
 
-  private loadActiveLocations(): void {
-    this.locationsService
+  private loadActiveCompanies(): void {
+    this.companiesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeLocations.set(result.items));
+      .subscribe((result) => this.activeCompanies.set(result.items));
   }
 }

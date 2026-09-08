@@ -7,6 +7,7 @@ import { DAYS_OF_WEEK, GroupDto, GroupSlotDto, dayOfWeekTranslationKey } from '.
 import { GroupsService } from '../../../../../core/services/groups.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { GroupSlotFormDialogComponent } from './group-slot-form-dialog.component';
+import { timeOfDayLabel } from '../../../../../core/utils/time-of-day.util';
 
 /** Slots section of the group detail page - GroupUpdateRequest has no slots
  * field at all, they're managed exclusively through /slots endpoints. Only
@@ -37,14 +38,15 @@ export class GroupSlotsSectionComponent {
 
   readonly activeSlots = computed(() =>
     this.group()
-      .slots.filter((slot) => slot.isActive)
+      .slots.filter((slot) => slot?.isActive)
       .sort((a, b) => {
         const dayDiff = DAYS_OF_WEEK.indexOf(a.dayOfWeek) - DAYS_OF_WEEK.indexOf(b.dayOfWeek);
-        return dayDiff !== 0 ? dayDiff : a.startTime.localeCompare(b.startTime);
+        return dayDiff !== 0 ? dayDiff : (a.startTime ?? '').localeCompare(b.startTime ?? '');
       }),
   );
 
   readonly dayOfWeekTranslationKey = dayOfWeekTranslationKey;
+  readonly timeOfDayLabel = timeOfDayLabel;
 
   openCreate(): void {
     this.editingSlot.set(null);
@@ -65,7 +67,7 @@ export class GroupSlotsSectionComponent {
       header: this.translate.instant('COMMON.CONFIRM_HEADER'),
       message: this.translate.instant('GROUPS.SLOTS.CONFIRM_REMOVE', {
         day: this.translate.instant(dayOfWeekTranslationKey(slot.dayOfWeek)),
-        time: slot.startTime.slice(0, 5),
+        time: timeOfDayLabel(slot.startTime),
       }),
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: this.translate.instant('COMMON.YES'),

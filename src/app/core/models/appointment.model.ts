@@ -57,6 +57,8 @@ export interface AppointmentScheduleCellDto {
   employeeName: string;
   companyId: string;
   companyName: string;
+  roomId?: string;
+  roomName?: string;
   clientNames: string[];
   /** Index-aligned with `clientNames` - NOT sent by the backend yet (requested
    * for the birthday marker in schedule-cell-view.util.ts, which needs a
@@ -117,6 +119,8 @@ export interface AppointmentDto {
   employeeName: string;
   companyId: string;
   companyName: string;
+  roomId?: string;
+  roomName?: string;
   status: AppointmentStatus;
   isCancelled: boolean;
   form?: AppointmentForm;
@@ -148,6 +152,7 @@ export interface AppointmentScheduleQuery {
   serviceId?: string | null;
   executionMode?: ServiceExecutionMode | null;
   status?: AppointmentStatus | null;
+  roomId?: string | null;
 }
 
 /** Body for PATCH /api/appointments/{id}/move - a dedicated partial-update
@@ -161,6 +166,10 @@ export interface AppointmentMoveRequest {
   startsAt: string;
   employeeId?: string;
   companyId?: string;
+  /** `undefined`/`null` = leave the room unchanged - it can NOT be used to
+   * clear an already-assigned room, only to move to a different one (see
+   * AppointmentDetailDialogComponent.onSave's doc comment). */
+  roomId?: string | null;
 }
 
 /** Payment method values exactly as the backend sends/accepts them. */
@@ -213,6 +222,7 @@ export interface AppointmentCreateRequest {
   serviceId: string;
   employeeId: string;
   companyId: string;
+  roomId?: string | null;
   clientIds: string[];
   amount?: number | null;
   note?: string | null;
@@ -237,6 +247,7 @@ export interface RecurringAppointmentCreateRequest {
   serviceId: string;
   employeeId: string;
   companyId: string;
+  roomId?: string | null;
   clientIds: string[];
   firstOccurrenceStartsAt: string;
   endDate: string;
@@ -253,19 +264,26 @@ export interface AppointmentCancelRequest {
 
 /** Why one date in a POST /recurring request collided - see RecurringConflictDetail.
  * `OUTSIDE_WORKING_HOURS` (frontend #16) means the occurrence falls outside the
- * employee's or location's WorkingHoursTemplate - see core/models/working-hours.model.ts.
+ * employee's or company's WorkingHoursTemplate - see core/models/working-hours.model.ts.
  * `EXISTING_SCHEDULE_BREAK` (frontend #22) means the occurrence collides with a
  * trainer's break - returned by both POST /appointments/recurring and POST
  * /schedule-breaks/recurring, the same reason list is shared by both series
- * endpoints. */
+ * endpoints. `ROOM_OCCUPIED` (Rooms) means the occurrence collides with an
+ * existing booking in the chosen room - also returned by POST
+ * /groups/generate when the group's defaultRoomId is already booked. */
 export type RecurringConflictReason =
-  'EXISTING_APPOINTMENT' | 'ROSTER_ABSENCE' | 'OUTSIDE_WORKING_HOURS' | 'EXISTING_SCHEDULE_BREAK';
+  | 'EXISTING_APPOINTMENT'
+  | 'ROSTER_ABSENCE'
+  | 'OUTSIDE_WORKING_HOURS'
+  | 'EXISTING_SCHEDULE_BREAK'
+  | 'ROOM_OCCUPIED';
 
 const RECURRING_CONFLICT_REASON_TRANSLATION_KEYS: Record<RecurringConflictReason, string> = {
   EXISTING_APPOINTMENT: 'SCHEDULE.RECURRING_CONFLICT_REASONS.EXISTING_APPOINTMENT',
   ROSTER_ABSENCE: 'SCHEDULE.RECURRING_CONFLICT_REASONS.ROSTER_ABSENCE',
   OUTSIDE_WORKING_HOURS: 'SCHEDULE.RECURRING_CONFLICT_REASONS.OUTSIDE_WORKING_HOURS',
   EXISTING_SCHEDULE_BREAK: 'SCHEDULE.RECURRING_CONFLICT_REASONS.EXISTING_SCHEDULE_BREAK',
+  ROOM_OCCUPIED: 'SCHEDULE.RECURRING_CONFLICT_REASONS.ROOM_OCCUPIED',
 };
 
 export function recurringConflictReasonTranslationKey(reason: RecurringConflictReason): string {
@@ -281,12 +299,12 @@ export interface AvailableSlotDto {
 }
 
 /** One entry of GET /api/appointments/available-slots's response array - one row
- * per employee qualified for the requested service at the requested location,
+ * per employee qualified for the requested service at the requested company,
  * even when they have no free slots that day (`slots: []` - filter those out
  * client-side, see AvailableSlotsSliderComponent). Busyness is resolved across
- * ALL of the employee's locations, not just the requested one, so a trainer
- * working two locations never shows up free here when they're actually booked
- * at their other location. */
+ * ALL of the employee's companies, not just the requested one, so a trainer
+ * working two companies never shows up free here when they're actually booked
+ * at their other company. */
 export interface EmployeeAvailableSlotsDto {
   employeeId: string;
   employeeName: string;
@@ -297,7 +315,7 @@ export interface EmployeeAvailableSlotsDto {
 /** GET /api/appointments/available-slots?serviceId=&companyId=&date=&employeeId=
  * (frontend #24, last item on the feature list) - `employeeId` is optional and
  * only used to narrow to one trainer (Member role locked to themselves via
- * CurrentEmployeeService); omitted, every qualified employee at the location is
+ * CurrentEmployeeService); omitted, every qualified employee at the company is
  * returned. Powers NewAppointmentDialog's "slobodni termini" slider, a
  * time-saving shortcut that pre-fills the trainer/time fields - the manual
  * fields stay fully usable alongside it either way. */

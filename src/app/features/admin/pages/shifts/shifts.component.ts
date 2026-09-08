@@ -2,11 +2,11 @@ import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { EmployeeDto } from '../../../../core/models/employee.model';
-import { LocationDto } from '../../../../core/models/location.model';
+import { CompanyDto } from '../../../../core/models/company.model';
 import { RosterEntryDto, RosterTypeDto } from '../../../../core/models/roster.model';
 import { CurrentEmployeeService } from '../../../../core/services/current-employee.service';
 import { EmployeesService } from '../../../../core/services/employees.service';
-import { LocationsService } from '../../../../core/services/locations.service';
+import { CompaniesService } from '../../../../core/services/companies.service';
 import { RosterEntriesService } from '../../../../core/services/roster-entries.service';
 import { RosterTypesService } from '../../../../core/services/roster-types.service';
 import { CompleteEmployeeProfileCtaComponent } from '../../../../shared/components/complete-employee-profile/complete-employee-profile-cta.component';
@@ -29,7 +29,7 @@ const DEFAULT_TAB = 'types';
  * isAdmin/currentEmployeeId inputs, so Admin already edits every row (see
  * TeamMonthlyComponent.isRowEditable) - only the wiring (dialog state +
  * active-lookups loading) is duplicated here, the same way every other admin
- * page re-loads its own active-employee/location lookups rather than sharing
+ * page re-loads its own active-employee/company lookups rather than sharing
  * a loader service.
  *
  * "Moj pregled" only makes sense if the logged-in Admin also has an Employee
@@ -53,12 +53,13 @@ const DEFAULT_TAB = 'types';
     CompleteEmployeeProfileCtaComponent,
   ],
   templateUrl: './shifts.component.html',
+  styleUrl: './shifts.component.scss',
 })
 export class ShiftsComponent {
   private readonly employeesService = inject(EmployeesService);
   private readonly rosterTypesService = inject(RosterTypesService);
   private readonly rosterEntriesService = inject(RosterEntriesService);
-  private readonly locationsService = inject(LocationsService);
+  private readonly companiesService = inject(CompaniesService);
   private readonly currentEmployeeService = inject(CurrentEmployeeService);
 
   readonly initialTab = DEFAULT_TAB;
@@ -68,7 +69,7 @@ export class ShiftsComponent {
 
   readonly activeEmployees = signal<EmployeeDto[]>([]);
   readonly activeRosterTypes = signal<RosterTypeDto[]>([]);
-  readonly activeLocations = signal<LocationDto[]>([]);
+  readonly activeCompanies = signal<CompanyDto[]>([]);
 
   readonly currentEmployeeId = computed(() => this.currentEmployeeService.employee()?.employeeId ?? null);
   readonly hasEmployeeProfile = computed(() => this.currentEmployeeService.hasProfile());
@@ -80,7 +81,7 @@ export class ShiftsComponent {
   constructor() {
     this.loadActiveEmployees();
     this.loadActiveRosterTypes();
-    this.loadActiveLocations();
+    this.loadActiveCompanies();
   }
 
   onTeamCellClick(event: TeamMonthlyCellClickEvent): void {
@@ -131,9 +132,9 @@ export class ShiftsComponent {
       .subscribe((result) => this.activeRosterTypes.set(result.items));
   }
 
-  private loadActiveLocations(): void {
-    this.locationsService
+  private loadActiveCompanies(): void {
+    this.companiesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeLocations.set(result.items));
+      .subscribe((result) => this.activeCompanies.set(result.items));
   }
 }

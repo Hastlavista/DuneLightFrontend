@@ -13,6 +13,7 @@ import { ClientPackagesService } from '../../../../../core/services/client-packa
 import { ClientsService } from '../../../../../core/services/clients.service';
 import { GroupAttendanceService } from '../../../../../core/services/group-attendance.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
+import { timeOfDayLabel } from '../../../../../core/utils/time-of-day.util';
 import { EligiblePackageSelectComponent } from '../../../../../shared/components/eligible-package-select/eligible-package-select.component';
 import { HrDatePipe } from '../../../../../shared/pipes/hr-date.pipe';
 
@@ -117,8 +118,8 @@ export class GroupAttendanceDialogComponent {
   subtitle(appointment: GroupAppointmentCellDto): string {
     return this.translate.instant('GROUPS.ATTENDANCE.SUBTITLE', {
       date: this.hrDatePipe.transform(appointment.date),
-      time: appointment.startTime.slice(0, 5),
-      location: appointment.companyName,
+      time: timeOfDayLabel(appointment.startTime),
+      company: appointment.companyName,
     });
   }
 

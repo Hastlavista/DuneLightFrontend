@@ -7,7 +7,7 @@ import { SUPPRESS_ERROR_TOAST } from '../http/http-context.tokens';
 
 /** Non-working days for one Company - nested under /api/companies/{companyId}/holidays,
  * not a standalone šifrarnik (no paging, list is filtered by year instead), so
- * this doesn't extend PagedCrudService. Feeds the location form dialog's
+ * this doesn't extend PagedCrudService. Feeds the company form dialog's
  * "Praznici" tab (see CompanyHolidaysTabComponent). */
 @Injectable({ providedIn: 'root' })
 export class CompanyHolidaysService {

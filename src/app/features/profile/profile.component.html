@@ -9,10 +9,10 @@
       <span class="profile-page__info-label">{{ 'PROFILE.FIELD_ROLE' | translate }}</span>
       <span>{{ roleLabelKey() | translate }}</span>
     </div>
-    @if (locationNames().length > 0) {
+    @if (companyNames().length > 0) {
       <div class="profile-page__info-row">
-        <span class="profile-page__info-label">{{ 'PROFILE.FIELD_LOCATIONS' | translate }}</span>
-        <span>{{ locationNames().join(', ') }}</span>
+        <span class="profile-page__info-label">{{ 'PROFILE.FIELD_COMPANIES' | translate }}</span>
+        <span>{{ companyNames().join(', ') }}</span>
       </div>
     }
   </div>

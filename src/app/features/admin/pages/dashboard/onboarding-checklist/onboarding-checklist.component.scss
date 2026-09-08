@@ -11,6 +11,38 @@
     margin: 0 0 1.25rem;
   }
 
+  &__org-id {
+    display: flex;
+    align-items: center;
+    gap: 0.9rem;
+    padding: 0.9rem 1.1rem;
+    margin-bottom: 1.25rem;
+    border: 1px solid var(--gold);
+    border-radius: calc(var(--radius-card) - 4px);
+    background: var(--paper-2);
+
+    i {
+      flex-shrink: 0;
+      font-size: 1.1rem;
+      color: var(--gold);
+    }
+  }
+
+  &__org-id-text {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+
+    strong {
+      font-family: var(--font-heading);
+    }
+
+    span {
+      font-size: 0.85rem;
+      color: var(--clay-2);
+    }
+  }
+
   &__list {
     list-style: none;
     margin: 0;

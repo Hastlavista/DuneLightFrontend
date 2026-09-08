@@ -1,0 +1,168 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '43rem', maxWidth: 'calc(100vw - 2rem)', height: 'min(90vh, 45rem)' }"
+  styleClass="company-dialog"
+>
+  <ng-template #header>
+    <div class="company-dialog__header">
+      <span class="company-dialog__mark" [style.background-color]="'#' + form.controls.colorHex.value"></span>
+      <div>
+        <h2>{{ headerTitle() }}</h2>
+        <p>{{ headerSubtitle() }}</p>
+      </div>
+    </div>
+  </ng-template>
+
+  <p-tabs [(value)]="activeTab" styleClass="company-dialog__tabs">
+    <p-tablist>
+      <p-tab value="data">
+        <span>{{ 'CATALOG.COMPANIES.TAB_DATA' | translate }}</span>
+        <span class="company-dialog__tab-badge">✓</span>
+      </p-tab>
+      @if (canViewWorkingHours()) {
+        <p-tab value="workingHours" [disabled]="!currentCompanyId()">
+          <span>{{ 'CATALOG.COMPANIES.TAB_WORKING_HOURS' | translate }}</span>
+        </p-tab>
+      }
+      @if (canViewHolidays()) {
+        <p-tab value="holidays" [disabled]="!currentCompanyId()">
+          <span>{{ 'CATALOG.COMPANIES.TAB_HOLIDAYS' | translate }}</span>
+        </p-tab>
+      }
+      @if (canViewRooms()) {
+        <p-tab value="rooms" [disabled]="!currentCompanyId()">
+          <span>{{ 'CATALOG.COMPANIES.TAB_ROOMS' | translate }}</span>
+        </p-tab>
+      }
+    </p-tablist>
+    <p-tabpanels>
+      <p-tabpanel value="data">
+        <form [formGroup]="form" (ngSubmit)="onSave()" class="company-form company-dialog__panel company-dialog__panel--data" novalidate>
+          <div class="company-form__field">
+            <label for="company-name">{{ 'CATALOG.COMPANIES.FIELD_NAME' | translate }}</label>
+            <input id="company-name" type="text" pInputText fluid formControlName="name" maxlength="255" />
+            @if (form.controls.name.invalid && form.controls.name.touched) {
+              <span class="company-form__error">{{ 'CATALOG.COMPANIES.ERRORS.NAME_REQUIRED' | translate }}</span>
+            }
+          </div>
+
+          <div class="company-form__field">
+            <label for="company-phone">{{ 'CATALOG.COMPANIES.FIELD_PHONE' | translate }}</label>
+            <input id="company-phone" type="text" pInputText fluid formControlName="phone" maxlength="50" />
+          </div>
+
+          <div class="company-form__field company-form__field--full">
+            <label for="company-address">{{ 'CATALOG.COMPANIES.FIELD_ADDRESS' | translate }}</label>
+            <input id="company-address" type="text" pInputText fluid formControlName="address" maxlength="500" />
+          </div>
+
+          <div class="company-form__field">
+            <label for="company-country">{{ 'CATALOG.COMPANIES.FIELD_COUNTRY' | translate }}</label>
+            <p-select
+              id="company-country"
+              fluid
+              appendTo="body"
+              formControlName="country"
+              [options]="countryOptions"
+              optionLabel="name"
+              optionValue="code"
+            />
+            <span class="company-form__hint">{{ 'CATALOG.COMPANIES.COUNTRY_HINT' | translate }}</span>
+          </div>
+
+          <div class="company-form__sort">
+            <label for="company-sort-order">{{ 'CATALOG.COMPANIES.FIELD_SORT_ORDER' | translate }}</label>
+            <div class="company-form__sort-row">
+              <div class="company-form__sort-control">
+                <button type="button" (click)="decrementSortOrder()" aria-label="Smanji redoslijed">−</button>
+                <input id="company-sort-order" type="number" formControlName="sortOrder" />
+                <button type="button" (click)="incrementSortOrder()" aria-label="Povećaj redoslijed">+</button>
+              </div>
+              <span class="company-form__hint">{{ 'CATALOG.COMPANIES.SORT_ORDER_HINT' | translate }}</span>
+            </div>
+          </div>
+
+          <div class="company-form__field company-form__field--full">
+            <label>{{ 'CATALOG.COMPANIES.FIELD_COLOR' | translate }}</label>
+            <div class="company-form__swatches">
+              @for (color of colorOptions; track color) {
+                <button
+                  type="button"
+                  class="company-form__swatch"
+                  [class.company-form__swatch--active]="form.controls.colorHex.value === color"
+                  [style.background-color]="'#' + color"
+                  (click)="selectColor(color)"
+                  [attr.aria-label]="('#' + color)"
+                >
+                  @if (form.controls.colorHex.value === color) {
+                    <i class="pi pi-check"></i>
+                  }
+                </button>
+              }
+            </div>
+          </div>
+
+          <div class="company-form__field company-form__field--full">
+            <label for="company-note">{{ 'CATALOG.COMPANIES.FIELD_NOTE' | translate }}</label>
+            <textarea id="company-note" pTextarea fluid rows="3" formControlName="note"></textarea>
+          </div>
+
+          <div class="company-form__actions">
+            <span>{{ 'CATALOG.COMPANIES.MODAL_FOOTER_HINT' | translate }}</span>
+            <p-button
+              type="button"
+              severity="secondary"
+              [outlined]="true"
+              [label]="'COMMON.CANCEL' | translate"
+              (onClick)="onCancel()"
+            />
+            <p-button type="submit" [label]="'CATALOG.COMPANIES.SAVE_CHANGES' | translate" [loading]="saving()" />
+          </div>
+        </form>
+      </p-tabpanel>
+
+      @if (canViewWorkingHours()) {
+        <p-tabpanel value="workingHours">
+          <div class="company-dialog__panel company-dialog__panel--scroll">
+            @if (currentCompanyId(); as id) {
+              <app-working-hours-template-editor
+                [owner]="{ type: 'company', companyId: id }"
+                [saveLabelKey]="workingHoursSaveLabelKey()"
+                (saved)="onWorkingHoursSaved()"
+              />
+            } @else {
+              <p class="dl-form__hint">{{ 'CATALOG.COMPANIES.WIZARD_LOCKED_HINT' | translate }}</p>
+            }
+          </div>
+        </p-tabpanel>
+      }
+
+      @if (canViewHolidays()) {
+        <p-tabpanel value="holidays">
+          <div class="company-dialog__panel company-dialog__panel--scroll">
+            @if (currentCompanyId(); as id) {
+              <app-company-holidays-tab [companyId]="id" />
+            } @else {
+              <p class="dl-form__hint">{{ 'CATALOG.COMPANIES.WIZARD_LOCKED_HINT' | translate }}</p>
+            }
+          </div>
+        </p-tabpanel>
+      }
+
+      @if (canViewRooms()) {
+        <p-tabpanel value="rooms">
+          <div class="company-dialog__panel company-dialog__panel--scroll">
+            @if (currentCompanyId(); as id) {
+              <app-rooms-tab [companyId]="id" />
+            } @else {
+              <p class="dl-form__hint">{{ 'CATALOG.COMPANIES.WIZARD_LOCKED_HINT' | translate }}</p>
+            }
+          </div>
+        </p-tabpanel>
+      }
+    </p-tabpanels>
+  </p-tabs>
+</p-dialog>

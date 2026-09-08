@@ -1,51 +1,31 @@
 <div class="sidebar" [class.sidebar--admin]="section() === 'admin'">
   <div class="sidebar__brand">
-    <span class="sidebar__brand-mark">DL</span>
-    <span class="sidebar__brand-name">DuneLight</span>
+    @if (logoUrl(); as url) {
+      <img class="sidebar__brand-logo" [src]="url" alt="Organization logo" />
+    } @else {
+      <span class="sidebar__brand-mark">DL</span>
+      <span class="sidebar__brand-name">DuneLight</span>
+    }
   </div>
 
   <nav class="sidebar__nav">
-    @for (item of navItems(); track item.path) {
-      <a
-        class="sidebar__nav-item"
-        [routerLink]="[basePath(), item.path]"
-        routerLinkActive="sidebar__nav-item--active"
-        (click)="onNavigate()"
-      >
-        <i class="pi" [class]="item.icon"></i>
-        <span>{{ item.labelKey | translate }}</span>
-      </a>
+    @for (group of navGroups(); track group.labelKey ?? $index) {
+      <div class="sidebar__nav-group">
+        @if (group.labelKey) {
+          <span class="sidebar__nav-group-label">{{ group.labelKey | translate }}</span>
+        }
+        @for (item of group.items; track item.path) {
+          <a
+            class="sidebar__nav-item"
+            [routerLink]="[basePath(), item.path]"
+            routerLinkActive="sidebar__nav-item--active"
+            (click)="onNavigate()"
+          >
+            <i class="pi" [class]="item.icon"></i>
+            <span>{{ item.labelKey | translate }}</span>
+          </a>
+        }
+      </div>
     }
   </nav>
-
-  <div class="sidebar__user">
-    <div class="sidebar__avatar" [style.background]="avatarColor()">
-      {{ initials() }}
-    </div>
-    <div class="sidebar__user-info">
-      <span class="sidebar__user-name">{{ displayName() }}</span>
-      <span class="sidebar__user-role">{{ roleLabelKey() | translate }}</span>
-    </div>
-    <button
-      type="button"
-      class="sidebar__logout"
-      (click)="userMenu.toggle($event)"
-      [attr.aria-label]="'LAYOUT.SIDEBAR.LOGOUT' | translate"
-      [title]="'LAYOUT.SIDEBAR.LOGOUT' | translate"
-    >
-      <i class="pi pi-sign-out"></i>
-    </button>
-    <p-popover #userMenu>
-      <div class="sidebar__user-menu">
-        <button type="button" class="sidebar__user-menu-item" (click)="switchUser(); userMenu.hide()">
-          <i class="pi pi-users"></i>
-          <span>{{ 'LAYOUT.SIDEBAR.SWITCH_USER' | translate }}</span>
-        </button>
-        <button type="button" class="sidebar__user-menu-item" (click)="logout(); userMenu.hide()">
-          <i class="pi pi-sign-out"></i>
-          <span>{{ 'LAYOUT.SIDEBAR.LOGOUT' | translate }}</span>
-        </button>
-      </div>
-    </p-popover>
-  </div>
 </div>

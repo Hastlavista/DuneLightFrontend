@@ -4,14 +4,14 @@ import { Button } from 'primeng/button';
 import { AppointmentScheduleCellDto } from '../../../../core/models/appointment.model';
 import { EmployeeDirectoryDto } from '../../../../core/models/employee.model';
 import { GroupAppointmentCellDto, GroupDto } from '../../../../core/models/group.model';
-import { LocationDto } from '../../../../core/models/location.model';
+import { CompanyDto } from '../../../../core/models/company.model';
 import { ScheduleBreakCellDto } from '../../../../core/models/schedule-break.model';
 import { ServiceDto } from '../../../../core/models/service.model';
 import { CurrentEmployeeService } from '../../../../core/services/current-employee.service';
 import { EmployeesService } from '../../../../core/services/employees.service';
 import { GroupsService } from '../../../../core/services/groups.service';
-import { LocationContextService } from '../../../../core/services/location-context.service';
-import { LocationsService } from '../../../../core/services/locations.service';
+import { CompanyContextService } from '../../../../core/services/company-context.service';
+import { CompaniesService } from '../../../../core/services/companies.service';
 import { ServicesService } from '../../../../core/services/services.service';
 import { AppointmentDetailDialogComponent } from '../../../../shared/components/appointment-detail-dialog/appointment-detail-dialog.component';
 import { NewAppointmentDialogComponent, NewAppointmentInitial } from '../../../../shared/components/new-appointment-dialog/new-appointment-dialog.component';
@@ -52,8 +52,8 @@ export class MyWeekComponent {
   private readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly employeesService = inject(EmployeesService);
   private readonly groupsService = inject(GroupsService);
-  private readonly locationContext = inject(LocationContextService);
-  private readonly locationsService = inject(LocationsService);
+  private readonly companyContext = inject(CompanyContextService);
+  private readonly companiesService = inject(CompaniesService);
   private readonly servicesService = inject(ServicesService);
 
   readonly weekGrid = viewChild<ScheduleWeekGridComponent>('weekGrid');
@@ -70,7 +70,7 @@ export class MyWeekComponent {
 
   readonly activeEmployees = signal<EmployeeDirectoryDto[]>([]);
   readonly activeServices = signal<ServiceDto[]>([]);
-  readonly activeLocations = signal<LocationDto[]>([]);
+  readonly activeCompanies = signal<CompanyDto[]>([]);
 
   readonly detailVisible = signal(false);
   readonly detailAppointmentId = signal<string | null>(null);
@@ -91,7 +91,7 @@ export class MyWeekComponent {
   constructor() {
     this.loadActiveEmployees();
     this.loadActiveServices();
-    this.loadActiveLocations();
+    this.loadActiveCompanies();
   }
 
   onAppointmentClicked(appointment: AppointmentScheduleCellDto): void {
@@ -112,7 +112,7 @@ export class MyWeekComponent {
     this.newAppointmentInitial.set({
       startsAt: new Date(),
       employeeId: this.currentEmployeeService.employee()?.employeeId ?? null,
-      companyId: this.locationContext.selectedLocationId(),
+      companyId: this.companyContext.selectedCompanyId(),
     });
     this.newAppointmentVisible.set(true);
   }
@@ -126,7 +126,7 @@ export class MyWeekComponent {
     this.newBreakInitial.set({
       startsAt: new Date(),
       employeeId: this.currentEmployeeService.employee()?.employeeId ?? null,
-      companyId: this.locationContext.selectedLocationId(),
+      companyId: this.companyContext.selectedCompanyId(),
     });
     this.newBreakVisible.set(true);
   }
@@ -168,9 +168,9 @@ export class MyWeekComponent {
       .subscribe((result) => this.activeServices.set(result.items));
   }
 
-  private loadActiveLocations(): void {
-    this.locationsService
+  private loadActiveCompanies(): void {
+    this.companiesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeLocations.set(result.items));
+      .subscribe((result) => this.activeCompanies.set(result.items));
   }
 }

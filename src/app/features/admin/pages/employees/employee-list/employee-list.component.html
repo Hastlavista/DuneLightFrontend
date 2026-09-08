@@ -9,11 +9,11 @@
   >
     <p-select
       class="employee-list-page__filter"
-      [options]="locationFilterOptions()"
+      [options]="companyFilterOptions()"
       optionLabel="label"
       optionValue="value"
-      [ngModel]="locationFilter()"
-      (ngModelChange)="onLocationFilterChange($event)"
+      [ngModel]="companyFilter()"
+      (ngModelChange)="onCompanyFilterChange($event)"
     />
     <p-select
       class="employee-list-page__filter"
@@ -43,7 +43,7 @@
         <th>{{ 'EMPLOYEES.COL_NAME' | translate }}</th>
         <th>{{ 'EMPLOYEES.COL_ROLE' | translate }}</th>
         <th>{{ 'EMPLOYEES.COL_ENGAGEMENT_TYPE' | translate }}</th>
-        <th>{{ 'EMPLOYEES.COL_LOCATIONS' | translate }}</th>
+        <th>{{ 'EMPLOYEES.COL_COMPANIES' | translate }}</th>
         <th>{{ 'EMPLOYEES.COL_COLOR' | translate }}</th>
         <th>{{ 'COMMON.COL_STATUS' | translate }}</th>
         <th class="employee-list-page__actions-col"></th>
@@ -56,12 +56,12 @@
         <td>{{ roleColumnLabel(employee) }}</td>
         <td>{{ employee.engagementTypeName }}</td>
         <td>
-          @for (location of employee.companies; track location.companyId) {
+          @for (company of employee.companies; track company.companyId) {
             <span
-              class="employee-list-page__location"
-              [class.employee-list-page__location--primary]="location.isPrimary"
+              class="employee-list-page__company"
+              [class.employee-list-page__company--primary]="company.isPrimary"
             >
-              {{ location.companyName }}@if (!$last) {, }
+              {{ company.companyName }}@if (!$last) {, }
             </span>
           }
         </td>

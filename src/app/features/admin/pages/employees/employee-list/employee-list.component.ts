@@ -9,11 +9,11 @@ import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { EmployeeDto } from '../../../../../core/models/employee.model';
 import { EngagementTypeDto } from '../../../../../core/models/engagement-type.model';
-import { LocationDto } from '../../../../../core/models/location.model';
+import { CompanyDto } from '../../../../../core/models/company.model';
 import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { EmployeesService } from '../../../../../core/services/employees.service';
 import { EngagementTypesService } from '../../../../../core/services/engagement-types.service';
-import { LocationsService } from '../../../../../core/services/locations.service';
+import { CompaniesService } from '../../../../../core/services/companies.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { translationReadySignal } from '../../../../../core/utils/translation-signal.util';
 import { ColorSwatchComponent } from '../../../../../shared/components/color-swatch/color-swatch.component';
@@ -48,7 +48,7 @@ interface FilterOption<T> {
 export class EmployeeListComponent {
   private readonly employeesService = inject(EmployeesService);
   private readonly currentEmployeeService = inject(CurrentEmployeeService);
-  private readonly locationsService = inject(LocationsService);
+  private readonly companiesService = inject(CompaniesService);
   private readonly engagementTypesService = inject(EngagementTypesService);
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
@@ -64,19 +64,19 @@ export class EmployeeListComponent {
   readonly search = signal('');
   readonly showInactive = signal(false);
 
-  readonly locationFilter = signal<string | null>(null);
+  readonly companyFilter = signal<string | null>(null);
   readonly engagementTypeFilter = signal<string | null>(null);
 
-  readonly activeLocations = signal<LocationDto[]>([]);
+  readonly activeCompanies = signal<CompanyDto[]>([]);
   readonly activeEngagementTypes = signal<EngagementTypeDto[]>([]);
 
   private readonly translationsReady = translationReadySignal(this.translate);
 
-  readonly locationFilterOptions = computed<FilterOption<string>[]>(() => {
+  readonly companyFilterOptions = computed<FilterOption<string>[]>(() => {
     this.translationsReady();
     return [
-      { label: this.translate.instant('EMPLOYEES.FILTER_LOCATION_ALL'), value: null },
-      ...this.activeLocations().map((location) => ({ label: location.name, value: location.id })),
+      { label: this.translate.instant('EMPLOYEES.FILTER_COMPANY_ALL'), value: null },
+      ...this.activeCompanies().map((company) => ({ label: company.name, value: company.id })),
     ];
   });
 
@@ -89,7 +89,7 @@ export class EmployeeListComponent {
   });
 
   constructor() {
-    this.loadActiveLocations();
+    this.loadActiveCompanies();
     this.loadActiveEngagementTypes();
   }
 
@@ -112,8 +112,8 @@ export class EmployeeListComponent {
     this.fetch(0, this.rows());
   }
 
-  onLocationFilterChange(locationId: string | null): void {
-    this.locationFilter.set(locationId);
+  onCompanyFilterChange(companyId: string | null): void {
+    this.companyFilter.set(companyId);
     this.table.first = 0;
     this.fetch(0, this.rows());
   }
@@ -230,7 +230,7 @@ export class EmployeeListComponent {
         },
         {
           extraParams: {
-            companyId: this.locationFilter(),
+            companyId: this.companyFilter(),
             engagementTypeId: this.engagementTypeFilter(),
           },
         },
@@ -242,10 +242,10 @@ export class EmployeeListComponent {
       });
   }
 
-  private loadActiveLocations(): void {
-    this.locationsService
+  private loadActiveCompanies(): void {
+    this.companiesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeLocations.set(result.items));
+      .subscribe((result) => this.activeCompanies.set(result.items));
   }
 
   private loadActiveEngagementTypes(): void {

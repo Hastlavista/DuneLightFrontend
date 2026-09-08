@@ -6,6 +6,7 @@ import { finalize } from 'rxjs';
 import { DAYS_OF_WEEK, GroupDto, dayOfWeekShortTranslationKey } from '../../../../core/models/group.model';
 import { CurrentEmployeeService } from '../../../../core/services/current-employee.service';
 import { GroupsService } from '../../../../core/services/groups.service';
+import { timeOfDayLabel } from '../../../../core/utils/time-of-day.util';
 
 /**
  * "Moje grupe" - GET /api/groups has no trainer filter, so this fetches the
@@ -50,9 +51,9 @@ export class MyGroupsComponent {
 
   slotsSummary(group: GroupDto): string {
     return group.slots
-      .filter((slot) => slot.isActive)
+      .filter((slot) => slot?.isActive && slot.startTime)
       .sort((a, b) => DAYS_OF_WEEK.indexOf(a.dayOfWeek) - DAYS_OF_WEEK.indexOf(b.dayOfWeek))
-      .map((slot) => `${this.translate.instant(dayOfWeekShortTranslationKey(slot.dayOfWeek))} ${slot.startTime.slice(0, 5)}`)
+      .map((slot) => `${this.translate.instant(dayOfWeekShortTranslationKey(slot.dayOfWeek))} ${timeOfDayLabel(slot.startTime)}`)
       .join(', ');
   }
 

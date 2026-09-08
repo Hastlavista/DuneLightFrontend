@@ -8,7 +8,7 @@ import { PagedQuery, PagedResult } from '../models/paged-result.model';
  * follows). All of these endpoints share the same shape:
  * GET (paged list) / GET {id} / POST / PUT {id} / PATCH {id}/activate /
  * PATCH {id}/deactivate / DELETE {id}. Subclass with the concrete DTO/request
- * types and the resource URL - see LocationsService, ServicesService.
+ * types and the resource URL - see CompaniesService, ServicesService.
  */
 export abstract class PagedCrudService<TDto, TUpsertRequest> {
   protected abstract readonly resourceUrl: string;
@@ -16,7 +16,7 @@ export abstract class PagedCrudService<TDto, TUpsertRequest> {
   constructor(protected readonly http: HttpClient) {}
 
   /** `suppressErrorToast` mirrors SUPPRESS_ERROR_TOAST for background/preload
-   * fetches (e.g. the global location switcher) that handle failure silently.
+   * fetches (e.g. the global company switcher) that handle failure silently.
    * `extraParams` covers resource-specific list filters (e.g. Usluge's
    * executionMode) without polluting the shared PagedQuery shape - falsy
    * values (undefined/null/'') are omitted so callers can pass an "unset" filter

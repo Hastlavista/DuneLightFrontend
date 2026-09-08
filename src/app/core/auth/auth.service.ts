@@ -23,6 +23,11 @@ export class AuthService {
   readonly isLoggedIn = computed(() => this.authState() !== null);
   readonly currentRole = computed<UserRole | null>(() => this.authState()?.role ?? null);
   readonly token = computed(() => this.authState()?.token ?? null);
+  /** The slug the current org's users type into the login form's
+   * "organizationSlug" field - see LoginRequest. Surfaced so the UI can
+   * remind a freshly-registered Owner what it is (register() navigates
+   * straight into the app with no confirmation screen of its own). */
+  readonly organizationSlug = computed(() => this.authState()?.organizationSlug ?? null);
 
   constructor(private readonly http: HttpClient) {}
 

@@ -192,6 +192,12 @@ export class PersonalRosterComponent {
     return item.rosterTypeName === ASSUMED_WORK_HOURS_ROW_NAME;
   }
 
+  formattedHours(hours: number): string {
+    return hours.toLocaleString('hr-HR', {
+      maximumFractionDigits: 0,
+    });
+  }
+
   plannedTimeLabel(day: RosterPlannedDayDto): string {
     return day.intervals.map((interval) => `${interval.start.slice(0, 5)} – ${interval.end.slice(0, 5)}`).join(', ');
   }

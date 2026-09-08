@@ -23,7 +23,7 @@ interface YearOption {
 }
 
 /**
- * "Praznici" tab on the location form dialog (see LocationFormDialogComponent) -
+ * "Praznici" tab on the company form dialog (see CompanyFormDialogComponent) -
  * same self-contained-per-owner shape as WorkingHoursTemplateEditorComponent,
  * but Company-only (no Employee variant) and list+create+delete+generate
  * instead of a GET/PUT singleton. `canManage` (roster.templates.manage) gates
@@ -87,7 +87,7 @@ export class CompanyHolidaysTabComponent {
       .subscribe({
         next: (result) => {
           this.notifications.showSuccess(
-            this.translate.instant('CATALOG.LOCATIONS.HOLIDAYS.GENERATED', {
+            this.translate.instant('CATALOG.COMPANIES.HOLIDAYS.GENERATED', {
               created: result.createdCount,
               skipped: result.skippedCount,
             }),
@@ -126,7 +126,7 @@ export class CompanyHolidaysTabComponent {
       .pipe(finalize(() => this.addSaving.set(false)))
       .subscribe({
         next: () => {
-          this.notifications.showSuccess(this.translate.instant('CATALOG.LOCATIONS.HOLIDAYS.CREATED'));
+          this.notifications.showSuccess(this.translate.instant('CATALOG.COMPANIES.HOLIDAYS.CREATED'));
           this.addFormVisible.set(false);
           this.fetch(this.companyId(), this.year());
         },
@@ -137,7 +137,7 @@ export class CompanyHolidaysTabComponent {
   confirmDelete(holiday: CompanyHolidayDto): void {
     this.confirmationService.confirm({
       header: this.translate.instant('COMMON.CONFIRM_HEADER'),
-      message: this.translate.instant('CATALOG.LOCATIONS.HOLIDAYS.CONFIRM_DELETE', { name: holiday.name }),
+      message: this.translate.instant('CATALOG.COMPANIES.HOLIDAYS.CONFIRM_DELETE', { name: holiday.name }),
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: this.translate.instant('COMMON.YES'),
       rejectLabel: this.translate.instant('COMMON.NO'),
@@ -145,7 +145,7 @@ export class CompanyHolidaysTabComponent {
       accept: () => {
         this.service.delete(this.companyId(), holiday.id).subscribe({
           next: () => {
-            this.notifications.showSuccess(this.translate.instant('CATALOG.LOCATIONS.HOLIDAYS.DELETED'));
+            this.notifications.showSuccess(this.translate.instant('CATALOG.COMPANIES.HOLIDAYS.DELETED'));
             this.fetch(this.companyId(), this.year());
           },
           error: () => {},

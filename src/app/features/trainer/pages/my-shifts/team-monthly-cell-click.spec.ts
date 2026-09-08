@@ -40,7 +40,7 @@ const ROSTER_TYPE: RosterTypeDto = {
     <app-roster-team-monthly
       [isAdmin]="true"
       [currentEmployeeId]="null"
-      [activeLocations]="[]"
+      [activeCompanies]="[]"
       (cellClick)="onTeamCellClick($event)"
     />
     <app-roster-entry-form-dialog

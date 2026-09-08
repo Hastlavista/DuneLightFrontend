@@ -1,4 +1,4 @@
-/** One non-working day for a Company/location - blocks scheduling that day and
+/** One non-working day for a Company/company - blocks scheduling that day and
  * is silently skipped when generating group appointments (backend concern,
  * already live; this frontend only reads/writes the catalog). Row shape of
  * GET .../holidays and the `created` array of GenerateCompanyHolidaysResult. */

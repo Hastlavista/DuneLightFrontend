@@ -29,7 +29,7 @@ function combineDateAndTime(date: Date, time: string): Date {
 }
 
 /** Horizontally-scrollable "slobodni termini" picker (frontend #24, last item on
- * the feature list) - once a service+location are chosen on NewAppointmentDialog,
+ * the feature list) - once a service+company are chosen on NewAppointmentDialog,
  * fetches GET /api/appointments/available-slots for the displayed day and lets
  * the user jump straight to a free trainer+time instead of guessing manually.
  * Renders nothing until both serviceId/companyId inputs are set. A click emits

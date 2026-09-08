@@ -21,14 +21,58 @@
       </div>
     }
 
-    <p-select
-      [options]="locationOptions()"
-      optionLabel="label"
-      optionValue="value"
-      [ngModel]="selectedLocationId()"
-      (ngModelChange)="onLocationChange($event)"
-      [ariaLabel]="'LAYOUT.TOPBAR.LOCATION_SWITCHER' | translate"
-      styleClass="topbar__location-select"
-    />
+    <div class="topbar__company-switcher" [attr.aria-label]="'LAYOUT.TOPBAR.COMPANY_SWITCHER' | translate">
+      @for (company of companyOptions(); track company.value ?? 'all') {
+        <button
+          type="button"
+          class="topbar__company-option"
+          [class.topbar__company-option--active]="selectedCompanyId() === company.value"
+          (click)="onCompanyChange(company.value)"
+        >
+          @if (company.value !== null) {
+            <span class="topbar__company-dot"></span>
+          }
+          <span>{{ company.label }}</span>
+        </button>
+      }
+    </div>
+
+    <button type="button" class="topbar__user" (click)="userMenu.toggle($event)">
+      <span class="topbar__avatar" [style.background]="avatarColor()">{{ initials() }}</span>
+      <span class="topbar__user-info">
+        <span class="topbar__user-name">{{ displayName() }}</span>
+        <span class="topbar__user-email">{{ email() }}</span>
+      </span>
+      <i class="pi pi-chevron-down"></i>
+    </button>
+    <p-popover #userMenu styleClass="topbar__user-popover">
+      <div class="topbar__user-menu">
+        <div class="topbar__user-menu-header">
+          <span class="topbar__menu-avatar" [style.background]="avatarColor()">{{ initials() }}</span>
+          <span class="topbar__menu-identity">
+            <strong>{{ displayName() }}</strong>
+            <span>{{ email() }}</span>
+          </span>
+        </div>
+
+        <div class="topbar__user-menu-list">
+          <button type="button" class="topbar__user-menu-item" (click)="openProfile(); userMenu.hide()">
+            <i class="pi pi-user"></i>
+            <span>{{ 'LAYOUT.SIDEBAR.MY_PROFILE' | translate }}</span>
+          </button>
+          <button type="button" class="topbar__user-menu-item" (click)="openAccountSettings(); userMenu.hide()">
+            <i class="pi pi-cog"></i>
+            <span>{{ 'LAYOUT.USER_MENU.ACCOUNT_SETTINGS' | translate }}</span>
+          </button>
+        </div>
+
+        <div class="topbar__user-menu-footer">
+          <button type="button" class="topbar__user-menu-item topbar__user-menu-item--danger" (click)="logout(); userMenu.hide()">
+            <i class="pi pi-sign-out"></i>
+            <span>{{ 'LAYOUT.SIDEBAR.LOGOUT' | translate }}</span>
+          </button>
+        </div>
+      </div>
+    </p-popover>
   </div>
 </header>
