@@ -1,5 +1,6 @@
 import { Routes } from '@angular/router';
 import { ownerGuard } from '../../core/guards/owner.guard';
+import { brandingGuard } from '../../core/guards/branding.guard';
 
 export const ADMIN_ROUTES: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'dashboard' },
@@ -94,6 +95,12 @@ export const ADMIN_ROUTES: Routes = [
     canActivate: [ownerGuard],
     loadComponent: () => import('./pages/permissions/permissions.component').then((m) => m.PermissionsComponent),
     data: { titleKey: 'NAV.ADMIN.PERMISSIONS' },
+  },
+  {
+    path: 'branding',
+    canActivate: [brandingGuard],
+    loadComponent: () => import('./pages/branding/branding.component').then((m) => m.BrandingComponent),
+    data: { titleKey: 'NAV.ADMIN.BRANDING' },
   },
   {
     // Same convention as 'employees/:id' - separate routed page, `:id` is

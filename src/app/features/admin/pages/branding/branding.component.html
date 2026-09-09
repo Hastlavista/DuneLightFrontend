@@ -1,0 +1,31 @@
+<section class="branding-page">
+  <header class="branding-page__header">
+    <div><span>{{ 'BRANDING.EYEBROW' | translate }}</span><h2>{{ 'BRANDING.TITLE' | translate }}</h2><p>{{ 'BRANDING.SUBTITLE' | translate }}</p></div>
+    @if (branding(); as current) { <small><i class="pi pi-building"></i>{{ current.organizationName }}</small> }
+  </header>
+  @if (loading()) {
+    <div class="branding-loading">{{ 'BRANDING.LOADING' | translate }}</div>
+  } @else {
+    <div class="branding-layout">
+      <main>
+        <article class="branding-card">
+          <header><i class="pi pi-images"></i><div><h3>{{ 'BRANDING.IDENTITY_TITLE' | translate }}</h3><p>{{ 'BRANDING.IDENTITY_HINT' | translate }}</p></div></header>
+          <div class="assets">
+            <section class="asset"><div class="asset-label"><div><b>{{ 'BRANDING.LOGO' | translate }}</b><span>{{ 'BRANDING.LOGO_HINT' | translate }}</span></div>@if (branding()?.logo) { <button type="button" (click)="removeAsset('logo')">{{ 'COMMON.DELETE' | translate }}</button> }</div><div class="asset-preview logo">@if (logoUrl(); as url) { <img [src]="url" [alt]="'BRANDING.LOGO' | translate" /> } @else { <i class="pi pi-image"></i><span>{{ 'BRANDING.NO_LOGO' | translate }}</span> }</div><label class="upload"><input type="file" accept=".png,.jpg,.jpeg,.gif,.webp,.ico,.avif" (change)="upload('logo', $event)" [disabled]="uploading() !== null" /><i class="pi" [class.pi-upload]="uploading() !== 'logo'" [class.pi-spinner]="uploading() === 'logo'" [class.pi-spin]="uploading() === 'logo'"></i>{{ (uploading() === 'logo' ? 'BRANDING.UPLOADING' : 'BRANDING.UPLOAD_LOGO') | translate }}</label></section>
+            <section class="asset"><div class="asset-label"><div><b>{{ 'BRANDING.FAVICON' | translate }}</b><span>{{ 'BRANDING.FAVICON_HINT' | translate }}</span></div>@if (branding()?.favicon) { <button type="button" (click)="removeAsset('favicon')">{{ 'COMMON.DELETE' | translate }}</button> }</div><div class="asset-preview favicon">@if (faviconUrl(); as url) { <img [src]="url" [alt]="'BRANDING.FAVICON' | translate" /> } @else { <i class="pi pi-star"></i><span>{{ 'BRANDING.NO_FAVICON' | translate }}</span> }</div><label class="upload"><input type="file" accept=".png,.jpg,.jpeg,.gif,.webp,.ico,.avif" (change)="upload('favicon', $event)" [disabled]="uploading() !== null" /><i class="pi" [class.pi-upload]="uploading() !== 'favicon'" [class.pi-spinner]="uploading() === 'favicon'" [class.pi-spin]="uploading() === 'favicon'"></i>{{ (uploading() === 'favicon' ? 'BRANDING.UPLOADING' : 'BRANDING.UPLOAD_FAVICON') | translate }}</label></section>
+          </div>
+          <footer><i class="pi pi-info-circle"></i>{{ 'BRANDING.FILE_HINT' | translate }}</footer>
+        </article>
+        <article class="branding-card">
+          <header><i class="pi pi-palette"></i><div><h3>{{ 'BRANDING.COLORS_TITLE' | translate }}</h3><p>{{ 'BRANDING.COLORS_HINT' | translate }}</p></div></header>
+          <form [formGroup]="form" (ngSubmit)="saveColors()">
+            <label><span>{{ 'BRANDING.PRIMARY_COLOR' | translate }}</span><div><input type="color" [value]="primaryColor()" (input)="form.controls.primaryColor.setValue($any($event.target).value)" /><input pInputText formControlName="primaryColor" maxlength="7" /></div>@if (form.controls.primaryColor.invalid && form.controls.primaryColor.touched) { <small>{{ 'BRANDING.HEX_ERROR' | translate }}</small> }</label>
+            <label><span>{{ 'BRANDING.SECONDARY_COLOR' | translate }}</span><div><input type="color" [value]="secondaryColor()" (input)="form.controls.secondaryColor.setValue($any($event.target).value)" /><input pInputText formControlName="secondaryColor" maxlength="7" /></div>@if (form.controls.secondaryColor.invalid && form.controls.secondaryColor.touched) { <small>{{ 'BRANDING.HEX_ERROR' | translate }}</small> }</label>
+            <div class="actions"><p-button type="button" [text]="true" icon="pi pi-refresh" [label]="'BRANDING.RESET_COLORS' | translate" (onClick)="resetColors()"></p-button><p-button type="submit" icon="pi pi-check" [label]="'BRANDING.SAVE_COLORS' | translate" [loading]="savingColors()"></p-button></div>
+          </form>
+        </article>
+      </main>
+      <aside class="preview"><header><span>{{ 'BRANDING.LIVE_PREVIEW' | translate }}</span><i class="pi pi-eye"></i></header><div class="preview-canvas"><div class="preview-login" [style.--primary]="primaryColor()" [style.--secondary]="secondaryColor()"><div class="preview-brand">@if (logoUrl(); as url) { <img [src]="url" alt="" /> } @else { <span>DL</span><b>DuneLight</b> }</div><div class="preview-form"><small>{{ 'BRANDING.PREVIEW_WELCOME' | translate }}</small><strong>{{ branding()?.organizationName || 'DuneLight' }}</strong><i></i><button type="button">{{ 'BRANDING.PREVIEW_BUTTON' | translate }}</button><a>{{ 'BRANDING.PREVIEW_LINK' | translate }}</a></div></div></div><p><i class="pi pi-sparkles"></i>{{ 'BRANDING.PREVIEW_HINT' | translate }}</p></aside>
+    </div>
+  }
+</section>
