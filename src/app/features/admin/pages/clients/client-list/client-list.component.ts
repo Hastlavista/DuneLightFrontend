@@ -1,9 +1,11 @@
 import { Component, ViewChild, computed, inject, input, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ConfirmationService, MenuItem } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Menu } from 'primeng/menu';
+import { Select } from 'primeng/select';
 import { Tag } from 'primeng/tag';
 import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
@@ -40,6 +42,8 @@ interface FilterOption<T> {
     TableModule,
     Button,
     Menu,
+    Select,
+    FormsModule,
     Tag,
     TranslatePipe,
     ListToolbarComponent,
@@ -177,18 +181,10 @@ export class ClientListComponent {
     this.fetch(0, this.rows());
   }
 
-  selectTag(tagId: string | null): void {
-    this.onTagFilterChange(tagId);
-  }
-
   onHomeTrainerFilterChange(trainerId: string | null): void {
     this.homeTrainerFilter.set(trainerId);
     this.table.first = 0;
     this.fetch(0, this.rows());
-  }
-
-  selectHomeTrainer(trainerId: string | null): void {
-    this.onHomeTrainerFilterChange(trainerId);
   }
 
   onHomeCompanyFilterChange(companyId: string | null): void {

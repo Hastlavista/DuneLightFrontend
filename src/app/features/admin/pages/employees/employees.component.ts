@@ -19,6 +19,7 @@ const DEFAULT_TAB = 'employees';
   selector: 'app-admin-employees',
   imports: [Tabs, TabList, Tab, TabPanels, TabPanel, TranslatePipe, EmployeeListComponent, EngagementTypesComponent],
   templateUrl: './employees.component.html',
+  styleUrl: './employees.component.scss',
 })
 export class EmployeesComponent {
   private readonly route = inject(ActivatedRoute);

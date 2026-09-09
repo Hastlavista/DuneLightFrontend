@@ -2,9 +2,7 @@
 .client-list-page__header { display: flex; width: 100%; padding: .9rem 1rem; border: 1px solid var(--rose-border); border-radius: 14px; background: var(--surface-card); box-shadow: var(--shadow-soft); }
 .client-list-page__filter-group { display: flex; flex-direction: column; gap: .3rem; }
 .client-list-page__filter-group > span { color: var(--ink-muted); font-size: .66rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; }
-.client-list-page__filter-group > div { display: flex; flex-wrap: wrap; gap: .38rem; }
-.client-list-page__filter-group button { min-height: 2.1rem; padding: .28rem .7rem; border: 1px solid var(--rose-border); border-radius: 8px; background: var(--surface-card); color: var(--ink-secondary); font: inherit; font-size: .76rem; font-weight: 400; cursor: pointer; white-space: nowrap; }
-.client-list-page__filter-group button.client-list-page__filter-chip--active { border-color: var(--teal); background: var(--mint-tint); color: var(--teal-dark); font-weight: 600; }
+.client-list-page__filter { min-width: 13rem; }
 .client-list-page__row { display: grid; grid-template-columns: 2.4rem minmax(15rem, 1fr) minmax(16rem, .7fr) auto; align-items: center; gap: .85rem; min-height: 4.85rem; padding: .7rem .9rem; border: 1px solid var(--rose-border); border-left: 5px solid var(--teal); border-radius: 12px; background: var(--surface-card); box-shadow: 0 1px 2px rgba(46, 50, 60, .03); }
 .client-list-page__row-main { min-width: 0; }
 .client-list-page__avatar { display: inline-flex; width: 2.25rem; height: 2.25rem; align-items: center; justify-content: center; border-radius: 8px; color: white; font-family: var(--font-heading); font-size: .8rem; font-weight: 700; }

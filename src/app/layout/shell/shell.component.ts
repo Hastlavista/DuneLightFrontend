@@ -10,10 +10,11 @@ import { CurrentEmployeeService } from '../../core/services/current-employee.ser
 import { CompanyContextService } from '../../core/services/company-context.service';
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { TopbarComponent } from '../topbar/topbar.component';
+import { PinLockOverlayComponent } from '../../shared/components/pin-lock-overlay/pin-lock-overlay.component';
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, SidebarComponent, TopbarComponent],
+  imports: [RouterOutlet, SidebarComponent, TopbarComponent, PinLockOverlayComponent],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss',
 })
@@ -21,6 +22,7 @@ export class ShellComponent {
   readonly section = input.required<'admin' | 'trainer'>();
 
   readonly sidebarOpen = signal(false);
+  readonly locked = inject(InactivityService).locked;
 
   private readonly router = inject(Router);
   private readonly activatedRoute = inject(ActivatedRoute);

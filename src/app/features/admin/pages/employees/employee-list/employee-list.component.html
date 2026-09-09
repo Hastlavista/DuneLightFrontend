@@ -1,73 +1,67 @@
-<div class="dl-card employee-list-page">
-  <app-list-toolbar
-    [newLabelKey]="'EMPLOYEES.NEW'"
-    [search]="search()"
-    [showInactive]="showInactive()"
-    (searchChange)="onSearchChange($event)"
-    (showInactiveChange)="onShowInactiveChange($event)"
-    (create)="openCreate()"
-  >
-    <p-select
-      class="employee-list-page__filter"
-      [options]="companyFilterOptions()"
-      optionLabel="label"
-      optionValue="value"
-      [ngModel]="companyFilter()"
-      (ngModelChange)="onCompanyFilterChange($event)"
-    />
-    <p-select
-      class="employee-list-page__filter"
-      [options]="engagementTypeFilterOptions()"
-      optionLabel="label"
-      optionValue="value"
-      [ngModel]="engagementTypeFilter()"
-      (ngModelChange)="onEngagementTypeFilterChange($event)"
-    />
-  </app-list-toolbar>
+<section class="employee-list-page">
+  <div class="employee-list-page__header">
+    <app-list-toolbar
+      [newLabelKey]="'EMPLOYEES.NEW'"
+      [search]="search()"
+      [showInactive]="showInactive()"
+      (searchChange)="onSearchChange($event)"
+      (showInactiveChange)="onShowInactiveChange($event)"
+      (create)="openCreate()"
+    >
+      <div class="employee-list-page__filter-group">
+        <span>Poslovnica</span>
+        <p-select
+          class="employee-list-page__filter"
+          [options]="companyFilterOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="companyFilter()"
+          (ngModelChange)="onCompanyFilterChange($event)"
+        />
+      </div>
+      <div class="employee-list-page__filter-group">
+        <span>Vrsta zaposlenja</span>
+        <p-select
+          class="employee-list-page__filter"
+          [options]="engagementTypeFilterOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="engagementTypeFilter()"
+          (ngModelChange)="onEngagementTypeFilterChange($event)"
+        />
+      </div>
+    </app-list-toolbar>
+  </div>
 
-  <p-table
-    #dt
-    [value]="items()"
-    [lazy]="true"
-    (onLazyLoad)="onLazyLoad($event)"
-    [paginator]="true"
-    [rows]="rows()"
-    [totalRecords]="totalCount()"
-    [loading]="loading()"
-    [rowsPerPageOptions]="[20, 50, 100, 200]"
-    dataKey="id"
-    responsiveLayout="scroll"
-  >
-    <ng-template pTemplate="header">
-      <tr>
-        <th>{{ 'EMPLOYEES.COL_NAME' | translate }}</th>
-        <th>{{ 'EMPLOYEES.COL_ROLE' | translate }}</th>
-        <th>{{ 'EMPLOYEES.COL_ENGAGEMENT_TYPE' | translate }}</th>
-        <th>{{ 'EMPLOYEES.COL_COMPANIES' | translate }}</th>
-        <th>{{ 'EMPLOYEES.COL_COLOR' | translate }}</th>
-        <th>{{ 'COMMON.COL_STATUS' | translate }}</th>
-        <th class="employee-list-page__actions-col"></th>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="body" let-employee>
-      <tr [class.employee-list-page__row--inactive]="!employee.isActive">
-        <td>{{ fullName(employee) }}</td>
-        <td>{{ roleColumnLabel(employee) }}</td>
-        <td>{{ employee.engagementTypeName }}</td>
-        <td>
-          @for (company of employee.companies; track company.companyId) {
-            <span
-              class="employee-list-page__company"
-              [class.employee-list-page__company--primary]="company.isPrimary"
-            >
-              {{ company.companyName }}@if (!$last) {, }
-            </span>
-          }
-        </td>
-        <td><app-color-swatch [colorHex]="employee.colorHex" /></td>
-        <td><app-status-tag [active]="employee.isActive" /></td>
-        <td class="employee-list-page__actions">
+  @if (loading()) {
+    <p class="employee-list-page__empty">Učitavanje zaposlenika…</p>
+  } @else if (items().length === 0) {
+    <p class="employee-list-page__empty">{{ 'EMPLOYEES.EMPTY' | translate }}</p>
+  } @else {
+    <div class="employee-list-page__cards">
+      @for (employee of items(); track employee.id) {
+        <article class="employee-list-page__card" [class.employee-list-page__card--inactive]="!employee.isActive">
+          <span class="employee-list-page__accent" [style.background]="employee.colorHex || 'var(--teal)'"></span>
+          <span class="employee-list-page__avatar" [style.background]="employee.colorHex || 'var(--teal)'">{{ initials(employee) }}</span>
+          <div class="employee-list-page__identity">
+            <div class="employee-list-page__name-row">
+              <h3>{{ fullName(employee) }}</h3>
+              <span class="employee-list-page__badge">{{ roleColumnLabel(employee) }}</span>
+              <span class="employee-list-page__status" [class.employee-list-page__status--inactive]="!employee.isActive">
+                {{ employee.isActive ? 'Aktivno' : 'Neaktivno' }}
+              </span>
+            </div>
+            <p>{{ employee.phone || '—' }} · {{ employee.email || '—' }}</p>
+          </div>
+          <div class="employee-list-page__assignments">
+            <span class="employee-list-page__pill">{{ employee.engagementTypeName || '—' }}</span>
+            @for (company of employee.companies; track company.companyId) {
+              <span class="employee-list-page__company" [class.employee-list-page__company--primary]="company.isPrimary">
+                <i [style.background]="employee.colorHex || 'var(--teal)'"></i>{{ company.companyName }}@if (company.isPrimary) { · primarna }
+              </span>
+            }
+          </div>
+          <div class="employee-list-page__actions">
           <p-button
             icon="pi pi-pencil"
             [text]="true"
@@ -106,14 +100,16 @@
             [title]="'COMMON.DELETE' | translate"
             (onClick)="confirmDelete(employee)"
           />
-        </td>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="emptymessage">
-      <tr>
-        <td colspan="7" class="employee-list-page__empty">{{ 'EMPLOYEES.EMPTY' | translate }}</td>
-      </tr>
-    </ng-template>
-  </p-table>
-</div>
+          </div>
+        </article>
+      }
+    </div>
+    <p-paginator
+      [first]="first()"
+      [rows]="rows()"
+      [totalRecords]="totalCount()"
+      [rowsPerPageOptions]="[20, 50, 100, 200]"
+      (onPageChange)="onPageChange($event)"
+    />
+  }
+</section>

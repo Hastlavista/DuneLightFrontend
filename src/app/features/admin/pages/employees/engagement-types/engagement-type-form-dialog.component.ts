@@ -14,6 +14,7 @@ import { NotificationService } from '../../../../../core/services/notification.s
   selector: 'app-engagement-type-form-dialog',
   imports: [Dialog, ReactiveFormsModule, InputText, InputNumber, Button, TranslatePipe],
   templateUrl: './engagement-type-form-dialog.component.html',
+  styleUrl: './engagement-type-form-dialog.component.scss',
 })
 export class EngagementTypeFormDialogComponent {
   private readonly fb = inject(FormBuilder);
@@ -85,6 +86,14 @@ export class EngagementTypeFormDialogComponent {
 
   onCancel(): void {
     this.visible.set(false);
+  }
+
+  moveToTop(): void {
+    this.form.controls.sortOrder.setValue(0);
+  }
+
+  moveToBottom(): void {
+    this.form.controls.sortOrder.setValue(Math.max(1, this.form.controls.sortOrder.value + 1));
   }
 
   private resetForm(type: EngagementTypeDto | null): void {

@@ -1,24 +1,26 @@
 .engagement-types-page {
-  padding: 1.25rem;
-
-  &__actions-col {
-    width: 8rem;
-  }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; }
+  header p { margin: 0; color: var(--ink-muted); font-size: .8rem; }
+  &__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: .8rem; }
+  &__card { display: grid; grid-template-columns: .3rem 1fr auto; gap: .9rem; overflow: hidden; min-height: 8.5rem; border: 1px solid var(--rose-border); border-radius: 14px; background: var(--surface-card); box-shadow: var(--shadow-soft); }
+  &__card > span { background: var(--teal); }
+  &__card > div { padding: 1rem 0; }
+  &__card h3 { margin: 0; font-size: 1.05rem; }
+  &__card p { margin: .35rem 0 0; color: var(--ink-muted); font-size: .76rem; }
+  &__card--inactive { opacity: .6; }
 
   &__actions {
     display: flex;
     align-items: center;
+    align-self: end;
     gap: 0.25rem;
+    padding: 0 1rem 1rem 0 !important;
     white-space: nowrap;
-  }
-
-  &__row--inactive {
-    opacity: 0.55;
   }
 
   &__empty {
     text-align: center;
-    padding: 2rem 0;
-    color: var(--olive-gold);
+    padding: 2rem;
+    color: var(--ink-muted);
   }
 }

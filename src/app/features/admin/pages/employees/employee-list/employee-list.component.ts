@@ -1,11 +1,11 @@
-import { Component, ViewChild, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
+import { Paginator, PaginatorState } from 'primeng/paginator';
 import { Select } from 'primeng/select';
-import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { EmployeeDto } from '../../../../../core/models/employee.model';
 import { EngagementTypeDto } from '../../../../../core/models/engagement-type.model';
@@ -15,10 +15,8 @@ import { EmployeesService } from '../../../../../core/services/employees.service
 import { EngagementTypesService } from '../../../../../core/services/engagement-types.service';
 import { CompaniesService } from '../../../../../core/services/companies.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
-import { translationReadySignal } from '../../../../../core/utils/translation-signal.util';
-import { ColorSwatchComponent } from '../../../../../shared/components/color-swatch/color-swatch.component';
 import { ListToolbarComponent } from '../../../../../shared/components/list-toolbar/list-toolbar.component';
-import { StatusTagComponent } from '../../../../../shared/components/status-tag/status-tag.component';
+import { translationReadySignal } from '../../../../../core/utils/translation-signal.util';
 
 const DEFAULT_PAGE_SIZE = 20;
 /** pageSize max is 200 - fetches the full active set in one page for the filter
@@ -33,14 +31,12 @@ interface FilterOption<T> {
 @Component({
   selector: 'app-admin-employee-list',
   imports: [
-    TableModule,
     Button,
+    Paginator,
     Select,
     FormsModule,
     TranslatePipe,
     ListToolbarComponent,
-    StatusTagComponent,
-    ColorSwatchComponent,
   ],
   templateUrl: './employee-list.component.html',
   styleUrl: './employee-list.component.scss',
@@ -55,12 +51,11 @@ export class EmployeeListComponent {
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
 
-  @ViewChild('dt') private table!: Table;
-
   readonly items = signal<EmployeeDto[]>([]);
   readonly totalCount = signal(0);
   readonly loading = signal(false);
   readonly rows = signal(DEFAULT_PAGE_SIZE);
+  readonly first = signal(0);
   readonly search = signal('');
   readonly showInactive = signal(false);
 
@@ -91,37 +86,35 @@ export class EmployeeListComponent {
   constructor() {
     this.loadActiveCompanies();
     this.loadActiveEngagementTypes();
-  }
-
-  onLazyLoad(event: TableLazyLoadEvent): void {
-    const first = event.first ?? 0;
-    const rows = event.rows ?? this.rows();
-    this.rows.set(rows);
-    this.fetch(first, rows);
+    this.fetch(0, this.rows());
   }
 
   onSearchChange(term: string): void {
     this.search.set(term);
-    this.table.first = 0;
-    this.fetch(0, this.rows());
+    this.resetAndFetch();
   }
 
   onShowInactiveChange(value: boolean): void {
     this.showInactive.set(value);
-    this.table.first = 0;
-    this.fetch(0, this.rows());
+    this.resetAndFetch();
   }
 
   onCompanyFilterChange(companyId: string | null): void {
     this.companyFilter.set(companyId);
-    this.table.first = 0;
-    this.fetch(0, this.rows());
+    this.resetAndFetch();
   }
 
   onEngagementTypeFilterChange(engagementTypeId: string | null): void {
     this.engagementTypeFilter.set(engagementTypeId);
-    this.table.first = 0;
-    this.fetch(0, this.rows());
+    this.resetAndFetch();
+  }
+
+  onPageChange(event: PaginatorState): void {
+    const rows = event.rows ?? this.rows();
+    const first = event.first ?? 0;
+    this.rows.set(rows);
+    this.first.set(first);
+    this.fetch(first, rows);
   }
 
   openCreate(): void {
@@ -139,7 +132,7 @@ export class EmployeeListComponent {
         if (result.warning) {
           this.notifications.showWarning(result.warning);
         }
-        this.fetch(this.table?.first ?? 0, this.rows());
+        this.resetAndFetch();
       },
       error: () => {},
     });
@@ -159,7 +152,7 @@ export class EmployeeListComponent {
             if (result.warning) {
               this.notifications.showWarning(result.warning);
             }
-            this.fetch(this.table?.first ?? 0, this.rows());
+            this.resetAndFetch();
           },
           error: () => {},
         });
@@ -179,7 +172,7 @@ export class EmployeeListComponent {
         this.employeesService.delete(employee.id).subscribe({
           next: () => {
             this.notifications.showSuccess(this.translate.instant('EMPLOYEES.DELETED'));
-            this.fetch(this.table?.first ?? 0, this.rows());
+            this.resetAndFetch();
           },
           error: () => {},
         });
@@ -189,6 +182,10 @@ export class EmployeeListComponent {
 
   fullName(employee: EmployeeDto): string {
     return `${employee.firstName} ${employee.lastName}`;
+  }
+
+  initials(employee: EmployeeDto): string {
+    return `${employee.firstName.charAt(0)}${employee.lastName.charAt(0)}`.toUpperCase();
   }
 
   /** Only ever true for the org's Owner viewing their own row (see
@@ -240,6 +237,11 @@ export class EmployeeListComponent {
         this.items.set(result.items);
         this.totalCount.set(result.totalCount);
       });
+  }
+
+  private resetAndFetch(): void {
+    this.first.set(0);
+    this.fetch(0, this.rows());
   }
 
   private loadActiveCompanies(): void {

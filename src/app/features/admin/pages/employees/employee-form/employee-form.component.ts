@@ -4,13 +4,9 @@ import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Va
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
-import { ColorPicker } from 'primeng/colorpicker';
 import { DatePicker } from 'primeng/datepicker';
-import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
-import { MultiSelect } from 'primeng/multiselect';
 import { Password } from 'primeng/password';
-import { Select } from 'primeng/select';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { Observable, finalize, forkJoin, of } from 'rxjs';
 import {
@@ -44,6 +40,14 @@ const NEW_ID = 'new';
 /** pageSize max is 200 - fetches the full active set in one page for the
  * company/service/engagement-type pickers. */
 const LOOKUP_PAGE_SIZE = 200;
+const EMPLOYEE_COLORS = [
+  { name: 'Teal', value: '0D5C63' },
+  { name: 'Svijetli teal', value: '128089' },
+  { name: 'Burgundy', value: '8E3A4A' },
+  { name: 'Dusty rose', value: '7A5D61' },
+  { name: 'Slate', value: '545863' },
+  { name: 'Mint', value: 'A8DCBE' },
+];
 
 export interface EmployeeOption {
   id: string;
@@ -86,11 +90,7 @@ function employmentDatesValidator(group: AbstractControl): ValidationErrors | nu
   imports: [
     ReactiveFormsModule,
     InputText,
-    InputNumber,
-    Select,
-    MultiSelect,
     DatePicker,
-    ColorPicker,
     Password,
     Button,
     Tabs,
@@ -175,18 +175,12 @@ export class EmployeeFormComponent {
     this.justCreatedInWizard() ? 'EMPLOYEES.SAVE_AND_FINISH' : 'COMMON.SAVE',
   );
 
-  /** Keeps the "new employee" framing through the whole wizard even after
-   * "Podaci" has created the employee under the hood - only a genuine re-open
-   * via "uredi" (justCreatedInWizard never set) shows the edit title. */
-  readonly pageTitleKey = computed(() =>
-    this.isEditMode() && !this.justCreatedInWizard() ? 'EMPLOYEES.EDIT_TITLE' : 'EMPLOYEES.NEW_TITLE',
-  );
-
   readonly activeCompanies = signal<CompanyDto[]>([]);
   readonly activeServices = signal<ServiceDto[]>([]);
   readonly activeEngagementTypes = signal<EngagementTypeDto[]>([]);
   readonly activeGrantGroups = signal<GrantGroupDto[]>([]);
   readonly activeRoles = signal<RoleDto[]>([]);
+  readonly colorOptions = EMPLOYEE_COLORS;
 
   /** Companies/services/engagement type linked to the employee being edited
    * that have since been deactivated - kept visible in their picker (with a
@@ -379,6 +373,15 @@ export class EmployeeFormComponent {
     this.navigateBack();
   }
 
+  selectEngagementType(id: string): void { this.form.controls.engagementTypeId.setValue(id); }
+  selectColor(value: string): void { this.form.controls.colorHex.setValue(value); }
+  selectPrimaryCompany(id: string): void { this.form.controls.primaryCompanyId.setValue(id); }
+  toggleCompany(id: string): void { this.toggleIds('companyIds', id); }
+  toggleService(id: string): void { this.toggleIds('serviceIds', id); }
+  toggleGrantGroup(id: string): void { this.toggleIds('grantGroupIds', id); }
+  toggleRole(id: string): void { this.toggleIds('roleIds', id); }
+  isSelected(ids: string[], id: string): boolean { return ids.includes(id); }
+
   onWorkingHoursSaved(): void {
     if (this.justCreatedInWizard()) {
       this.goToNextWizardStep('workingHours');
@@ -415,6 +418,15 @@ export class EmployeeFormComponent {
       .filter((option) => !activeIds.has(option.id))
       .map((option) => ({ id: option.id, name: `${option.name} (${badge})` }));
     return [...active, ...grandfathered];
+  }
+
+  private toggleIds(controlName: 'companyIds' | 'serviceIds' | 'grantGroupIds' | 'roleIds', id: string): void {
+    const control = this.form.controls[controlName];
+    const ids = control.value;
+    control.setValue(ids.includes(id) ? ids.filter((value) => value !== id) : [...ids, id]);
+    if (controlName === 'companyIds' && !control.value.includes(this.form.controls.primaryCompanyId.value ?? '')) {
+      this.form.controls.primaryCompanyId.setValue(null);
+    }
   }
 
   private toCommonRequest(): EmployeeUpsertRequest {

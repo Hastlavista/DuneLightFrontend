@@ -13,4 +13,8 @@
       <router-outlet />
     </main>
   </div>
+
+  @if (locked()) {
+    <app-pin-lock-overlay />
+  }
 </div>

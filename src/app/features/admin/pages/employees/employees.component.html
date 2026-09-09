@@ -1,4 +1,5 @@
-<p-tabs [value]="initialTab">
+<section class="employees-page">
+<p-tabs [value]="initialTab" styleClass="employees-page__tabs">
   <p-tablist>
     <p-tab value="employees">{{ 'EMPLOYEES.TAB_LABEL' | translate }}</p-tab>
     <p-tab value="engagement-types">{{ 'EMPLOYEES.ENGAGEMENT_TYPES.TAB_LABEL' | translate }}</p-tab>
@@ -12,3 +13,4 @@
     </p-tabpanel>
   </p-tabpanels>
 </p-tabs>
+</section>

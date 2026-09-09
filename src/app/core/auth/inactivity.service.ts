@@ -1,4 +1,4 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { CurrentEmployeeService } from '../services/current-employee.service';
 import { AuthService } from './auth.service';
@@ -25,6 +25,9 @@ export class InactivityService {
 
   private timeoutId: ReturnType<typeof setTimeout> | null = null;
   private started = false;
+  /** The session remains in memory while locked so the previous workspace can
+   * stay safely obscured behind the PIN prompt instead of being torn down. */
+  readonly locked = signal(false);
   private readonly onActivity = (): void => this.resetTimer();
 
   start(): void {
@@ -32,6 +35,7 @@ export class InactivityService {
       return;
     }
     this.started = true;
+    this.locked.set(false);
     for (const event of ACTIVITY_EVENTS) {
       document.addEventListener(event, this.onActivity, { passive: true });
     }
@@ -49,6 +53,12 @@ export class InactivityService {
     this.clearTimer();
   }
 
+  unlock(): void {
+    this.locked.set(false);
+    this.start();
+    this.resetTimer();
+  }
+
   private resetTimer(): void {
     this.clearTimer();
     this.timeoutId = setTimeout(() => this.onTimeout(), INACTIVITY_TIMEOUT_MS);
@@ -63,8 +73,6 @@ export class InactivityService {
 
   private onTimeout(): void {
     this.stop();
-    this.auth.logout();
-    this.currentEmployeeService.clear();
-    this.router.navigate(['/login']);
+    this.locked.set(true);
   }
 }

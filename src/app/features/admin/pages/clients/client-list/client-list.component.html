@@ -10,17 +10,28 @@
   >
       <div class="client-list-page__filter-group">
         <span>Oznaka</span>
-        <div>
-          <button type="button" [class.client-list-page__filter-chip--active]="tagFilter() === null" (click)="selectTag(null)">Sve oznake</button>
-          @for (tag of activeTags(); track tag.id) { <button type="button" [class.client-list-page__filter-chip--active]="tagFilter() === tag.id" (click)="selectTag(tag.id)">{{ tag.name }}</button> }
-        </div>
+        <p-select
+          class="client-list-page__filter"
+          [options]="tagFilterOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="tagFilter()"
+          (ngModelChange)="onTagFilterChange($event)"
+        />
       </div>
       <div class="client-list-page__filter-group">
         <span>Matični trener</span>
-        <div>
-          <button type="button" [class.client-list-page__filter-chip--active]="homeTrainerFilter() === null" (click)="selectHomeTrainer(null)">Svi treneri</button>
-          @for (employee of activeEmployees(); track employee.id) { <button type="button" [class.client-list-page__filter-chip--active]="homeTrainerFilter() === employee.id" (click)="selectHomeTrainer(employee.id)">{{ employee.firstName }} {{ employee.lastName }}</button> }
-        </div>
+        <p-select
+          class="client-list-page__filter"
+          [options]="homeTrainerFilterOptions()"
+          optionLabel="label"
+          optionValue="value"
+          [ngModel]="homeTrainerFilter()"
+          (ngModelChange)="onHomeTrainerFilterChange($event)"
+          [filter]="true"
+          filterBy="label"
+          [showClear]="true"
+        />
       </div>
     </app-list-toolbar>
   </div>

@@ -55,7 +55,7 @@ export class EmployeeLeaveFundTabComponent {
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
 
-  readonly employeeId = input.required<string>();
+  readonly employeeId = input<string | null>(null);
 
   /** Lets the "new employee" wizard (EmployeeFormComponent) relabel the save
    * button ("Spremi i završi") without this component knowing anything about
@@ -80,6 +80,8 @@ export class EmployeeLeaveFundTabComponent {
    * not-yet-expired carryover from a previous year (see this component's
    * doc). */
   readonly sortedFunds = computed(() => [...this.funds()].sort((a, b) => b.fundYear - a.fundYear));
+  readonly usedDays = computed(() => this.sortedFunds().reduce((total, fund) => total + fund.usedDays, 0));
+  readonly remainingDays = computed(() => Math.max(0, this.form.controls.annualDays.value - this.usedDays()));
 
   private readonly translationsReady = translationReadySignal(this.translate);
 
@@ -99,7 +101,10 @@ export class EmployeeLeaveFundTabComponent {
   });
 
   constructor() {
-    effect(() => this.load(this.employeeId()));
+    effect(() => {
+      const id = this.employeeId();
+      if (id) { this.load(id); } else { this.loading.set(false); this.applySettings(null); this.form.disable({ emitEvent: false }); }
+    });
   }
 
   isCurrentFund(fund: LeaveFundDto): boolean {
@@ -107,7 +112,8 @@ export class EmployeeLeaveFundTabComponent {
   }
 
   onSave(): void {
-    if (!this.canManage() || this.form.invalid) {
+    const employeeId = this.employeeId();
+    if (!employeeId || !this.canManage() || this.form.invalid) {
       this.form.markAllAsTouched();
       return;
     }
@@ -115,13 +121,13 @@ export class EmployeeLeaveFundTabComponent {
     const request: EmployeeLeaveSettingsDto = this.form.getRawValue();
     this.saving.set(true);
     this.leaveFundService
-      .updateSettings(this.employeeId(), request)
+      .updateSettings(employeeId, request)
       .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
         next: (dto) => {
           this.applySettings(dto);
           this.notifications.showSuccess(this.translate.instant('EMPLOYEES.LEAVE_FUND.SAVED'));
-          this.loadFunds(this.employeeId());
+          this.loadFunds(employeeId);
           this.saved.emit();
         },
         error: () => {},

@@ -1,23 +1,27 @@
-<div class="dl-card employee-form-page">
-  <div class="employee-form-page__header">
-    <h2>{{ pageTitleKey() | translate }}</h2>
-    <p-button
-      [text]="true"
-      severity="secondary"
-      icon="pi pi-arrow-left"
-      [label]="'EMPLOYEES.BACK_TO_LIST' | translate"
-      (onClick)="onCancel()"
-    />
+<div class="employee-form-page">
+  <section class="employee-form-page__panel">
+  <div class="employee-form-page__summary">
+    <span class="employee-form-page__summary-icon"><i class="pi pi-user"></i></span>
+    <div>
+      <strong>{{ form.controls.firstName.value || 'Novi zaposlenik' }} {{ form.controls.lastName.value }}</strong>
+      <small>
+        @if (isEditMode()) {
+          {{ form.controls.email.value || 'Zaposlenik' }} · {{ form.controls.companyIds.value.length }} poslovnice
+        } @else {
+          Unesite osnovne podatke i postavite radni odnos.
+        }
+      </small>
+    </div>
+    <button type="button" class="employee-form-page__back" (click)="onCancel()"><i class="pi pi-angle-left"></i>{{ 'EMPLOYEES.BACK_TO_LIST' | translate }}</button>
   </div>
-
-  <p-tabs [(value)]="activeTab">
+  <p-tabs [(value)]="activeTab" styleClass="employee-form-page__tabs">
     <p-tablist>
       <p-tab value="data">{{ 'EMPLOYEES.TAB_DATA' | translate }}</p-tab>
       @if (canViewWorkingHours()) {
         <p-tab value="workingHours" [disabled]="!editingId()">{{ 'EMPLOYEES.TAB_WORKING_HOURS' | translate }}</p-tab>
       }
       @if (canViewLeaveFund()) {
-        <p-tab value="leaveFund" [disabled]="!editingId()">{{ 'EMPLOYEES.TAB_LEAVE_FUND' | translate }}</p-tab>
+        <p-tab value="leaveFund">{{ 'EMPLOYEES.TAB_LEAVE_FUND' | translate }}</p-tab>
       }
     </p-tablist>
     <p-tabpanels>
@@ -129,16 +133,11 @@
 
       <div class="dl-form__field">
         <label for="employee-engagement-type">{{ 'EMPLOYEES.FIELD_ENGAGEMENT_TYPE' | translate }}</label>
-        <p-select
-          id="employee-engagement-type"
-          fluid
-          appendTo="body"
-          formControlName="engagementTypeId"
-          [options]="engagementTypeOptions()"
-          optionLabel="name"
-          optionValue="id"
-          [placeholder]="'EMPLOYEES.FIELD_ENGAGEMENT_TYPE_PLACEHOLDER' | translate"
-        />
+        <div class="employee-form-page__choices">
+          @for (type of engagementTypeOptions(); track type.id) {
+            <button type="button" [class.employee-form-page__choice--active]="form.controls.engagementTypeId.value === type.id" (click)="selectEngagementType(type.id)">{{ type.name }}</button>
+          }
+        </div>
         @if (form.controls.engagementTypeId.invalid && form.controls.engagementTypeId.touched) {
           <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.ENGAGEMENT_TYPE_REQUIRED' | translate }}</span>
         }
@@ -158,16 +157,14 @@
     <section class="employee-form-page__section">
       <h3>{{ 'EMPLOYEES.SECTION_DISPLAY' | translate }}</h3>
 
-      <div class="dl-form__row">
-        <div class="dl-form__field">
-          <label for="employee-color">{{ 'EMPLOYEES.FIELD_COLOR' | translate }}</label>
-          <p-colorpicker id="employee-color" formControlName="colorHex" appendTo="body" />
+      <div class="dl-form__field">
+        <label for="employee-color">{{ 'EMPLOYEES.FIELD_COLOR' | translate }}</label>
+        <div class="employee-form-page__choices">
+          @for (color of colorOptions; track color.value) {
+            <button type="button" [class.employee-form-page__choice--active]="form.controls.colorHex.value === color.value" (click)="selectColor(color.value)"><i [style.background]="'#' + color.value"></i>{{ color.name }}</button>
+          }
         </div>
-
-        <div class="dl-form__field">
-          <label for="employee-sort-order">{{ 'EMPLOYEES.FIELD_SORT_ORDER' | translate }}</label>
-          <p-inputnumber id="employee-sort-order" fluid formControlName="sortOrder" [showButtons]="true" />
-        </div>
+        <span class="dl-form__hint">Boja kojom su njegovi termini označeni u kalendaru.</span>
       </div>
     </section>
 
@@ -176,17 +173,11 @@
 
       <div class="dl-form__field">
         <label for="employee-companies">{{ 'EMPLOYEES.FIELD_COMPANIES' | translate }}</label>
-        <p-multiselect
-          id="employee-companies"
-          fluid
-          appendTo="body"
-          display="chip"
-          formControlName="companyIds"
-          [options]="companyOptions()"
-          optionLabel="name"
-          optionValue="id"
-          [placeholder]="'EMPLOYEES.FIELD_COMPANIES_PLACEHOLDER' | translate"
-        />
+        <div class="employee-form-page__choices">
+          @for (company of companyOptions(); track company.id) {
+            <button type="button" [class.employee-form-page__choice--active]="isSelected(form.controls.companyIds.value, company.id)" (click)="toggleCompany(company.id)">{{ company.name }}</button>
+          }
+        </div>
         @if (form.controls.companyIds.invalid && form.controls.companyIds.touched) {
           <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.COMPANIES_REQUIRED' | translate }}</span>
         }
@@ -194,16 +185,11 @@
 
       <div class="dl-form__field">
         <label for="employee-primary-company">{{ 'EMPLOYEES.FIELD_PRIMARY_COMPANY' | translate }}</label>
-        <p-select
-          id="employee-primary-company"
-          fluid
-          appendTo="body"
-          formControlName="primaryCompanyId"
-          [options]="primaryCompanyOptions()"
-          optionLabel="name"
-          optionValue="id"
-          [placeholder]="'EMPLOYEES.FIELD_PRIMARY_COMPANY_PLACEHOLDER' | translate"
-        />
+        <div class="employee-form-page__choices employee-form-page__choices--muted">
+          @for (company of primaryCompanyOptions(); track company.id) {
+            <button type="button" [class.employee-form-page__choice--active]="form.controls.primaryCompanyId.value === company.id" (click)="selectPrimaryCompany(company.id)">{{ company.name }}</button>
+          } @empty { <span class="dl-form__hint">Prvo odaberite poslovnice u kojima radi.</span> }
+        </div>
         @if (form.errors?.['primaryNotSelected'] && form.controls.primaryCompanyId.touched) {
           <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.PRIMARY_COMPANY_REQUIRED' | translate }}</span>
         }
@@ -215,17 +201,11 @@
 
       <div class="dl-form__field">
         <label for="employee-services">{{ 'EMPLOYEES.FIELD_SERVICES' | translate }}</label>
-        <p-multiselect
-          id="employee-services"
-          fluid
-          appendTo="body"
-          display="chip"
-          formControlName="serviceIds"
-          [options]="serviceOptions()"
-          optionLabel="name"
-          optionValue="id"
-          [placeholder]="'EMPLOYEES.FIELD_SERVICES_PLACEHOLDER' | translate"
-        />
+        <div class="employee-form-page__choices">
+          @for (service of serviceOptions(); track service.id) {
+            <button type="button" [class.employee-form-page__choice--active]="isSelected(form.controls.serviceIds.value, service.id)" (click)="toggleService(service.id)">{{ service.name }}</button>
+          }
+        </div>
         <span class="dl-form__hint">{{ 'EMPLOYEES.SERVICES_EMPTY_HINT' | translate }}</span>
       </div>
     </section>
@@ -257,17 +237,11 @@
       @if (!isSelfOwnerEdit()) {
         <div class="dl-form__field">
           <label for="employee-grant-groups">{{ 'EMPLOYEES.FIELD_GRANT_GROUPS' | translate }}</label>
-          <p-multiselect
-            id="employee-grant-groups"
-            fluid
-            appendTo="body"
-            display="chip"
-            formControlName="grantGroupIds"
-            [options]="grantGroupOptions()"
-            optionLabel="name"
-            optionValue="id"
-            [placeholder]="'EMPLOYEES.FIELD_GRANT_GROUPS_PLACEHOLDER' | translate"
-          />
+          <div class="employee-form-page__choices">
+            @for (group of grantGroupOptions(); track group.id) {
+              <button type="button" [class.employee-form-page__choice--active]="isSelected(form.controls.grantGroupIds.value, group.id)" (click)="toggleGrantGroup(group.id)">{{ group.name }}</button>
+            }
+          </div>
           @if (form.controls.grantGroupIds.invalid && form.controls.grantGroupIds.touched) {
             <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.GRANT_GROUPS_REQUIRED' | translate }}</span>
           }
@@ -280,29 +254,20 @@
 
       <div class="dl-form__field">
         <label for="employee-roles">{{ 'EMPLOYEES.FIELD_ROLES' | translate }}</label>
-        <p-multiselect
-          id="employee-roles"
-          fluid
-          appendTo="body"
-          display="chip"
-          formControlName="roleIds"
-          [options]="roleOptions()"
-          optionLabel="name"
-          optionValue="id"
-          [placeholder]="'EMPLOYEES.FIELD_ROLES_PLACEHOLDER' | translate"
-        />
+        <div class="employee-form-page__choices">
+          @for (role of roleOptions(); track role.id) {
+            <button type="button" [class.employee-form-page__choice--active]="isSelected(form.controls.roleIds.value, role.id)" (click)="toggleRole(role.id)">{{ role.name }}</button>
+          }
+        </div>
       </div>
     </section>
 
     <div class="dl-form__actions">
-      <p-button
-        type="button"
-        [text]="true"
-        severity="secondary"
-        [label]="'COMMON.CANCEL' | translate"
-        (onClick)="onCancel()"
-      />
-      <p-button type="submit" [label]="dataSaveLabelKey() | translate" [loading]="saving()" />
+      <span class="employee-form-page__footer-hint">Za spremanje trebaju biti popunjena obavezna polja.</span>
+      <div class="employee-form-page__footer-buttons">
+        <p-button type="button" severity="secondary" [outlined]="true" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" />
+        <p-button type="submit" [label]="dataSaveLabelKey() | translate" [loading]="saving()" />
+      </div>
     </div>
   </form>
       </p-tabpanel>
@@ -323,17 +288,10 @@
 
       @if (canViewLeaveFund()) {
         <p-tabpanel value="leaveFund">
-          @if (editingId(); as id) {
-            <app-employee-leave-fund-tab
-              [employeeId]="id"
-              [saveLabelKey]="leaveFundSaveLabelKey()"
-              (saved)="onLeaveFundSaved()"
-            />
-          } @else {
-            <p class="dl-form__hint">{{ 'EMPLOYEES.WIZARD_LOCKED_HINT' | translate }}</p>
-          }
+          <app-employee-leave-fund-tab [employeeId]="editingId()" [saveLabelKey]="leaveFundSaveLabelKey()" (saved)="onLeaveFundSaved()" />
         </p-tabpanel>
       }
     </p-tabpanels>
   </p-tabs>
+  </section>
 </div>

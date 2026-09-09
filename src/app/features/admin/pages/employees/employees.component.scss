@@ -1,0 +1,28 @@
+.employees-page {
+}
+
+:host ::ng-deep .employees-page__tabs {
+  .p-tablist {
+    border-bottom: 1px solid var(--rose-border);
+  }
+
+  .p-tab {
+    padding: .65rem 1rem;
+    color: var(--ink-secondary);
+    font-weight: 600;
+  }
+
+  .p-tab.p-tab-active {
+    color: var(--teal-dark);
+  }
+
+  .p-tabpanels {
+    padding: 1.25rem 0 0;
+    background: transparent;
+  }
+
+  .p-tabpanel {
+    padding: 0;
+    background: transparent;
+  }
+}

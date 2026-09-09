@@ -1,29 +1,53 @@
 .employee-form-page {
-  padding: 1.25rem;
-  max-width: 48rem;
-
-  &__header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 1.25rem;
-
-    h2 {
-      margin: 0;
-    }
-  }
+  &__panel { overflow: hidden; border: 1px solid var(--rose-border); border-radius: 16px; background: var(--surface-card); box-shadow: var(--shadow-soft); }
+  &__back { display: inline-flex; min-height: 2.2rem; align-items: center; gap: .35rem; padding: .4rem .7rem; border: 1px solid var(--rose-border); border-radius: 8px; background: var(--surface-card); color: var(--ink-secondary); cursor: pointer; font: inherit; font-size: .76rem; white-space: nowrap; }
+  &__summary { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .75rem; padding: 1rem 1.1rem; border-bottom: 1px solid var(--mint-border); background: var(--mint-tint); }
+  &__summary-icon { display: inline-flex; width: 2.3rem; height: 2.3rem; align-items: center; justify-content: center; border: 1px solid var(--mint-border); border-radius: 9px; background: var(--surface-card); color: var(--teal); }
+  &__summary div { display: flex; min-width: 0; flex-direction: column; gap: .12rem; }
+  &__summary strong { overflow: hidden; font-family: var(--font-heading); font-size: 1rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+  &__summary small { overflow: hidden; color: var(--ink-muted); font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
 
   &__section {
     display: flex;
     flex-direction: column;
-    gap: 1.25rem;
+    gap: .95rem;
+    padding: 1.2rem 1.1rem;
+    border-bottom: 1px solid var(--rose-border);
 
     h3 {
       margin: 0;
-      font-size: 0.95rem;
-      color: var(--clay-2);
-      border-bottom: 1px solid var(--sand);
-      padding-bottom: 0.5rem;
+      color: var(--ink-secondary);
+      font-family: var(--font-body);
+      font-size: .7rem;
+      font-weight: 700;
+      letter-spacing: .04em;
+      text-transform: uppercase;
     }
   }
+
+  &__choices { display: flex; flex-wrap: wrap; gap: .45rem; }
+  &__choices button { min-height: 2.15rem; padding: .32rem .72rem; border: 1px solid var(--rose-border); border-radius: 9px; background: var(--surface-card); color: var(--ink-secondary); font: inherit; font-size: .76rem; cursor: pointer; }
+  &__choices button:hover { border-color: var(--mint-border); background: var(--mint-tint); }
+  &__choices button.employee-form-page__choice--active { border-color: var(--teal); background: var(--mint-tint); color: var(--teal-dark); font-weight: 600; }
+  &__choices button i { display: inline-block; width: .85rem; height: .85rem; margin-right: .42rem; border-radius: .26rem; vertical-align: -.12rem; }
+  &__choices--muted button { border-style: dashed; }
+  &__footer-hint { color: var(--ink-muted); font-size: .76rem; }
+  &__footer-buttons { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .55rem; }
+
+  :host ::ng-deep &__tabs {
+    .p-tablist { padding: 0 1rem; border-bottom: 1px solid var(--rose-border); background: var(--surface-card); }
+    .p-tab { padding: .72rem .95rem; color: var(--ink-secondary); font-size: .84rem; }
+    .p-tab.p-tab-active { color: var(--teal-dark); }
+    .p-tabpanels, .p-tabpanel { padding: 0; background: var(--surface-card); }
+    .p-tabpanel > .dl-form { gap: 0; }
+  }
+
+  :host ::ng-deep .dl-form__row { gap: .9rem; }
+  :host ::ng-deep .dl-form__field > label { color: var(--ink-secondary); font-size: .68rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+  :host ::ng-deep .dl-form__field input, :host ::ng-deep .dl-form__field textarea, :host ::ng-deep .dl-form__field .p-select, :host ::ng-deep .dl-form__field .p-multiselect { border-color: var(--rose-border-strong); border-radius: 10px; background: var(--surface-warm); }
+  :host ::ng-deep .dl-form { gap: 0; }
+  :host ::ng-deep .dl-form__actions { display: flex; align-items: center; justify-content: space-between; gap: .6rem; padding: 1rem 1.1rem; border-top: 1px solid var(--rose-border); background: var(--surface-card); }
+  :host ::ng-deep .dl-form__actions .p-button { min-height: 2.6rem; border-radius: 9px; padding-inline: 1rem; }
 }
+
+@media (max-width: 720px) { .employee-form-page__summary { grid-template-columns: auto minmax(0, 1fr); } .employee-form-page__summary .employee-form-page__back { grid-column: 1 / -1; justify-self: end; } .employee-form-page :host ::ng-deep .dl-form__actions { align-items: stretch; flex-direction: column; } .employee-form-page__footer-buttons { justify-content: flex-end; } }
