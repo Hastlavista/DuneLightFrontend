@@ -42,7 +42,7 @@
       @for (employee of items(); track employee.id) {
         <article class="employee-list-page__card" [class.employee-list-page__card--inactive]="!employee.isActive">
           <span class="employee-list-page__accent" [style.background]="employee.colorHex || 'var(--teal)'"></span>
-          <span class="employee-list-page__avatar" [style.background]="employee.colorHex || 'var(--teal)'">{{ initials(employee) }}</span>
+          <span class="employee-list-page__avatar dl-avatar" [style.background]="employee.colorHex || 'var(--teal)'">{{ initials(employee) }}</span>
           <div class="employee-list-page__identity">
             <div class="employee-list-page__name-row">
               <h3>{{ fullName(employee) }}</h3>

@@ -27,6 +27,9 @@ export class ListToolbarComponent {
   readonly newLabelKey = input('COMMON.NEW');
   readonly search = input('');
   readonly showInactive = input(false);
+  /** Some flat registries (e.g. roles and grant groups) have no inactive
+   * state, so their toolbar keeps the shared layout without a dead switch. */
+  readonly showInactiveToggle = input(true);
 
   readonly searchChange = output<string>();
   readonly showInactiveChange = output<boolean>();
@@ -39,5 +42,13 @@ export class ListToolbarComponent {
   onSearchInput(value: string): void {
     clearTimeout(this.debounceHandle);
     this.debounceHandle = setTimeout(() => this.searchChange.emit(value), SEARCH_DEBOUNCE_MS);
+  }
+
+  toggleShowInactive(): void {
+    this.showInactiveChange.emit(!this.showInactive());
+  }
+
+  onShowInactiveToggle(value: boolean): void {
+    this.showInactiveChange.emit(value);
   }
 }

@@ -1,13 +1,24 @@
 <p-dialog
   [(visible)]="visible"
   [modal]="true"
-  [style]="{ width: '32rem' }"
-  [header]="(isEditMode() ? 'CATALOG.PRICING.EDIT_TITLE' : 'CATALOG.PRICING.NEW_TITLE') | translate"
+  [style]="{ width: '34rem', maxWidth: 'calc(100vw - 2rem)' }"
+  styleClass="price-list-form-dialog"
   (onShow)="onDialogShow()"
 >
+  <ng-template #header>
+    <div class="price-list-form-dialog__header">
+      <span class="price-list-form-dialog__mark"><i class="pi pi-tags"></i></span>
+      <div>
+        <h2>{{ (isEditMode() ? 'CATALOG.PRICING.EDIT_TITLE' : 'CATALOG.PRICING.NEW_TITLE') | translate }}</h2>
+        <p>Odredite predmet, poslovnicu, cijenu i razdoblje primjene.</p>
+      </div>
+    </div>
+  </ng-template>
+
   @if (dialogShown()) {
-  <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
-    <div class="dl-form__field">
+  <form [formGroup]="form" (ngSubmit)="onSave()" class="price-list-form-dialog__form" novalidate>
+    <div class="price-list-form-dialog__section">
+    <div class="price-list-form-dialog__field">
       <label>{{ 'CATALOG.PRICING.FIELD_SUBJECT_TYPE' | translate }}</label>
       <p-selectbutton
         [options]="subjectTypeOptions()"
@@ -19,9 +30,11 @@
         <span class="dl-form__hint">{{ 'CATALOG.PRICING.SUBJECT_LOCKED_HINT' | translate }}</span>
       }
     </div>
+    </div>
 
+    <div class="price-list-form-dialog__section">
     @if (form.controls.subjectType.value === 'Service') {
-      <div class="dl-form__field">
+      <div class="price-list-form-dialog__field">
         <label for="price-list-service">{{ 'CATALOG.PRICING.FIELD_SERVICE' | translate }}</label>
         <p-select
           id="price-list-service"
@@ -40,7 +53,7 @@
         }
       </div>
     } @else {
-      <div class="dl-form__field">
+      <div class="price-list-form-dialog__field">
         <label for="price-list-package">{{ 'CATALOG.PRICING.FIELD_PACKAGE' | translate }}</label>
         <p-select
           id="price-list-package"
@@ -60,7 +73,7 @@
       </div>
     }
 
-    <div class="dl-form__field">
+    <div class="price-list-form-dialog__field">
       <label for="price-list-company">{{ 'CATALOG.PRICING.FIELD_COMPANY' | translate }}</label>
       <p-select
         id="price-list-company"
@@ -73,7 +86,7 @@
       />
     </div>
 
-    <div class="dl-form__field">
+    <div class="price-list-form-dialog__field">
       <label for="price-list-price">{{ 'CATALOG.PRICING.FIELD_PRICE' | translate }}</label>
       <p-inputnumber
         id="price-list-price"
@@ -89,9 +102,11 @@
         <span class="dl-form__error">{{ 'CATALOG.PRICING.ERRORS.PRICE_INVALID' | translate }}</span>
       }
     </div>
+    </div>
 
-    <div class="dl-form__row">
-      <div class="dl-form__field">
+    <div class="price-list-form-dialog__section price-list-form-dialog__section--dates">
+    <div class="price-list-form-dialog__row">
+      <div class="price-list-form-dialog__field">
         <label for="price-list-valid-from">{{
           'CATALOG.PRICING.FIELD_VALID_FROM' | translate
         }}</label>
@@ -110,7 +125,7 @@
         }
       </div>
 
-      <div class="dl-form__field">
+      <div class="price-list-form-dialog__field">
         <label for="price-list-valid-to">{{ 'CATALOG.PRICING.FIELD_VALID_TO' | translate }}</label>
         <p-datepicker
           id="price-list-valid-to"
@@ -124,16 +139,20 @@
         />
       </div>
     </div>
+    </div>
 
-    <div class="dl-form__actions">
+    <div class="price-list-form-dialog__actions">
+      <span>@if (form.invalid) { Provjerite obavezna polja. } @else { Spremno za spremanje. }</span>
+      <div>
       <p-button
         type="button"
-        [text]="true"
         severity="secondary"
+        [outlined]="true"
         [label]="'COMMON.CANCEL' | translate"
         (onClick)="onCancel()"
       />
       <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+      </div>
     </div>
   </form>
   }

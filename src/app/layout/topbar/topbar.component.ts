@@ -3,6 +3,7 @@ import { Router, RouterLink, RouterLinkActive } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Popover } from 'primeng/popover';
 import { AuthService } from '../../core/auth/auth.service';
+import { InactivityService } from '../../core/auth/inactivity.service';
 import { CompanyContextService } from '../../core/services/company-context.service';
 import { CurrentEmployeeService } from '../../core/services/current-employee.service';
 
@@ -21,6 +22,7 @@ export class TopbarComponent {
   private readonly authService = inject(AuthService);
   private readonly companyContextService = inject(CompanyContextService);
   private readonly currentEmployeeService = inject(CurrentEmployeeService);
+  private readonly inactivityService = inject(InactivityService);
   private readonly router = inject(Router);
   private readonly translate = inject(TranslateService);
 
@@ -82,6 +84,10 @@ export class TopbarComponent {
   }
 
   switchUser(): void {
+    // The login page owns the one shared PIN chooser. Ending this session
+    // first lets its guest route render that exact component instead of a
+    // visually separate overlay inside the current workspace.
+    this.inactivityService.stop();
     this.endSession();
     this.router.navigate(['/login']);
   }

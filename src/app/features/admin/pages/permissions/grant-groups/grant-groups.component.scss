@@ -1,34 +1,21 @@
-.grant-groups-page {
-  padding: 1.25rem;
-
-  &__toolbar {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: 1rem;
-    margin-bottom: 1rem;
-  }
-
-  &__search {
-    flex: 1 1 16rem;
-    min-width: 12rem;
-    margin-right: auto;
-  }
-
-  &__actions-col {
-    width: 7rem;
-  }
-
-  &__actions {
-    display: flex;
-    align-items: center;
-    gap: 0.25rem;
-    white-space: nowrap;
-  }
-
-  &__empty {
-    text-align: center;
-    padding: 2rem 0;
-    color: var(--olive-gold);
-  }
-}
+.permission-list-page { display: flex; flex-direction: column; gap: .8rem; }
+.permission-list-page__header { padding: .9rem 1rem; border: 1px solid var(--rose-border); border-radius: 14px; background: var(--surface-card); box-shadow: var(--shadow-soft); }
+.permission-list-page__cards { display: grid; gap: .55rem; }
+.permission-list-page__card { position: relative; display: grid; grid-template-columns: 2.4rem minmax(14rem, 1fr) minmax(17rem, .8fr) auto; align-items: center; gap: .85rem; min-height: 4.85rem; overflow: hidden; padding: .7rem .9rem .7rem 1.15rem; border: 1px solid var(--rose-border); border-radius: 12px; background: var(--surface-card); box-shadow: 0 1px 2px rgba(46, 50, 60, .03); }
+.permission-list-page__card--role { grid-template-columns: 2.4rem minmax(14rem, 1fr) auto; }
+.permission-list-page__accent { position: absolute; inset: 0 auto 0 0; width: 5px; background: var(--teal); }
+.permission-list-page__identity { min-width: 0; }
+.permission-list-page__identity h3 { overflow: hidden; margin: 0; color: var(--ink); font-family: var(--font-heading); font-size: 1rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+.permission-list-page__identity p { margin: .25rem 0 0; color: var(--ink-muted); font-size: .73rem; }
+.permission-list-page__facts { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .4rem; }
+.permission-list-page__facts span { display: inline-flex; min-height: 1.55rem; align-items: center; padding: .12rem .5rem; border: 1px solid var(--rose-border); border-radius: 7px; color: var(--ink-secondary); font-size: .69rem; white-space: nowrap; }
+.permission-list-page__facts b { margin-right: .22rem; color: var(--teal-dark); font-weight: 700; }
+.permission-list-page__actions { display: flex; align-items: center; gap: .3rem; padding-left: .75rem; border-left: 1px solid var(--rose-border); white-space: nowrap; }
+.permission-list-page__empty { padding: 2rem; color: var(--ink-muted); text-align: center; }
+:host ::ng-deep .permission-list-page__header app-list-toolbar { display: block; width: 100%; }
+:host ::ng-deep .permission-list-page__header .list-toolbar { display: grid; grid-template-columns: minmax(16rem, 1fr) auto; width: 100%; gap: .7rem; }
+:host ::ng-deep .permission-list-page__header .list-toolbar__search { grid-column: 1; }
+:host ::ng-deep .permission-list-page__header .list-toolbar__new { grid-column: 2; }
+:host ::ng-deep .permission-list-page__header .list-toolbar__search input { min-height: 2.35rem; border-color: var(--rose-border-strong); border-radius: 8px; background: var(--surface-warm); }
+:host ::ng-deep .permission-list-page__actions .p-button { width: 2rem; height: 2rem; border: 1px solid var(--rose-border); border-radius: 50%; background: var(--surface-card); color: var(--teal); }
+@media (max-width: 760px) { .permission-list-page__card, .permission-list-page__card--role { grid-template-columns: 2.4rem minmax(0, 1fr); } .permission-list-page__facts { grid-column: 2; justify-content: flex-start; } .permission-list-page__actions { grid-column: 1 / -1; justify-content: flex-end; padding: .6rem 0 0; border-top: 1px solid var(--rose-border); border-left: 0; } }

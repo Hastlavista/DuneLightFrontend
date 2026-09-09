@@ -109,12 +109,6 @@ export const ADMIN_NAV_GROUPS: NavGroup[] = [
     labelKey: 'NAV.ADMIN.GROUPS_LABELS.WORKSPACE',
     items: [
       { labelKey: 'NAV.ADMIN.PERMISSIONS', path: 'permissions', icon: 'pi-shield', ownerOnly: true },
-      {
-        labelKey: 'NAV.ADMIN.BRANDING',
-        path: 'branding',
-        icon: 'pi-palette',
-        requiredGrants: ['organization.branding.manage'],
-      },
     ],
   },
 ];

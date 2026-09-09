@@ -96,11 +96,6 @@ export const ADMIN_ROUTES: Routes = [
     data: { titleKey: 'NAV.ADMIN.PERMISSIONS' },
   },
   {
-    path: 'branding',
-    loadComponent: () => import('./pages/branding/branding.component').then((m) => m.BrandingComponent),
-    data: { titleKey: 'NAV.ADMIN.BRANDING' },
-  },
-  {
     // Same convention as 'employees/:id' - separate routed page, `:id` is
     // either a real id (edit) or the literal 'new' (create).
     path: 'permissions/grant-groups/:id',

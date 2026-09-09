@@ -1,15 +1,18 @@
-import { Component, ViewChild, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
+import { DatePicker } from 'primeng/datepicker';
 import { Select } from 'primeng/select';
-import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
+import { Paginator, PaginatorState } from 'primeng/paginator';
 import { finalize } from 'rxjs';
 import { CompanyDto } from '../../../../../../core/models/company.model';
 import {
+  EffectivePriceRow,
   PriceListItemDto,
   PriceListSubjectType,
+  PriceSource,
   priceListSubjectName,
 } from '../../../../../../core/models/price-list.model';
 import { ActivePackagesStore } from '../../../../../../core/services/active-packages.store';
@@ -18,6 +21,7 @@ import { CompaniesService } from '../../../../../../core/services/companies.serv
 import { NotificationService } from '../../../../../../core/services/notification.service';
 import { PriceListService } from '../../../../../../core/services/price-list.service';
 import { translationReadySignal } from '../../../../../../core/utils/translation-signal.util';
+import { toStartOfDayIso } from '../../../../../../core/utils/date.util';
 import { ListToolbarComponent } from '../../../../../../shared/components/list-toolbar/list-toolbar.component';
 import { StatusTagComponent } from '../../../../../../shared/components/status-tag/status-tag.component';
 import { EurCurrencyPipe } from '../../../../../../shared/pipes/eur-currency.pipe';
@@ -38,8 +42,9 @@ interface FilterOption<T> {
 @Component({
   selector: 'app-admin-price-list-items',
   imports: [
-    TableModule,
     Button,
+    DatePicker,
+    Paginator,
     Select,
     FormsModule,
     TranslatePipe,
@@ -61,16 +66,19 @@ export class PriceListItemsComponent {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
 
-  @ViewChild('dt') private table!: Table;
-
   readonly items = signal<PriceListItemDto[]>([]);
   readonly totalCount = signal(0);
   readonly loading = signal(false);
   readonly rows = signal(DEFAULT_PAGE_SIZE);
+  readonly first = signal(0);
   readonly search = signal('');
   readonly showInactive = signal(false);
   readonly companyFilter = signal<string | null>(null);
   readonly subjectTypeFilter = signal<PriceListSubjectType | null>(null);
+  readonly effectiveCompanyId = signal<string | null>(null);
+  readonly effectiveDate = signal<Date>(new Date());
+  readonly effectiveRows = signal<EffectivePriceRow[]>([]);
+  readonly effectiveLoading = signal(false);
 
   /** Services/packages preloaded via shared stores (see ActiveServicesStore /
    * ActivePackagesStore) so a create/activate/deactivate/delete on Usluge or
@@ -100,6 +108,10 @@ export class PriceListItemsComponent {
     ];
   });
 
+  readonly effectiveCompanyOptions = computed(() =>
+    this.activeCompanies().map((company) => ({ label: company.name, value: company.id })),
+  );
+
   readonly dialogVisible = signal(false);
   readonly editingItem = signal<PriceListItemDto | null>(null);
 
@@ -107,37 +119,49 @@ export class PriceListItemsComponent {
 
   constructor() {
     this.loadLookups();
-  }
-
-  onLazyLoad(event: TableLazyLoadEvent): void {
-    const first = event.first ?? 0;
-    const rows = event.rows ?? this.rows();
-    this.rows.set(rows);
-    this.fetch(first, rows);
+    this.fetch(0, this.rows());
   }
 
   onSearchChange(term: string): void {
     this.search.set(term);
-    this.table.first = 0;
-    this.fetch(0, this.rows());
+    this.resetAndFetch();
   }
 
   onShowInactiveChange(value: boolean): void {
     this.showInactive.set(value);
-    this.table.first = 0;
-    this.fetch(0, this.rows());
+    this.resetAndFetch();
   }
 
   onCompanyFilterChange(companyId: string | null): void {
     this.companyFilter.set(companyId);
-    this.table.first = 0;
-    this.fetch(0, this.rows());
+    this.resetAndFetch();
   }
 
   onSubjectTypeFilterChange(subjectType: PriceListSubjectType | null): void {
     this.subjectTypeFilter.set(subjectType);
-    this.table.first = 0;
-    this.fetch(0, this.rows());
+    this.resetAndFetch();
+  }
+
+  onEffectiveCompanyChange(companyId: string | null): void {
+    this.effectiveCompanyId.set(companyId);
+    this.fetchEffective();
+  }
+
+  onEffectiveDateChange(date: Date): void {
+    this.effectiveDate.set(date);
+    this.fetchEffective();
+  }
+
+  sourceLabel(source: PriceSource): string {
+    return this.translate.instant(`CATALOG.PRICING.SOURCE.${source}`);
+  }
+
+  onPageChange(event: PaginatorState): void {
+    const rows = event.rows ?? this.rows();
+    const first = event.first ?? 0;
+    this.rows.set(rows);
+    this.first.set(first);
+    this.fetch(first, rows);
   }
 
   openCreate(): void {
@@ -151,14 +175,16 @@ export class PriceListItemsComponent {
   }
 
   onSaved(): void {
-    this.fetch(this.table?.first ?? 0, this.rows());
+    this.fetch(this.first(), this.rows());
+    this.fetchEffective();
   }
 
   activate(item: PriceListItemDto): void {
     this.priceListService.activate(item.id).subscribe({
       next: () => {
         this.notifications.showSuccess(this.translate.instant('CATALOG.PRICING.ACTIVATED'));
-        this.fetch(this.table?.first ?? 0, this.rows());
+        this.fetch(this.first(), this.rows());
+        this.fetchEffective();
       },
       error: () => {},
     });
@@ -177,7 +203,8 @@ export class PriceListItemsComponent {
         this.priceListService.deactivate(item.id).subscribe({
           next: () => {
             this.notifications.showSuccess(this.translate.instant('CATALOG.PRICING.DEACTIVATED'));
-            this.fetch(this.table?.first ?? 0, this.rows());
+            this.fetch(this.first(), this.rows());
+            this.fetchEffective();
           },
           error: () => {},
         });
@@ -199,7 +226,8 @@ export class PriceListItemsComponent {
         this.priceListService.delete(item.id).subscribe({
           next: () => {
             this.notifications.showSuccess(this.translate.instant('CATALOG.PRICING.DELETED'));
-            this.fetch(this.table?.first ?? 0, this.rows());
+            this.fetch(this.first(), this.rows());
+            this.fetchEffective();
           },
           error: () => {},
         });
@@ -232,9 +260,34 @@ export class PriceListItemsComponent {
       });
   }
 
+  private resetAndFetch(): void {
+    this.first.set(0);
+    this.fetch(0, this.rows());
+  }
+
+  private fetchEffective(): void {
+    const companyId = this.effectiveCompanyId();
+    if (!companyId) {
+      this.effectiveRows.set([]);
+      return;
+    }
+
+    this.effectiveLoading.set(true);
+    this.priceListService
+      .getEffective(companyId, toStartOfDayIso(this.effectiveDate()))
+      .pipe(finalize(() => this.effectiveLoading.set(false)))
+      .subscribe({ next: (rows) => this.effectiveRows.set(rows), error: () => this.effectiveRows.set([]) });
+  }
+
   private loadLookups(): void {
     this.companiesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeCompanies.set(result.items));
+      .subscribe((result) => {
+        this.activeCompanies.set(result.items);
+        if (!this.effectiveCompanyId() && result.items[0]) {
+          this.effectiveCompanyId.set(result.items[0].id);
+          this.fetchEffective();
+        }
+      });
   }
 }

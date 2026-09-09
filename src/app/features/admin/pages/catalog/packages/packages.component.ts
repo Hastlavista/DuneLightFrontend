@@ -1,9 +1,9 @@
-import { Component, ViewChild, inject, signal } from '@angular/core';
+import { Component, inject, signal } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
-import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
+import { Paginator, PaginatorState } from 'primeng/paginator';
 import { finalize } from 'rxjs';
 import { entryModeTranslationKey, PackageDto } from '../../../../../core/models/package.model';
 import { ActivePackagesStore } from '../../../../../core/services/active-packages.store';
@@ -19,8 +19,8 @@ const DEFAULT_PAGE_SIZE = 20;
 @Component({
   selector: 'app-admin-packages',
   imports: [
-    TableModule,
     Button,
+    Paginator,
     TranslatePipe,
     EurCurrencyPipe,
     HrDatePipe,
@@ -38,34 +38,36 @@ export class PackagesComponent {
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
 
-  @ViewChild('dt') private table!: Table;
-
   readonly items = signal<PackageDto[]>([]);
   readonly totalCount = signal(0);
   readonly loading = signal(false);
   readonly rows = signal(DEFAULT_PAGE_SIZE);
+  readonly first = signal(0);
   readonly search = signal('');
   readonly showInactive = signal(false);
 
   readonly entryModeTranslationKey = entryModeTranslationKey;
 
-  onLazyLoad(event: TableLazyLoadEvent): void {
-    const first = event.first ?? 0;
-    const rows = event.rows ?? this.rows();
-    this.rows.set(rows);
-    this.fetch(first, rows);
+  constructor() {
+    this.fetch(0, this.rows());
   }
 
   onSearchChange(term: string): void {
     this.search.set(term);
-    this.table.first = 0;
-    this.fetch(0, this.rows());
+    this.resetAndFetch();
   }
 
   onShowInactiveChange(value: boolean): void {
     this.showInactive.set(value);
-    this.table.first = 0;
-    this.fetch(0, this.rows());
+    this.resetAndFetch();
+  }
+
+  onPageChange(event: PaginatorState): void {
+    const rows = event.rows ?? this.rows();
+    const first = event.first ?? 0;
+    this.rows.set(rows);
+    this.first.set(first);
+    this.fetch(first, rows);
   }
 
   openCreate(): void {
@@ -80,7 +82,7 @@ export class PackagesComponent {
     this.packagesService.activate(pkg.id).subscribe({
       next: () => {
         this.notifications.showSuccess(this.translate.instant('CATALOG.PACKAGES.ACTIVATED'));
-        this.fetch(this.table?.first ?? 0, this.rows());
+        this.fetch(this.first(), this.rows());
         this.activePackagesStore.refresh();
       },
       error: () => {},
@@ -98,7 +100,7 @@ export class PackagesComponent {
         this.packagesService.deactivate(pkg.id).subscribe({
           next: () => {
             this.notifications.showSuccess(this.translate.instant('CATALOG.PACKAGES.DEACTIVATED'));
-            this.fetch(this.table?.first ?? 0, this.rows());
+            this.fetch(this.first(), this.rows());
             this.activePackagesStore.refresh();
           },
           error: () => {},
@@ -119,7 +121,7 @@ export class PackagesComponent {
         this.packagesService.delete(pkg.id).subscribe({
           next: () => {
             this.notifications.showSuccess(this.translate.instant('CATALOG.PACKAGES.DELETED'));
-            this.fetch(this.table?.first ?? 0, this.rows());
+            this.fetch(this.first(), this.rows());
             this.activePackagesStore.refresh();
           },
           error: () => {},
@@ -143,5 +145,10 @@ export class PackagesComponent {
         this.items.set(result.items);
         this.totalCount.set(result.totalCount);
       });
+  }
+
+  private resetAndFetch(): void {
+    this.first.set(0);
+    this.fetch(0, this.rows());
   }
 }

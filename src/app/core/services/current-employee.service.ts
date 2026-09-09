@@ -35,10 +35,11 @@ export class CurrentEmployeeService {
    * Employee record. */
   readonly isOwner = computed(() => {
     const employee = this.employeeState();
-    if (employee) {
-      return employee.isOwner;
-    }
-    return this.loadedState() && this.auth.currentRole() === 'Admin';
+    // The account that creates an organization is an Admin/Owner even if it
+    // later receives an Employee profile whose legacy isOwner flag is false.
+    // Treat either authoritative source as sufficient, otherwise the sidebar
+    // hides every grant-protected administration page for that account.
+    return (employee?.isOwner ?? false) || (this.loadedState() && this.auth.currentRole() === 'Admin');
   });
 
   load(): Observable<CurrentEmployee | null> {

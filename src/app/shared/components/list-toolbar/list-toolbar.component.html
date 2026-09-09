@@ -15,10 +15,20 @@
     <ng-content />
   </div>
 
-  <label class="list-toolbar__switch">
-    <p-toggleswitch [ngModel]="showInactive()" (ngModelChange)="showInactiveChange.emit($event)" />
+  @if (showInactiveToggle()) {
+  <div
+    class="list-toolbar__switch"
+    role="switch"
+    tabindex="0"
+    [attr.aria-checked]="showInactive()"
+    (click)="toggleShowInactive()"
+    (keydown.enter)="toggleShowInactive()"
+    (keydown.space)="toggleShowInactive(); $event.preventDefault()"
+  >
+    <p-toggleswitch [ngModel]="showInactive()" (ngModelChange)="onShowInactiveToggle($event)" (click)="$event.stopPropagation()" />
     <span>{{ 'COMMON.SHOW_INACTIVE' | translate }}</span>
-  </label>
+  </div>
+  }
 
   <p-button
     class="list-toolbar__new"

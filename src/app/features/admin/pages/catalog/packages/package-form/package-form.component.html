@@ -1,16 +1,14 @@
-<div class="dl-card package-form-page">
-  <div class="package-form-page__header">
-    <h2>{{ (isEditMode() ? 'CATALOG.PACKAGES.EDIT_TITLE' : 'CATALOG.PACKAGES.NEW_TITLE') | translate }}</h2>
-    <p-button
-      [text]="true"
-      severity="secondary"
-      icon="pi pi-arrow-left"
-      [label]="'CATALOG.PACKAGES.BACK_TO_LIST' | translate"
-      (onClick)="onCancel()"
-    />
-  </div>
-
+<div class="package-form-page">
+  <div class="package-form-page__panel">
   <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+    <div class="package-form-page__summary">
+      <span class="package-form-page__summary-icon"><i class="pi pi-box"></i></span>
+      <div><strong>{{ form.controls.name.value || (isEditMode() ? ('CATALOG.PACKAGES.EDIT_TITLE' | translate) : ('CATALOG.PACKAGES.NEW_TITLE' | translate)) }}</strong><small>{{ form.controls.defaultPrice.value }} € · {{ servicesArray.length }} usluga</small></div>
+      <button type="button" class="package-form-page__back" (click)="onCancel()"><i class="pi pi-angle-left"></i>{{ 'CATALOG.PACKAGES.BACK_TO_LIST' | translate }}</button>
+    </div>
+
+    <section class="package-form-page__section">
+      <h3>Osnovni podaci</h3>
     <div class="dl-form__field">
       <label for="package-name">{{ 'CATALOG.PACKAGES.FIELD_NAME' | translate }}</label>
       <input id="package-name" type="text" pInputText fluid formControlName="name" maxlength="255" />
@@ -48,6 +46,10 @@
       </div>
     </div>
 
+    </section>
+
+    <section class="package-form-page__section">
+      <h3>Ulazi i valjanost</h3>
     <div class="dl-form__field">
       <label>{{ 'CATALOG.PACKAGES.FIELD_ENTRY_MODE' | translate }}</label>
       <p-selectbutton
@@ -133,7 +135,9 @@
       </div>
     }
 
-    <div class="package-form-page__services">
+    </section>
+
+    <section class="package-form-page__section package-form-page__services">
       <div class="package-form-page__services-header">
         <label>{{ 'CATALOG.PACKAGES.SERVICES_SECTION_TITLE' | translate }}</label>
         <p-button
@@ -200,7 +204,7 @@
           </div>
         }
       </div>
-    </div>
+    </section>
 
     <div class="dl-form__actions">
       <p-button
@@ -213,4 +217,5 @@
       <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
     </div>
   </form>
+  </div>
 </div>

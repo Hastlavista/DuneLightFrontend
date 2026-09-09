@@ -95,7 +95,6 @@
       "GROUPS": "Grupe",
       "SERVICES": "Usluge i cjenik",
       "PERMISSIONS": "Dozvole",
-      "BRANDING": "Izgled marke",
       "FINANCE": "Financije",
       "REPORTS": "Izvješća",
       "PROFILE": "Moj profil",
@@ -860,7 +859,8 @@
       "clients": "Klijenti",
       "appointments": "Raspored",
       "groups": "Grupe",
-      "roster": "Roster"
+      "roster": "Roster",
+      "schedule-breaks": "Pauze u rasporedu"
     },
     "GRANT_GROUPS": {
       "TAB_LABEL": "Grant grupe",
@@ -1305,37 +1305,6 @@
       "PASSWORDS_DO_NOT_MATCH": "Lozinke se ne podudaraju.",
       "PIN_REQUIRED": "Novi PIN je obavezan.",
       "PIN_FORMAT": "PIN mora imati 4 do 6 znamenki."
-    }
-  },
-  "BRANDING": {
-    "INTRO": "Prilagodite izgled prijave i cijele aplikacije za vašu organizaciju. Neoznačena polja zadržavaju zadani izgled platforme.",
-    "SECTION_LOGO": "Logotip",
-    "SECTION_FAVICON": "Favicon (ikona kartice)",
-    "SECTION_COLORS": "Boje",
-    "PRIMARY_COLOR": "Primarna boja",
-    "PRIMARY_COLOR_HINT": "Koristi se za oznake (accent), gumbe i poveznice.",
-    "SECONDARY_COLOR": "Sekundarna boja",
-    "SECONDARY_COLOR_HINT": "Koristi se za hover/fokus stanja.",
-    "SAVE_COLORS": "Spremi boje",
-    "RESET_COLORS": "Vrati na zadano",
-    "CONFIRM_RESET_COLORS": "Vratiti boje na zadani izgled platforme?",
-    "COLORS_UPDATED": "Boje su uspješno spremljene.",
-    "COLORS_RESET": "Boje su vraćene na zadane vrijednosti.",
-    "UPLOAD_LOGO": "Učitaj logotip",
-    "UPLOAD_FAVICON": "Učitaj favicon",
-    "DELETE_LOGO": "Ukloni logotip",
-    "DELETE_FAVICON": "Ukloni favicon",
-    "LOGO_PREVIEW": "Pregled logotipa",
-    "FAVICON_PREVIEW": "Pregled favicona",
-    "LOGO_EMPTY": "Nije postavljen logotip.",
-    "FAVICON_EMPTY": "Nije postavljen favicon.",
-    "LOGO_UPLOADED": "Logotip je uspješno učitan.",
-    "FAVICON_UPLOADED": "Favicon je uspješno učitan.",
-    "ITEM_DELETED": "Postavka je uklonjena.",
-    "CONFIRM_DELETE_LOGO": "Ukloniti logotip?",
-    "CONFIRM_DELETE_FAVICON": "Ukloniti favicon?",
-    "ERRORS": {
-      "FILE_TOO_LARGE": "Datoteka je prevelika. Maksimalna veličina je 2 MB."
     }
   }
 }

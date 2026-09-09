@@ -1,29 +1,41 @@
 <p-dialog
   [(visible)]="visible"
   [modal]="true"
-  [style]="{ width: '28rem' }"
-  [header]="(isEditMode() ? 'PERMISSIONS.ROLES.EDIT_TITLE' : 'PERMISSIONS.ROLES.NEW_TITLE') | translate"
+  [style]="{ width: '32rem', maxWidth: 'calc(100vw - 2rem)' }"
+  styleClass="client-dialog role-dialog"
   (onShow)="onDialogShow()"
 >
+  <ng-template #header>
+    <div class="role-dialog__header">
+      <span class="role-dialog__mark"><i class="pi pi-user-tag"></i></span>
+      <div>
+        <h2>{{ (isEditMode() ? 'PERMISSIONS.ROLES.EDIT_TITLE' : 'PERMISSIONS.ROLES.NEW_TITLE') | translate }}</h2>
+        <p>Oznaka se dodjeljuje zaposleniku za lakše prepoznavanje njegove poslovne uloge.</p>
+      </div>
+    </div>
+  </ng-template>
   @if (dialogShown()) {
-  <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
-    <div class="dl-form__field">
+  <form [formGroup]="form" (ngSubmit)="onSave()" class="role-dialog__form" novalidate>
+    <div class="role-dialog__intro">
+      <span class="role-dialog__preview"><i class="pi pi-user-tag"></i></span>
+      <div><strong>Poslovna oznaka</strong><span>Vidi se na zaposleniku i pomaže pri organizaciji tima.</span></div>
+    </div>
+
+    <div class="role-dialog__field">
       <label for="role-name">{{ 'PERMISSIONS.ROLES.FIELD_NAME' | translate }}</label>
-      <input id="role-name" type="text" pInputText fluid formControlName="name" maxlength="255" />
+      <input id="role-name" type="text" pInputText fluid formControlName="name" maxlength="255" placeholder="npr. Voditelj tima" />
       @if (form.controls.name.invalid && form.controls.name.touched) {
         <span class="dl-form__error">{{ 'PERMISSIONS.ROLES.ERRORS.NAME_REQUIRED' | translate }}</span>
       }
+      <small>Možeš je dodijeliti jednom ili više zaposlenika.</small>
     </div>
 
-    <div class="dl-form__actions">
-      <p-button
-        type="button"
-        [text]="true"
-        severity="secondary"
-        [label]="'COMMON.CANCEL' | translate"
-        (onClick)="onCancel()"
-      />
-      <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+    <div class="role-dialog__actions">
+      <span>{{ form.valid ? 'Spremno za spremanje.' : 'Unesi naziv oznake.' }}</span>
+      <div>
+        <p-button type="button" [outlined]="true" severity="secondary" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" />
+        <p-button type="submit" [label]="'COMMON.SAVE' | translate" [disabled]="form.invalid" [loading]="saving()" />
+      </div>
     </div>
   </form>
   }

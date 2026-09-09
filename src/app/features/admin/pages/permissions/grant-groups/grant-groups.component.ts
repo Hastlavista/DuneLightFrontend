@@ -4,14 +4,11 @@ import { Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
-import { IconField } from 'primeng/iconfield';
-import { InputIcon } from 'primeng/inputicon';
-import { InputText } from 'primeng/inputtext';
-import { TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { GrantGroupDto } from '../../../../../core/models/permissions.model';
 import { GrantGroupsService } from '../../../../../core/services/grant-groups.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
+import { ListToolbarComponent } from '../../../../../shared/components/list-toolbar/list-toolbar.component';
 
 /** GrantGroups (Owner-only) - GET isn't paginated (a flat array, same as
  * Grupe), and there's no isActive/activate/deactivate concept here at all -
@@ -20,7 +17,7 @@ import { NotificationService } from '../../../../../core/services/notification.s
  * search filter, same rationale as GroupsComponent. */
 @Component({
   selector: 'app-admin-grant-groups',
-  imports: [TableModule, Button, IconField, InputIcon, InputText, FormsModule, TranslatePipe],
+  imports: [Button, FormsModule, TranslatePipe, ListToolbarComponent],
   templateUrl: './grant-groups.component.html',
   styleUrl: './grant-groups.component.scss',
 })

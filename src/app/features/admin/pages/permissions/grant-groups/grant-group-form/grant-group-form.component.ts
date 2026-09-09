@@ -2,7 +2,6 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
-import { Accordion, AccordionContent, AccordionHeader, AccordionPanel } from 'primeng/accordion';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { finalize, forkJoin, of } from 'rxjs';
@@ -30,10 +29,6 @@ interface ModuleGroup {
     ReactiveFormsModule,
     FormsModule,
     InputText,
-    Accordion,
-    AccordionPanel,
-    AccordionHeader,
-    AccordionContent,
     Button,
     TranslatePipe,
   ],
@@ -56,7 +51,6 @@ export class GrantGroupFormComponent {
 
   readonly catalog = signal<GrantDto[]>([]);
   readonly selectedGrants = signal<Set<string>>(new Set());
-  readonly accordionValue = signal<string[]>([]);
 
   readonly moduleGroups = computed<ModuleGroup[]>(() => {
     const byModule = new Map<string, GrantDto[]>();
@@ -86,7 +80,6 @@ export class GrantGroupFormComponent {
       .subscribe({
         next: ({ catalog, group }) => {
           this.catalog.set(catalog);
-          this.accordionValue.set(Array.from(new Set(catalog.map((grant) => grant.module))));
           if (group) {
             this.form.reset({ name: group.name });
             this.selectedGrants.set(new Set(group.grants));

@@ -29,6 +29,20 @@ interface ExecutionModeOption {
   value: ServiceExecutionMode;
 }
 
+interface ServiceColorOption {
+  label: string;
+  value: string;
+}
+
+const SERVICE_COLORS: ServiceColorOption[] = [
+  { label: 'Teal', value: '0F6871' },
+  { label: 'Svijetli teal', value: '168A91' },
+  { label: 'Burgundy', value: '96384B' },
+  { label: 'Dusty rose', value: '826365' },
+  { label: 'Slate', value: '555B68' },
+  { label: 'Mint', value: 'A9DDC3' },
+];
+
 @Component({
   selector: 'app-service-form-dialog',
   imports: [
@@ -42,6 +56,7 @@ interface ExecutionModeOption {
     TranslatePipe,
   ],
   templateUrl: './service-form-dialog.component.html',
+  styleUrl: './service-form-dialog.component.scss',
 })
 export class ServiceFormDialogComponent {
   private readonly fb = inject(FormBuilder);
@@ -55,6 +70,8 @@ export class ServiceFormDialogComponent {
 
   readonly saving = signal(false);
   readonly isEditMode = computed(() => this.service() !== null);
+  readonly colorOptions = SERVICE_COLORS;
+  readonly executionModeTranslationKey = executionModeTranslationKey;
 
   readonly executionModeOptions = computed<ExecutionModeOption[]>(() =>
     EXECUTION_MODES.map((mode) => ({ label: this.translate.instant(executionModeTranslationKey(mode)), value: mode })),
@@ -131,6 +148,10 @@ export class ServiceFormDialogComponent {
 
   onCancel(): void {
     this.visible.set(false);
+  }
+
+  selectColor(colorHex: string): void {
+    this.form.controls.colorHex.setValue(colorHex);
   }
 
   private resetForm(service: ServiceDto | null): void {

@@ -20,6 +20,8 @@
     gap: 0.5rem;
     color: var(--clay-2);
     font-size: 0.9rem;
+    cursor: pointer;
+    user-select: none;
     white-space: nowrap;
   }
 

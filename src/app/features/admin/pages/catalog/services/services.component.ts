@@ -1,10 +1,10 @@
-import { Component, ViewChild, computed, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
-import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
+import { Paginator, PaginatorState } from 'primeng/paginator';
 import { finalize } from 'rxjs';
 import { EXECUTION_MODES, ServiceDto, ServiceExecutionMode, executionModeTranslationKey } from '../../../../../core/models/service.model';
 import { ActiveServicesStore } from '../../../../../core/services/active-services.store';
@@ -26,8 +26,8 @@ interface ExecutionModeFilterOption {
 @Component({
   selector: 'app-admin-catalog-services',
   imports: [
-    TableModule,
     Button,
+    Paginator,
     Select,
     FormsModule,
     TranslatePipe,
@@ -47,12 +47,11 @@ export class CatalogServicesComponent {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
 
-  @ViewChild('dt') private table!: Table;
-
   readonly items = signal<ServiceDto[]>([]);
   readonly totalCount = signal(0);
   readonly loading = signal(false);
   readonly rows = signal(DEFAULT_PAGE_SIZE);
+  readonly first = signal(0);
   readonly search = signal('');
   readonly showInactive = signal(false);
   readonly executionModeFilter = signal<ServiceExecutionMode | null>(null);
@@ -67,29 +66,31 @@ export class CatalogServicesComponent {
   readonly dialogVisible = signal(false);
   readonly editingService = signal<ServiceDto | null>(null);
 
-  onLazyLoad(event: TableLazyLoadEvent): void {
-    const first = event.first ?? 0;
-    const rows = event.rows ?? this.rows();
-    this.rows.set(rows);
-    this.fetch(first, rows);
+  constructor() {
+    this.fetch(0, this.rows());
   }
 
   onSearchChange(term: string): void {
     this.search.set(term);
-    this.table.first = 0;
-    this.fetch(0, this.rows());
+    this.resetAndFetch();
   }
 
   onShowInactiveChange(value: boolean): void {
     this.showInactive.set(value);
-    this.table.first = 0;
-    this.fetch(0, this.rows());
+    this.resetAndFetch();
   }
 
   onExecutionModeFilterChange(mode: ServiceExecutionMode | null): void {
     this.executionModeFilter.set(mode);
-    this.table.first = 0;
-    this.fetch(0, this.rows());
+    this.resetAndFetch();
+  }
+
+  onPageChange(event: PaginatorState): void {
+    const rows = event.rows ?? this.rows();
+    const first = event.first ?? 0;
+    this.rows.set(rows);
+    this.first.set(first);
+    this.fetch(first, rows);
   }
 
   openCreate(): void {
@@ -103,7 +104,7 @@ export class CatalogServicesComponent {
   }
 
   onSaved(): void {
-    this.fetch(this.table?.first ?? 0, this.rows());
+    this.fetch(this.first(), this.rows());
     this.activeServicesStore.refresh();
   }
 
@@ -111,7 +112,7 @@ export class CatalogServicesComponent {
     this.servicesService.activate(service.id).subscribe({
       next: () => {
         this.notifications.showSuccess(this.translate.instant('CATALOG.SERVICES.ACTIVATED'));
-        this.fetch(this.table?.first ?? 0, this.rows());
+        this.fetch(this.first(), this.rows());
         this.activeServicesStore.refresh();
       },
       error: () => {},
@@ -131,7 +132,7 @@ export class CatalogServicesComponent {
         this.servicesService.deactivate(service.id).subscribe({
           next: () => {
             this.notifications.showSuccess(this.translate.instant('CATALOG.SERVICES.DEACTIVATED'));
-            this.fetch(this.table?.first ?? 0, this.rows());
+            this.fetch(this.first(), this.rows());
             this.activeServicesStore.refresh();
           },
           error: () => {},
@@ -152,7 +153,7 @@ export class CatalogServicesComponent {
         this.servicesService.delete(service.id).subscribe({
           next: () => {
             this.notifications.showSuccess(this.translate.instant('CATALOG.SERVICES.DELETED'));
-            this.fetch(this.table?.first ?? 0, this.rows());
+            this.fetch(this.first(), this.rows());
             this.activeServicesStore.refresh();
           },
           error: () => {},
@@ -179,5 +180,20 @@ export class CatalogServicesComponent {
         this.items.set(result.items);
         this.totalCount.set(result.totalCount);
       });
+  }
+
+  initials(service: ServiceDto): string {
+    return service.name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part.charAt(0))
+      .join('')
+      .toUpperCase();
+  }
+
+  private resetAndFetch(): void {
+    this.first.set(0);
+    this.fetch(0, this.rows());
   }
 }

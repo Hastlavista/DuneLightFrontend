@@ -64,6 +64,10 @@
             <i class="pi pi-cog"></i>
             <span>{{ 'LAYOUT.USER_MENU.ACCOUNT_SETTINGS' | translate }}</span>
           </button>
+          <button type="button" class="topbar__user-menu-item" (click)="switchUser(); userMenu.hide()">
+            <i class="pi pi-users"></i>
+            <span>{{ 'LAYOUT.SIDEBAR.SWITCH_USER' | translate }}</span>
+          </button>
         </div>
 
         <div class="topbar__user-menu-footer">

@@ -53,6 +53,16 @@ export class ProfileComponent {
     return employee ? `${employee.firstName} ${employee.lastName}`.trim() : (this.user()?.email ?? '');
   });
 
+  readonly initials = computed(() =>
+    this.displayName()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part.charAt(0))
+      .join('')
+      .toUpperCase(),
+  );
+
   readonly roleLabelKey = computed(() => {
     const role = this.user()?.role;
     return role ? roleTranslationKey(role) : '';

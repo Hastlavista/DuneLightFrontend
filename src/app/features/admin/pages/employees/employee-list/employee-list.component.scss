@@ -12,7 +12,6 @@
   &__card { position: relative; display: grid; grid-template-columns: 2.4rem minmax(15rem, 1fr) minmax(16rem, .7fr) auto; align-items: center; gap: .85rem; min-height: 4.85rem; overflow: hidden; padding: .7rem .9rem .7rem 1.15rem; border: 1px solid var(--rose-border); border-radius: 12px; background: var(--surface-card); box-shadow: 0 1px 2px rgba(46, 50, 60, .03); }
   &__card--inactive { opacity: .62; }
   &__accent { position: absolute; inset: 0 auto 0 0; width: 5px; }
-  &__avatar { display: inline-flex; width: 2.25rem; height: 2.25rem; align-items: center; justify-content: center; border-radius: 50%; color: #fff; font-family: var(--font-heading); font-size: .8rem; font-weight: 700; }
   &__name-row { display: flex; align-items: center; flex-wrap: wrap; gap: .4rem; }
   &__identity h3 { overflow: hidden; margin: 0; font-size: 1rem; text-overflow: ellipsis; white-space: nowrap; }
   &__identity p { margin: .25rem 0 0; color: var(--ink-muted); font-size: .73rem; }

@@ -81,7 +81,7 @@
   &__choice-group > label { color: var(--ink-secondary); font-size: .68rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
   &__choice-group > div { display: flex; flex-wrap: wrap; gap: .42rem; }
   &__choice-group button { min-height: 2.15rem; padding: .3rem .7rem; border: 1px solid var(--rose-border); border-radius: 9px; background: var(--surface-card); color: var(--ink-secondary); font: inherit; font-size: .76rem; cursor: pointer; }
-  &__choice-group button i { margin-right: .35rem; color: var(--teal); font-size: .52rem; }
+  &__choice-group button i { margin-right: .35rem; color: var(--teal); font-size: var(--text-2xs); }
   &__choice-group button.client-form-page__choice--active { border-color: var(--teal); background: var(--mint-tint); color: var(--teal-dark); font-weight: 600; }
   &__choice-group small { color: var(--ink-muted); font-size: .72rem; }
   &__footer-hint { color: var(--ink-muted); font-size: .76rem; }

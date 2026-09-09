@@ -1,8 +1,12 @@
-<div class="pin-lock" role="dialog" aria-modal="true" aria-label="Unos PIN-a">
+<div class="pin-lock" [class.pin-lock--standalone]="standalone()" role="dialog" [attr.aria-modal]="standalone() ? null : true" aria-label="Unos PIN-a">
   <form class="pin-lock__card" [formGroup]="form" (ngSubmit)="submit()">
-    <header>
-      <span class="pin-lock__icon"><i class="pi pi-lock"></i></span>
-      <div><small>ZAŠTIĆENI PRISTUP</small><h2>Zaslon je zaključan</h2></div>
+    <header class="pin-lock__header">
+      @if (!standalone()) { <span class="pin-lock__icon"><i class="pi pi-lock"></i></span> }
+      <div class="pin-lock__heading">
+        @if (!standalone()) { <small>ZAŠTIĆENI PRISTUP</small> }
+        <h2>Odaberite korisnika</h2>
+      </div>
+      @if (!standalone()) { <span class="pin-lock__status">Promjena korisnika</span> }
     </header>
 
     <div class="pin-lock__users">
@@ -15,11 +19,21 @@
     </div>
 
     @if (selected(); as user) {
-      <label for="lock-pin">Upiši PIN za {{ user.firstName }}</label>
-      <input id="lock-pin" pInputText type="password" formControlName="pin" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" autofocus />
+      <div class="pin-lock__pin-field">
+        <div class="pin-lock__pin-dots" aria-hidden="true">
+          @for (dot of pinDots; track dot) {
+            <span [class.pin-lock__pin-dot--filled]="form.controls.pin.value.length > dot"></span>
+          }
+        </div>
+        <input #pinInput id="lock-pin" pInputText type="password" formControlName="pin" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="one-time-code" [attr.aria-label]="'Upiši PIN za ' + user.firstName" />
+      </div>
+      <label class="pin-lock__pin-label" for="lock-pin">Upiši PIN za {{ user.firstName }}</label>
     }
     @if (failed()) { <p class="pin-lock__error">PIN nije ispravan. Pokušajte ponovno.</p> }
-    <p class="pin-lock__hint">Podaci ostaju otvoreni u pozadini — smjena se ne prekida.</p>
-    <footer><button type="button" (click)="useOtherAccount()">Prijavi se drugim računom</button><p-button type="submit" label="Otključaj" [loading]="loading()" /></footer>
+    <p class="pin-lock__hint">Podaci ostaju otvoreni u pozadini — promjena se ne prekida.</p>
+    <footer class="pin-lock__footer">
+      <button type="button" (click)="useOtherAccount()">Prijavi se drugim računom</button>
+      <p-button type="submit" label="Nastavi" [loading]="loading()" />
+    </footer>
   </form>
 </div>

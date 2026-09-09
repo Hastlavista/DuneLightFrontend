@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, ViewEncapsulation, computed, inject, signal } from '@angular/core';
 import {
   AbstractControl,
   FormArray,
@@ -83,6 +83,10 @@ function servicesArrayValidator(control: AbstractControl): ValidationErrors | nu
   ],
   templateUrl: './package-form.component.html',
   styleUrl: './package-form.component.scss',
+  // The form is rendered inside the admin shell. These selectors are unique to
+  // the package form, so keeping them global prevents a lazy-route style scope
+  // from leaving the create page unstyled after navigation.
+  encapsulation: ViewEncapsulation.None,
 })
 export class PackageFormComponent {
   private readonly fb = inject(FormBuilder);

@@ -1,113 +1,45 @@
-<div class="dl-card services-page">
-  <app-list-toolbar
-    [newLabelKey]="'CATALOG.SERVICES.NEW'"
-    [search]="search()"
-    [showInactive]="showInactive()"
-    (searchChange)="onSearchChange($event)"
-    (showInactiveChange)="onShowInactiveChange($event)"
-    (create)="openCreate()"
-  >
-    <p-select
-      class="services-page__execution-mode-filter"
-      [options]="executionModeFilterOptions()"
-      optionLabel="label"
-      optionValue="value"
-      [ngModel]="executionModeFilter()"
-      (ngModelChange)="onExecutionModeFilterChange($event)"
-    />
-  </app-list-toolbar>
+<section class="services-page">
+  <div class="services-page__header">
+    <app-list-toolbar [newLabelKey]="'CATALOG.SERVICES.NEW'" [search]="search()" [showInactive]="showInactive()" (searchChange)="onSearchChange($event)" (showInactiveChange)="onShowInactiveChange($event)" (create)="openCreate()">
+      <div class="services-page__filter-group">
+        <span>Način izvođenja</span>
+        <p-select class="services-page__filter" [options]="executionModeFilterOptions()" optionLabel="label" optionValue="value" [ngModel]="executionModeFilter()" (ngModelChange)="onExecutionModeFilterChange($event)" />
+      </div>
+    </app-list-toolbar>
+  </div>
 
-  <p-table
-    #dt
-    [value]="items()"
-    [lazy]="true"
-    (onLazyLoad)="onLazyLoad($event)"
-    [paginator]="true"
-    [rows]="rows()"
-    [totalRecords]="totalCount()"
-    [loading]="loading()"
-    [rowsPerPageOptions]="[20, 50, 100, 200]"
-    dataKey="id"
-    responsiveLayout="scroll"
-  >
-    <ng-template pTemplate="header">
-      <tr>
-        <th>{{ 'CATALOG.SERVICES.COL_NAME' | translate }}</th>
-        <th>{{ 'CATALOG.SERVICES.COL_EXECUTION_MODE' | translate }}</th>
-        <th>{{ 'CATALOG.SERVICES.COL_COLOR' | translate }}</th>
-        <th>{{ 'CATALOG.SERVICES.COL_DURATION' | translate }}</th>
-        <th>{{ 'CATALOG.SERVICES.COL_PRICE' | translate }}</th>
-        <th>{{ 'COMMON.COL_STATUS' | translate }}</th>
-        <th class="services-page__actions-col"></th>
-      </tr>
-    </ng-template>
+  @if (loading()) {
+    <p class="services-page__empty">Učitavanje usluga…</p>
+  } @else if (items().length === 0) {
+    <p class="services-page__empty">{{ 'CATALOG.SERVICES.EMPTY' | translate }}</p>
+  } @else {
+    <div class="services-page__cards">
+      @for (service of items(); track service.id) {
+        <article class="services-page__card" [class.services-page__card--inactive]="!service.isActive">
+          <span class="services-page__accent" [style.background]="service.colorHex || 'var(--teal)'"></span>
+          <span class="services-page__avatar dl-avatar" [style.background]="service.colorHex || 'var(--teal)'">{{ initials(service) }}</span>
+          <div class="services-page__identity">
+            <div class="services-page__name-row"><h3>{{ service.name }}</h3><app-status-tag [active]="service.isActive" /></div>
+            <p>{{ 'CATALOG.SERVICES.DURATION_MINUTES' | translate: { minutes: service.defaultDurationMinutes } }} · {{ service.defaultPrice | eurCurrency }}</p>
+          </div>
+          <div class="services-page__assignments">
+            <span class="services-page__pill">{{ executionModeTranslationKey(service.executionMode) | translate }}</span>
+            <span class="services-page__color"><app-color-swatch [colorHex]="service.colorHex" />Boja usluge</span>
+          </div>
+          <div class="services-page__actions">
+            <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.EDIT' | translate" [title]="'COMMON.EDIT' | translate" (onClick)="openEdit(service)" />
+            @if (service.isActive) {
+              <p-button icon="pi pi-eye-slash" severity="warn" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.DEACTIVATE' | translate" [title]="'COMMON.DEACTIVATE' | translate" (onClick)="confirmDeactivate(service)" />
+            } @else {
+              <p-button icon="pi pi-eye" severity="success" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.ACTIVATE' | translate" [title]="'COMMON.ACTIVATE' | translate" (onClick)="activate(service)" />
+            }
+            <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.DELETE' | translate" [title]="'COMMON.DELETE' | translate" (onClick)="confirmDelete(service)" />
+          </div>
+        </article>
+      }
+    </div>
+    <p-paginator [first]="first()" [rows]="rows()" [totalRecords]="totalCount()" [rowsPerPageOptions]="[20, 50, 100, 200]" (onPageChange)="onPageChange($event)" />
+  }
+</section>
 
-    <ng-template pTemplate="body" let-service>
-      <tr [class.services-page__row--inactive]="!service.isActive">
-        <td>{{ service.name }}</td>
-        <td>{{ executionModeTranslationKey(service.executionMode) | translate }}</td>
-        <td><app-color-swatch [colorHex]="service.colorHex" /></td>
-        <td>
-          {{
-            'CATALOG.SERVICES.DURATION_MINUTES'
-              | translate: { minutes: service.defaultDurationMinutes }
-          }}
-        </td>
-        <td>{{ service.defaultPrice | eurCurrency }}</td>
-        <td><app-status-tag [active]="service.isActive" /></td>
-        <td class="services-page__actions">
-          <p-button
-            icon="pi pi-pencil"
-            [text]="true"
-            [rounded]="true"
-            [ariaLabel]="'COMMON.EDIT' | translate"
-            [title]="'COMMON.EDIT' | translate"
-            (onClick)="openEdit(service)"
-          />
-          @if (service.isActive) {
-            <p-button
-              icon="pi pi-eye-slash"
-              severity="warn"
-              [text]="true"
-              [rounded]="true"
-              [ariaLabel]="'COMMON.DEACTIVATE' | translate"
-              [title]="'COMMON.DEACTIVATE' | translate"
-              (onClick)="confirmDeactivate(service)"
-            />
-          } @else {
-            <p-button
-              icon="pi pi-eye"
-              severity="success"
-              [text]="true"
-              [rounded]="true"
-              [ariaLabel]="'COMMON.ACTIVATE' | translate"
-              [title]="'COMMON.ACTIVATE' | translate"
-              (onClick)="activate(service)"
-            />
-          }
-          <p-button
-            icon="pi pi-trash"
-            severity="danger"
-            [text]="true"
-            [rounded]="true"
-            [ariaLabel]="'COMMON.DELETE' | translate"
-            [title]="'COMMON.DELETE' | translate"
-            (onClick)="confirmDelete(service)"
-          />
-        </td>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="emptymessage">
-      <tr>
-        <td colspan="7" class="services-page__empty">{{ 'CATALOG.SERVICES.EMPTY' | translate }}</td>
-      </tr>
-    </ng-template>
-  </p-table>
-</div>
-
-<app-service-form-dialog
-  [(visible)]="dialogVisible"
-  [service]="editingService()"
-  (saved)="onSaved()"
-/>
+<app-service-form-dialog [(visible)]="dialogVisible" [service]="editingService()" (saved)="onSaved()" />

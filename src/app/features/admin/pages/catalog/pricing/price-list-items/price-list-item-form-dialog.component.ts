@@ -82,6 +82,7 @@ function subjectRequiredValidator(group: AbstractControl): ValidationErrors | nu
     TranslatePipe,
   ],
   templateUrl: './price-list-item-form-dialog.component.html',
+  styleUrl: './price-list-item-form-dialog.component.scss',
 })
 export class PriceListItemFormDialogComponent {
   private readonly fb = inject(FormBuilder);

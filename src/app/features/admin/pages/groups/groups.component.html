@@ -1,102 +1,77 @@
-<div class="dl-card groups-page">
-  <app-list-toolbar
-    [newLabelKey]="'GROUPS.NEW'"
-    [search]="search()"
-    [showInactive]="showInactive()"
-    (searchChange)="onSearchChange($event)"
-    (showInactiveChange)="onShowInactiveChange($event)"
-    (create)="openCreate()"
-  >
-    <p-button
-      icon="pi pi-sync"
-      severity="secondary"
-      [text]="true"
-      [label]="'GROUPS.GENERATE.BUTTON' | translate"
-      (onClick)="openGenerateForAll()"
-    />
-  </app-list-toolbar>
+<section class="groups-page">
+  <div class="groups-page__summary">
+    <article><span>Aktivne grupe</span><strong>{{ activeGroups().length }}</strong><small>{{ allItems().length - activeGroups().length }} skrivenih</small></article>
+    <article><span>Termina tjedno</span><strong>{{ weeklySlots() }}</strong><small>Iz tjednih rasporeda</small></article>
+    <article><span>Popunjenost</span><strong>{{ occupancyPercent() }}%</strong><small>{{ totalMembers() }} od {{ totalCapacity() }} mjesta</small></article>
+    <article><span>Pune grupe</span><strong>{{ fullGroups() }}</strong><small>Provjerite listu čekanja</small></article>
+  </div>
 
-  <p-table
-    [value]="items()"
-    [paginator]="true"
-    [rows]="20"
-    [rowsPerPageOptions]="[20, 50, 100]"
-    [loading]="loading()"
-    dataKey="id"
-    responsiveLayout="scroll"
-  >
-    <ng-template pTemplate="header">
-      <tr>
-        <th>{{ 'GROUPS.COL_NAME' | translate }}</th>
-        <th>{{ 'GROUPS.COL_SERVICE' | translate }}</th>
-        <th>{{ 'GROUPS.COL_COMPANY' | translate }}</th>
-        <th>{{ 'GROUPS.COL_TRAINER' | translate }}</th>
-        <th>{{ 'GROUPS.COL_SLOTS' | translate }}</th>
-        <th>{{ 'GROUPS.COL_CAPACITY' | translate }}</th>
-        <th>{{ 'COMMON.COL_STATUS' | translate }}</th>
-        <th class="groups-page__actions-col"></th>
-      </tr>
-    </ng-template>
+  <div class="groups-page__header">
+    <app-list-toolbar
+      [newLabelKey]="'GROUPS.NEW'"
+      [search]="search()"
+      [showInactive]="showInactive()"
+      (searchChange)="onSearchChange($event)"
+      (showInactiveChange)="onShowInactiveChange($event)"
+      (create)="openCreate()"
+    >
+      <div class="groups-page__filters">
+        <div class="groups-page__filter-group">
+          <span>Poslovnica</span>
+          <p-select class="groups-page__filter-select" [options]="companyFilterOptions()" optionLabel="label" optionValue="value" [ngModel]="companyFilter()" (ngModelChange)="onCompanyFilterChange($event)" />
+        </div>
+        <div class="groups-page__filter-group">
+          <span>Trener</span>
+          <p-select class="groups-page__filter-select" [options]="trainerFilterOptions()" optionLabel="label" optionValue="value" [ngModel]="trainerFilter()" (ngModelChange)="onTrainerFilterChange($event)" [filter]="true" filterBy="label" [showClear]="true" />
+        </div>
+        <div class="groups-page__filter-group">
+          <span>Popunjenost</span>
+          <div>
+            <button type="button" class="groups-page__filter-choice" [class.groups-page__filter-choice--active]="capacityFilter() === 'all'" (click)="selectCapacity('all')">Sve</button>
+            <button type="button" class="groups-page__filter-choice" [class.groups-page__filter-choice--active]="capacityFilter() === 'available'" (click)="selectCapacity('available')">Ima mjesta</button>
+            <button type="button" class="groups-page__filter-choice" [class.groups-page__filter-choice--active]="capacityFilter() === 'full'" (click)="selectCapacity('full')">Puno</button>
+            <button type="button" class="groups-page__filter-choice" [class.groups-page__filter-choice--active]="capacityFilter() === 'empty'" (click)="selectCapacity('empty')">Bez prijava</button>
+          </div>
+        </div>
+      </div>
+    </app-list-toolbar>
+  </div>
 
-    <ng-template pTemplate="body" let-group>
-      <tr [class.groups-page__row--inactive]="!group.isActive">
-        <td>{{ group.name }}</td>
-        <td>{{ group.serviceName }}</td>
-        <td>{{ group.companyName }}</td>
-        <td>{{ group.defaultTrainerName || ('GROUPS.NO_TRAINER' | translate) }}</td>
-        <td>{{ slotsSummary(group) }}</td>
-        <td [class.groups-page__capacity--over]="isOverCapacity(group)">
-          {{ group.activeMemberCount }}/{{ group.capacity }}
-        </td>
-        <td><app-status-tag [active]="group.isActive" /></td>
-        <td class="groups-page__actions">
-          <p-button
-            icon="pi pi-pencil"
-            [text]="true"
-            [rounded]="true"
-            [ariaLabel]="'COMMON.EDIT' | translate"
-            [title]="'COMMON.EDIT' | translate"
-            (onClick)="openEdit(group)"
-          />
-          <p-button
-            icon="pi pi-sync"
-            [text]="true"
-            [rounded]="true"
-            [ariaLabel]="'GROUPS.GENERATE.BUTTON' | translate"
-            [title]="'GROUPS.GENERATE.BUTTON' | translate"
-            (onClick)="openGenerateForGroup(group)"
-          />
-          @if (group.isActive) {
-            <p-button
-              icon="pi pi-eye-slash"
-              severity="warn"
-              [text]="true"
-              [rounded]="true"
-              [ariaLabel]="'COMMON.DEACTIVATE' | translate"
-              [title]="'COMMON.DEACTIVATE' | translate"
-              (onClick)="confirmDeactivate(group)"
-            />
-          } @else {
-            <p-button
-              icon="pi pi-eye"
-              severity="success"
-              [text]="true"
-              [rounded]="true"
-              [ariaLabel]="'COMMON.ACTIVATE' | translate"
-              [title]="'COMMON.ACTIVATE' | translate"
-              (onClick)="activate(group)"
-            />
-          }
-        </td>
-      </tr>
-    </ng-template>
-
-    <ng-template pTemplate="emptymessage">
-      <tr>
-        <td colspan="8" class="groups-page__empty">{{ 'GROUPS.EMPTY' | translate }}</td>
-      </tr>
-    </ng-template>
-  </p-table>
-</div>
+  @if (loading()) {
+    <p class="groups-page__empty">Učitavanje grupa…</p>
+  } @else if (items().length === 0) {
+    <p class="groups-page__empty">{{ 'GROUPS.EMPTY' | translate }}</p>
+  } @else {
+    <div class="groups-page__view-bar"><span>Prikazano {{ items().length }} grupa</span><span>Kapacitet i termini</span></div>
+    <div class="groups-page__cards">
+      @for (group of pagedItems(); track group.id) {
+        <article class="groups-page__card" [class.groups-page__card--inactive]="!group.isActive">
+          <span class="groups-page__accent"></span>
+          <div class="groups-page__card-head">
+            <span class="groups-page__avatar">{{ initials(group) }}</span>
+            <div>
+              <div class="groups-page__name-row"><h3>{{ group.name }}</h3><span class="groups-page__availability" [class.groups-page__availability--full]="group.activeMemberCount >= group.capacity">{{ availabilityLabel(group) }}</span></div>
+              <p>{{ group.serviceName }} · {{ group.companyName }}@if (group.defaultTrainerName) { · {{ group.defaultTrainerName }} }</p>
+            </div>
+          </div>
+          <div class="groups-page__card-actions">
+            <p-button icon="pi pi-pencil" [outlined]="true" [label]="'COMMON.EDIT' | translate" (onClick)="openEdit(group)" />
+            <p-button [icon]="group.isActive ? 'pi pi-eye-slash' : 'pi pi-eye'" severity="secondary" [text]="true" [rounded]="true" [ariaLabel]="group.isActive ? ('COMMON.DEACTIVATE' | translate) : ('COMMON.ACTIVATE' | translate)" [title]="group.isActive ? ('COMMON.DEACTIVATE' | translate) : ('COMMON.ACTIVATE' | translate)" (onClick)="group.isActive ? confirmDeactivate(group) : activate(group)" />
+          </div>
+          <div class="groups-page__slots">
+            @for (slot of group.slots; track slot.id) { @if (slot.isActive) { <span>{{ dayOfWeekShortTranslationKey(slot.dayOfWeek) | translate }} {{ slot.startTime.slice(0, 5) }}</span> } }
+          </div>
+          <section class="groups-page__occupancy">
+            <div><span>Popunjenost</span><strong>{{ group.activeMemberCount }} / {{ group.capacity }}</strong></div>
+            <div class="groups-page__progress"><i [style.width.%]="occupancyFor(group)"></i></div>
+            <small>{{ freePlacesLabel(group) }}</small>
+          </section>
+          <footer><span><i class="pi pi-calendar"></i>{{ slotsSummary(group) || 'Nema aktivnih termina' }}</span><p-button icon="pi pi-sync" severity="secondary" [outlined]="true" [label]="'GROUPS.GENERATE.BUTTON' | translate" (onClick)="openGenerateForGroup(group)" /></footer>
+        </article>
+      }
+    </div>
+    <p-paginator [first]="first()" [rows]="rows()" [totalRecords]="items().length" [rowsPerPageOptions]="[20, 50, 100]" (onPageChange)="onPageChange($event)" />
+  }
+</section>
 
 <app-generate-appointments-dialog [(visible)]="generateDialogVisible" [group]="generateForGroup()" />
