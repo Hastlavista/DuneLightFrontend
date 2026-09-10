@@ -96,14 +96,14 @@ export class BrandingComponent {
   private load(afterLoad?: () => void): void {
     this.loading.set(true);
     this.brandingService.getBranding().pipe(finalize(() => this.loading.set(false))).subscribe({
-      next: (branding) => { this.branding.set(branding); this.setColors(branding); this.brandingService.apply(branding); afterLoad?.(); }, error: () => {},
+      next: (branding) => { this.branding.set(branding); this.setColors(branding); this.brandingService.apply(branding, branding.organizationSlug); afterLoad?.(); }, error: () => {},
     });
   }
 
   private update(updated: OrganizationBranding): void {
     const current = this.branding(); if (!current) return;
     const branding = { ...current, ...updated };
-    this.branding.set(branding); this.setColors(branding); this.brandingService.apply(branding);
+    this.branding.set(branding); this.setColors(branding); this.brandingService.apply(branding, branding.organizationSlug);
   }
 
   private setColors(branding: OrganizationBranding): void {

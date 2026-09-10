@@ -55,7 +55,7 @@ export class LoginComponent {
         }
         this.brandingService.getPublicBranding(slug).subscribe({
           next: (branding) => {
-            if (this.form.controls.organizationSlug.value?.trim() === slug) this.brandingService.apply(branding);
+            if (this.form.controls.organizationSlug.value?.trim() === slug) this.brandingService.apply(branding, slug);
           },
           error: () => {},
         });

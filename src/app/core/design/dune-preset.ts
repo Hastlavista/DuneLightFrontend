@@ -52,11 +52,14 @@ export const DunePreset = definePreset(Aura, {
       800: '#0A4A50',
       900: '#0A4A50',
       950: '#0A4A50',
-      // Platform accent for buttons, links, and active nav.
+      // Platform accent for buttons, links, and active nav. Hover/active are
+      // shades derived from the primary color itself (see
+      // branding-colors.util.ts), not the org's secondary color - that stays
+      // a free-standing accent instead of doubling as primary's hover state.
       color: 'var(--brand-primary, #0D5C63)',
       contrastColor: 'var(--brand-primary-contrast, #FFFFFF)',
-      hoverColor: 'var(--brand-secondary, #0A4A50)',
-      activeColor: 'var(--brand-secondary, #0A4A50)',
+      hoverColor: 'var(--brand-primary-hover, #0A4A50)',
+      activeColor: 'var(--brand-primary-active, #0A4A50)',
     },
     surface: {
       0: '#FFFFFF',

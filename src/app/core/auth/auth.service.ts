@@ -12,8 +12,8 @@ import {
 } from '../models/auth.models';
 import { UserRole } from '../models/role';
 
-const STORAGE_KEY = 'dl_auth';
-const LAST_SLUG_KEY = 'dl_last_org_slug';
+export const STORAGE_KEY = 'dl_auth';
+export const LAST_SLUG_KEY = 'dl_last_org_slug';
 
 @Injectable({ providedIn: 'root' })
 export class AuthService {

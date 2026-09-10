@@ -9,6 +9,8 @@ import {
   OrganizationBranding,
   OrganizationBrandingResponse,
 } from '../models/branding.model';
+import { applyBrandCssVariables, deriveBrandCssVariables } from './branding-colors.util';
+import { cacheBrandColors } from './branding-cache.util';
 
 /** API route prefix for the organization branding endpoints. */
 const PUBLIC_URL_BASE = '/api/organization/branding';
@@ -23,10 +25,14 @@ export class BrandingService {
   constructor(private readonly http: HttpClient) {}
 
   /** Applies the organization identity and updates the shared state so presentational
-   * components (login/sidebar) react to it. */
-  apply(branding: OrganizationBranding): void {
+   * components (login/sidebar) react to it. `slug`, when known, caches the colors so the
+   * next page load can paint them immediately - see branding-bootstrap.util.ts. */
+  apply(branding: OrganizationBranding, slug?: string): void {
     this.brandingState.set(branding);
     applyBranding(branding);
+    if (slug) {
+      cacheBrandColors(slug, { primaryColor: branding.primaryColor, secondaryColor: branding.secondaryColor });
+    }
   }
 
   /** Clears just the shared state signal (no DOM mutation) - used when the
@@ -40,10 +46,7 @@ export class BrandingService {
    * clean) and drops the favicon back to the app's. */
   reset(): void {
     this.brandingState.set(null);
-    const root = document.documentElement;
-    root.style.removeProperty('--brand-primary');
-    root.style.removeProperty('--brand-secondary');
-    root.style.removeProperty('--brand-primary-contrast');
+    applyBrandCssVariables(document.documentElement, {});
     const link = document.querySelector("link[rel='icon']") as HTMLLinkElement | null;
     if (link) {
       link.removeAttribute('href');
@@ -100,9 +103,7 @@ export class BrandingService {
 /** Applies the public organization identity that survives the page cleanup. */
 export function applyBranding(branding: OrganizationBranding): void {
   const root = document.documentElement;
-  applyColor(root, '--brand-primary', branding.primaryColor);
-  applyColor(root, '--brand-secondary', branding.secondaryColor);
-  root.style.setProperty('--brand-primary-contrast', contrastColor(branding.primaryColor ?? '#0D5C63'));
+  applyBrandCssVariables(root, deriveBrandCssVariables(branding.primaryColor, branding.secondaryColor));
 
   const faviconUrl = resolveBrandingAssetUrl(branding.favicon);
   const link = document.querySelector("link[rel='icon']") as HTMLLinkElement | null;
@@ -113,23 +114,6 @@ export function applyBranding(branding: OrganizationBranding): void {
       link.href = 'favicon.ico';
     }
   }
-}
-
-function applyColor(root: HTMLElement, property: string, color: string | null): void {
-  if (color) {
-    root.style.setProperty(property, color);
-  } else {
-    root.style.removeProperty(property);
-  }
-}
-
-function contrastColor(hex: string): '#FFFFFF' | '#2E323C' {
-  const value = hex.replace('#', '');
-  const [red, green, blue] = [0, 2, 4].map((offset) => Number.parseInt(value.slice(offset, offset + 2), 16) / 255);
-  const luminance = [red, green, blue]
-    .map((channel) => (channel <= 0.03928 ? channel / 12.92 : ((channel + 0.055) / 1.055) ** 2.4))
-    .reduce((sum, channel, index) => sum + channel * [0.2126, 0.7152, 0.0722][index], 0);
-  return luminance > 0.38 ? '#2E323C' : '#FFFFFF';
 }
 
 /** Resolves a branding asset's relative URL (as returned by the API) against

@@ -53,7 +53,7 @@ export class ShellComponent {
     const slug = this.authService.organizationSlug();
     if (slug) {
       this.brandingService.getPublicBranding(slug).subscribe({
-        next: (branding) => this.brandingService.apply(branding),
+        next: (branding) => this.brandingService.apply(branding, slug),
         error: () => {},
       });
     }
