@@ -25,7 +25,7 @@
     <ng-template pTemplate="body" let-type>
       <tr [class.roster-types-page__row--inactive]="!type.isActive">
         <td>
-          <div class="roster-types-page__item" [style.border-left-color]="type.colorHex ?? 'var(--teal)'">
+          <div class="roster-types-page__item" [style.border-left-color]="type.colorHex ?? 'var(--brand-primary)'">
             <div class="roster-types-page__main">
               <div class="roster-types-page__title-row">
                 <span class="roster-types-page__name">{{ type.name }}</span>

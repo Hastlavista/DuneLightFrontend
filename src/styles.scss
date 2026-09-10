@@ -144,7 +144,7 @@ a {
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: var(--teal);
+  background: var(--brand-primary);
   color: var(--brand-primary-contrast);
   font-family: var(--font-heading);
   font-size: 0.8rem;
@@ -449,15 +449,15 @@ a {
 .price-list-page__effective-row { min-height: 3.85rem; padding: .55rem 1.1rem; border-top: 1px solid var(--rose-border); }
 .price-list-page__effective-row:first-of-type { border-top: 0; }
 .price-list-page__effective-subject { display: flex; min-width: 0; align-items: center; gap: .6rem; }
-.price-list-page__effective-subject > span { width: .48rem; height: .48rem; flex: 0 0 auto; border-radius: 50%; background: var(--teal); }
+.price-list-page__effective-subject > span { width: .48rem; height: .48rem; flex: 0 0 auto; border-radius: 50%; background: var(--brand-primary); }
 .price-list-page__effective-subject > span.price-list-page__effective-dot--package { background: var(--dusty-rose); }
 .price-list-page__effective-subject div { min-width: 0; }
 .price-list-page__effective-subject strong, .price-list-page__effective-subject small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .price-list-page__effective-subject strong { color: var(--ink); font-size: .85rem; }
 .price-list-page__effective-subject small { margin-top: .1rem; color: var(--ink-muted); font-size: .68rem; }
-.price-list-page__effective-price { justify-self: end; color: var(--teal-dark); font-family: var(--font-heading); font-size: .9rem; white-space: nowrap; }
+.price-list-page__effective-price { justify-self: end; color: var(--brand-primary-hover); font-family: var(--font-heading); font-size: .9rem; white-space: nowrap; }
 .price-list-page__source { display: inline-flex; width: fit-content; min-height: 1.5rem; align-items: center; padding: .08rem .45rem; border-radius: 999px; background: var(--surface-soft); color: var(--ink-secondary); font-size: .65rem; white-space: nowrap; }
-.price-list-page__source--company { background: var(--mint-tint); color: var(--teal-dark); }
+.price-list-page__source--company { background: var(--brand-primary-light); color: var(--brand-primary-hover); }
 .price-list-page__source--all { background: color-mix(in srgb, var(--dusty-rose) 13%, transparent); color: var(--dusty-rose); }
 .price-list-page__items-heading { padding: .7rem .1rem 0; }
 .price-list-page__effective .p-select, .price-list-page__effective .p-datepicker { border-color: var(--rose-border-strong); border-radius: 8px; background: var(--surface-warm); }

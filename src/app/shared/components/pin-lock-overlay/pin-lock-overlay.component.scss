@@ -33,31 +33,31 @@
 }
 
 .pin-lock__header { display: flex; align-items: center; gap: 0.7rem; }
-.pin-lock__icon { display: grid; width: 2.3rem; height: 2.3rem; flex: 0 0 auto; place-items: center; border-radius: 9px; background: var(--teal); color: var(--brand-primary-contrast); }
+.pin-lock__icon { display: grid; width: 2.3rem; height: 2.3rem; flex: 0 0 auto; place-items: center; border-radius: 9px; background: var(--brand-primary); color: var(--brand-primary-contrast); }
 .pin-lock__heading { min-width: 0; }
 .pin-lock__heading small { display: block; color: var(--ink-muted); font-size: 0.61rem; font-weight: 700; letter-spacing: 0.055em; }
 .pin-lock__heading h2 { margin: 0.08rem 0 0; font-size: 1.05rem; line-height: 1.15; }
-.pin-lock__status { margin-left: auto; padding: 0.2rem 0.48rem; border-radius: 999px; background: var(--mint); color: var(--teal-dark); font-size: 0.62rem; font-weight: 700; white-space: nowrap; }
+.pin-lock__status { margin-left: auto; padding: 0.2rem 0.48rem; border-radius: 999px; background: var(--brand-primary-light); color: var(--brand-primary-hover); font-size: 0.62rem; font-weight: 700; white-space: nowrap; }
 
 .pin-lock__users { display: flex; gap: 0.42rem; margin: 1rem 0; overflow-x: auto; padding-bottom: 0.1rem; }
 .pin-lock__users button { display: flex; min-width: 0; align-items: center; gap: 0.34rem; padding: 0.28rem 0.45rem; border: 1px solid var(--rose-border); border-radius: 999px; background: var(--surface-card); color: var(--ink); font: inherit; font-size: 0.69rem; cursor: pointer; white-space: nowrap; }
 .pin-lock__users button:hover { border-color: var(--rose-border-strong); background: var(--surface-warm); }
-.pin-lock__users button.pin-lock__user--selected { border-color: var(--teal); background: var(--mint-tint); color: var(--teal-dark); }
+.pin-lock__users button.pin-lock__user--selected { border-color: var(--brand-primary); background: var(--brand-primary-light); color: var(--brand-primary-hover); }
 .pin-lock__users span { display: grid; width: 1.68rem; height: 1.68rem; flex: 0 0 auto; place-items: center; border-radius: 50%; color: var(--brand-primary-contrast); font-size: 0.61rem; font-weight: 700; }
 .pin-lock__users strong { overflow: hidden; max-width: 4.45rem; text-overflow: ellipsis; }
 
 .pin-lock__pin-field { position: relative; display: grid; place-items: center; height: 4.05rem; border-radius: 999px; background: var(--surface-soft); }
 .pin-lock__pin-dots { display: flex; gap: 0.6rem; }
 .pin-lock__pin-dots span { width: 1.65rem; height: 1.65rem; border: 1px solid var(--rose-border); border-radius: 50%; background: var(--surface-card); transition: border-color 150ms ease, background 150ms ease; }
-.pin-lock__pin-dots .pin-lock__pin-dot--filled { border-color: var(--teal); background: var(--mint-tint); box-shadow: inset 0 0 0 0.32rem var(--surface-card), inset 0 0 0 0.39rem var(--teal); }
+.pin-lock__pin-dots .pin-lock__pin-dot--filled { border-color: var(--brand-primary); background: var(--brand-primary-light); box-shadow: inset 0 0 0 0.32rem var(--surface-card), inset 0 0 0 0.39rem var(--brand-primary); }
 .pin-lock__pin-field input { position: absolute; inset: 0; width: 100%; opacity: 0; cursor: text; }
-.pin-lock__pin-field:focus-within { box-shadow: 0 0 0 2px rgba(13, 92, 99, 0.14); }
+.pin-lock__pin-field:focus-within { box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-primary) 14%, transparent); }
 .pin-lock__pin-label { display: block; margin: 0.68rem 0 0; color: var(--ink-muted); font-size: 0.72rem; text-align: center; }
 .pin-lock__error { margin: 0.45rem 0 0; color: var(--red); font-size: 0.74rem; text-align: center; }
 .pin-lock__hint { margin: 0.82rem 0 0; padding-top: 0.78rem; border-top: 1px solid var(--rose-border); color: var(--ink-muted); font-size: 0.69rem; line-height: 1.45; }
 .pin-lock__footer { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; margin-top: 0.82rem; }
-.pin-lock__footer > button { border: 1px solid var(--rose-border); border-radius: 8px; background: var(--surface-card); color: var(--teal-dark); font: inherit; font-size: 0.72rem; font-weight: 600; cursor: pointer; padding: 0.52rem 0.62rem; }
-.pin-lock__footer > button:hover { border-color: var(--mint-border); background: var(--mint-tint); }
+.pin-lock__footer > button { border: 1px solid var(--rose-border); border-radius: 8px; background: var(--surface-card); color: var(--brand-primary-hover); font: inherit; font-size: 0.72rem; font-weight: 600; cursor: pointer; padding: 0.52rem 0.62rem; }
+.pin-lock__footer > button:hover { border-color: var(--mint-border); background: var(--brand-primary-light); }
 
 @media (max-width: 390px) {
   .pin-lock__card { padding: 1rem; }

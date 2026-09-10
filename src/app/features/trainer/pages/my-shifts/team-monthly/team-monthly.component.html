@@ -59,7 +59,7 @@
                   <span
                     class="team-monthly__entry"
                     [class.team-monthly__entry--absence]="entry.isAbsence"
-                    [style.background]="entry.rosterTypeColorHex ?? 'var(--teal)'"
+                    [style.background]="entry.rosterTypeColorHex ?? 'var(--brand-primary)'"
                     [title]="entryTooltip(entry)"
                     (click)="onCellClick(employee, day, entry.rosterEntryId); $event.stopPropagation()"
                   >
@@ -70,7 +70,7 @@
                   @for (interval of plannedIntervals(employee, day); track interval.start + interval.end) {
                     <span
                       class="team-monthly__entry"
-                      [style.background]="'var(--mint)'"
+                      [style.background]="'var(--brand-primary-light)'"
                       [title]="assumedTooltip(interval)"
                       (click)="onCellClick(employee, day, null, interval); $event.stopPropagation()"
                     >

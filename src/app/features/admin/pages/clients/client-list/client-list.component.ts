@@ -286,7 +286,7 @@ export class ClientListComponent {
   }
 
   companyColor(client: ClientDto): string {
-    return this.activeCompanies().find((company) => company.id === client.homeCompanyId)?.colorHex ?? 'var(--teal)';
+    return this.activeCompanies().find((company) => company.id === client.homeCompanyId)?.colorHex ?? 'var(--brand-primary)';
   }
 
   private fetch(first: number, rows: number): void {

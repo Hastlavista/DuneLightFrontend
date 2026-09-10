@@ -33,7 +33,7 @@
   height: 2.4rem;
   place-items: center;
   border-radius: 9px;
-  background: var(--teal);
+  background: var(--brand-primary);
   color: var(--brand-primary-contrast);
   font-family: var(--font-heading);
   font-size: 1rem;
@@ -62,7 +62,7 @@
 .login-form__server-error { padding: 0.58rem 0.68rem; border: 1px solid rgba(142, 58, 74, 0.24); border-radius: 8px; background: rgba(142, 58, 74, 0.08); color: var(--red); font-size: 0.76rem; }
 
 .login-page__switch { width: min(100%, 25rem); margin: 0.85rem 0 0; color: var(--ink-muted); font-size: 0.75rem; text-align: center; }
-.login-page__switch-link { margin-left: 0.28rem; color: var(--teal-dark); font-weight: 700; text-decoration: none; }
+.login-page__switch-link { margin-left: 0.28rem; color: var(--brand-primary-hover); font-weight: 700; text-decoration: none; }
 .login-page__switch-link:hover { text-decoration: underline; }
 .login-page__switch-link--btn { margin-left: 0; padding: 0; border: 0; background: transparent; font: inherit; cursor: pointer; }
 

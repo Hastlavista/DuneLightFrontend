@@ -14,7 +14,7 @@
   padding: 0.75rem 0.9rem;
   background: var(--surface-card);
   border: 1px solid var(--rose-border);
-  border-left: 4px solid var(--teal);
+  border-left: 4px solid var(--brand-primary);
   border-radius: 8px;
   box-shadow: 0 1px 2px rgba(46, 50, 60, 0.04);
 }
@@ -74,8 +74,8 @@
   }
 
   &--positive {
-    background: var(--mint-tint);
-    color: var(--teal);
+    background: var(--brand-primary-light);
+    color: var(--brand-primary);
   }
 
   &--danger {
@@ -159,7 +159,7 @@
     height: 2rem;
     border-color: var(--rose-border);
     background: var(--surface-card);
-    color: var(--teal);
+    color: var(--brand-primary);
   }
 }
 

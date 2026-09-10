@@ -56,7 +56,7 @@
 
   &--planned {
     background: transparent;
-    border: 1px dashed var(--teal);
+    border: 1px dashed var(--brand-primary);
   }
 }
 
@@ -108,8 +108,8 @@ thead .team-monthly__employee-col,
   text-align: center;
 
   &--today {
-    background: var(--mint-tint);
-    color: var(--teal-dark);
+    background: var(--brand-primary-light);
+    color: var(--brand-primary-hover);
   }
 }
 
@@ -129,7 +129,7 @@ thead .team-monthly__employee-col,
   border-bottom: 1px solid var(--surface-soft-3);
 
   &--today {
-    background: var(--mint-tint);
+    background: var(--brand-primary-light);
   }
 
   &--editable {
@@ -147,9 +147,9 @@ thead .team-monthly__employee-col,
   margin-bottom: 0.15rem;
   padding: 0.2rem 0.3rem;
   overflow: hidden;
-  border: 1px solid rgba(13, 92, 99, 0.16);
+  border: 1px solid color-mix(in srgb, var(--brand-primary) 16%, transparent);
   border-radius: 5px;
-  color: var(--teal-dark);
+  color: var(--brand-primary-hover);
   cursor: pointer;
   font-family: var(--font-heading);
   font-size: 0.72rem;
@@ -166,8 +166,8 @@ thead .team-monthly__employee-col,
 
   &--planned {
     background: transparent;
-    border: 1px dashed var(--teal);
-    color: var(--teal-dark);
+    border: 1px dashed var(--brand-primary);
+    color: var(--brand-primary-hover);
   }
 }
 
@@ -193,7 +193,7 @@ thead .team-monthly__employee-col,
 
 .team-monthly__row--own {
   .team-monthly__employee-col {
-    background: var(--mint-tint);
+    background: var(--brand-primary-light);
     font-weight: 700;
   }
 }
@@ -211,11 +211,11 @@ thead .team-monthly__employee-col,
     border: 1px solid var(--rose-border);
     border-radius: 8px;
     background: var(--surface-card);
-    color: var(--teal);
+    color: var(--brand-primary);
   }
 
   .team-monthly__nav .p-button-label {
-    color: var(--teal-dark);
+    color: var(--brand-primary-hover);
     font-size: 0.8rem;
     font-weight: 600;
   }

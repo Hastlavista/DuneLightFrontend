@@ -127,7 +127,7 @@ export class ScheduleGridComponent {
    * whole card reads as "this category" at a glance while staying light enough
    * for the client/service text to stay readable on top. */
   cellBackground(colorHex: string): string {
-    return `color-mix(in srgb, ${colorHex} 14%, var(--mint-light))`;
+    return `color-mix(in srgb, ${colorHex} 14%, var(--brand-primary-light))`;
   }
 
   onColumnClick(column: ScheduleGridColumn, event: MouseEvent): void {

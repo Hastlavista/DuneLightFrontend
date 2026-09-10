@@ -111,7 +111,7 @@ export class CompaniesComponent {
   }
 
   companyColor(company: CompanyDto): string {
-    return company.colorHex ?? 'var(--teal)';
+    return company.colorHex ?? 'var(--brand-primary)';
   }
 
   weekHours(company: CompanyDto): CompanyDayHours[] {

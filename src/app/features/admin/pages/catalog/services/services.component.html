@@ -16,8 +16,8 @@
     <div class="services-page__cards">
       @for (service of items(); track service.id) {
         <article class="services-page__card" [class.services-page__card--inactive]="!service.isActive">
-          <span class="services-page__accent" [style.background]="service.colorHex || 'var(--teal)'"></span>
-          <span class="services-page__avatar dl-avatar" [style.background]="service.colorHex || 'var(--teal)'">{{ initials(service) }}</span>
+          <span class="services-page__accent" [style.background]="service.colorHex || 'var(--brand-primary)'"></span>
+          <span class="services-page__avatar dl-avatar" [style.background]="service.colorHex || 'var(--brand-primary)'">{{ initials(service) }}</span>
           <div class="services-page__identity">
             <div class="services-page__name-row"><h3>{{ service.name }}</h3><app-status-tag [active]="service.isActive" /></div>
             <p>{{ 'CATALOG.SERVICES.DURATION_MINUTES' | translate: { minutes: service.defaultDurationMinutes } }} · {{ service.defaultPrice | eurCurrency }}</p>

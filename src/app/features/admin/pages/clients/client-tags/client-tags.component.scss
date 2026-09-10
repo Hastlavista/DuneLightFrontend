@@ -2,7 +2,7 @@
 .client-tags-page__header { display: flex; align-items: center; justify-content: space-between; min-height: 2.6rem; }
 .client-tags-page__header p { margin: 0; color: var(--ink-muted); font-size: .78rem; }
 .client-tags-page__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(17rem, 1fr)); gap: .8rem; }
-.client-tags-page__card { display: flex; min-height: 8.25rem; flex-direction: column; justify-content: space-between; padding: .95rem 1rem .8rem; border: 1px solid var(--rose-border); border-left: 5px solid var(--teal); border-radius: 12px; background: var(--surface-card); box-shadow: var(--shadow-soft); }
+.client-tags-page__card { display: flex; min-height: 8.25rem; flex-direction: column; justify-content: space-between; padding: .95rem 1rem .8rem; border: 1px solid var(--rose-border); border-left: 5px solid var(--brand-primary); border-radius: 12px; background: var(--surface-card); box-shadow: var(--shadow-soft); }
 .client-tags-page__card--inactive { opacity: .64; }
 .client-tags-page__content > div { display: flex; align-items: center; gap: .5rem; }
 .client-tags-page__content h3 { margin: 0; color: var(--ink); font-family: var(--font-heading); font-size: 1.05rem; font-weight: 600; }
@@ -12,7 +12,7 @@
 
 :host ::ng-deep {
   .client-tags-page__header .p-button { min-height: 2.5rem; border-radius: 10px; padding: .55rem 1rem; }
-  .client-tags-page__actions .p-button { width: 2rem; height: 2rem; border: 1px solid var(--rose-border); background: var(--surface-card); color: var(--teal); }
+  .client-tags-page__actions .p-button { width: 2rem; height: 2rem; border: 1px solid var(--rose-border); background: var(--surface-card); color: var(--brand-primary); }
 }
 
 @media (max-width: 640px) { .client-tags-page__header { align-items: stretch; flex-direction: column; gap: .65rem; } .client-tags-page__grid { grid-template-columns: 1fr; } }

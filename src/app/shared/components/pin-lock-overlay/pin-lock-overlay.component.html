@@ -12,7 +12,7 @@
     <div class="pin-lock__users">
       @for (user of users(); track user.email) {
         <button type="button" [class.pin-lock__user--selected]="selected() === user" (click)="select(user)">
-          <span [style.background]="user.colorHex || 'var(--teal)'">{{ initials(user) }}</span>
+          <span [style.background]="user.colorHex || 'var(--brand-primary)'">{{ initials(user) }}</span>
           <strong>{{ user.firstName }} {{ user.lastName.charAt(0) }}.</strong>
         </button>
       }

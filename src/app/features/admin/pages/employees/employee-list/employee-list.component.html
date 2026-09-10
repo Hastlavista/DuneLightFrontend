@@ -41,8 +41,8 @@
     <div class="employee-list-page__cards">
       @for (employee of items(); track employee.id) {
         <article class="employee-list-page__card" [class.employee-list-page__card--inactive]="!employee.isActive">
-          <span class="employee-list-page__accent" [style.background]="employee.colorHex || 'var(--teal)'"></span>
-          <span class="employee-list-page__avatar dl-avatar" [style.background]="employee.colorHex || 'var(--teal)'">{{ initials(employee) }}</span>
+          <span class="employee-list-page__accent" [style.background]="employee.colorHex || 'var(--brand-primary)'"></span>
+          <span class="employee-list-page__avatar dl-avatar" [style.background]="employee.colorHex || 'var(--brand-primary)'">{{ initials(employee) }}</span>
           <div class="employee-list-page__identity">
             <div class="employee-list-page__name-row">
               <h3>{{ fullName(employee) }}</h3>
@@ -57,7 +57,7 @@
             <span class="employee-list-page__pill">{{ employee.engagementTypeName || '—' }}</span>
             @for (company of employee.companies; track company.companyId) {
               <span class="employee-list-page__company" [class.employee-list-page__company--primary]="company.isPrimary">
-                <i [style.background]="employee.colorHex || 'var(--teal)'"></i>{{ company.companyName }}@if (company.isPrimary) { · primarna }
+                <i [style.background]="employee.colorHex || 'var(--brand-primary)'"></i>{{ company.companyName }}@if (company.isPrimary) { · primarna }
               </span>
             }
           </div>

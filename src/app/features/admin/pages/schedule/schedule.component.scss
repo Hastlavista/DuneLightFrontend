@@ -47,15 +47,15 @@
   }
 
   .schedule-page__view-toggle .p-button:not(.p-button-outlined) {
-    background: var(--teal);
-    border-color: var(--teal);
-    color: #FFFFFF;
+    background: var(--brand-primary);
+    border-color: var(--brand-primary);
+    color: var(--brand-primary-contrast);
   }
 
   .schedule-page__view-toggle .p-button.p-button-outlined {
     background: transparent;
     border-color: transparent;
-    color: var(--teal-dark);
+    color: var(--brand-primary-hover);
   }
 
   .schedule-page__filter .p-select {
@@ -72,13 +72,13 @@
   }
 
   .schedule-page__new-appointment .p-button {
-    background: var(--teal);
-    border-color: var(--teal);
+    background: var(--brand-primary);
+    border-color: var(--brand-primary);
   }
 
   .schedule-page__new-break .p-button {
     border-color: var(--rose-border-strong);
-    color: var(--teal-dark);
+    color: var(--brand-primary-hover);
   }
 }
 

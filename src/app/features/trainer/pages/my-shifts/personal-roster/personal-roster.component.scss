@@ -52,7 +52,7 @@
 
   &--planned {
     background: transparent;
-    border: 1px dashed var(--teal);
+    border: 1px dashed var(--brand-primary);
   }
 }
 
@@ -86,7 +86,7 @@
   }
 
   &--assumed {
-    background: var(--mint-tint);
+    background: var(--brand-primary-light);
     border-color: var(--mint-border);
   }
 }
@@ -149,9 +149,9 @@
   align-items: center;
   min-height: 1.25rem;
   padding: 0.12rem 0.45rem;
-  border: 1px dashed var(--teal);
+  border: 1px dashed var(--brand-primary);
   border-radius: 999px;
-  color: var(--teal-dark);
+  color: var(--brand-primary-hover);
   font-size: 0.72rem;
   font-style: normal;
   font-weight: 600;
@@ -188,7 +188,7 @@
   .personal-roster__actions .p-button {
     width: 2rem;
     height: 2rem;
-    color: var(--teal);
+    color: var(--brand-primary);
   }
 }
 

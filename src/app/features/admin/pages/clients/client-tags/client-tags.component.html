@@ -9,7 +9,7 @@
   } @else if (items().length) {
     <div class="client-tags-page__grid">
       @for (tag of items(); track tag.id) {
-        <article class="client-tags-page__card" [class.client-tags-page__card--inactive]="!tag.isActive" [style.border-left-color]="tag.colorHex || 'var(--teal)'">
+        <article class="client-tags-page__card" [class.client-tags-page__card--inactive]="!tag.isActive" [style.border-left-color]="tag.colorHex || 'var(--brand-primary)'">
           <div class="client-tags-page__content">
             <div><h3>{{ tag.name }}</h3><app-status-tag [active]="tag.isActive" /></div>
             <span>Redoslijed {{ tag.sortOrder }}</span>

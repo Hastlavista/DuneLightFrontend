@@ -6,7 +6,7 @@
   .clients-page__tabs .p-tablist-content { background: var(--surface-card); }
   .clients-page__tabs .p-tablist { border-bottom: 1px solid var(--rose-border); }
   .clients-page__tabs .p-tab { gap: .45rem; padding: .55rem .8rem; border: 0; border-bottom: 2px solid transparent; background: transparent; color: var(--ink-secondary); font-family: var(--font-body); font-size: .82rem; font-weight: 600; }
-  .clients-page__tabs .p-tab.p-tab-active { border-bottom-color: var(--teal); color: var(--teal-dark); }
+  .clients-page__tabs .p-tab.p-tab-active { border-bottom-color: var(--brand-primary); color: var(--brand-primary-hover); }
   .clients-page__tabs .p-tabpanels { padding: .75rem .65rem; background: var(--surface-page); }
   .clients-page__tabs .p-tabpanel { background: transparent; }
 }

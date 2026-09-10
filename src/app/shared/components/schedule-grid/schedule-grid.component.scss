@@ -55,7 +55,7 @@
       width: 0.4rem;
       height: 0.4rem;
       border-radius: 999px;
-      background: var(--teal);
+      background: var(--brand-primary);
     }
   }
 
@@ -141,8 +141,8 @@
     overflow: hidden;
     inset-inline: 4px;
     border: 1px solid var(--mint-border);
-    background: var(--mint-light);
-    border-left: 3px solid var(--teal);
+    background: var(--brand-primary-light);
+    border-left: 3px solid var(--brand-primary);
     border-radius: 7px;
     box-shadow: none;
     padding: 0.22rem 0.45rem;
@@ -183,7 +183,7 @@
 
   &__cell-birthday {
     font-size: 0.68rem;
-    color: var(--teal);
+    color: var(--brand-primary);
     margin-right: 0.15rem;
   }
 
