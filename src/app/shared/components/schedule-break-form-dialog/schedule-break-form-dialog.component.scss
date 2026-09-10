@@ -109,9 +109,9 @@
 
     &:hover,
     &--selected {
-      border-color: var(--teal);
-      background: var(--mint-tint);
-      color: var(--teal);
+      border-color: var(--brand-primary);
+      background: var(--brand-primary-light);
+      color: var(--brand-primary);
     }
   }
 
@@ -125,9 +125,9 @@
 
   &__selected-trainer {
     padding: 0.55rem 0.65rem;
-    border: 1px solid var(--teal);
+    border: 1px solid var(--brand-primary);
     border-radius: 10px;
-    background: var(--mint-tint);
+    background: var(--brand-primary-light);
 
     > span:last-child {
       min-width: 0;
@@ -141,7 +141,7 @@
       flex-shrink: 0;
       border-radius: 8px;
       background: var(--surface-soft);
-      color: var(--teal);
+      color: var(--brand-primary);
       font-size: 0.75rem;
       font-weight: 700;
     }
@@ -156,7 +156,7 @@
       flex-shrink: 0;
       border-radius: 8px;
       background: var(--surface-soft);
-      color: var(--teal);
+      color: var(--brand-primary);
       font-size: 0.75rem;
       font-weight: 700;
     }
@@ -252,9 +252,9 @@
     }
 
     &--end {
-      border-color: var(--mint-border);
-      background: var(--mint-tint);
-      color: var(--teal);
+      border-color: var(--brand-primary);
+      background: var(--brand-primary-light);
+      color: var(--brand-primary);
     }
   }
 

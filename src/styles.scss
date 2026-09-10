@@ -238,7 +238,7 @@ a {
 .appointment-detail-modal .p-select-label { min-height: 2.35rem; }
 
 .new-appointment-modal .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider,
-.schedule-break-modal .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider { background: var(--teal); }
+.schedule-break-modal .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider { background: var(--brand-primary); }
 
 .new-appointment-modal .p-button,
 .schedule-break-modal .p-button,
@@ -249,8 +249,8 @@ a {
 .schedule-break-modal .p-button:not(.p-button-outlined):not(.p-button-text),
 .schedule-break-detail-modal .p-button:not(.p-button-outlined):not(.p-button-text):not(.p-button-danger),
 .appointment-detail-modal .p-button:not(.p-button-outlined):not(.p-button-text):not(.p-button-danger) {
-  border-color: var(--teal);
-  background: var(--teal);
+  border-color: var(--brand-primary);
+  background: var(--brand-primary);
 }
 
 .new-appointment-client-panel,
@@ -342,7 +342,7 @@ a {
 .appointment-detail-modal .p-select-label { min-height: 2.35rem; }
 
 .new-appointment-modal .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider,
-.schedule-break-modal .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider { background: var(--teal); }
+.schedule-break-modal .p-toggleswitch.p-toggleswitch-checked .p-toggleswitch-slider { background: var(--brand-primary); }
 
 .new-appointment-modal .p-button,
 .schedule-break-modal .p-button,
@@ -353,8 +353,8 @@ a {
 .schedule-break-modal .p-button:not(.p-button-outlined):not(.p-button-text),
 .schedule-break-detail-modal .p-button:not(.p-button-outlined):not(.p-button-text):not(.p-button-danger),
 .appointment-detail-modal .p-button:not(.p-button-outlined):not(.p-button-text):not(.p-button-danger) {
-  border-color: var(--teal);
-  background: var(--teal);
+  border-color: var(--brand-primary);
+  background: var(--brand-primary);
 }
 
 .new-appointment-client-panel,
@@ -514,8 +514,8 @@ a {
 }
 
 .roster-type-form .p-checkbox-checked .p-checkbox-box {
-  border-color: var(--teal);
-  background: var(--teal);
+  border-color: var(--brand-primary);
+  background: var(--brand-primary);
 }
 
 .roster-type-form__actions .p-button {
@@ -603,8 +603,8 @@ a {
 }
 
 .company-dialog__tabs .p-tab.p-tab-active {
-  border-bottom-color: var(--teal);
-  color: var(--teal-dark);
+  border-bottom-color: var(--brand-primary);
+  color: var(--brand-primary-hover);
 }
 
 .company-dialog__tabs .p-tab.p-disabled {
@@ -667,8 +667,8 @@ a {
 .company-form input[pInputText]:enabled:focus,
 .company-form textarea:focus,
 .company-form .p-select.p-focus {
-  border-color: var(--teal);
-  box-shadow: 0 0 0 2px rgba(13, 92, 99, 0.12);
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--brand-primary) 12%, transparent);
   outline: 0;
 }
 
@@ -696,7 +696,7 @@ a {
 input[type='checkbox'] {
   width: 1rem;
   height: 1rem;
-  accent-color: var(--teal);
+  accent-color: var(--brand-primary);
 }
 
 .company-dialog__footer .p-button {
@@ -746,7 +746,7 @@ input[type='checkbox'] {
 .client-tag-dialog__palette, .client-tag-dialog__sort-options { display: flex; flex-wrap: wrap; gap: .45rem; }
 .client-tag-dialog__palette button, .client-tag-dialog__sort-options button { display: inline-flex; min-height: 2.2rem; align-items: center; gap: .45rem; padding: .3rem .7rem; border: 1px solid var(--rose-border); border-radius: 9px; background: var(--surface-card); color: var(--ink-secondary); font: inherit; font-size: .76rem; cursor: pointer; }
 .client-tag-dialog__palette i { width: .85rem; height: .85rem; border-radius: 999px; }
-.client-tag-dialog__palette button.client-tag-dialog__choice--active, .client-tag-dialog__sort-options button.client-tag-dialog__choice--active { border-color: var(--teal); background: var(--mint-tint); color: var(--teal-dark); font-weight: 600; }
+.client-tag-dialog__palette button.client-tag-dialog__choice--active, .client-tag-dialog__sort-options button.client-tag-dialog__choice--active { border-color: var(--brand-primary); background: var(--brand-primary-light); color: var(--brand-primary-hover); font-weight: 600; }
 .client-tag-dialog__actions { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: .1rem -1.35rem 0; padding: 1rem 1.35rem; border-top: 1px solid var(--rose-border); }
 .client-tag-dialog__actions > span { color: var(--ink-muted); font-size: .75rem; }
 .client-tag-dialog__actions > div { display: flex; gap: .55rem; }
@@ -759,7 +759,7 @@ input[type='checkbox'] {
 .role-dialog__header, .role-dialog__intro { display: flex; align-items: center; gap: .85rem; }
 .role-dialog__header h2 { margin: 0; color: var(--ink); font-family: var(--font-heading); font-size: 1.35rem; font-weight: 600; }
 .role-dialog__header p { margin: .25rem 0 0; color: var(--ink-muted); font-size: .76rem; }
-.role-dialog__mark, .role-dialog__preview { display: inline-flex; width: 2.45rem; height: 2.45rem; flex: 0 0 auto; align-items: center; justify-content: center; border: 1px solid var(--rose-border); border-radius: 9px; background: var(--mint-tint); color: var(--teal); }
+.role-dialog__mark, .role-dialog__preview { display: inline-flex; width: 2.45rem; height: 2.45rem; flex: 0 0 auto; align-items: center; justify-content: center; border: 1px solid var(--rose-border); border-radius: 9px; background: var(--brand-primary-light); color: var(--brand-primary); }
 .role-dialog__form { display: flex; flex-direction: column; gap: 1rem; }
 .role-dialog__intro { padding: .85rem .95rem; border: 1px solid var(--rose-border); border-radius: 14px; background: var(--surface-soft); }
 .role-dialog__intro > div { display: flex; flex-direction: column; gap: .12rem; }

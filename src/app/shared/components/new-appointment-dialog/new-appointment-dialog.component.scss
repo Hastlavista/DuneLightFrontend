@@ -108,7 +108,7 @@
       place-items: center;
       border-radius: 8px;
       background: var(--surface-soft);
-      color: var(--teal);
+      color: var(--brand-primary);
       font-size: 0.75rem;
       font-weight: 700;
     }
@@ -151,8 +151,8 @@
 
     &:hover,
     &--selected {
-      border-color: var(--teal);
-      background: var(--mint-tint);
+      border-color: var(--brand-primary);
+      background: var(--brand-primary-light);
     }
   }
 
@@ -160,7 +160,7 @@
     width: 0.24rem;
     min-height: 2.15rem;
     border-radius: 999px;
-    background: var(--teal);
+    background: var(--brand-primary);
   }
 
   &__segmented,
@@ -196,9 +196,9 @@
 
     &:hover,
     &--selected {
-      border-color: var(--teal);
-      background: var(--mint-tint);
-      color: var(--teal);
+      border-color: var(--brand-primary);
+      background: var(--brand-primary-light);
+      color: var(--brand-primary);
     }
   }
 

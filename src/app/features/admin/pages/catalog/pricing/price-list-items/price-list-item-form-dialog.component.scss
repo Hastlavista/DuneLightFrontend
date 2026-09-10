@@ -34,7 +34,7 @@
 }
 
 .price-list-form-dialog__header { display: grid; grid-template-columns: 2.35rem 1fr; align-items: center; gap: .75rem; }
-.price-list-form-dialog__mark { display: inline-flex; width: 2.35rem; height: 2.35rem; align-items: center; justify-content: center; border: 1px solid var(--mint-border); border-radius: 10px; background: var(--mint-tint); color: var(--teal); }
+.price-list-form-dialog__mark { display: inline-flex; width: 2.35rem; height: 2.35rem; align-items: center; justify-content: center; border: 1px solid var(--mint-border); border-radius: 10px; background: var(--brand-primary-light); color: var(--brand-primary); }
 .price-list-form-dialog__header h2 { margin: 0; color: var(--ink); font-family: var(--font-heading); font-size: 1.2rem; }
 .price-list-form-dialog__header p { margin: .2rem 0 0; color: var(--ink-muted); font-size: .73rem; }
 .price-list-form-dialog__form { display: flex; flex-direction: column; }
@@ -42,7 +42,7 @@
 .price-list-form-dialog__field { display: flex; flex-direction: column; gap: .35rem; }
 .price-list-form-dialog__field > label { color: var(--ink-secondary); font-size: .68rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .price-list-form-dialog__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
-.price-list-form-dialog__section .p-selectbutton .p-togglebutton.p-togglebutton-checked { border-color: transparent; background: var(--mint-tint); color: var(--teal-dark); font-weight: inherit; box-shadow: none; }
+.price-list-form-dialog__section .p-selectbutton .p-togglebutton.p-togglebutton-checked { border-color: transparent; background: var(--brand-primary-light); color: var(--brand-primary-hover); font-weight: inherit; box-shadow: none; }
 .price-list-form-dialog__section .p-selectbutton .p-togglebutton.p-togglebutton-checked .p-togglebutton-content { background: transparent; box-shadow: none; }
 .price-list-form-dialog__actions { display: flex; align-items: center; justify-content: space-between; gap: .6rem; padding: .9rem 1.35rem; background: var(--surface-warm); }
 .price-list-form-dialog__actions > span { color: var(--ink-muted); font-size: .72rem; }

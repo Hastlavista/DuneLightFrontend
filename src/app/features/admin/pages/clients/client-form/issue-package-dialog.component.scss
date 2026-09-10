@@ -15,11 +15,11 @@
   &__package-card strong { font-family: var(--font-heading); font-size: .9rem; font-weight: 600; }
   &__package-card b { font-family: var(--font-heading); font-size: .85rem; white-space: nowrap; }
   &__package-card small { grid-column: 1 / -1; color: var(--ink-muted); font-size: .7rem; line-height: 1.35; }
-  &__package-card--active { border-color: var(--teal); background: var(--mint-tint); box-shadow: inset 0 0 0 1px var(--teal); }
+  &__package-card--active { border-color: var(--brand-primary); background: var(--brand-primary-light); box-shadow: inset 0 0 0 1px var(--brand-primary); }
   &__chips, &__date-shortcuts { display: flex; flex-wrap: wrap; gap: .45rem; }
   &__chips button, &__date-shortcuts button { min-height: 2.15rem; padding: .3rem .7rem; border: 1px solid var(--rose-border); border-radius: 9px; background: var(--surface-card); color: var(--ink-secondary); font: inherit; font-size: .76rem; cursor: pointer; }
   &__chips button i { margin-right: .35rem; font-size: var(--text-2xs); }
-  &__chips button.issue-package-dialog__chip--active, &__date-shortcuts button.issue-package-dialog__shortcut--active { border-color: var(--teal); background: var(--mint-tint); color: var(--teal-dark); font-weight: 600; }
+  &__chips button.issue-package-dialog__chip--active, &__date-shortcuts button.issue-package-dialog__shortcut--active { border-color: var(--brand-primary); background: var(--brand-primary-light); color: var(--brand-primary-hover); font-weight: 600; }
   &__purchase-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
   &__actions { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: .1rem -1.3rem -1.25rem; padding: 1rem 1.3rem; border-top: 1px solid var(--rose-border); }
   &__actions > span { color: var(--ink-muted); font-size: .75rem; }

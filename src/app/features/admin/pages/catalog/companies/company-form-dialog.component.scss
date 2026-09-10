@@ -92,8 +92,8 @@
   cursor: pointer;
 
   &--active {
-    border-color: var(--teal-dark);
-    box-shadow: 0 0 0 2px var(--surface-card), 0 0 0 4px var(--teal);
+    border-color: var(--brand-primary-hover);
+    box-shadow: 0 0 0 2px var(--surface-card), 0 0 0 4px var(--brand-primary);
   }
 }
 
@@ -116,7 +116,7 @@
     height: 2.25rem;
     border: 0;
     background: var(--surface-card);
-    color: var(--teal-dark);
+    color: var(--brand-primary-hover);
     font: inherit;
     font-weight: 700;
     text-align: center;
@@ -126,8 +126,8 @@
     cursor: pointer;
 
     &:hover {
-      background: var(--mint-tint);
-      color: var(--teal);
+      background: var(--brand-primary-light);
+      color: var(--brand-primary);
     }
   }
 
@@ -139,7 +139,7 @@
 
     &:focus {
       outline: 0;
-      box-shadow: inset 0 0 0 1px var(--teal);
+      box-shadow: inset 0 0 0 1px var(--brand-primary);
     }
   }
 }

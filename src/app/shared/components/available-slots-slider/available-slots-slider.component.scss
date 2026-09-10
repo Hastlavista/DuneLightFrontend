@@ -58,7 +58,7 @@
     min-width: 0;
     font-size: 0.8rem;
     font-weight: 600;
-    color: var(--teal);
+    color: var(--brand-primary);
     text-transform: uppercase;
 
     span:last-child {
@@ -97,14 +97,14 @@
     cursor: pointer;
 
     &:hover {
-      border-color: var(--teal);
-      color: var(--teal);
+      border-color: var(--brand-primary);
+      color: var(--brand-primary);
     }
 
     &--selected {
-      background: var(--teal);
-      color: #fff;
-      border-color: var(--teal);
+      background: var(--brand-primary);
+      color: var(--brand-primary-contrast);
+      border-color: var(--brand-primary);
     }
   }
 
@@ -122,7 +122,7 @@
     border: 1px solid var(--rose-border);
     border-radius: 8px;
     background: var(--surface-card);
-    color: var(--teal);
+    color: var(--brand-primary);
     font-size: 0.8rem;
     font-weight: 600;
     cursor: pointer;

@@ -14,7 +14,7 @@
 .service-form-dialog__palette { display: flex; flex-wrap: wrap; gap: .4rem; }
 .service-form-dialog__palette button { display: inline-flex; min-height: 2.1rem; align-items: center; gap: .4rem; padding: .28rem .6rem; border: 1px solid var(--rose-border); border-radius: 8px; background: var(--surface-card); color: var(--ink-secondary); font: inherit; font-size: .72rem; cursor: pointer; }
 .service-form-dialog__palette button i { width: .82rem; height: .82rem; border-radius: 50%; }
-.service-form-dialog__palette button.service-form-dialog__choice--active { border-color: var(--teal); background: var(--mint-tint); color: var(--teal-dark); font-weight: 700; }
+.service-form-dialog__palette button.service-form-dialog__choice--active { border-color: var(--brand-primary); background: var(--brand-primary-light); color: var(--brand-primary-hover); font-weight: 700; }
 .service-form-dialog__custom-color { display: inline-flex; min-height: 2.1rem; align-items: center; gap: .35rem; padding: .18rem .45rem; border: 1px dashed var(--rose-border-strong); border-radius: 8px; }
 .service-form-dialog__custom-color em { color: var(--ink-muted); font-size: .7rem; font-style: normal; }
 .service-form-dialog__field textarea { width: 100%; min-height: 4.25rem; padding: .65rem .75rem; border: 1px solid var(--rose-border-strong); border-radius: 9px; background: var(--surface-warm); color: var(--ink); font: inherit; resize: vertical; }
