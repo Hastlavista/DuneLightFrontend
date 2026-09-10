@@ -3,7 +3,7 @@
   header p { margin: 0; color: var(--ink-muted); font-size: .8rem; }
   &__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); gap: .8rem; }
   &__card { display: grid; grid-template-columns: .3rem 1fr auto; gap: .9rem; overflow: hidden; min-height: 8.5rem; border: 1px solid var(--rose-border); border-radius: 14px; background: var(--surface-card); box-shadow: var(--shadow-soft); }
-  &__card > span { background: var(--teal); }
+  &__card > span { background: var(--brand-primary); }
   &__card > div { padding: 1rem 0; }
   &__card h3 { margin: 0; font-size: 1.05rem; }
   &__card p { margin: .35rem 0 0; color: var(--ink-muted); font-size: .76rem; }

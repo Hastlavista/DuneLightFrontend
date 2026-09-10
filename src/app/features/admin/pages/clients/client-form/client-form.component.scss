@@ -50,7 +50,7 @@
   }
 
   textarea { width: 100%; min-height: 4.25rem; padding: .65rem .75rem; border: 1px solid var(--rose-border-strong); border-radius: 8px; background: var(--surface-warm); color: var(--ink); font: inherit; resize: vertical; }
-  input[type='checkbox'] { width: 1rem; height: 1rem; accent-color: var(--teal); }
+  input[type='checkbox'] { width: 1rem; height: 1rem; accent-color: var(--brand-primary); }
 
   &__no-show-stat {
     display: flex;
@@ -71,8 +71,8 @@
     gap: 0.5rem;
   }
 
-  &__summary { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .75rem; margin: 0; padding: 1rem 1.1rem; border-bottom: 1px solid var(--mint-border); background: var(--mint-tint); }
-  &__summary-icon { display: inline-flex; width: 2.3rem; height: 2.3rem; align-items: center; justify-content: center; border: 1px solid var(--mint-border); border-radius: 9px; background: var(--surface-card); color: var(--teal); }
+  &__summary { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: .75rem; margin: 0; padding: 1rem 1.1rem; border-bottom: 1px solid var(--mint-border); background: var(--brand-primary-light); }
+  &__summary-icon { display: inline-flex; width: 2.3rem; height: 2.3rem; align-items: center; justify-content: center; border: 1px solid var(--mint-border); border-radius: 9px; background: var(--surface-card); color: var(--brand-primary); }
   &__summary div { display: flex; min-width: 0; flex-direction: column; gap: .12rem; }
   &__summary strong { overflow: hidden; font-family: var(--font-heading); font-size: 1rem; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
   &__summary small { overflow: hidden; color: var(--ink-muted); font-size: .72rem; text-overflow: ellipsis; white-space: nowrap; }
@@ -81,8 +81,8 @@
   &__choice-group > label { color: var(--ink-secondary); font-size: .68rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
   &__choice-group > div { display: flex; flex-wrap: wrap; gap: .42rem; }
   &__choice-group button { min-height: 2.15rem; padding: .3rem .7rem; border: 1px solid var(--rose-border); border-radius: 9px; background: var(--surface-card); color: var(--ink-secondary); font: inherit; font-size: .76rem; cursor: pointer; }
-  &__choice-group button i { margin-right: .35rem; color: var(--teal); font-size: var(--text-2xs); }
-  &__choice-group button.client-form-page__choice--active { border-color: var(--teal); background: var(--mint-tint); color: var(--teal-dark); font-weight: 600; }
+  &__choice-group button i { margin-right: .35rem; color: var(--brand-primary); font-size: var(--text-2xs); }
+  &__choice-group button.client-form-page__choice--active { border-color: var(--brand-primary); background: var(--brand-primary-light); color: var(--brand-primary-hover); font-weight: 600; }
   &__choice-group small { color: var(--ink-muted); font-size: .72rem; }
   &__footer-hint { color: var(--ink-muted); font-size: .76rem; }
   &__footer-buttons { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: .55rem; }
