@@ -55,7 +55,7 @@ export class TopbarComponent {
     return email.slice(0, 2).toUpperCase();
   });
 
-  readonly avatarColor = computed(() => this.employee()?.colorHex || 'var(--teal)');
+  readonly avatarColor = computed(() => this.employee()?.colorHex || 'var(--brand-primary)');
 
   readonly companyOptions = computed<CompanyOption[]>(() => [
     { label: this.translate.instant('LAYOUT.TOPBAR.ALL_COMPANIES'), value: null },

@@ -61,8 +61,8 @@
   white-space: nowrap;
 
   &--active {
-    background: var(--teal);
-    color: #FFFFFF;
+    background: var(--brand-primary);
+    color: var(--brand-primary-contrast);
     font-weight: 600;
   }
 }
@@ -108,7 +108,7 @@
   width: 0.45rem;
   height: 0.45rem;
   border-radius: 999px;
-  background: var(--teal);
+  background: var(--brand-primary);
 }
 
 .topbar__user {
