@@ -7,6 +7,9 @@ export interface OrganizationBranding {
   favicon: string | null;
   primaryColor: string | null;
   secondaryColor: string | null;
+  /** Optional navigation-surface color. When absent, the client derives a
+   * neutral, low-saturation surface from the primary color. */
+  surfaceColor: string | null;
 }
 
 export interface OrganizationBrandingResponse extends OrganizationBranding {
@@ -17,6 +20,7 @@ export interface OrganizationBrandingResponse extends OrganizationBranding {
 export interface BrandingColorsUpdateRequest {
   primaryColor: string;
   secondaryColor: string;
+  surfaceColor: string | null;
 }
 
 export interface BrandingUploadResponse {

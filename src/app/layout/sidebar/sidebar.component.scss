@@ -2,12 +2,12 @@
   display: flex;
   flex-direction: column;
   height: 100%;
-  background: var(--brand-primary-light);
+  background: var(--brand-surface);
   color: var(--ink);
   border-right: 1px solid var(--rose-border-strong);
 
   &--admin {
-    background: var(--brand-primary-light);
+    background: var(--brand-surface);
     color: var(--ink);
     border-right-color: var(--rose-border-strong);
 
@@ -126,4 +126,3 @@
     font-weight: 600;
   }
 }
-

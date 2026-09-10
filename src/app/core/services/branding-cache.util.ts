@@ -5,6 +5,7 @@ const CACHE_KEY_PREFIX = 'dl_branding_colors:';
 export interface CachedBrandColors {
   primaryColor: string | null;
   secondaryColor: string | null;
+  surfaceColor: string | null;
 }
 
 /** Persists the org's last-applied colors so the next page load (or hard

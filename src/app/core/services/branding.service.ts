@@ -31,7 +31,7 @@ export class BrandingService {
     this.brandingState.set(branding);
     applyBranding(branding);
     if (slug) {
-      cacheBrandColors(slug, { primaryColor: branding.primaryColor, secondaryColor: branding.secondaryColor });
+      cacheBrandColors(slug, { primaryColor: branding.primaryColor, secondaryColor: branding.secondaryColor, surfaceColor: branding.surfaceColor });
     }
   }
 
@@ -103,7 +103,7 @@ export class BrandingService {
 /** Applies the public organization identity that survives the page cleanup. */
 export function applyBranding(branding: OrganizationBranding): void {
   const root = document.documentElement;
-  applyBrandCssVariables(root, deriveBrandCssVariables(branding.primaryColor, branding.secondaryColor));
+  applyBrandCssVariables(root, deriveBrandCssVariables(branding.primaryColor, branding.secondaryColor, branding.surfaceColor));
 
   const faviconUrl = resolveBrandingAssetUrl(branding.favicon);
   const link = document.querySelector("link[rel='icon']") as HTMLLinkElement | null;

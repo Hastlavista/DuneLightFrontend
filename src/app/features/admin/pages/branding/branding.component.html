@@ -1,8 +1,4 @@
 <section class="branding-page">
-  <header class="branding-page__header">
-    <div><span>{{ 'BRANDING.EYEBROW' | translate }}</span><h2>{{ 'BRANDING.TITLE' | translate }}</h2><p>{{ 'BRANDING.SUBTITLE' | translate }}</p></div>
-    @if (branding(); as current) { <small><i class="pi pi-building"></i>{{ current.organizationName }}</small> }
-  </header>
   @if (loading()) {
     <div class="branding-loading">{{ 'BRANDING.LOADING' | translate }}</div>
   } @else {
@@ -21,6 +17,15 @@
           <form [formGroup]="form" (ngSubmit)="saveColors()">
             <label><span>{{ 'BRANDING.PRIMARY_COLOR' | translate }}</span><div><input type="color" [value]="primaryColor()" (input)="form.controls.primaryColor.setValue($any($event.target).value)" /><input pInputText formControlName="primaryColor" maxlength="7" /></div>@if (form.controls.primaryColor.invalid && form.controls.primaryColor.touched) { <small>{{ 'BRANDING.HEX_ERROR' | translate }}</small> }</label>
             <label><span>{{ 'BRANDING.SECONDARY_COLOR' | translate }}</span><div><input type="color" [value]="secondaryColor()" (input)="form.controls.secondaryColor.setValue($any($event.target).value)" /><input pInputText formControlName="secondaryColor" maxlength="7" /></div>@if (form.controls.secondaryColor.invalid && form.controls.secondaryColor.touched) { <small>{{ 'BRANDING.HEX_ERROR' | translate }}</small> }</label>
+            <section class="surface-option">
+              <button type="button" class="surface-option__toggle" [attr.aria-expanded]="surfaceColorCustom()" (click)="setSurfaceColorCustom(!surfaceColorCustom())">
+                <i class="pi" [class.pi-chevron-right]="!surfaceColorCustom()" [class.pi-chevron-down]="surfaceColorCustom()"></i>
+                <span><b>{{ 'BRANDING.SURFACE_OPTION' | translate }}</b><small>{{ 'BRANDING.SURFACE_HINT' | translate }}</small></span>
+              </button>
+              @if (surfaceColorCustom()) {
+                <label><span>{{ 'BRANDING.SURFACE_COLOR' | translate }}</span><div><input type="color" [value]="surfaceColor()" (input)="form.controls.surfaceColor.setValue($any($event.target).value)" /><input pInputText formControlName="surfaceColor" maxlength="7" /></div>@if (form.controls.surfaceColor.invalid && form.controls.surfaceColor.touched) { <small>{{ 'BRANDING.HEX_ERROR' | translate }}</small> }</label>
+              }
+            </section>
             <div class="actions"><p-button type="button" [text]="true" icon="pi pi-refresh" [label]="'BRANDING.RESET_COLORS' | translate" (onClick)="resetColors()"></p-button><p-button type="submit" icon="pi pi-check" [label]="'BRANDING.SAVE_COLORS' | translate" [loading]="savingColors()"></p-button></div>
           </form>
         </article>

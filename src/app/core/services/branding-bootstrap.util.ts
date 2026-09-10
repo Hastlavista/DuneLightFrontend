@@ -16,5 +16,5 @@ export function applyCachedBrandingOnBoot(): void {
   if (!cached) {
     return;
   }
-  applyBrandCssVariables(document.documentElement, deriveBrandCssVariables(cached.primaryColor, cached.secondaryColor));
+  applyBrandCssVariables(document.documentElement, deriveBrandCssVariables(cached.primaryColor, cached.secondaryColor, cached.surfaceColor));
 }

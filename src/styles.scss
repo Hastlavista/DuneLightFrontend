@@ -81,6 +81,7 @@
   --brand-primary-active: var(--teal-dark);
   --brand-primary-light: var(--mint-light);
   --brand-primary-contrast: #ffffff;
+  --brand-surface: #DBD1D3;
   --brand-secondary: var(--teal-dark);
   --brand-secondary-contrast: #ffffff;
 
@@ -772,3 +773,13 @@ input[type='checkbox'] {
 .role-dialog__actions > span { color: var(--ink-muted); font-size: .75rem; }
 .role-dialog__actions > div { display: flex; gap: .55rem; }
 @media (max-width: 560px) { .role-dialog__actions { align-items: stretch; flex-direction: column; } .role-dialog__actions > div { justify-content: flex-end; } }
+
+/* Branding's expandable navigation-surface setting lives here instead of the
+   component stylesheet, which is already at its strict component CSS budget. */
+.branding-page .surface-option { grid-column: 1 / -1; padding: .8rem .9rem; border: 1px solid var(--rose-border); border-radius: 10px; background: var(--surface-warm); }
+.branding-page .surface-option__toggle { display: flex; width: 100%; align-items: center; gap: .65rem; padding: 0; border: 0; background: transparent; color: var(--ink); font: inherit; text-align: left; cursor: pointer; }
+.branding-page .surface-option__toggle > i { width: .75rem; color: var(--brand-primary); font-size: .72rem; }
+.branding-page .surface-option__toggle span { display: flex; flex-direction: column; gap: .13rem; }
+.branding-page .surface-option__toggle b { font-size: .78rem; }
+.branding-page .surface-option__toggle small { color: var(--ink-muted); font-size: .69rem; font-weight: 400; line-height: 1.35; }
+.branding-page .surface-option > label { margin-top: .85rem; padding-top: .85rem; border-top: 1px solid var(--rose-border); }

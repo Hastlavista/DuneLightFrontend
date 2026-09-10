@@ -10,6 +10,7 @@ const BRAND_CSS_PROPERTIES = [
   '--brand-primary-active',
   '--brand-primary-light',
   '--brand-primary-contrast',
+  '--brand-surface',
   '--brand-secondary',
   '--brand-secondary-contrast',
 ] as const;
@@ -22,7 +23,7 @@ export type BrandCssVariables = Partial<Record<BrandCssProperty, string>>;
  * (not the secondary color - see dune-preset.ts) so they stay visually
  * related to the button/element they belong to regardless of what the org
  * picked as their secondary accent. */
-export function deriveBrandCssVariables(primaryColor: string | null, secondaryColor: string | null): BrandCssVariables {
+export function deriveBrandCssVariables(primaryColor: string | null, secondaryColor: string | null, surfaceColor: string | null = null): BrandCssVariables {
   const vars: BrandCssVariables = {};
   if (primaryColor) {
     const primary = colord(primaryColor);
@@ -31,12 +32,20 @@ export function deriveBrandCssVariables(primaryColor: string | null, secondaryCo
     vars['--brand-primary-active'] = primary.darken(0.14).toHex();
     vars['--brand-primary-light'] = primary.lighten(0.38).toHex();
     vars['--brand-primary-contrast'] = contrastColor(primaryColor);
+    vars['--brand-surface'] = surfaceColor || deriveNeutralSurface(primary);
   }
   if (secondaryColor) {
     vars['--brand-secondary'] = secondaryColor;
     vars['--brand-secondary-contrast'] = contrastColor(secondaryColor);
   }
   return vars;
+}
+
+/** Keeps navigation surfaces visibly related to a brand while preventing a
+ * saturated primary from turning the whole shell into one large color block. */
+function deriveNeutralSurface(primary: ReturnType<typeof colord>): string {
+  const { h, s, l } = primary.toHsl();
+  return colord({ h, s: Math.min(s, 14), l: Math.min(92, Math.max(86, l + 24)) }).toHex();
 }
 
 /** Sets every brand CSS property present in `vars` and removes every one

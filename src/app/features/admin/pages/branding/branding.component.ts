@@ -40,15 +40,20 @@ export class BrandingComponent {
   readonly form = this.fb.nonNullable.group({
     primaryColor: [DEFAULT_PRIMARY, [Validators.required, Validators.pattern(HEX_PATTERN)]],
     secondaryColor: [DEFAULT_SECONDARY, [Validators.required, Validators.pattern(HEX_PATTERN)]],
+    surfaceColor: ['#DBD1D3', [Validators.pattern(HEX_PATTERN)]],
   });
   readonly primaryColor = signal(DEFAULT_PRIMARY);
   readonly secondaryColor = signal(DEFAULT_SECONDARY);
+  readonly surfaceColor = signal('#DBD1D3');
+  readonly surfaceColorCustom = signal(false);
   readonly logoUrl = computed(() => this.logoPreview() ?? resolveBrandingAssetUrl(this.branding()?.logo));
   readonly faviconUrl = computed(() => this.faviconPreview() ?? resolveBrandingAssetUrl(this.branding()?.favicon));
   /** Same derivation BrandingService.apply() uses to paint the real app, so the
    * shell mock below previews the actual hover/light/contrast shades - not
    * just the two raw hex values the user typed. */
-  readonly previewVars = computed(() => deriveBrandCssVariables(this.primaryColor(), this.secondaryColor()));
+  readonly previewVars = computed(() => deriveBrandCssVariables(
+    this.primaryColor(), this.secondaryColor(), this.surfaceColorCustom() ? this.surfaceColor() : null,
+  ));
 
   constructor() {
     this.load();
@@ -56,6 +61,7 @@ export class BrandingComponent {
     this.form.valueChanges.pipe(takeUntilDestroyed(destroyRef)).subscribe((colors) => {
       this.primaryColor.set(colors.primaryColor || DEFAULT_PRIMARY);
       this.secondaryColor.set(colors.secondaryColor || DEFAULT_SECONDARY);
+      this.surfaceColor.set(colors.surfaceColor || '#DBD1D3');
     });
     destroyRef.onDestroy(() => {
       this.revoke(this.logoPreview());
@@ -64,10 +70,11 @@ export class BrandingComponent {
   }
 
   saveColors(): void {
-    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    if (this.form.controls.primaryColor.invalid || this.form.controls.secondaryColor.invalid || (this.surfaceColorCustom() && this.form.controls.surfaceColor.invalid)) { this.form.markAllAsTouched(); return; }
     this.savingColors.set(true);
     this.brandingService.updateColors({
       primaryColor: this.primaryColor().toUpperCase(), secondaryColor: this.secondaryColor().toUpperCase(),
+      surfaceColor: this.surfaceColorCustom() ? this.surfaceColor().toUpperCase() : null,
     }).pipe(finalize(() => this.savingColors.set(false))).subscribe({
       next: (updated) => { this.update(updated); this.success('BRANDING.COLORS_SAVED'); }, error: () => {},
     });
@@ -77,6 +84,10 @@ export class BrandingComponent {
     this.confirm('BRANDING.CONFIRM_RESET_COLORS', 'pi pi-refresh', 'BRANDING.RESET_COLORS', () =>
       this.brandingService.resetColors().subscribe({ next: (updated) => { this.update(updated); this.success('BRANDING.COLORS_RESET'); }, error: () => {} }),
     );
+  }
+
+  setSurfaceColorCustom(custom: boolean): void {
+    this.surfaceColorCustom.set(custom);
   }
 
   upload(kind: 'logo' | 'favicon', event: Event): void {
@@ -113,7 +124,12 @@ export class BrandingComponent {
   }
 
   private setColors(branding: OrganizationBranding): void {
-    this.form.patchValue({ primaryColor: branding.primaryColor ?? DEFAULT_PRIMARY, secondaryColor: branding.secondaryColor ?? DEFAULT_SECONDARY });
+    this.surfaceColorCustom.set(Boolean(branding.surfaceColor));
+    this.form.patchValue({
+      primaryColor: branding.primaryColor ?? DEFAULT_PRIMARY,
+      secondaryColor: branding.secondaryColor ?? DEFAULT_SECONDARY,
+      surfaceColor: branding.surfaceColor ?? '#DBD1D3',
+    });
   }
 
   private validFile(file: File): boolean {
