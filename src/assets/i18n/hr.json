@@ -1369,7 +1369,9 @@
     "PREVIEW_WELCOME": "Dobro došli u",
     "PREVIEW_BUTTON": "Prijavi se",
     "PREVIEW_LINK": "Zaboravili ste lozinku?",
-    "PREVIEW_HINT": "Pregled prikazuje kako će boje izgledati na prijavnom ekranu."
+    "PREVIEW_LOGIN_LABEL": "Prijava",
+    "PREVIEW_SHELL_LABEL": "Bočna i gornja traka",
+    "PREVIEW_HINT": "Pregled prikazuje kako će boje izgledati na prijavnom ekranu i u aplikaciji."
   },
   "PROFILE": {
     "TITLE": "Moj profil",

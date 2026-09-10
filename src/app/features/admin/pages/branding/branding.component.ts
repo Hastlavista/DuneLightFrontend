@@ -1,3 +1,4 @@
+import { NgStyle } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -8,6 +9,7 @@ import { InputText } from 'primeng/inputtext';
 import { finalize } from 'rxjs';
 import { OrganizationBranding, OrganizationBrandingResponse } from '../../../../core/models/branding.model';
 import { BrandingService, resolveBrandingAssetUrl } from '../../../../core/services/branding.service';
+import { deriveBrandCssVariables } from '../../../../core/services/branding-colors.util';
 import { NotificationService } from '../../../../core/services/notification.service';
 
 const DEFAULT_PRIMARY = '#0D5C63';
@@ -18,7 +20,7 @@ const ALLOWED_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'ico', 
 
 @Component({
   selector: 'app-admin-branding',
-  imports: [ReactiveFormsModule, TranslatePipe, Button, InputText],
+  imports: [ReactiveFormsModule, TranslatePipe, Button, InputText, NgStyle],
   templateUrl: './branding.component.html',
   styleUrl: './branding.component.scss',
 })
@@ -43,6 +45,10 @@ export class BrandingComponent {
   readonly secondaryColor = signal(DEFAULT_SECONDARY);
   readonly logoUrl = computed(() => this.logoPreview() ?? resolveBrandingAssetUrl(this.branding()?.logo));
   readonly faviconUrl = computed(() => this.faviconPreview() ?? resolveBrandingAssetUrl(this.branding()?.favicon));
+  /** Same derivation BrandingService.apply() uses to paint the real app, so the
+   * shell mock below previews the actual hover/light/contrast shades - not
+   * just the two raw hex values the user typed. */
+  readonly previewVars = computed(() => deriveBrandCssVariables(this.primaryColor(), this.secondaryColor()));
 
   constructor() {
     this.load();

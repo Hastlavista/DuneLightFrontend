@@ -25,7 +25,30 @@
           </form>
         </article>
       </main>
-      <aside class="preview"><header><span>{{ 'BRANDING.LIVE_PREVIEW' | translate }}</span><i class="pi pi-eye"></i></header><div class="preview-canvas"><div class="preview-login" [style.--primary]="primaryColor()" [style.--secondary]="secondaryColor()"><div class="preview-brand">@if (logoUrl(); as url) { <img [src]="url" alt="" /> } @else { <span>DL</span><b>DuneLight</b> }</div><div class="preview-form"><small>{{ 'BRANDING.PREVIEW_WELCOME' | translate }}</small><strong>{{ branding()?.organizationName || 'DuneLight' }}</strong><i></i><button type="button">{{ 'BRANDING.PREVIEW_BUTTON' | translate }}</button><a>{{ 'BRANDING.PREVIEW_LINK' | translate }}</a></div></div></div><p><i class="pi pi-sparkles"></i>{{ 'BRANDING.PREVIEW_HINT' | translate }}</p></aside>
+      <aside class="preview">
+        <header><span>{{ 'BRANDING.LIVE_PREVIEW' | translate }}</span><i class="pi pi-eye"></i></header>
+        <div class="preview-canvas">
+          <small class="preview-canvas__label">{{ 'BRANDING.PREVIEW_SHELL_LABEL' | translate }}</small>
+          <div class="preview-shell" [ngStyle]="previewVars()">
+            <div class="preview-shell__sidebar">
+              <span class="preview-shell__brand">DL</span>
+              <span class="preview-shell__nav-item preview-shell__nav-item--active">{{ 'NAV.ADMIN.DASHBOARD' | translate }}</span>
+              <span class="preview-shell__nav-item"></span>
+              <span class="preview-shell__nav-item"></span>
+            </div>
+            <div class="preview-shell__main">
+              <div class="preview-shell__topbar">
+                <span class="preview-shell__topbar-pill">{{ 'LAYOUT.TOPBAR.VIEW_ADMIN' | translate }}</span>
+                <span class="preview-shell__topbar-avatar">{{ branding()?.organizationName?.charAt(0) || 'D' }}</span>
+              </div>
+              <div class="preview-shell__content"></div>
+            </div>
+          </div>
+          <small class="preview-canvas__label">{{ 'BRANDING.PREVIEW_LOGIN_LABEL' | translate }}</small>
+          <div class="preview-login" [style.--primary]="primaryColor()" [style.--secondary]="secondaryColor()"><div class="preview-brand">@if (logoUrl(); as url) { <img [src]="url" alt="" /> } @else { <span>DL</span><b>DuneLight</b> }</div><div class="preview-form"><small>{{ 'BRANDING.PREVIEW_WELCOME' | translate }}</small><strong>{{ branding()?.organizationName || 'DuneLight' }}</strong><i></i><button type="button">{{ 'BRANDING.PREVIEW_BUTTON' | translate }}</button><a>{{ 'BRANDING.PREVIEW_LINK' | translate }}</a></div></div>
+        </div>
+        <p><i class="pi pi-sparkles"></i>{{ 'BRANDING.PREVIEW_HINT' | translate }}</p>
+      </aside>
     </div>
   }
 </section>
