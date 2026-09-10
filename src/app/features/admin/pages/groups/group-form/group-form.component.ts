@@ -28,7 +28,7 @@ import {
 } from '../../../../../core/models/group.model';
 import { CompanyDto } from '../../../../../core/models/company.model';
 import { RoomDto } from '../../../../../core/models/room.model';
-import { ServiceDto } from '../../../../../core/models/service.model';
+import { ServiceDto, ServiceExecutionMode } from '../../../../../core/models/service.model';
 import { EmployeesService } from '../../../../../core/services/employees.service';
 import { GroupsService } from '../../../../../core/services/groups.service';
 import { CompaniesService } from '../../../../../core/services/companies.service';
@@ -37,6 +37,7 @@ import { RoomsService } from '../../../../../core/services/rooms.service';
 import { ServicesService } from '../../../../../core/services/services.service';
 import { toTimeOfDayString } from '../../../../../core/utils/time-of-day.util';
 import { translationReadySignal } from '../../../../../core/utils/translation-signal.util';
+import { resolveWarningMessage } from '../../../../../core/utils/warning-translation.util';
 import { GroupAppointmentsSectionComponent } from './group-appointments-section.component';
 import { GroupMembersSectionComponent } from './group-members-section.component';
 import { GroupSlotsSectionComponent } from './group-slots-section.component';
@@ -220,8 +221,11 @@ export class GroupFormComponent {
         .update(id, this.toUpdateRequest())
         .pipe(finalize(() => this.saving.set(false)))
         .subscribe({
-          next: () => {
+          next: (updated) => {
             this.notifications.showSuccess(this.translate.instant('GROUPS.UPDATED'));
+            for (const warning of updated.warnings) {
+              this.notifications.showWarning(resolveWarningMessage(this.translate, warning));
+            }
             this.loadGroup(id);
           },
           error: () => {},
@@ -231,8 +235,11 @@ export class GroupFormComponent {
         .create(this.toCreateRequest())
         .pipe(finalize(() => this.saving.set(false)))
         .subscribe({
-          next: () => {
+          next: (created) => {
             this.notifications.showSuccess(this.translate.instant('GROUPS.CREATED'));
+            for (const warning of created.warnings) {
+              this.notifications.showWarning(resolveWarningMessage(this.translate, warning));
+            }
             this.navigateBack();
           },
           error: () => {},
@@ -301,9 +308,14 @@ export class GroupFormComponent {
     return group ? select(group) : null;
   }
 
+  /** Grupe can only run a Group-executionMode uslugu - Individual services
+   * would produce per-client, not shared, termini and aren't valid here. */
   private loadActiveServices(): void {
     this.servicesService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
+      .getPage(
+        { page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true },
+        { suppressErrorToast: true, extraParams: { executionMode: 'Group' satisfies ServiceExecutionMode } },
+      )
       .subscribe((result) => this.activeServices.set(result.items));
   }
 

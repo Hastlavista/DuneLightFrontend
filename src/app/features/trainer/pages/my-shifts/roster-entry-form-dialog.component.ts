@@ -16,6 +16,7 @@ import { NotificationService } from '../../../../core/services/notification.serv
 import { RosterEntriesService } from '../../../../core/services/roster-entries.service';
 import { toStartOfDayIso } from '../../../../core/utils/date.util';
 import { parseTimeOfDay, toTimeOfDayString } from '../../../../core/utils/time-of-day.util';
+import { resolveWarningMessage } from '../../../../core/utils/warning-translation.util';
 
 interface SelectOption {
   label: string;
@@ -274,7 +275,7 @@ export class RosterEntryFormDialogComponent {
         this.notifications.showSuccess(
           this.translate.instant(current ? 'ROSTER.ENTRY_FORM.UPDATED' : 'ROSTER.ENTRY_FORM.CREATED'),
         );
-        result.warnings.forEach((warning) => this.notifications.showWarning(warning));
+        result.warnings.forEach((warning) => this.notifications.showWarning(resolveWarningMessage(this.translate, warning)));
         this.saved.emit();
 
         if (!current && !type.isAbsence) {

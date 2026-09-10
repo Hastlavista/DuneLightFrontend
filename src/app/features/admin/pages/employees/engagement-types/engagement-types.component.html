@@ -60,4 +60,9 @@
   }
 </section>
 
-<app-engagement-type-form-dialog [(visible)]="dialogVisible" [engagementType]="editingType()" (saved)="onSaved()" />
+<app-engagement-type-form-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="onDialogVisibleChange($event)"
+  [engagementType]="editingType()"
+  (saved)="onSaved()"
+/>

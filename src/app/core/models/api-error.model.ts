@@ -11,3 +11,16 @@ export interface AppError {
   message: string;
   details?: Record<string, string[]>;
 }
+
+/**
+ * Non-blocking counterpart to AppError's `{ code, message, details }` shape,
+ * minus `message` - the backend never sends prose for a warning, only a code
+ * (and optionally structured `details`) for the frontend to translate via
+ * core/utils/warning-translation.util.ts's `warnings.<code>` i18n keys.
+ * Carried on AppointmentDto/AppointmentScheduleCellDto/GroupDto/
+ * RosterEntryDto's `warnings` arrays and EmployeeDto's single `warning` field.
+ */
+export interface WarningDto {
+  code: string;
+  details?: Record<string, unknown>;
+}

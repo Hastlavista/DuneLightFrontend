@@ -1,7 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
-import { Button } from 'primeng/button';
 import { AuthService } from '../../../../../core/auth/auth.service';
 import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { OnboardingStatusDto } from '../../../../../core/models/onboarding-status.model';
@@ -14,7 +13,7 @@ interface LinkStep {
   titleKey: string;
   descriptionKey: string;
   routerLink: string[];
-  queryParams?: Record<string, string>;
+  queryParams?: Record<string, string | undefined>;
   actionKey: string;
   done: boolean;
 }
@@ -43,7 +42,7 @@ type ChecklistStep = LinkStep | ProfileStep;
  */
 @Component({
   selector: 'app-onboarding-checklist',
-  imports: [RouterLink, TranslatePipe, Button, CompleteEmployeeProfileDialogComponent],
+  imports: [RouterLink, TranslatePipe, CompleteEmployeeProfileDialogComponent],
   templateUrl: './onboarding-checklist.component.html',
   styleUrl: './onboarding-checklist.component.scss',
 })
@@ -74,6 +73,7 @@ export class OnboardingChecklistComponent {
         titleKey: 'DASHBOARD.ONBOARDING.COMPANY_TITLE',
         descriptionKey: 'DASHBOARD.ONBOARDING.COMPANY_DESC',
         routerLink: ['/admin/companies'],
+        queryParams: { create: 'company' },
         actionKey: 'DASHBOARD.ONBOARDING.COMPANY_ACTION',
         done: status.hasCompany,
       },
@@ -83,7 +83,7 @@ export class OnboardingChecklistComponent {
         titleKey: 'DASHBOARD.ONBOARDING.ENGAGEMENT_TYPE_TITLE',
         descriptionKey: 'DASHBOARD.ONBOARDING.ENGAGEMENT_TYPE_DESC',
         routerLink: ['/admin/employees'],
-        queryParams: { tab: 'engagement-types' },
+        queryParams: { tab: 'engagement-types', create: 'engagement-type' },
         actionKey: 'DASHBOARD.ONBOARDING.ENGAGEMENT_TYPE_ACTION',
         done: status.hasEngagementType,
       },
@@ -93,7 +93,7 @@ export class OnboardingChecklistComponent {
         titleKey: 'DASHBOARD.ONBOARDING.SERVICE_TITLE',
         descriptionKey: 'DASHBOARD.ONBOARDING.SERVICE_DESC',
         routerLink: ['/admin/services'],
-        queryParams: { tab: 'services' },
+        queryParams: { tab: 'services', create: 'service' },
         actionKey: 'DASHBOARD.ONBOARDING.SERVICE_ACTION',
         done: status.hasService,
       },

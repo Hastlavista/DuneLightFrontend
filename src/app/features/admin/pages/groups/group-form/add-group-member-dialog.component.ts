@@ -13,6 +13,7 @@ import { GroupDetailDto } from '../../../../../core/models/group.model';
 import { ClientsService } from '../../../../../core/services/clients.service';
 import { GroupsService } from '../../../../../core/services/groups.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
+import { resolveWarningMessage } from '../../../../../core/utils/warning-translation.util';
 
 const PAGE_SIZE = 10;
 const SEARCH_DEBOUNCE_MS = 300;
@@ -141,7 +142,7 @@ export class AddGroupMemberDialogComponent {
         next: (updated) => {
           this.notifications.showSuccess(this.translate.instant('GROUPS.MEMBERS.ADDED'));
           for (const warning of updated.warnings) {
-            this.notifications.showWarning(warning);
+            this.notifications.showWarning(resolveWarningMessage(this.translate, warning));
           }
           this.justAddedIds.update((ids) => new Set(ids).add(client.id));
           this.changed.emit();

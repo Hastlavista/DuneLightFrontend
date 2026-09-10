@@ -11,9 +11,9 @@ const ACTIVITY_EVENTS = ['click', 'keydown', 'touchstart'] as const;
 
 /**
  * Tracks app-wide user activity and, after INACTIVITY_TIMEOUT_MS of silence,
- * opens the shared-device PIN overlay. The current workspace stays mounted
- * beneath it so a user can unlock or switch person without an intermediate
- * login page. Started/stopped from ShellComponent.
+ * opens the shared-device PIN overlay for PIN-enabled accounts. Accounts
+ * without a PIN are logged out and sent to the normal login form instead.
+ * Started/stopped from ShellComponent.
  */
 @Injectable({ providedIn: 'root' })
 export class InactivityService {
@@ -77,6 +77,17 @@ export class InactivityService {
   }
 
   private onTimeout(): void {
-    this.lockNow();
+    // A PIN-capable account can keep its current workspace mounted and
+    // unlock it quickly. A password-only account has no way through that
+    // overlay, so end its session and show the regular login form instead.
+    if (this.currentEmployeeService.employee()?.hasPinSet) {
+      this.lockNow();
+      return;
+    }
+
+    this.stop();
+    this.auth.logout();
+    this.currentEmployeeService.clear();
+    this.router.navigate(['/login'], { queryParams: { mode: 'full' } });
   }
 }

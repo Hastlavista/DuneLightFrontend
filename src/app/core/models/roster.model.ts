@@ -1,3 +1,5 @@
+import { WarningDto } from './api-error.model';
+
 /** GET /api/roster/types/{id} and the items of its paged list. `requiresTime`
  * is informative only - it does NOT drive RosterEntry's create/update shape,
  * `isAbsence` alone does (see RosterEntryDto). `deductsFromLeaveFund`
@@ -43,7 +45,8 @@ export interface RosterTypeUpsertRequest {
  * separate rows, never one row with two ranges. Odsutnost (`isAbsence: true`):
  * `dateFrom`/`dateTo` is the range (`dateTo: null` = still open), time fields
  * are null. `warnings` is transient - only ever populated on the response of
- * Create/Update (e.g. an overlap warning), always empty on a plain GET. */
+ * Create/Update (e.g. a ROSTER_ENTRY_OVERLAP warning, see WarningDto), always
+ * empty on a plain GET. */
 export interface RosterEntryDto {
   id: string;
   employeeId: string;
@@ -59,7 +62,7 @@ export interface RosterEntryDto {
   endTime: string | null;
   durationHours: number | null;
   note: string | null;
-  warnings: string[];
+  warnings: WarningDto[];
 }
 
 /** Body for both POST /api/roster/entries and PUT /api/roster/entries/{id} -

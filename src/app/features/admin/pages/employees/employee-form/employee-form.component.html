@@ -23,6 +23,9 @@
       @if (canViewLeaveFund()) {
         <p-tab value="leaveFund">{{ 'EMPLOYEES.TAB_LEAVE_FUND' | translate }}</p-tab>
       }
+      @if (canViewHistory()) {
+        <p-tab value="history" [disabled]="!editingId()">{{ 'EMPLOYEES.TAB_HISTORY' | translate }}</p-tab>
+      }
     </p-tablist>
     <p-tabpanels>
       <p-tabpanel value="data">
@@ -289,6 +292,16 @@
       @if (canViewLeaveFund()) {
         <p-tabpanel value="leaveFund">
           <app-employee-leave-fund-tab [employeeId]="editingId()" [saveLabelKey]="leaveFundSaveLabelKey()" (saved)="onLeaveFundSaved()" />
+        </p-tabpanel>
+      }
+
+      @if (canViewHistory()) {
+        <p-tabpanel value="history">
+          @if (editingId(); as id) {
+            <app-employee-history-tab [employeeId]="id" />
+          } @else {
+            <p class="dl-form__hint">{{ 'EMPLOYEES.WIZARD_LOCKED_HINT' | translate }}</p>
+          }
         </p-tabpanel>
       }
     </p-tabpanels>

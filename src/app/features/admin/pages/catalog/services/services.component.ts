@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ConfirmationService } from 'primeng/api';
@@ -46,6 +47,8 @@ export class CatalogServicesComponent {
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly items = signal<ServiceDto[]>([]);
   readonly totalCount = signal(0);
@@ -68,6 +71,9 @@ export class CatalogServicesComponent {
 
   constructor() {
     this.fetch(0, this.rows());
+    if (this.route.snapshot.queryParamMap.get('create') === 'service') {
+      this.openCreate();
+    }
   }
 
   onSearchChange(term: string): void {
@@ -96,6 +102,18 @@ export class CatalogServicesComponent {
   openCreate(): void {
     this.editingService.set(null);
     this.dialogVisible.set(true);
+  }
+
+  onDialogVisibleChange(visible: boolean): void {
+    this.dialogVisible.set(visible);
+    if (!visible && this.route.snapshot.queryParamMap.get('create') === 'service') {
+      this.router.navigate([], {
+        relativeTo: this.route,
+        queryParams: { create: null },
+        queryParamsHandling: 'merge',
+        replaceUrl: true,
+      });
+    }
   }
 
   openEdit(service: ServiceDto): void {

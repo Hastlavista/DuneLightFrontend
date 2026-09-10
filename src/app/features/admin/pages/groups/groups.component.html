@@ -56,7 +56,7 @@
           </div>
           <div class="groups-page__card-actions">
             <p-button icon="pi pi-pencil" [outlined]="true" [label]="'COMMON.EDIT' | translate" (onClick)="openEdit(group)" />
-            <p-button [icon]="group.isActive ? 'pi pi-eye-slash' : 'pi pi-eye'" severity="secondary" [text]="true" [rounded]="true" [ariaLabel]="group.isActive ? ('COMMON.DEACTIVATE' | translate) : ('COMMON.ACTIVATE' | translate)" [title]="group.isActive ? ('COMMON.DEACTIVATE' | translate) : ('COMMON.ACTIVATE' | translate)" (onClick)="group.isActive ? confirmDeactivate(group) : activate(group)" />
+            <p-button [icon]="group.isActive ? 'pi pi-eye-slash' : 'pi pi-eye'" severity="secondary" [outlined]="true" [label]="group.isActive ? ('COMMON.DEACTIVATE' | translate) : ('COMMON.ACTIVATE' | translate)" (onClick)="group.isActive ? confirmDeactivate(group) : activate(group)" />
           </div>
           <div class="groups-page__slots">
             @for (slot of group.slots; track slot.id) { @if (slot.isActive) { <span>{{ dayOfWeekShortTranslationKey(slot.dayOfWeek) | translate }} {{ slot.startTime.slice(0, 5) }}</span> } }

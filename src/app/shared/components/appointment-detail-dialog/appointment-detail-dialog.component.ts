@@ -1,6 +1,7 @@
 import { Component, computed, effect, inject, input, model, output, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
 import { Dialog } from 'primeng/dialog';
@@ -13,6 +14,7 @@ import {
   AppointmentClientRef,
   AppointmentCompleteRequest,
   AppointmentDto,
+  AppointmentMoveRequest,
   PAYMENT_METHODS,
   PackageSelection,
   PaymentMethod,
@@ -24,12 +26,16 @@ import { ClientPackageDto } from '../../../core/models/client-package.model';
 import { EmployeeSummary } from '../../../core/models/employee.model';
 import { CompanyDto } from '../../../core/models/company.model';
 import { RoomDto } from '../../../core/models/room.model';
+import { AvailabilityDto } from '../../../core/models/working-hours.model';
 import { AppointmentsService } from '../../../core/services/appointments.service';
+import { AvailabilityService } from '../../../core/services/availability.service';
 import { ClientPackagesService } from '../../../core/services/client-packages.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { RoomsService } from '../../../core/services/rooms.service';
-import { toLocalIsoFromDate } from '../../../core/utils/date.util';
+import { toDateOnly, toLocalIsoFromDate } from '../../../core/utils/date.util';
+import { isOutsideAvailability } from '../../../core/utils/scheduling-conflict.util';
 import { translationReadySignal } from '../../../core/utils/translation-signal.util';
+import { resolveWarningMessage } from '../../../core/utils/warning-translation.util';
 import { EligiblePackageSelectComponent } from '../eligible-package-select/eligible-package-select.component';
 import { EurCurrencyPipe } from '../../pipes/eur-currency.pipe';
 
@@ -95,10 +101,12 @@ type DetailMode = 'view' | 'billing' | 'cancel' | 'noShow';
 export class AppointmentDetailDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly appointmentsService = inject(AppointmentsService);
+  private readonly availabilityService = inject(AvailabilityService);
   private readonly clientPackagesService = inject(ClientPackagesService);
   private readonly roomsService = inject(RoomsService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
+  private readonly confirmationService = inject(ConfirmationService);
 
   readonly visible = model(false);
   readonly appointmentId = input<string | null>(null);
@@ -152,6 +160,24 @@ export class AppointmentDetailDialogComponent {
 
   readonly roomOptions = computed<SelectOption[]>(() => this.roomsForCompany().map((room) => ({ label: room.name, value: room.id })));
 
+  /** Trainer pre-save warning for the move form (frontend #27) - same
+   * soft/non-blocking treatment as NewAppointmentDialogComponent's
+   * `availability`/`startsAtOutsideAvailability`, see
+   * scheduling-conflict.util.ts. Room/trainer *double-booking* is
+   * deliberately NOT checked here - that stays a hard, unconditional 409 on
+   * the backend, so there's nothing a "continue anyway" could ever override. */
+  readonly availability = signal<AvailabilityDto | null>(null);
+
+  readonly startsAtOutsideAvailability = computed<boolean>(() => {
+    const avail = this.availability();
+    const startsAt = this.form.controls.startsAt.value;
+    if (!avail || !startsAt) {
+      return false;
+    }
+    const minutes = startsAt.getHours() * 60 + startsAt.getMinutes();
+    return isOutsideAvailability(minutes, minutes, avail.effectiveIntervals);
+  });
+
   readonly paymentMethodOptions = computed<SelectOption[]>(() => {
     this.translationsReady();
     return PAYMENT_METHODS.map((method) => ({ label: this.translate.instant(paymentMethodTranslationKey(method)), value: method }));
@@ -173,11 +199,17 @@ export class AppointmentDetailDialogComponent {
         this.appointment.set(null);
         this.form.reset({ startsAt: null, employeeId: '', companyId: '', roomId: null });
         this.roomsForCompany.set([]);
+        this.availability.set(null);
         this.mode.set('view');
       }
     });
 
-    this.form.controls.companyId.valueChanges.subscribe(() => this.refreshRooms());
+    this.form.controls.companyId.valueChanges.subscribe(() => {
+      this.refreshRooms();
+      this.refreshAvailability();
+    });
+    this.form.controls.employeeId.valueChanges.subscribe(() => this.refreshAvailability());
+    this.form.controls.startsAt.valueChanges.subscribe(() => this.refreshAvailability());
   }
 
   onCancel(): void {
@@ -185,9 +217,49 @@ export class AppointmentDetailDialogComponent {
   }
 
   onSave(): void {
-    const appt = this.appointment();
-    if (!appt || this.form.invalid) {
+    if (this.form.invalid) {
       this.form.markAllAsTouched();
+      return;
+    }
+    if (!this.appointment()) {
+      return;
+    }
+
+    this.confirmSchedulingWarningsThenMove();
+  }
+
+  /** Soft (non-blocking) pre-save check (frontend #27) - see
+   * NewAppointmentDialogComponent's identical treatment and
+   * scheduling-conflict.util.ts. */
+  private confirmSchedulingWarningsThenMove(): void {
+    const reasons: string[] = [];
+    if (this.startsAtOutsideAvailability()) {
+      reasons.push(
+        this.translate.instant('SCHEDULING_WARNINGS.TRAINER_OUTSIDE_HOURS', {
+          name: this.employeeOptions().find((option) => option.value === this.form.controls.employeeId.value)?.label ?? '',
+        }),
+      );
+    }
+
+    if (reasons.length === 0) {
+      this.performMove();
+      return;
+    }
+
+    this.confirmationService.confirm({
+      header: this.translate.instant('SCHEDULING_WARNINGS.CONFIRM_HEADER'),
+      message: `${reasons.join(' ')} ${this.translate.instant('SCHEDULING_WARNINGS.CONFIRM_MESSAGE')}`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: this.translate.instant('SCHEDULING_WARNINGS.CONTINUE_ANYWAY'),
+      rejectLabel: this.translate.instant('COMMON.CANCEL'),
+      acceptButtonProps: { severity: 'warn' },
+      accept: () => this.performMove(),
+    });
+  }
+
+  private performMove(): void {
+    const appt = this.appointment();
+    if (!appt) {
       return;
     }
 
@@ -197,7 +269,7 @@ export class AppointmentDetailDialogComponent {
     // "clear," so picking "bez prostorije" on an appointment that already has
     // a room assigned is a no-op, not a clear - that would need a PUT this
     // dialog doesn't call (see AppointmentMoveRequest.roomId's doc comment).
-    const request = {
+    const request: AppointmentMoveRequest = {
       startsAt: toLocalIsoFromDate(raw.startsAt as Date),
       companyId: raw.companyId,
       roomId: raw.roomId || null,
@@ -212,7 +284,7 @@ export class AppointmentDetailDialogComponent {
         next: (result) => {
           this.visible.set(false);
           this.saved.emit();
-          result.warnings.forEach((warning) => this.notifications.showWarning(warning));
+          result.warnings.forEach((warning) => this.notifications.showWarning(resolveWarningMessage(this.translate, warning)));
         },
         error: () => {},
       });
@@ -460,6 +532,24 @@ export class AppointmentDetailDialogComponent {
       .subscribe({
         next: (result) => this.roomsForCompany.set(result.items),
         error: () => this.roomsForCompany.set([]),
+      });
+  }
+
+  /** Mirrors NewAppointmentDialogComponent.refreshAvailability - same
+   * GET /api/availability lookup, driving `startsAtOutsideAvailability`. */
+  private refreshAvailability(): void {
+    const employeeId = this.form.controls.employeeId.value;
+    const companyId = this.form.controls.companyId.value;
+    const startsAt = this.form.controls.startsAt.value;
+    if (!employeeId || !companyId || !startsAt) {
+      this.availability.set(null);
+      return;
+    }
+    this.availabilityService
+      .get({ employeeId, companyId, date: toDateOnly(startsAt) }, { suppressErrorToast: true })
+      .subscribe({
+        next: (result) => this.availability.set(result),
+        error: () => this.availability.set(null),
       });
   }
 

@@ -1,0 +1,12 @@
+@if (shouldShow()) {
+  <div class="dl-card set-pin-cta">
+    <i class="pi pi-shield set-pin-cta__icon"></i>
+    <div class="set-pin-cta__text">
+      <strong>{{ 'SET_PIN.CTA_TITLE' | translate }}</strong>
+      <span>{{ 'SET_PIN.CTA_MESSAGE' | translate }}</span>
+    </div>
+    <p-button [label]="'SET_PIN.CTA_BUTTON' | translate" (onClick)="openDialog()" />
+  </div>
+
+  <app-set-pin-dialog [(visible)]="dialogVisible" />
+}

@@ -3,6 +3,7 @@ import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { AutoComplete, AutoCompleteCompleteEvent } from 'primeng/autocomplete';
+import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
 import { Dialog } from 'primeng/dialog';
@@ -42,6 +43,7 @@ import { PriceListService } from '../../../core/services/price-list.service';
 import { RoomsService } from '../../../core/services/rooms.service';
 import { toDateOnly, toEndOfDayIso, toLocalIsoFromDate } from '../../../core/utils/date.util';
 import { translationReadySignal } from '../../../core/utils/translation-signal.util';
+import { resolveWarningMessage } from '../../../core/utils/warning-translation.util';
 import { AvailableSlotSelection, AvailableSlotsSliderComponent } from '../available-slots-slider/available-slots-slider.component';
 import { EligiblePackageSelectComponent } from '../eligible-package-select/eligible-package-select.component';
 
@@ -140,6 +142,7 @@ export class NewAppointmentDialogComponent {
   private readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
+  private readonly confirmationService = inject(ConfirmationService);
 
   readonly visible = model(false);
   readonly employees = input<EmployeeSummary[]>([]);
@@ -475,11 +478,51 @@ export class NewAppointmentDialogComponent {
       if (!this.form.controls.recurrenceType.value || !this.form.controls.endDate.value) {
         return;
       }
-      this.submitRecurring();
     } else if (this.completeNow()) {
       if (!this.form.controls.paymentMethod.value || !this.canConfirmComplete()) {
         return;
       }
+    }
+
+    this.confirmSchedulingWarningsThenDispatch();
+  }
+
+  /** Soft (non-blocking) pre-save check (frontend #27) - trainer outside
+   * working hours doesn't stop the form, just gates the actual save call
+   * behind a "Nastavi ipak?" confirm so the user can knowingly override it.
+   * Room/trainer *double-booking* is deliberately NOT part of this - that
+   * stays a hard, unconditional 409 on the backend (APPOINTMENT_OVERLAP), so
+   * there is nothing a "continue anyway" here could ever make succeed; see
+   * scheduling-conflict.util.ts. */
+  private confirmSchedulingWarningsThenDispatch(): void {
+    const reasons = this.buildSchedulingWarnings();
+    if (reasons.length === 0) {
+      this.dispatchSubmit();
+      return;
+    }
+    this.confirmationService.confirm({
+      header: this.translate.instant('SCHEDULING_WARNINGS.CONFIRM_HEADER'),
+      message: `${reasons.join(' ')} ${this.translate.instant('SCHEDULING_WARNINGS.CONFIRM_MESSAGE')}`,
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: this.translate.instant('SCHEDULING_WARNINGS.CONTINUE_ANYWAY'),
+      rejectLabel: this.translate.instant('COMMON.CANCEL'),
+      acceptButtonProps: { severity: 'warn' },
+      accept: () => this.dispatchSubmit(),
+    });
+  }
+
+  private buildSchedulingWarnings(): string[] {
+    const reasons: string[] = [];
+    if (this.startsAtOutsideAvailability()) {
+      reasons.push(this.translate.instant('SCHEDULING_WARNINGS.TRAINER_OUTSIDE_HOURS', { name: this.selectedEmployee()?.label ?? '' }));
+    }
+    return reasons;
+  }
+
+  private dispatchSubmit(): void {
+    if (this.isRecurring()) {
+      this.submitRecurring();
+    } else if (this.completeNow()) {
       this.submitComplete();
     } else {
       this.submitCreate();
@@ -504,8 +547,9 @@ export class NewAppointmentDialogComponent {
       .create(request)
       .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
-        next: () => {
+        next: (result) => {
           this.notifications.showSuccess(this.translate.instant('SCHEDULE.NEW_APPOINTMENT.SCHEDULED'));
+          result.warnings.forEach((warning) => this.notifications.showWarning(resolveWarningMessage(this.translate, warning)));
           this.visible.set(false);
           this.created.emit();
         },
@@ -534,8 +578,9 @@ export class NewAppointmentDialogComponent {
       .complete(request)
       .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
-        next: () => {
+        next: (result) => {
           this.notifications.showSuccess(this.translate.instant('SCHEDULE.NEW_APPOINTMENT.COMPLETED'));
+          result.warnings.forEach((warning) => this.notifications.showWarning(resolveWarningMessage(this.translate, warning)));
           this.visible.set(false);
           this.created.emit();
         },
@@ -565,6 +610,15 @@ export class NewAppointmentDialogComponent {
       .subscribe({
         next: (results) => {
           this.notifications.showSuccess(this.translate.instant('SCHEDULE.NEW_APPOINTMENT.RECURRING_CREATED', { count: results.length }));
+          // Per-instance soft warnings (outside working hours/holiday/absence/
+          // break) - the series is created in full regardless, only a genuine
+          // double-booking anywhere still aborts the whole thing with 409
+          // RECURRING_CONFLICT below. Dedupe identical messages so a run of
+          // e.g. 10 outside-hours occurrences doesn't toast the same line 10
+          // times.
+          new Set(
+            results.flatMap((result) => result.warnings.map((warning) => resolveWarningMessage(this.translate, warning))),
+          ).forEach((message) => this.notifications.showWarning(message));
           this.visible.set(false);
           this.created.emit();
         },

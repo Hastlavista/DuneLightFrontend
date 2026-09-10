@@ -11,11 +11,6 @@
 
   @if (dialogShown()) {
     <form [formGroup]="form" (ngSubmit)="onSave()" class="service-form-dialog__form" novalidate>
-      <div class="service-form-dialog__preview">
-        <span [style.background]="'#' + (form.controls.colorHex.value || '0F6871')"></span>
-        <div><strong>{{ form.controls.name.value || 'Nova usluga' }}</strong><small>{{ executionModeTranslationKey(form.controls.executionMode.value) | translate }} · {{ form.controls.defaultDurationMinutes.value }} min</small></div>
-      </div>
-
       <div class="service-form-dialog__field">
         <label for="service-name">{{ 'CATALOG.SERVICES.FIELD_NAME' | translate }}</label>
         <input id="service-name" type="text" pInputText fluid formControlName="name" maxlength="255" />

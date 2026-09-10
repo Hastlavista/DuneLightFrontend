@@ -7,6 +7,7 @@
     "NEW": "Novi",
     "SAVE": "Spremi",
     "CANCEL": "Odustani",
+    "CLOSE": "Zatvori",
     "EDIT": "Uredi",
     "DELETE": "Obriši",
     "ACTIVATE": "Aktiviraj",
@@ -56,6 +57,7 @@
     "LAST_ACTIVE_COMPANY": "Nije dopušteno — ovo je posljednja aktivna poslovnica.",
     "LAST_ACTIVE_SLOT": "Nije dopušteno — ovo je posljednji aktivni termin grupe.",
     "ALREADY_MEMBER": "Klijent je već član ove grupe.",
+    "SERVICE_NOT_GROUP_MODE": "Odabrana usluga nije grupnog tipa - grupe mogu koristiti samo usluge s načinom izvođenja \"grupno\".",
     "ALREADY_COMPLETED": "Ovaj termin je već označen kao završen.",
     "SAME_DAY_ONLY": "Trajno brisanje termina dopušteno je samo na isti dan.",
     "NOT_OWNER": "Možete mijenjati samo svoje zapise.",
@@ -78,6 +80,17 @@
     "LEAVE_SETTINGS_NOT_CONFIGURED": "Fond godišnjeg odmora nije postavljen za ovog zaposlenika.",
 
     "UNKNOWN": "Došlo je do greške. Pokušajte ponovno."
+  },
+  "warnings": {
+    "EMPLOYEE_ON_BREAK": "Trener ima pauzu u odabranom terminu.",
+    "EMPLOYEE_ABSENT": "Zaposlenik je odsutan u odabranom terminu.",
+    "OUTSIDE_WORKING_HOURS_WARNING": "Odabrani termin je izvan radnog vremena zaposlenika ili poslovnice.",
+    "COMPANY_CLOSED_HOLIDAY": "Poslovnica je zatvorena zbog praznika u odabranom terminu.",
+    "GROUP_CAPACITY_EXCEEDED": "Broj aktivnih članova grupe ({{activeMemberCount}}) premašuje kapacitet ({{capacity}}).",
+    "ROSTER_ENTRY_OVERLAP": "Novi zapis se preklapa s postojećim zapisom \"{{rosterTypeName}}\".",
+    "EMPLOYEE_HAS_FUTURE_APPOINTMENTS": "Zaposlenik ima buduće termine.",
+
+    "UNKNOWN": "Upozorenje."
   },
   "ROLES": {
     "ADMIN": "Admin",
@@ -121,9 +134,6 @@
       "MY_PROFILE": "Moj profil",
       "LOGOUT": "Odjava",
       "SWITCH_USER": "Promijeni korisnika"
-    },
-    "USER_MENU": {
-      "ACCOUNT_SETTINGS": "Postavke računa"
     },
     "TOPBAR": {
       "ALL_COMPANIES": "Sve poslovnice",
@@ -555,7 +565,21 @@
     "TAB_DATA": "Podaci",
     "TAB_WORKING_HOURS": "Radno vrijeme",
     "TAB_LEAVE_FUND": "Godišnji odmor",
+    "TAB_HISTORY": "Povijest",
+    "HISTORY_SHORTCUT": "Povijest zaposlenika",
     "WIZARD_LOCKED_HINT": "Ovaj tab bit će dostupan čim spremite osnovne podatke zaposlenika na tabu \"Podaci\".",
+    "HISTORY": {
+      "COL_DATETIME": "Datum i vrijeme",
+      "COL_TYPE": "Vrsta",
+      "COL_SERVICE": "Usluga",
+      "COL_DURATION": "Trajanje",
+      "COL_CLIENTS": "Klijenti",
+      "COL_COMPANY": "Poslovnica",
+      "TYPE_INDIVIDUAL": "Individualno",
+      "TYPE_GROUP": "Grupno",
+      "DURATION_MINUTES": "{{minutes}} min",
+      "EMPTY": "Zaposlenik još nema odrađenih termina."
+    },
     "SAVE_AND_CONTINUE": "Spremi i nastavi",
     "SAVE_AND_FINISH": "Spremi i završi",
     "INACTIVE_BADGE": "neaktivno",
@@ -686,6 +710,22 @@
     "SAVE_BUTTON": "Spremi profil",
     "SAVED": "Profil zaposlenika je uspješno kreiran."
   },
+  "SET_PIN": {
+    "CTA_TITLE": "Postavite svoj PIN",
+    "CTA_MESSAGE": "PIN omogućuje brzu prijavu na zajedničkom uređaju bez unosa lozinke.",
+    "CTA_BUTTON": "Postavi PIN",
+    "TITLE": "Postavi PIN",
+    "INTRO": "PIN koristite za brzo prebacivanje između korisnika na zajedničkom uređaju.",
+    "FIELD_NEW_PIN": "Novi PIN",
+    "FIELD_CURRENT_PASSWORD": "Trenutna lozinka",
+    "SUBMIT": "Spremi PIN",
+    "SAVED": "PIN je uspješno spremljen.",
+    "ERRORS": {
+      "PIN_REQUIRED": "Novi PIN je obavezan.",
+      "PIN_FORMAT": "PIN mora imati 4 do 6 znamenki.",
+      "CURRENT_PASSWORD_REQUIRED": "Trenutna lozinka je obavezna."
+    }
+  },
   "DASHBOARD": {
     "ONBOARDING": {
       "TITLE": "Checklist za početak",
@@ -729,7 +769,8 @@
     "GENERATE_APPOINTMENTS": "Generiraj termine",
     "ACTIVATED": "Grupa je aktivirana.",
     "DEACTIVATED": "Grupa je deaktivirana.",
-    "CONFIRM_DEACTIVATE": "Jeste li sigurni da želite deaktivirati grupu \"{{name}}\"? Ovo zaustavlja buduće generiranje termina za ovu grupu, već generirani termini ostaju.",
+    "CONFIRM_DEACTIVATE_HEADER": "Deaktiviraj grupu",
+    "CONFIRM_DEACTIVATE": "Jeste li sigurni da želite deaktivirati grupu \"{{name}}\"? Ovo briše sve buduće termine generirane za ovu grupu i zaustavlja buduće generiranje termina.",
     "CREATED": "Grupa je uspješno kreirana.",
     "UPDATED": "Grupa je uspješno ažurirana.",
     "SECTION_BASIC": "Osnovno",
@@ -899,6 +940,13 @@
       "DELETED": "Poslovna oznaka je izbrisana.",
       "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati poslovnu oznaku \"{{name}}\"?"
     }
+  },
+  "SCHEDULING_WARNINGS": {
+    "CONFIRM_HEADER": "Upozorenje",
+    "CONTINUE_ANYWAY": "Nastavi ipak",
+    "TRAINER_OUTSIDE_HOURS": "Trener {{name}} ne radi u odabranom terminu (izvan je njegovog radnog vremena).",
+    "ROOM_UNAVAILABLE": "Odabrana prostorija nije dostupna u odabranom terminu.",
+    "CONFIRM_MESSAGE": "Jeste li sigurni da želite nastaviti?"
   },
   "SCHEDULE": {
     "VIEW_DAY": "Dan",

@@ -11,10 +11,11 @@ import { CompanyContextService } from '../../core/services/company-context.servi
 import { SidebarComponent } from '../sidebar/sidebar.component';
 import { TopbarComponent } from '../topbar/topbar.component';
 import { PinLockOverlayComponent } from '../../shared/components/pin-lock-overlay/pin-lock-overlay.component';
+import { SetPinCtaComponent } from '../../shared/components/set-pin/set-pin-cta.component';
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, SidebarComponent, TopbarComponent, PinLockOverlayComponent],
+  imports: [RouterOutlet, SidebarComponent, TopbarComponent, PinLockOverlayComponent, SetPinCtaComponent],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss',
 })

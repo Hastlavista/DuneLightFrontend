@@ -113,4 +113,9 @@
   </div>
 </div>
 
-<app-company-form-dialog [(visible)]="dialogVisible" [company]="null" (saved)="onSaved()" />
+<app-company-form-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="onDialogVisibleChange($event)"
+  [company]="null"
+  (saved)="onSaved()"
+/>

@@ -16,15 +16,6 @@
 
   @if (dialogShown()) {
     <form [formGroup]="form" (ngSubmit)="onSave()" class="issue-package-dialog" novalidate>
-      <section class="issue-package-dialog__selection">
-        <span class="issue-package-dialog__selection-icon"><i class="pi pi-box"></i></span>
-        <div>
-          <strong>{{ selectedPackage() ? selectedPackage()!.name : 'Paket još nije odabran' }}</strong>
-          <small>{{ selectedPackage() ? packageSummary(selectedPackage()!) : 'Odaberi paket - cijena se povlači iz cjenika odabrane poslovnice.' }}</small>
-        </div>
-        <span>{{ selectedPackage() ? priceLabel(selectedPackage()!.defaultPrice) : '-' }}</span>
-      </section>
-
       <section class="issue-package-dialog__section">
         <div class="issue-package-dialog__label-row"><label>{{ 'CLIENTS.PACKAGES.FIELD_PACKAGE' | translate }}</label><span>Obavezno</span></div>
         <div class="issue-package-dialog__package-grid">

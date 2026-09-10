@@ -16,10 +16,6 @@
   </ng-template>
   @if (dialogShown()) {
   <form [formGroup]="form" (ngSubmit)="onSave()" class="engagement-type-dialog__form" novalidate>
-    <div class="engagement-type-dialog__preview">
-      <span></span>
-      <div><strong>{{ form.controls.name.value || 'Naziv vrste zaposlenja' }}</strong><small>Redoslijed {{ form.controls.sortOrder.value }}</small></div>
-    </div>
     <div class="dl-form__field">
       <label for="engagement-type-name">{{ 'EMPLOYEES.ENGAGEMENT_TYPES.FIELD_NAME' | translate }}</label>
       <input id="engagement-type-name" type="text" pInputText fluid formControlName="name" maxlength="255" />

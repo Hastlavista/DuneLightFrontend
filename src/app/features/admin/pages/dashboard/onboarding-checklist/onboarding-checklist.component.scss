@@ -119,9 +119,14 @@
   &__action {
     flex-shrink: 0;
     align-self: center;
+    padding: 0;
+    border: 0;
+    background: transparent;
+    font: inherit;
     font-weight: 600;
     text-decoration: underline;
     color: var(--ochre);
+    cursor: pointer;
     white-space: nowrap;
   }
 }

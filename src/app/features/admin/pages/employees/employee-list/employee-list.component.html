@@ -70,6 +70,14 @@
             [title]="'COMMON.EDIT' | translate"
             (onClick)="openEdit(employee)"
           />
+          <p-button
+            icon="pi pi-history"
+            [text]="true"
+            [rounded]="true"
+            [ariaLabel]="'EMPLOYEES.HISTORY_SHORTCUT' | translate"
+            [title]="'EMPLOYEES.HISTORY_SHORTCUT' | translate"
+            (onClick)="openHistory(employee)"
+          />
           @if (employee.isActive) {
             <p-button
               icon="pi pi-eye-slash"

@@ -16,7 +16,7 @@
     </div>
   </ng-template>
 
-  <p-tabs [(value)]="activeTab" styleClass="company-dialog__tabs">
+  <p-tabs [(value)]="activeTab" class="company-dialog__tabs">
     <p-tablist>
       <p-tab value="data">
         <span>{{ 'CATALOG.COMPANIES.TAB_DATA' | translate }}</span>
@@ -109,18 +109,6 @@
             <label for="company-note">{{ 'CATALOG.COMPANIES.FIELD_NOTE' | translate }}</label>
             <textarea id="company-note" rows="3" formControlName="note"></textarea>
           </div>
-
-          <div class="company-form__actions">
-            <span>{{ 'CATALOG.COMPANIES.MODAL_FOOTER_HINT' | translate }}</span>
-            <p-button
-              type="button"
-              severity="secondary"
-              [outlined]="true"
-              [label]="'COMMON.CANCEL' | translate"
-              (onClick)="onCancel()"
-            />
-            <p-button type="submit" [label]="'CATALOG.COMPANIES.SAVE_CHANGES' | translate" [loading]="saving()" />
-          </div>
         </form>
       </p-tabpanel>
 
@@ -165,4 +153,25 @@
       }
     </p-tabpanels>
   </p-tabs>
+
+  <ng-template #footer>
+    @if (activeTab() === 'data') {
+      <div class="company-dialog__footer">
+        <span>{{ 'CATALOG.COMPANIES.MODAL_FOOTER_HINT' | translate }}</span>
+        <p-button
+          type="button"
+          severity="secondary"
+          [outlined]="true"
+          [label]="'COMMON.CANCEL' | translate"
+          (onClick)="onCancel()"
+        />
+        <p-button
+          type="button"
+          [label]="'CATALOG.COMPANIES.SAVE_CHANGES' | translate"
+          [loading]="saving()"
+          (onClick)="onSave()"
+        />
+      </div>
+    }
+  </ng-template>
 </p-dialog>

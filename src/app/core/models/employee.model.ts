@@ -1,3 +1,4 @@
+import { WarningDto } from './api-error.model';
 import { UserRole } from './role';
 
 export interface EmployeeCompany {
@@ -88,7 +89,7 @@ export interface EmployeeColumnEntry {
 
 /** GET /api/employees/{id} and the items of its paged list. `warning` is
  * transient - only ever populated in the response of PATCH activate/deactivate
- * (e.g. "Zaposlenik ima buduće termine."), never on a plain GET. */
+ * (EMPLOYEE_HAS_FUTURE_APPOINTMENTS, see WarningDto), never on a plain GET. */
 export interface EmployeeDto {
   id: string;
   firstName: string;
@@ -120,7 +121,7 @@ export interface EmployeeDto {
   createdBy: string | null;
   updatedAt: string | null;
   updatedBy: string | null;
-  warning: string | null;
+  warning: WarningDto | null;
 }
 
 /** Body for POST /api/employees/with-login - the only create path the UI uses

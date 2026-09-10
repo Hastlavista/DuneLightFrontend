@@ -48,12 +48,9 @@
               }
               @case ('profile') {
                 @if (isOwner()) {
-                  <p-button
-                    class="onboarding-checklist__action"
-                    [label]="step.actionKey | translate"
-                    [text]="true"
-                    (onClick)="onOwnerProfileClick()"
-                  />
+                  <button type="button" class="onboarding-checklist__action" (click)="onOwnerProfileClick()">
+                    {{ step.actionKey | translate }}
+                  </button>
                 }
               }
             }

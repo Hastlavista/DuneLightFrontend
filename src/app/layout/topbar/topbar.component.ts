@@ -74,10 +74,6 @@ export class TopbarComponent {
     this.router.navigate([this.basePath(), 'profile']);
   }
 
-  openAccountSettings(): void {
-    this.openProfile();
-  }
-
   logout(): void {
     this.endSession();
     this.router.navigate(['/login'], { queryParams: { mode: 'full' } });

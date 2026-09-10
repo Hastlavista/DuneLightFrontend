@@ -31,6 +31,7 @@ import { ServicesService } from '../../../../../core/services/services.service';
 import { toStartOfDayIso } from '../../../../../core/utils/date.util';
 import { translationReadySignal } from '../../../../../core/utils/translation-signal.util';
 import { WorkingHoursTemplateEditorComponent } from '../../../../../shared/components/working-hours-template-editor/working-hours-template-editor.component';
+import { EmployeeHistoryTabComponent } from './employee-history-tab.component';
 import { EmployeeLeaveFundTabComponent } from './employee-leave-fund-tab.component';
 
 /** Route param sentinel for create mode - see admin.routes.ts ('employees/:id'
@@ -101,6 +102,7 @@ function employmentDatesValidator(group: AbstractControl): ValidationErrors | nu
     TranslatePipe,
     WorkingHoursTemplateEditorComponent,
     EmployeeLeaveFundTabComponent,
+    EmployeeHistoryTabComponent,
   ],
   templateUrl: './employee-form.component.html',
   styleUrl: './employee-form.component.scss',
@@ -135,7 +137,7 @@ export class EmployeeFormComponent {
    * edit from then on - see EmployeeFormComponent's own doc. */
   readonly justCreatedInWizard = signal(false);
 
-  readonly activeTab = signal<'data' | 'workingHours' | 'leaveFund'>('data');
+  readonly activeTab = signal<'data' | 'workingHours' | 'leaveFund' | 'history'>('data');
 
   /** "Radno vrijeme" tab is shown (as a locked tab, see the template) as soon
    * as someone has a reason to see it at all - roster.templates is a grant of
@@ -158,6 +160,15 @@ export class EmployeeFormComponent {
       'roster.leave-fund.view.own',
       'roster.leave-fund.view.all',
     ]),
+  );
+
+  /** "Povijest" tab - GET /api/appointments/by-employee/{id} is gated by
+   * Grants.AppointmentsView on the backend, same grant set as the Raspored nav
+   * item itself (see nav-items.ts) - anyone who can see the schedule at all
+   * can see one employee's own completed history. Shown-but-locked-until-id,
+   * same rationale as canViewWorkingHours/canViewLeaveFund. */
+  readonly canViewHistory = computed(() =>
+    this.currentEmployeeService.hasAnyGrant(['appointments.view', 'appointments.write.own', 'appointments.write.all']),
   );
 
   /** "Podaci" tab's submit button - "Spremi i nastavi" only while creating
@@ -263,6 +274,13 @@ export class EmployeeFormComponent {
     const idParam = this.route.snapshot.paramMap.get('id');
     const id = idParam && idParam !== NEW_ID ? idParam : null;
     this.editingId.set(id);
+
+    // "Povijest klijenta"-style shortcut from the employee list's history icon
+    // (?tab=history) - lands straight on the tab instead of "Podaci", see
+    // EmployeeListComponent.openHistory.
+    if (this.route.snapshot.queryParamMap.get('tab') === 'history') {
+      this.activeTab.set('history');
+    }
 
     this.loadActiveCompanies();
     this.loadActiveServices();

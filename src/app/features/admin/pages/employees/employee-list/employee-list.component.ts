@@ -17,6 +17,7 @@ import { CompaniesService } from '../../../../../core/services/companies.service
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { ListToolbarComponent } from '../../../../../shared/components/list-toolbar/list-toolbar.component';
 import { translationReadySignal } from '../../../../../core/utils/translation-signal.util';
+import { resolveWarningMessage } from '../../../../../core/utils/warning-translation.util';
 
 const DEFAULT_PAGE_SIZE = 20;
 /** pageSize max is 200 - fetches the full active set in one page for the filter
@@ -125,12 +126,22 @@ export class EmployeeListComponent {
     this.router.navigate(['/admin/employees', employee.id]);
   }
 
+  /** Shortcut to the "Povijest" tab on the employee profile - same
+   * destination as openEdit(), just with `?tab=history` so
+   * EmployeeFormComponent opens straight into it instead of "Podaci" (same
+   * pattern intent as Klijenti's "Povijest klijenta" list shortcut, adapted
+   * to a query param since the employee profile is a full tabbed page, not a
+   * modal). */
+  openHistory(employee: EmployeeDto): void {
+    this.router.navigate(['/admin/employees', employee.id], { queryParams: { tab: 'history' } });
+  }
+
   activate(employee: EmployeeDto): void {
     this.employeesService.activate(employee.id).subscribe({
       next: (result) => {
         this.notifications.showSuccess(this.translate.instant('EMPLOYEES.ACTIVATED'));
         if (result.warning) {
-          this.notifications.showWarning(result.warning);
+          this.notifications.showWarning(resolveWarningMessage(this.translate, result.warning));
         }
         this.resetAndFetch();
       },
@@ -150,7 +161,7 @@ export class EmployeeListComponent {
           next: (result) => {
             this.notifications.showSuccess(this.translate.instant('EMPLOYEES.DEACTIVATED'));
             if (result.warning) {
-              this.notifications.showWarning(result.warning);
+              this.notifications.showWarning(resolveWarningMessage(this.translate, result.warning));
             }
             this.resetAndFetch();
           },

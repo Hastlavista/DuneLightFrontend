@@ -1,0 +1,47 @@
+<div class="employee-history-tab">
+  <p-table
+    [value]="items()"
+    [lazy]="true"
+    (onLazyLoad)="onLazyLoad($event)"
+    [paginator]="true"
+    [rows]="rows()"
+    [totalRecords]="totalCount()"
+    [loading]="loading()"
+    [rowsPerPageOptions]="[20, 50, 100, 200]"
+    dataKey="id"
+    responsiveLayout="scroll"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>{{ 'EMPLOYEES.HISTORY.COL_DATETIME' | translate }}</th>
+        <th>{{ 'EMPLOYEES.HISTORY.COL_TYPE' | translate }}</th>
+        <th>{{ 'EMPLOYEES.HISTORY.COL_SERVICE' | translate }}</th>
+        <th>{{ 'EMPLOYEES.HISTORY.COL_DURATION' | translate }}</th>
+        <th>{{ 'EMPLOYEES.HISTORY.COL_CLIENTS' | translate }}</th>
+        <th>{{ 'EMPLOYEES.HISTORY.COL_COMPANY' | translate }}</th>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="body" let-appt>
+      <tr>
+        <td>{{ dateTimeLabel(appt) }}</td>
+        <td>
+          <p-tag
+            [severity]="appt.form === 'Group' ? 'info' : 'secondary'"
+            [value]="(appt.form === 'Group' ? 'EMPLOYEES.HISTORY.TYPE_GROUP' : 'EMPLOYEES.HISTORY.TYPE_INDIVIDUAL') | translate"
+          />
+        </td>
+        <td>{{ appt.form === 'Group' ? appt.groupName : appt.serviceName }}</td>
+        <td>{{ 'EMPLOYEES.HISTORY.DURATION_MINUTES' | translate: { minutes: appt.durationMinutes } }}</td>
+        <td>{{ appt.form === 'Group' ? '—' : clientNamesLabel(appt) }}</td>
+        <td>{{ appt.companyName }}</td>
+      </tr>
+    </ng-template>
+
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="6" class="employee-history-tab__empty">{{ 'EMPLOYEES.HISTORY.EMPTY' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>

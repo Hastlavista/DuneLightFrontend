@@ -11,6 +11,7 @@ import { GroupsService } from '../../../../core/services/groups.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { toEndOfDayIso, toStartOfDayIso } from '../../../../core/utils/date.util';
 import { translationReadySignal } from '../../../../core/utils/translation-signal.util';
+import { resolveWarningMessage } from '../../../../core/utils/warning-translation.util';
 
 interface GroupOption {
   label: string;
@@ -113,6 +114,14 @@ export class GenerateAppointmentsDialogComponent {
               skipped: result.skippedCount,
             }),
           );
+          // Per-occurrence soft warnings (outside working hours/odsutnost/pauza) -
+          // a real trener/room double-booking would have aborted the whole
+          // batch with 409 RECURRING_CONFLICT instead, before reaching here.
+          // Dedupe identical messages so e.g. 10 outside-hours occurrences
+          // don't toast the same line 10 times.
+          new Set(
+            result.created.flatMap((appt) => appt.warnings.map((warning) => resolveWarningMessage(this.translate, warning))),
+          ).forEach((message) => this.notifications.showWarning(message));
           this.visible.set(false);
         },
         error: () => {},

@@ -1,3 +1,4 @@
+import { WarningDto } from './api-error.model';
 import { CoverageType } from './group-attendance.model';
 import { ServiceExecutionMode } from './service.model';
 
@@ -73,6 +74,13 @@ export interface AppointmentScheduleCellDto {
   groupName?: string;
   attendanceCount?: number;
   expectedCount?: number;
+  /** Soft (non-blocking) scheduling issues on this specific occurrence -
+   * EMPLOYEE_ON_BREAK/EMPLOYEE_ABSENT/OUTSIDE_WORKING_HOURS_WARNING/
+   * COMPANY_CLOSED_HOLIDAY (see WarningDto) - same field/shape as
+   * AppointmentDto.warnings, populated per-instance by
+   * POST /groups/generate-appointments (see GenerateGroupAppointmentsResult.created).
+   * Empty for a plain schedule-grid read. */
+  warnings: WarningDto[];
 }
 
 /** One client on a full AppointmentDto - just enough to render the read-only
@@ -140,7 +148,7 @@ export interface AppointmentDto {
   clientAttendance?: ClientAttendanceDto;
   /** Present only for Cancelled and NoShow rows returned by client history. */
   cancellationReason?: string | null;
-  warnings: string[];
+  warnings: WarningDto[];
 }
 
 /** Query params for GET /api/appointments/schedule. `from`/`to` are required

@@ -232,7 +232,7 @@ export class GroupsComponent {
 
   confirmDeactivate(group: GroupDto): void {
     this.confirmationService.confirm({
-      header: this.translate.instant('COMMON.CONFIRM_HEADER'),
+      header: this.translate.instant('GROUPS.CONFIRM_DEACTIVATE_HEADER'),
       message: this.translate.instant('GROUPS.CONFIRM_DEACTIVATE', { name: group.name }),
       icon: 'pi pi-exclamation-triangle',
       acceptLabel: this.translate.instant('COMMON.YES'),

@@ -76,6 +76,16 @@ export class AppointmentsService {
     return this.http.get<PagedResult<AppointmentDto>>(`${this.resourceUrl}/by-client/${clientId}`, { params });
   }
 
+  /** GET /api/appointments/by-employee/{employeeId} - paged history of an
+   * employee's own COMPLETED termini only (individual and group together),
+   * newest first - "Povijest" tab on the employee profile page. Unlike
+   * getByClient, cancelled/no-show rows are excluded server-side, so there's
+   * no status column to render on this list. */
+  getByEmployee(employeeId: string, query: { page: number; pageSize: number }): Observable<PagedResult<AppointmentDto>> {
+    const params = new HttpParams().set('page', query.page).set('pageSize', query.pageSize);
+    return this.http.get<PagedResult<AppointmentDto>>(`${this.resourceUrl}/by-employee/${employeeId}`, { params });
+  }
+
   /** PATCH /api/appointments/{id}/move - called from AppointmentDetailDialog's
    * inline edit form (never the full PUT). Returns the full AppointmentDto with
    * `warnings` populated when the new slot overlaps another booking - that is

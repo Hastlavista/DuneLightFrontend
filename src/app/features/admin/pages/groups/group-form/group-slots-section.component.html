@@ -54,5 +54,5 @@
 </section>
 
 @if (!readOnly()) {
-  <app-group-slot-form-dialog [(visible)]="dialogVisible" [groupId]="group().id" [slot]="editingSlot()" (saved)="onSaved()" />
+  <app-group-slot-form-dialog [(visible)]="dialogVisible" [groupId]="group().id" [group]="group()" [slot]="editingSlot()" (saved)="onSaved()" />
 }

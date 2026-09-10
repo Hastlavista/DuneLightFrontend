@@ -42,4 +42,9 @@
   }
 </section>
 
-<app-service-form-dialog [(visible)]="dialogVisible" [service]="editingService()" (saved)="onSaved()" />
+<app-service-form-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="onDialogVisibleChange($event)"
+  [service]="editingService()"
+  (saved)="onSaved()"
+/>

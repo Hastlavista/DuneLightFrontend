@@ -1,3 +1,6 @@
+import { WarningDto } from './api-error.model';
+import { AppointmentScheduleCellDto } from './appointment.model';
+
 /** Day-of-week values exactly as the backend sends/accepts them (standard .NET
  * enum string, English). Use these everywhere in logic - translate only for
  * display. */
@@ -108,7 +111,7 @@ export interface GroupDto {
   note: string | null;
   slots: GroupSlotDto[];
   activeMemberCount: number;
-  warnings: string[];
+  warnings: WarningDto[];
   createdAt: string;
   createdBy?: string;
   updatedAt?: string;
@@ -166,7 +169,12 @@ export interface GenerateGroupAppointmentsRequest {
 export interface GenerateGroupAppointmentsResult {
   createdCount: number;
   skippedCount: number;
-  created: GroupAppointmentCellDto[];
+  /** Full schedule-cell shape (not the minimal GroupAppointmentCellDto above) -
+   * each entry's `warnings` carries soft scheduling issues (outside working
+   * hours, roster absence, trainer on a ScheduleBreak) for that specific
+   * generated occurrence; a real trener/room double-booking still aborts the
+   * whole batch with 409 RECURRING_CONFLICT before any of this is returned. */
+  created: AppointmentScheduleCellDto[];
 }
 
 /** GET /api/clients/{clientId}/groups - groups the client is a member of,
