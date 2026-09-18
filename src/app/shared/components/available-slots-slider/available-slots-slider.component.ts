@@ -53,6 +53,11 @@ export class AvailableSlotsSliderComponent {
    * constructor effect below) - the slider's own prev/next-day nav then
    * browses independently of it without fighting this input. */
   readonly initialDate = input<Date | null>(null);
+  /** Bumped by the hosting dialog whenever it is reopened or a scheduling
+   * mutation makes an already-rendered result potentially stale. The dialog
+   * remains mounted while hidden, so input identity alone is not sufficient to
+   * guarantee a new server-authoritative availability lookup on every open. */
+  readonly refreshVersion = input(0);
   /** Set when the picking employee is already fixed - either Member role
    * locked to themselves (see CurrentEmployeeService.employee) or the caller
    * has a Trener already picked in its own form - narrows the query to that
@@ -90,10 +95,18 @@ export class AvailableSlotsSliderComponent {
       const companyId = this.companyId();
       const employeeId = this.lockedEmployeeId();
       const date = this.selectedDate();
+      // Read the explicit invalidation value as an effect dependency. It is
+      // intentionally otherwise unused: a changed value means refetch the
+      // exact same query rather than trusting rows from a previous dialog open.
+      this.refreshVersion();
       if (!serviceId || !companyId) {
         this.rows.set([]);
+        this.selectedSlot.set(null);
+        this.expanded.set(true);
         return;
       }
+      this.selectedSlot.set(null);
+      this.expanded.set(true);
       this.fetchSlots(serviceId, companyId, employeeId, date);
     });
 

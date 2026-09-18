@@ -8,6 +8,7 @@ import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { finalize } from 'rxjs';
+import { CompanyDto } from '../../../../../core/models/company.model';
 import {
   EXECUTION_MODES,
   ServiceDto,
@@ -15,11 +16,20 @@ import {
   ServiceUpsertRequest,
   executionModeTranslationKey,
 } from '../../../../../core/models/service.model';
+import { CompaniesService } from '../../../../../core/services/companies.service';
 import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { ServicesService } from '../../../../../core/services/services.service';
+import { translationReadySignal } from '../../../../../core/utils/translation-signal.util';
 
 const DEFAULT_DURATION_MINUTES = 30;
+const COMPANY_LOOKUP_PAGE_SIZE = 200;
+
+interface CompanyChoiceOption {
+  id: string;
+  name: string;
+  inactive: boolean;
+}
 
 /** Olive-gold from the dune palette - a sensible default when creating a new
  * service, before the user picks their own color. */
@@ -62,6 +72,7 @@ const SERVICE_COLORS: ServiceColorOption[] = [
 export class ServiceFormDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly servicesService = inject(ServicesService);
+  private readonly companiesService = inject(CompaniesService);
   protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
@@ -75,9 +86,34 @@ export class ServiceFormDialogComponent {
   readonly colorOptions = SERVICE_COLORS;
   readonly executionModeTranslationKey = executionModeTranslationKey;
 
-  readonly executionModeOptions = computed<ExecutionModeOption[]>(() =>
-    EXECUTION_MODES.map((mode) => ({ label: this.translate.instant(executionModeTranslationKey(mode)), value: mode })),
-  );
+  private readonly translationsReady = translationReadySignal(this.translate);
+
+  /** All active Companies (lookup pool) - loaded once, not per-open. */
+  private readonly activeCompanies = signal<CompanyDto[]>([]);
+  /** Companies actually assigned to the Service being edited right now (GET
+   * .../companies) - incl. a possibly-inactive/grandfathered one, see
+   * ServicesService.getAssignedCompanies's doc. Empty (not loading) for a new
+   * Service, which starts with zero assignments. */
+  private readonly assignedCompanies = signal<CompanyDto[]>([]);
+  readonly companiesLoading = signal(false);
+
+  /** Active Companies plus any currently-assigned-but-now-inactive one (kept
+   * visible with a badge instead of silently dropped from the picker) - same
+   * grandfathering pattern as EmployeeFormComponent.companyOptions. */
+  readonly companyOptions = computed<CompanyChoiceOption[]>(() => {
+    const active = this.activeCompanies();
+    const activeIds = new Set(active.map((company) => company.id));
+    const grandfathered = this.assignedCompanies().filter((company) => !activeIds.has(company.id));
+    return [
+      ...active.map((company) => ({ id: company.id, name: company.name, inactive: false })),
+      ...grandfathered.map((company) => ({ id: company.id, name: company.name, inactive: true })),
+    ];
+  });
+
+  readonly executionModeOptions = computed<ExecutionModeOption[]>(() => {
+    this.translationsReady();
+    return EXECUTION_MODES.map((mode) => ({ label: this.translate.instant(executionModeTranslationKey(mode)), value: mode }));
+  });
 
   /** True only once p-dialog's own open transition has actually finished (its
    * (onShow) event). A p-select created in the SAME tick as that transition ends
@@ -95,9 +131,14 @@ export class ServiceFormDialogComponent {
     defaultPrice: [0, [Validators.required, Validators.min(0)]],
     description: [''],
     sortOrder: [0],
+    companyIds: this.fb.nonNullable.control<string[]>([]),
   });
 
   constructor() {
+    this.companiesService
+      .getPage({ page: 1, pageSize: COMPANY_LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
+      .subscribe((result) => this.activeCompanies.set(result.items));
+
     effect(() => {
       if (this.visible()) {
         this.resetForm(this.service());
@@ -111,6 +152,16 @@ export class ServiceFormDialogComponent {
 
   onDialogShow(): void {
     this.dialogShown.set(true);
+  }
+
+  toggleCompany(id: string): void {
+    const control = this.form.controls.companyIds;
+    const ids = control.value;
+    control.setValue(ids.includes(id) ? ids.filter((value) => value !== id) : [...ids, id]);
+  }
+
+  isCompanySelected(id: string): boolean {
+    return this.form.controls.companyIds.value.includes(id);
   }
 
   onSave(): void {
@@ -129,6 +180,7 @@ export class ServiceFormDialogComponent {
       description: raw.description || null,
       sortOrder: raw.sortOrder,
     };
+    const companyIds = raw.companyIds;
 
     const current = this.service();
     const request$ = current
@@ -136,15 +188,35 @@ export class ServiceFormDialogComponent {
       : this.servicesService.create(request);
 
     this.saving.set(true);
-    request$.pipe(finalize(() => this.saving.set(false))).subscribe({
-      next: () => {
-        this.notifications.showSuccess(
-          this.translate.instant(current ? 'CATALOG.SERVICES.UPDATED' : 'CATALOG.SERVICES.CREATED'),
-        );
-        this.visible.set(false);
-        this.saved.emit();
+    request$.subscribe({
+      // Service core data is saved (create/update both succeeded server-side)
+      // before this second step ever runs - a failure here must NOT roll back
+      // or delete the just-created/updated Service (backend has no such
+      // rollback, see ReplaceAssignedCompanies's doc), it just leaves
+      // ServiceCompany assignments as they already were.
+      next: (savedService) => {
+        this.servicesService
+          .replaceAssignedCompanies(savedService.id, companyIds)
+          .pipe(finalize(() => this.saving.set(false)))
+          .subscribe({
+            next: () => {
+              this.notifications.showSuccess(
+                this.translate.instant(current ? 'CATALOG.SERVICES.UPDATED' : 'CATALOG.SERVICES.CREATED'),
+              );
+              this.visible.set(false);
+              this.saved.emit();
+            },
+            // Default error toast already surfaced the real reason (e.g.
+            // INACTIVE_COMPANY) - close and refresh the list so it reflects
+            // the real, now-existing/updated Service instead of silently
+            // claiming the whole save succeeded.
+            error: () => {
+              this.visible.set(false);
+              this.saved.emit();
+            },
+          });
       },
-      error: () => {},
+      error: () => this.saving.set(false),
     });
   }
 
@@ -165,6 +237,22 @@ export class ServiceFormDialogComponent {
       defaultPrice: service?.defaultPrice ?? 0,
       description: service?.description ?? '',
       sortOrder: service?.sortOrder ?? 0,
+      companyIds: [],
     });
+
+    this.assignedCompanies.set([]);
+    if (service) {
+      this.companiesLoading.set(true);
+      this.servicesService
+        .getAssignedCompanies(service.id)
+        .pipe(finalize(() => this.companiesLoading.set(false)))
+        .subscribe({
+          next: (companies) => {
+            this.assignedCompanies.set(companies);
+            this.form.controls.companyIds.setValue(companies.map((company) => company.id));
+          },
+          error: () => this.assignedCompanies.set([]),
+        });
+    }
   }
 }

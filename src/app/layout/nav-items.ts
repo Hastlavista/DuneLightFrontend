@@ -1,4 +1,4 @@
-import { PAGE_GRANTS } from '../core/permissions/page-grants';
+import { PageKey } from '../core/permissions/page-policies';
 
 export interface NavItem {
   labelKey: string;
@@ -7,19 +7,18 @@ export interface NavItem {
   /** When true, only shown to the organization's Owner (see ownerGuard, which
    * enforces this server-side too - hiding it here is purely a UX nicety). */
   ownerOnly?: boolean;
-  /** OR-matched against CurrentEmployeeService.hasAnyGrant() - same semantics
-   * as the backend's [RequireGrant]. Sourced from PAGE_GRANTS (see
-   * page-grants.ts) - the same lookup admin.routes.ts's grantGuard() calls
-   * use, so a page's nav-visibility and its actual navigation gate can never
-   * drift apart. Includes each screen's `.view` grant too, so a view-only
-   * user still sees the item and can look even though that screen's write
-   * actions stay hidden/disabled for them (see CurrentEmployeeService.can()
-   * / action-grants.ts for that per-action layer). Omit entirely for items
-   * every employee should see regardless (Dashboard, personal trainer items,
-   * Financije/Izvješća - no grant exists for the latter two yet, so they're
-   * open to everyone until one is added).
+  /** Resolved through CurrentEmployeeService.canPage() - the same PAGE_POLICIES
+   * lookup admin.routes.ts's grantGuard(pageKey) uses, so a page's
+   * nav-visibility and its actual navigation gate can never drift apart (see
+   * page-policies.ts). Each page's policy includes its `.view` grant too, so
+   * a view-only user still sees the item and can look even though that
+   * screen's write actions stay hidden/disabled for them (see
+   * CurrentEmployeeService.can() / action-policies.ts for that per-action
+   * layer). Omit entirely for items every employee should see regardless
+   * (Dashboard, personal trainer items, Financije/Izvješća - no grant exists
+   * for the latter two yet, so they're open to everyone until one is added).
    */
-  requiredGrants?: readonly string[];
+  pageKey?: PageKey;
 }
 
 export interface NavGroup {
@@ -29,8 +28,8 @@ export interface NavGroup {
 }
 
 /** One flat sidebar for every employee - each item shows or hides purely on
- * its own requiredGrants/ownerOnly (see SidebarComponent), not on any
- * admin/trainer section anymore. */
+ * its own pageKey/ownerOnly (see SidebarComponent), not on any admin/trainer
+ * section anymore. */
 export const NAV_GROUPS: NavGroup[] = [
   {
     items: [
@@ -44,32 +43,32 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     labelKey: 'NAV.ADMIN.GROUPS_LABELS.OPERATIONS',
     items: [
-      { labelKey: 'NAV.ADMIN.DASHBOARD', path: 'dashboard', icon: 'pi-home', requiredGrants: PAGE_GRANTS.dashboard },
+      { labelKey: 'NAV.ADMIN.DASHBOARD', path: 'dashboard', icon: 'pi-home', pageKey: 'dashboard' },
       {
         labelKey: 'NAV.ADMIN.SCHEDULE',
         path: 'schedule',
         icon: 'pi-calendar',
-        requiredGrants: PAGE_GRANTS.schedule,
+        pageKey: 'schedule',
       },
       {
         labelKey: 'NAV.ADMIN.SHIFTS',
         path: 'shifts',
         icon: 'pi-clock',
-        requiredGrants: PAGE_GRANTS.shifts,
+        pageKey: 'shifts',
       },
       {
         labelKey: 'NAV.ADMIN.COMPANIES',
         path: 'companies',
         icon: 'pi-map-marker',
-        requiredGrants: PAGE_GRANTS.companies,
+        pageKey: 'companies',
       },
       {
         labelKey: 'NAV.ADMIN.CHECKOUT',
         path: 'checkout',
         icon: 'pi-credit-card',
-        requiredGrants: PAGE_GRANTS.checkout,
+        pageKey: 'checkout',
       },
-      { labelKey: 'NAV.ADMIN.NOTIFICATIONS', path: 'notifications', icon: 'pi-bell', requiredGrants: PAGE_GRANTS.notifications },
+      { labelKey: 'NAV.ADMIN.NOTIFICATIONS', path: 'notifications', icon: 'pi-bell', pageKey: 'notifications' },
     ],
   },
   {
@@ -79,21 +78,21 @@ export const NAV_GROUPS: NavGroup[] = [
         labelKey: 'NAV.ADMIN.CLIENTS',
         path: 'clients',
         icon: 'pi-users',
-        requiredGrants: PAGE_GRANTS.clients,
+        pageKey: 'clients',
       },
       {
         labelKey: 'NAV.ADMIN.EMPLOYEES',
         path: 'employees',
         icon: 'pi-id-card',
-        requiredGrants: PAGE_GRANTS.employees,
+        pageKey: 'employees',
       },
       {
         labelKey: 'NAV.ADMIN.GROUPS',
         path: 'groups',
         icon: 'pi-sitemap',
-        requiredGrants: PAGE_GRANTS.groups,
+        pageKey: 'groups',
       },
-      { labelKey: 'NAV.ADMIN.COMMISSIONS', path: 'commissions', icon: 'pi-wallet', requiredGrants: PAGE_GRANTS.commissions },
+      { labelKey: 'NAV.ADMIN.COMMISSIONS', path: 'commissions', icon: 'pi-wallet', pageKey: 'commissions' },
     ],
   },
   {
@@ -105,7 +104,7 @@ export const NAV_GROUPS: NavGroup[] = [
         labelKey: 'NAV.ADMIN.SERVICES',
         path: 'services',
         icon: 'pi-tags',
-        requiredGrants: PAGE_GRANTS.services,
+        pageKey: 'services',
       },
       {
         // Proizvodi i zaliha - one nav item hosting the Proizvodi/Zaliha tabs,
@@ -113,7 +112,7 @@ export const NAV_GROUPS: NavGroup[] = [
         labelKey: 'NAV.ADMIN.PRODUCTS',
         path: 'products',
         icon: 'pi-box',
-        requiredGrants: PAGE_GRANTS.products,
+        pageKey: 'products',
       },
     ],
   },
@@ -131,7 +130,7 @@ export const NAV_GROUPS: NavGroup[] = [
         labelKey: 'NAV.ADMIN.BRANDING',
         path: 'branding',
         icon: 'pi-palette',
-        requiredGrants: PAGE_GRANTS.branding,
+        pageKey: 'branding',
       },
       { labelKey: 'NAV.ADMIN.PERMISSIONS', path: 'permissions', icon: 'pi-shield', ownerOnly: true },
     ],

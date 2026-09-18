@@ -137,6 +137,19 @@
                     </small>
                   }
                 </div>
+                @if (mode() === 'view' && canCorrectBooking(appt, booking) && currentEmployeeService.can('appointments.manage')) {
+                  <div class="appointment-detail__booking-actions">
+                    <p-button
+                      type="button"
+                      size="small"
+                      [text]="true"
+                      severity="secondary"
+                      [label]="'SCHEDULE.DETAIL.CORRECT_TO_CONFIRMED' | translate"
+                      [loading]="correctingClientId() === booking.clientId"
+                      (onClick)="confirmCorrectBooking(booking)"
+                    />
+                  </div>
+                }
               </div>
             }
           </section>

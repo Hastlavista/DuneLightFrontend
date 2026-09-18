@@ -92,20 +92,14 @@ export class CompanyFormDialogComponent {
    * entirely for a user with neither, same as CompaniesComponent's own
    * canViewWorkingHours (that one still gates the now-removed standalone
    * dialog's entry point in the row actions). */
-  readonly canViewWorkingHours = computed(() =>
-    this.currentEmployeeService.hasAnyGrant(['roster.templates.view', 'roster.templates.manage']),
-  );
+  readonly canViewWorkingHours = computed(() => this.currentEmployeeService.can('roster.templates.view'));
 
   /** Same grant as "Radno vrijeme" (roster.templates.view/.manage) - Praznici
    * lives under the same Roster module on the backend. */
-  readonly canViewHolidays = computed(() =>
-    this.currentEmployeeService.hasAnyGrant(['roster.templates.view', 'roster.templates.manage']),
-  );
+  readonly canViewHolidays = computed(() => this.currentEmployeeService.can('roster.templates.view'));
 
   /** catalog.rooms.view/.manage - its own grant, independent of the tabs above. */
-  readonly canViewRooms = computed(() =>
-    this.currentEmployeeService.hasAnyGrant(['catalog.rooms.view', 'catalog.rooms.manage']),
-  );
+  readonly canViewRooms = computed(() => this.currentEmployeeService.can('catalog.rooms.view'));
 
   readonly dataSaveLabelKey = computed(() =>
     this.currentCompanyId() ? 'COMMON.SAVE' : 'CATALOG.COMPANIES.SAVE_AND_CONTINUE',

@@ -144,9 +144,7 @@ export class EmployeeFormComponent {
    * its own, independent of employees.manage (see
    * WorkingHoursTemplateEditorComponent's own doc). It stays disabled until
    * editingId() exists, since the template endpoint is keyed by employeeId. */
-  readonly canViewWorkingHours = computed(() =>
-    this.currentEmployeeService.hasAnyGrant(['roster.templates.view', 'roster.templates.manage']),
-  );
+  readonly canViewWorkingHours = computed(() => this.currentEmployeeService.can('roster.templates.view'));
 
   /** "Godišnji odmor" tab (frontend #18) - same shown-but-locked-until-id
    * rationale as canViewWorkingHours (both leave-settings and leave-funds
@@ -164,12 +162,12 @@ export class EmployeeFormComponent {
 
   /** "Povijest" tab - GET /api/appointments/by-employee/{id} is gated by
    * Grants.AppointmentsView on the backend, same grant set as the Raspored nav
-   * item itself (see nav-items.ts) - anyone who can see the schedule at all
-   * can see one employee's own completed history. Shown-but-locked-until-id,
+   * item itself (see nav-items.ts, PAGE_POLICIES.schedule) - anyone who can
+   * see the schedule at all can see one employee's own completed history.
+   * Reuses canPage('schedule') rather than its own grant array, so it can
+   * never drift from the actual Raspored page policy. Shown-but-locked-until-id,
    * same rationale as canViewWorkingHours/canViewLeaveFund. */
-  readonly canViewHistory = computed(() =>
-    this.currentEmployeeService.hasAnyGrant(['appointments.view', 'appointments.write.own', 'appointments.write.all']),
-  );
+  readonly canViewHistory = computed(() => this.currentEmployeeService.canPage('schedule'));
 
   /** "Podaci" tab's submit button - "Spremi i nastavi" only while creating
    * (no id yet); once the employee exists, Save behaves plainly whether

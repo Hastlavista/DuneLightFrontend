@@ -32,6 +32,7 @@ import { AvailabilityDto } from '../../../core/models/working-hours.model';
 import { AppointmentsService } from '../../../core/services/appointments.service';
 import { AvailabilityService } from '../../../core/services/availability.service';
 import { ClientPackagesService } from '../../../core/services/client-packages.service';
+import { CurrentEmployeeService } from '../../../core/services/current-employee.service';
 import { NotificationService } from '../../../core/services/notification.service';
 import { RoomsService } from '../../../core/services/rooms.service';
 import { toDateOnly, toLocalIsoFromDate } from '../../../core/utils/date.util';
@@ -117,6 +118,7 @@ export class AppointmentDetailDialogComponent {
   private readonly availabilityService = inject(AvailabilityService);
   private readonly clientPackagesService = inject(ClientPackagesService);
   private readonly roomsService = inject(RoomsService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
   private readonly confirmationService = inject(ConfirmationService);
@@ -144,6 +146,12 @@ export class AppointmentDetailDialogComponent {
   readonly cancelSaving = signal(false);
   readonly noShowSaving = signal(false);
   private readonly returnEntryByClient = signal<Map<string, boolean>>(new Map());
+
+  /** clientId of the Booking currently being corrected back to Confirmed (PATCH
+   * .../confirm) - null when none is in flight. Per-row, not a single flag,
+   * since a multi-client Individual appointment can have several Completed
+   * bookings and only one is ever being corrected at a time. */
+  readonly correctingClientId = signal<string | null>(null);
 
   readonly appointmentStatusTranslationKey = appointmentStatusTranslationKey;
   readonly appointmentStatusSeverity = appointmentStatusSeverity;
@@ -429,6 +437,54 @@ export class AppointmentDetailDialogComponent {
 
   onBackToView(): void {
     this.mode.set('view');
+  }
+
+  /** "Vrati na potvrđeno" (PATCH .../confirm) is available for an Individual
+   * Booking at Completed or NoShow. Cancelled remains terminal; Group correction
+   * has its own surface (GroupAttendanceDialogComponent). */
+  canCorrectBooking(appointment: AppointmentDto, booking: BookingDto): boolean {
+    return appointment.form === 'Individual' && (booking.status === 'Completed' || booking.status === 'NoShow');
+  }
+
+  /** Meaningful, potentially multi-effect correction (payment void, package
+   * restore, commission reversal, Appointment reverting to Scheduled) - always
+   * confirmed first, same pattern as GroupAttendanceDialogComponent's identical
+   * correction action. */
+  confirmCorrectBooking(booking: BookingDto): void {
+    if (!this.currentEmployeeService.can('appointments.manage')) {
+      return;
+    }
+    this.confirmationService.confirm({
+      header: this.translate.instant('COMMON.CONFIRM_HEADER'),
+      message: this.translate.instant('SCHEDULE.DETAIL.CONFIRM_CORRECTION', { name: booking.clientName }),
+      icon: 'pi pi-exclamation-triangle',
+      acceptLabel: this.translate.instant('COMMON.YES'),
+      rejectLabel: this.translate.instant('COMMON.NO'),
+      accept: () => this.correctBooking(booking),
+    });
+  }
+
+  private correctBooking(booking: BookingDto): void {
+    const appt = this.appointment();
+    if (!appt) {
+      return;
+    }
+    this.correctingClientId.set(booking.clientId);
+    this.appointmentsService
+      .confirmBooking(appt.id, booking.clientId)
+      .pipe(finalize(() => this.correctingClientId.set(null)))
+      .subscribe({
+        next: () => {
+          this.notifications.showSuccess(this.translate.instant('SCHEDULE.DETAIL.CORRECTED'));
+          // Server-authoritative refresh (frontend #Correction) - the response
+          // above is only the corrected BookingDto; Appointment.Status, sibling
+          // bookings, payments and package-coverage fields may all have
+          // changed and must come from a fresh GET, never be patched locally.
+          this.fetch(appt.id);
+          this.saved.emit();
+        },
+        error: () => {},
+      });
   }
 
   returnableClients(): BookingDto[] {

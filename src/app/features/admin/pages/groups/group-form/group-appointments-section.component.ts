@@ -2,6 +2,8 @@ import { Component, input, output, signal } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TableModule } from 'primeng/table';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
+import { Tag } from 'primeng/tag';
+import { appointmentStatusSeverity, appointmentStatusTranslationKey } from '../../../../../core/models/appointment.model';
 import { GroupAppointmentCellDto, GroupDetailDto } from '../../../../../core/models/group.model';
 import { HrDatePipe } from '../../../../../shared/pipes/hr-date.pipe';
 import { GroupAttendanceDialogComponent } from '../attendance/group-attendance-dialog.component';
@@ -13,12 +15,15 @@ import { GroupAttendanceDialogComponent } from '../attendance/group-attendance-d
  * isn't built yet. */
 @Component({
   selector: 'app-admin-group-appointments-section',
-  imports: [TableModule, Tabs, TabList, Tab, TabPanels, TabPanel, TranslatePipe, HrDatePipe, GroupAttendanceDialogComponent],
+  imports: [TableModule, Tabs, TabList, Tab, TabPanels, TabPanel, Tag, TranslatePipe, HrDatePipe, GroupAttendanceDialogComponent],
   templateUrl: './group-appointments-section.component.html',
   styleUrl: './group-appointments-section.component.scss',
 })
 export class GroupAppointmentsSectionComponent {
   readonly group = input.required<GroupDetailDto>();
+
+  readonly appointmentStatusSeverity = appointmentStatusSeverity;
+  readonly appointmentStatusTranslationKey = appointmentStatusTranslationKey;
 
   /** Forwarded from GroupAttendanceDialogComponent's own `changed` output -
    * seat cancel/correct, waitlist join/cancel, or occurrence complete can all

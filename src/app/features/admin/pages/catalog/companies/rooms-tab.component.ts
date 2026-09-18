@@ -18,7 +18,7 @@ const DEFAULT_PAGE_SIZE = 20;
  * same self-contained-per-owner shape as CompanyHolidaysTabComponent, but a
  * full šifrarnik (edit/activate/deactivate/delete, not just add+delete) so it
  * mirrors CompaniesComponent/CatalogServicesComponent's table+dialog pair
- * instead. Action-level gating on catalog.rooms.manage (see ACTION_GRANTS) -
+ * instead. Action-level gating on catalog.rooms.manage (see ACTION_POLICIES) -
  * the tab's own visibility is separately grant-gated on catalog.rooms.view/.manage
  * (see CompanyFormDialogComponent.canViewRooms). */
 @Component({

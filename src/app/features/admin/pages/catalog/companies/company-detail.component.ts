@@ -63,15 +63,9 @@ export class CompanyDetailComponent {
   readonly countryOptions = COUNTRY_OPTIONS;
   readonly colorOptions = COMPANY_COLORS;
 
-  readonly canViewWorkingHours = computed(() =>
-    this.currentEmployeeService.hasAnyGrant(['roster.templates.view', 'roster.templates.manage']),
-  );
-  readonly canViewHolidays = computed(() =>
-    this.currentEmployeeService.hasAnyGrant(['roster.templates.view', 'roster.templates.manage']),
-  );
-  readonly canViewRooms = computed(() =>
-    this.currentEmployeeService.hasAnyGrant(['catalog.rooms.view', 'catalog.rooms.manage']),
-  );
+  readonly canViewWorkingHours = computed(() => this.currentEmployeeService.can('roster.templates.view'));
+  readonly canViewHolidays = computed(() => this.currentEmployeeService.can('roster.templates.view'));
+  readonly canViewRooms = computed(() => this.currentEmployeeService.can('catalog.rooms.view'));
 
   readonly form = this.fb.nonNullable.group({
     name: ['', [Validators.required, Validators.maxLength(255)]],

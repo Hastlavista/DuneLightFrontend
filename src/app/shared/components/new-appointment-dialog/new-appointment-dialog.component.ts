@@ -308,6 +308,11 @@ export class NewAppointmentDialogComponent {
    * of that field. */
   readonly slotsInitialDate = computed(() => this.selectedStartsAt());
 
+  /** p-dialog keeps the slider mounted while hidden. Bump this on every open
+   * and after an overlap conflict so identical form values still produce a
+   * fresh server-authoritative availability request. */
+  readonly slotsRefreshVersion = signal(0);
+
   /** Narrows the slider to a single employee row - either hard-locked for
    * role Member (same rationale as isMemberRole's doc: no reason to let a
    * trainer browse other trainers' slots), or, once the user has picked a
@@ -611,7 +616,10 @@ export class NewAppointmentDialogComponent {
           this.visible.set(false);
           this.created.emit();
         },
-        error: () => {},
+        // Keep the dialog open and surface the backend's localized business
+        // error (for example SERVICE_NOT_AVAILABLE_AT_COMPANY or an overlap)
+        // instead of silently failing after the submit button is pressed.
+        error: (err: AppError) => this.handleSchedulingError(err),
       });
   }
 
@@ -644,7 +652,10 @@ export class NewAppointmentDialogComponent {
           this.visible.set(false);
           this.created.emit();
         },
-        error: () => {},
+        // Completion can fail for the same business-rule reasons as a normal
+        // schedule; hiding that response leaves the user with a seemingly
+        // inert form and makes retrying impossible.
+        error: (err: AppError) => this.handleSchedulingError(err),
       });
   }
 
@@ -809,6 +820,16 @@ export class NewAppointmentDialogComponent {
       });
   }
 
+  /** The server remains the final authority. When a concurrent mutation takes
+   * a slot after it was shown, keep this form open, display the localized 409,
+   * then replace the stale availability response. */
+  private handleSchedulingError(err: AppError): void {
+    this.notifications.showAppError(err);
+    if (err.code === 'APPOINTMENT_OVERLAP') {
+      this.slotsRefreshVersion.update((version) => version + 1);
+    }
+  }
+
   private resetForm(): void {
     const init = this.initial();
     const locked = this.isMemberRole();
@@ -843,6 +864,7 @@ export class NewAppointmentDialogComponent {
     this.selectedPackageByClient.set(new Map());
     this.attemptedSubmit.set(false);
     this.availability.set(null);
+    this.slotsRefreshVersion.update((version) => version + 1);
     this.refreshAvailability();
     this.refreshRooms();
   }

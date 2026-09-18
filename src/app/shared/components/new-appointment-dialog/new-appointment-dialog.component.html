@@ -145,6 +145,7 @@
             [companyId]="slotsCompanyId()"
             [initialDate]="slotsInitialDate()"
             [lockedEmployeeId]="slotsLockedEmployeeId()"
+            [refreshVersion]="slotsRefreshVersion()"
             (slotSelected)="onSlotSelected($event)"
           />
           @if (!slotsServiceId() || !slotsCompanyId()) {

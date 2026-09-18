@@ -114,14 +114,10 @@ export class TodayComponent {
   /** Gates "Novi termin" (toolbar button + empty-slot click) - a view-only
    * Raspored user has no reason to see a create entry point they can't
    * actually submit; the backend would just 403 the create call. */
-  readonly canCreateAppointments = computed(() =>
-    this.currentEmployeeService.hasAnyGrant(['appointments.write.own', 'appointments.write.all']),
-  );
+  readonly canCreateAppointments = computed(() => this.currentEmployeeService.can('appointments.manage'));
 
   /** Same rationale as canCreateAppointments() - gates "+ Pauza". */
-  readonly canCreateBreaks = computed(() =>
-    this.currentEmployeeService.hasAnyGrant(['schedule.breaks.write.own', 'schedule.breaks.write.all']),
-  );
+  readonly canCreateBreaks = computed(() => this.currentEmployeeService.can('schedule-breaks.manage'));
 
   /** ScheduleDayGridComponent's columns filter by company NAME, not id (see
    * EmployeeColumnEntry's doc comment) - EmployeeDirectoryDto.companies is

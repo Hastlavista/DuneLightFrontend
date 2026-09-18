@@ -65,6 +65,9 @@
     "PACKAGE_SERVICE_NOT_COVERED": "Odabrani paket ne pokriva ovu uslugu.",
     "INACTIVE_EMPLOYEE": "Zaposlenik je neaktivan.",
     "INACTIVE_TYPE": "Odabrani tip je neaktivan.",
+    "INACTIVE_SERVICE": "Usluga nije aktivna.",
+    "SERVICE_NOT_AVAILABLE_AT_COMPANY": "Usluga nije dostupna u odabranoj poslovnici.",
+    "BOOKING_HAS_NON_REVERSIBLE_PAYMENT": "Korekciju nije moguće provesti jer rezervacija ima ručno evidentirano plaćanje koje se ne može automatski poništiti. Riješite plaćanje na blagajni pa pokušajte ponovno.",
     "PRICE_OVERLAP": "Ova stavka cjenika preklapa se s postojećom za isto razdoblje.",
     "CLIENT_ANONYMIZED": "Klijent je anonimiziran (GDPR) te se ne može uređivati.",
     "APPOINTMENT_OVERLAP": "Termin se preklapa s postojećom obavezom (trener, klijent ili prostorija) u ovom vremenskom razdoblju.",
@@ -310,7 +313,12 @@
       "DEACTIVATED": "Usluga je deaktivirana.",
       "DELETED": "Usluga je izbrisana.",
       "CONFIRM_DEACTIVATE": "Jeste li sigurni da želite deaktivirati uslugu \"{{name}}\"?",
-      "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati uslugu \"{{name}}\"? Ova radnja je nepovratna."
+      "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati uslugu \"{{name}}\"? Ova radnja je nepovratna.",
+      "COMPANIES_SECTION_TITLE": "Dostupno u poslovnicama",
+      "COMPANIES_LOADING": "Učitavanje poslovnica...",
+      "COMPANIES_HINT": "Usluga se može zakazati samo u odabranim poslovnicama.",
+      "COMPANIES_EMPTY_HINT": "Nijedna poslovnica nije odabrana — usluga trenutno nije dostupna ni u jednoj poslovnici i ne može se zakazati.",
+      "NO_ACTIVE_COMPANIES": "Nema aktivnih poslovnica."
     },
     "PRICING": {
       "ITEMS_TAB_LABEL": "Stavke cjenika",
@@ -1105,6 +1113,7 @@
       "COL_COMPANY": "Poslovnica",
       "COL_TRAINER": "Trener",
       "COL_OCCUPANCY": "Popunjenost",
+      "COL_STATUS": "Status",
       "OPEN_ATTENDANCE": "Otvori prisutnost"
     },
     "GENERATE": {
@@ -1438,6 +1447,9 @@
       "BOOKINGS": "Klijenti i naplata",
       "PACKAGE_COVERED": "Pokriveno paketom",
       "NOT_MOVABLE_HINT": "Otkazani termini ne mogu se premjestiti.",
+      "CORRECT_TO_CONFIRMED": "Vrati na potvrđeno",
+      "CONFIRM_CORRECTION": "Jeste li sigurni da želite vratiti rezervaciju klijenta \"{{name}}\" na potvrđeno? Ova radnja može: vratiti termin na status Zakazano, poništiti naplatu nastalu prilikom check-ina, vratiti iskorišteni ulazak paketa i poništiti pripadajuću zarađenu proviziju.",
+      "CORRECTED": "Rezervacija je vraćena na potvrđeno.",
       "ERRORS": {
         "STARTS_AT_REQUIRED": "Datum i vrijeme su obavezni.",
         "TRAINER_REQUIRED": "Trener je obavezan.",

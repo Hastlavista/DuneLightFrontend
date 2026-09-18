@@ -8,7 +8,9 @@ import { AuthService } from '../auth/auth.service';
 import { SUPPRESS_ERROR_TOAST } from '../http/http-context.tokens';
 import { CurrentEmployee } from '../models/employee.model';
 import { resolveErrorMessage } from '../utils/error-translation.util';
-import { ACTION_GRANTS, ActionKey } from '../permissions/action-grants';
+import { ACTION_POLICIES, ActionKey } from '../permissions/action-policies';
+import { PAGE_POLICIES, PageKey } from '../permissions/page-policies';
+import { evaluatePermissionPolicy, PermissionPolicy } from '../permissions/permission-policy.model';
 import { NotificationService } from './notification.service';
 
 @Injectable({ providedIn: 'root' })
@@ -109,13 +111,31 @@ export class CurrentEmployeeService {
   }
 
   /** Action-level (button/field) grant check - looks the key up in the
-   * centralized ACTION_GRANTS catalog instead of taking raw grant keys, so
+   * centralized ACTION_POLICIES catalog instead of taking raw grant keys, so
    * the grant a UI action checks can never drift from what its target
-   * endpoint's [RequireGrant] actually enforces (see action-grants.ts). Use
-   * for "should I show this button" (*ngIf) or "should this field be
-   * editable" ([disabled]) decisions - PAGE_GRANTS/grantGuard already
+   * endpoint's [RequireGrant] actually enforces (see action-policies.ts).
+   * Use for "should I show this button" (*ngIf) or "should this field be
+   * editable" ([disabled]) decisions - PAGE_POLICIES/canPage() already
    * covers whether the user can reach the page at all. */
   can(action: ActionKey): boolean {
-    return this.hasAnyGrant(ACTION_GRANTS[action]);
+    return this.evaluate(ACTION_POLICIES[action]);
+  }
+
+  /** Page-level navigation check - looks the key up in the centralized
+   * PAGE_POLICIES catalog (see page-policies.ts). Consumed by BOTH
+   * grantGuard (blocks direct-URL navigation) and SidebarComponent (hides
+   * the nav item), so the two can never drift apart. */
+  canPage(page: PageKey): boolean {
+    return this.evaluate(PAGE_POLICIES[page]);
+  }
+
+  /** Central policy evaluator - the one place Owner bypass is decided for
+   * every page/action policy in the app (see evaluatePermissionPolicy's own
+   * doc for the full anyOf/allOf/ownerOnly semantics). can()/canPage() are
+   * thin catalog lookups over this; a guard or component with a genuine
+   * one-off policy (not worth adding to either catalog) may also call this
+   * directly. */
+  evaluate(policy: PermissionPolicy): boolean {
+    return evaluatePermissionPolicy(policy, { isOwner: this.isOwner(), grants: this.employeeState()?.grants ?? [] });
   }
 }

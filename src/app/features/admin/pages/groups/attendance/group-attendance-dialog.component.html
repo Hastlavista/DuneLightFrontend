@@ -7,7 +7,12 @@
 >
   @if (dialogShown() && appointment(); as appointment) {
     <div class="group-attendance-dialog">
-      <p class="dl-form__hint">{{ subtitle(appointment) }}</p>
+      <div class="group-attendance-dialog__header">
+        <p class="dl-form__hint">{{ subtitle(appointment) }}</p>
+        @if (appointmentStatus() === 'Completed') {
+          <p-tag [severity]="appointmentStatusSeverity('Completed')" [value]="appointmentStatusTranslationKey('Completed') | translate" />
+        }
+      </div>
       @if (hasAppointmentsView()) {
         <p class="group-attendance-dialog__capacity">
           {{ 'GROUPS.ATTENDANCE.RESERVED' | translate }}: <strong>{{ capacityLabel() }}</strong>
@@ -263,7 +268,7 @@
         </section>
       }
 
-      @if (currentEmployeeService.can('appointments.manage')) {
+      @if (currentEmployeeService.can('appointments.manage') && canCompleteAppointment()) {
         <div class="group-attendance-dialog__footer">
           <p-button
             type="button"

@@ -25,7 +25,7 @@ export class SidebarComponent {
         if (item.ownerOnly && !isOwner) {
           return false;
         }
-        return !item.requiredGrants || this.currentEmployeeService.hasAnyGrant(item.requiredGrants);
+        return !item.pageKey || this.currentEmployeeService.canPage(item.pageKey);
       }),
     })).filter((group) => group.items.length > 0);
   });

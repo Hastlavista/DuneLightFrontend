@@ -123,13 +123,13 @@ export class ScheduleComponent {
   /** Gates "Novi termin" (toolbar button + empty-slot click) - a view-only
    * Raspored user has no reason to see a create entry point they can't
    * actually submit; the backend would just 403 the create call. Uses the
-   * shared ACTION_GRANTS 'appointments.manage' key (see action-grants.ts)
+   * shared ACTION_POLICIES 'appointments.manage' key (see action-policies.ts)
    * rather than a locally-duplicated grant list, so this can never drift
    * from what POST /api/appointments/schedule actually requires. */
   readonly canCreateAppointments = computed(() => this.currentEmployeeService.can('appointments.manage'));
 
   /** Same rationale as canCreateAppointments() - gates "+ Pauza" against
-   * ACTION_GRANTS 'schedule-breaks.manage' (POST /api/schedule-breaks). */
+   * ACTION_POLICIES 'schedule-breaks.manage' (POST /api/schedule-breaks). */
   readonly canCreateBreaks = computed(() => this.currentEmployeeService.can('schedule-breaks.manage'));
 
   /** ScheduleDayGridComponent's columns filter by company NAME, not id - see

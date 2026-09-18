@@ -1,5 +1,5 @@
 import { WarningDto } from './api-error.model';
-import { AppointmentScheduleCellDto } from './appointment.model';
+import { AppointmentScheduleCellDto, AppointmentStatus } from './appointment.model';
 
 /** Day-of-week values exactly as the backend sends/accepts them (standard .NET
  * enum string, English). Use these everywhere in logic - translate only for
@@ -89,6 +89,11 @@ export interface GroupAppointmentCellDto {
   employeeName: string | null;
   expectedCount: number;
   attendanceCount: number;
+  /** Status of the occurrence itself (Scheduled/Completed/Cancelled) - see
+   * AppointmentStatus. A future-dated occurrence can already be Completed
+   * (e.g. logged early/out of band); the row rendering must reflect this
+   * rather than implying it's still unresolved. */
+  status: AppointmentStatus;
 }
 
 /** GET /api/groups/{id} (and the flat list of GET /api/groups). `warnings` is

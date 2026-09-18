@@ -71,7 +71,7 @@ export class EmployeeLeaveFundTabComponent {
   readonly settingsExist = signal(false);
   readonly funds = signal<LeaveFundDto[]>([]);
 
-  readonly canManage = computed(() => this.currentEmployeeService.hasGrant('roster.leave-fund.settings.manage'));
+  readonly canManage = computed(() => this.currentEmployeeService.can('roster.leave-fund.settings.manage'));
   readonly canViewFunds = computed(() =>
     this.currentEmployeeService.hasAnyGrant(['roster.leave-fund.view.own', 'roster.leave-fund.view.all']),
   );

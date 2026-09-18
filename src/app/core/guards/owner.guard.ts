@@ -12,6 +12,13 @@ import { CurrentEmployeeService } from '../services/current-employee.service';
  * isOwner() directly - router guards for the whole matched route tree
  * resolve before any component, including ShellComponent which would
  * otherwise trigger the /me fetch, instantiates.
+ *
+ * Resolves through canPage('permissions') - PAGE_POLICIES.permissions is
+ * `{ ownerOnly: true }` (see page-policies.ts) - rather than isOwner()
+ * directly, so Owner bypass stays decided in exactly one place
+ * (evaluatePermissionPolicy). Kept as its own guard (rather than
+ * grantGuard('permissions')) purely to preserve its own redirect-to-'/app'
+ * target, unchanged from before this pass.
  */
 export const ownerGuard: CanActivateFn = () => {
   const currentEmployeeService = inject(CurrentEmployeeService);
@@ -19,5 +26,5 @@ export const ownerGuard: CanActivateFn = () => {
 
   return currentEmployeeService
     .ensureLoaded()
-    .pipe(map(() => currentEmployeeService.isOwner() || router.createUrlTree(['/app'])));
+    .pipe(map(() => currentEmployeeService.canPage('permissions') || router.createUrlTree(['/app'])));
 };

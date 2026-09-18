@@ -37,11 +37,15 @@ export function appointmentStatusSeverity(status: AppointmentStatus): 'info' | '
  * see BookingDto. `Confirmed` is the only non-terminal state; `Completed`/
  * `Cancelled`/`NoShow` are terminal except for an explicit admin/trainer
  * correction back to Confirmed via PATCH .../bookings/{clientId}/confirm (see
- * AppointmentsService.confirmBooking) - Group bookings only, the backend
- * rejects it for Form=Individual. That correction may void a check-in-
- * generated Payment and/or restore a consumed package entry server-side, so
- * callers must always reload the Booking (and its payments/package fields)
- * from the response rather than patch local state. */
+ * AppointmentsService.confirmBooking) - for Form=Group available from any
+ * terminal status (Completed/NoShow/Cancelled -> Confirmed); for
+ * Form=Individual deliberately narrower, available ONLY from Completed (undo
+ * of a wrong check-in - Cancelled/NoShow have no way back). That correction
+ * may void a check-in-generated Payment, restore a consumed package entry,
+ * and reverse the earned CommissionEntry server-side, and for Individual also
+ * reverts Appointment.Status back to Scheduled - so callers must always
+ * reload the whole Appointment (bookings, payments/package fields, and
+ * status) from a fresh GET rather than patch local state. */
 export type BookingStatus = 'Confirmed' | 'Completed' | 'Cancelled' | 'NoShow';
 
 const BOOKING_STATUS_TRANSLATION_KEYS: Record<BookingStatus, string> = {

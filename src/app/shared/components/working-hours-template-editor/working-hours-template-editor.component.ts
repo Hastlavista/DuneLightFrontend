@@ -102,7 +102,7 @@ export class WorkingHoursTemplateEditorComponent {
   readonly saving = signal(false);
   private readonly loadedAnchorDate = signal<string | null>(null);
 
-  readonly canManage = computed(() => this.currentEmployeeService.hasGrant('roster.templates.manage'));
+  readonly canManage = computed(() => this.currentEmployeeService.can('roster.templates.manage'));
 
   private readonly translationsReady = translationReadySignal(this.translate);
 

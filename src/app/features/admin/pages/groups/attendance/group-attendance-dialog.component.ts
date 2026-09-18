@@ -10,10 +10,13 @@ import { TableModule } from 'primeng/table';
 import { Tag } from 'primeng/tag';
 import { finalize, forkJoin, of } from 'rxjs';
 import {
+  AppointmentStatus,
   BookingDto,
   BookingStatus,
   PAYMENT_METHODS,
   PaymentMethod,
+  appointmentStatusSeverity,
+  appointmentStatusTranslationKey,
   bookingStatusSeverity,
   bookingStatusTranslationKey,
   paymentMethodTranslationKey,
@@ -102,7 +105,7 @@ export interface AttendanceRowVm {
  * waitlist section (future occurrences only), and a "završi termin" action.
  * These hit AppointmentsController/GroupAppointmentsController endpoints
  * (appointments.write.own/all), a different grant than the attendance
- * checkbox flow above (groups.attendance.own/all) - see ACTION_GRANTS.
+ * checkbox flow above (groups.attendance.own/all) - see ACTION_POLICIES.
  */
 @Component({
   selector: 'app-group-attendance-dialog',
@@ -157,8 +160,29 @@ export class GroupAttendanceDialogComponent {
   readonly coverageTypeTranslationKey = coverageTypeTranslationKey;
   readonly bookingStatusSeverity = bookingStatusSeverity;
   readonly bookingStatusTranslationKey = bookingStatusTranslationKey;
+  readonly appointmentStatusSeverity = appointmentStatusSeverity;
+  readonly appointmentStatusTranslationKey = appointmentStatusTranslationKey;
   readonly waitlistEntryStatusSeverity = waitlistEntryStatusSeverity;
   readonly waitlistEntryStatusTranslationKey = waitlistEntryStatusTranslationKey;
+
+  /** Status of the occurrence itself (Scheduled/Completed/Cancelled), fetched
+   * from GET /api/appointments/{id} (AppointmentDto.status) - GroupAppointmentCellDto
+   * (the row shape feeding this dialog) carries no status of its own, so this
+   * is the only reliable source. Null until loaded (or for a user without
+   * either grant below). Gates the "Završi termin" action and the completed
+   * badge - a future-dated occurrence can already be Completed (e.g. logged
+   * early/out of band), and without this the action would still appear valid
+   * and fail with 409 ALREADY_COMPLETED on click. */
+  readonly appointmentStatus = signal<AppointmentStatus | null>(null);
+
+  /** True once the "Završi termin" action is actually valid for this occurrence
+   * - false for a known-Completed/Cancelled status. Null (not yet loaded) fails
+   * open to the pre-existing behavior rather than hiding the button while the
+   * fetch below is still in flight. */
+  readonly canCompleteAppointment = computed(() => {
+    const status = this.appointmentStatus();
+    return status === null || status === 'Scheduled';
+  });
 
   private readonly translationsReady = translationReadySignal(this.translate);
 
@@ -200,7 +224,7 @@ export class GroupAttendanceDialogComponent {
   readonly waitingWaitlistEntries = computed(() => this.waitlistEntries().filter((entry) => entry.status === 'Waiting'));
 
   /** GET .../bookings and .../waitlist require `appointments.view` - a
-   * different grant family than groups.attendance.* (see ACTION_GRANTS's
+   * different grant family than groups.attendance.* (see ACTION_POLICIES's
    * doc). A Member/trainer holding only groups.attendance.own would get a
    * 403 on those calls, so the Phase 4 additions (status badges, capacity
    * line, correction/cancel actions, waitlist) only render for a user who
@@ -485,7 +509,7 @@ export class GroupAttendanceDialogComponent {
    * it - the response's warnings (GROUP_APPOINTMENT_UNRESOLVED_BOOKINGS) are
    * shown as a non-blocking toast, the operation itself still succeeded. */
   confirmCompleteAppointment(): void {
-    if (!this.currentEmployeeService.can('appointments.manage')) {
+    if (!this.currentEmployeeService.can('appointments.manage') || !this.canCompleteAppointment()) {
       return;
     }
     this.confirmationService.confirm({
@@ -599,17 +623,25 @@ export class GroupAttendanceDialogComponent {
     const bookings$ = canSeeBookings ? this.appointmentsService.getBookings(appointmentId) : of<BookingDto[]>([]);
     const waitlist$ =
       canSeeBookings && this.isFutureOccurrence() ? this.appointmentsService.getWaitlist(appointmentId) : of<WaitlistEntryDto[]>([]);
+    /** Same appointments.view boundary as bookings$/waitlist$ above - GET
+     * /api/appointments/{id} sits behind the same grant, so reusing
+     * canSeeBookings here avoids a 403 for a manage-only (write grant, no
+     * view grant) user; that edge case simply keeps today's behavior
+     * (appointmentStatus() stays null, canCompleteAppointment() fails open). */
+    const appointment$ = canSeeBookings ? this.appointmentsService.getById(appointmentId) : of(null);
     forkJoin({
       attendance: this.attendanceService.getAttendance(appointmentId),
       bookings: bookings$,
       waitlist: waitlist$,
+      appointment: appointment$,
     })
       .pipe(finalize(() => this.loading.set(false)))
-      .subscribe(({ attendance, bookings, waitlist }) => {
+      .subscribe(({ attendance, bookings, waitlist, appointment }) => {
         this.expectedEntries.set(attendance.expected);
         this.recordedEntries.set(attendance.recorded);
         this.bookingsByClient.set(new Map(bookings.map((booking) => [booking.clientId, booking])));
         this.waitlistEntries.set(waitlist);
+        this.appointmentStatus.set(appointment?.status ?? null);
         this.pendingGuests.update((list) => list.filter((guest) => !attendance.recorded.some((r) => r.clientId === guest.clientId)));
         this.rowUi.set(new Map());
       });
@@ -632,6 +664,7 @@ export class GroupAttendanceDialogComponent {
     this.rowUi.set(new Map());
     this.bookingsByClient.set(new Map());
     this.waitlistEntries.set([]);
+    this.appointmentStatus.set(null);
     this.guestResults.set([]);
     this.selectedGuestOption = null;
     this.waitlistResults.set([]);

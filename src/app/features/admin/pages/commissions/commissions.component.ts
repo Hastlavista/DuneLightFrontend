@@ -4,7 +4,7 @@ import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
 import { Tag } from 'primeng/tag';
 import { finalize, forkJoin, of } from 'rxjs';
-import { CommissionCalculationType, CommissionEntryDto, CommissionRuleDto, CommissionSubjectType } from '../../../../core/models/commission.model';
+import { CommissionCalculationType, CommissionEntryDto, CommissionRuleDto, CommissionSubjectType, commissionEntryStatusLabel, commissionEntryStatusSeverity } from '../../../../core/models/commission.model';
 import { CurrentEmployeeService } from '../../../../core/services/current-employee.service';
 import { CommissionsService } from '../../../../core/services/commissions.service';
 import { EmployeesService } from '../../../../core/services/employees.service';
@@ -18,6 +18,7 @@ type Subject = { id: string; name: string; executionMode?: string };
 @Component({ selector: 'app-admin-commissions', imports: [FormsModule, Button, Select, Tag, EurCurrencyPipe, HrDatePipe], templateUrl: './commissions.component.html', styleUrl: './commissions.component.scss' })
 export class CommissionsComponent {
   private readonly api = inject(CommissionsService); private readonly employeesApi = inject(EmployeesService); private readonly servicesApi = inject(ServicesService); private readonly productsApi = inject(ProductsService); private readonly packagesApi = inject(PackagesService); private readonly notifications = inject(NotificationService); protected readonly currentEmployee = inject(CurrentEmployeeService);
+  protected readonly commissionEntryStatusLabel = commissionEntryStatusLabel; protected readonly commissionEntryStatusSeverity = commissionEntryStatusSeverity;
   readonly rules = signal<CommissionRuleDto[]>([]); readonly entries = signal<CommissionEntryDto[]>([]); readonly total = signal(0); readonly loading = signal(false); readonly saving = signal(false); readonly employees = signal<Subject[]>([]); readonly services = signal<Subject[]>([]); readonly products = signal<Subject[]>([]); readonly packages = signal<Subject[]>([]);
   selectedEmployeeId = ''; selectedSubjectType: CommissionSubjectType = 'Service'; selectedSubjectId = ''; calculationType: CommissionCalculationType = 'Percentage'; value: number | null = null; from = this.dayOffset(-30); to = this.dayOffset(0); page = 1; readonly pageSize = 20; readonly subjectTypes: CommissionSubjectType[] = ['Service', 'Product', 'Package']; readonly calculationTypes: CommissionCalculationType[] = ['Percentage', 'Fixed'];
   constructor() { this.loadLookups(); this.refresh(); }

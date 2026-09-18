@@ -56,6 +56,32 @@
         <small>Redoslijed određuje položaj usluge u odabirima.</small>
       </div>
 
+      <div class="service-form-dialog__field">
+        <label>{{ 'CATALOG.SERVICES.COMPANIES_SECTION_TITLE' | translate }}</label>
+        @if (companiesLoading()) {
+          <span class="dl-form__hint">{{ 'CATALOG.SERVICES.COMPANIES_LOADING' | translate }}</span>
+        } @else {
+          <div class="service-form-dialog__palette">
+            @for (company of companyOptions(); track company.id) {
+              <button
+                type="button"
+                [class.service-form-dialog__choice--active]="isCompanySelected(company.id)"
+                (click)="toggleCompany(company.id)"
+              >
+                {{ company.name }}@if (company.inactive) { &nbsp;({{ 'COMMON.STATUS_INACTIVE' | translate }}) }
+              </button>
+            } @empty {
+              <span class="dl-form__hint">{{ 'CATALOG.SERVICES.NO_ACTIVE_COMPANIES' | translate }}</span>
+            }
+          </div>
+        }
+        @if (form.controls.companyIds.value.length === 0) {
+          <span class="dl-form__hint">{{ 'CATALOG.SERVICES.COMPANIES_EMPTY_HINT' | translate }}</span>
+        } @else {
+          <span class="dl-form__hint">{{ 'CATALOG.SERVICES.COMPANIES_HINT' | translate }}</span>
+        }
+      </div>
+
       <div class="service-form-dialog__actions">
         <span>@if (form.controls.name.invalid) { Nedostaje naziv usluge. } @else { Spremno za spremanje. }</span>
         <div><p-button type="button" [outlined]="true" severity="secondary" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" /><p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" [disabled]="form.invalid || !currentEmployeeService.can('catalog.services.manage')" /></div>

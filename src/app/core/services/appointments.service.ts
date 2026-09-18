@@ -206,12 +206,20 @@ export class AppointmentsService {
   }
 
   /** PATCH /api/appointments/{appointmentId}/bookings/{clientId}/confirm - no
-   * request body. Reverses a Group booking's check-in/cancel back to Confirmed
-   * (Completed/NoShow/Cancelled -> Confirmed) - an admin correction, rejected
-   * by the backend for Form=Individual. May void a check-in-generated Payment
-   * and/or restore a consumed package entry server-side - always reload the
-   * Booking (and any locally-held payment/package state) from the response,
-   * never patch it locally. */
+   * request body. Admin correction that reverses one Booking's check-in/cancel
+   * back to Confirmed: for Form=Group, from any terminal status
+   * (Completed/NoShow/Cancelled -> Confirmed); for Form=Individual, ONLY from
+   * Completed (undoing a wrong check-in - Cancelled/NoShow have no path back).
+   * May void a check-in-generated Payment, restore a consumed package entry,
+   * and reverse the earned CommissionEntry server-side; for Individual it also
+   * reverts Appointment.Status back to Scheduled (even on a multi-client
+   * appointment where a sibling Booking stays Completed). The response is only
+   * the corrected BookingDto, NOT the Appointment - callers must always
+   * re-fetch the whole Appointment (getById) afterwards rather than patch
+   * local state, since Appointment.Status and sibling bookings may also have
+   * changed. May reject with 409 BOOKING_HAS_NON_REVERSIBLE_PAYMENT when an
+   * active manual (non-check-in-generated) Payment makes automatic reversal
+   * unsafe - left to the default error toast, never bypass it client-side. */
   confirmBooking(appointmentId: string, clientId: string): Observable<BookingDto> {
     return this.http.patch<BookingDto>(`${this.resourceUrl}/${appointmentId}/bookings/${clientId}/confirm`, null);
   }

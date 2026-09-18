@@ -46,7 +46,7 @@ export class CompanyHolidaysTabComponent {
 
   readonly companyId = input.required<string>();
 
-  readonly canManage = computed(() => this.currentEmployeeService.hasGrant('roster.templates.manage'));
+  readonly canManage = computed(() => this.currentEmployeeService.can('roster.templates.manage'));
 
   readonly year = signal(new Date().getFullYear());
   readonly yearOptions = computed<YearOption[]>(() => {

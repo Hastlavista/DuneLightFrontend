@@ -125,5 +125,6 @@ export function toGroupAppointmentCell(dto: AppointmentScheduleCellDto): GroupAp
     employeeName: dto.employeeName,
     expectedCount: dto.expectedCount ?? 0,
     attendanceCount: dto.attendanceCount ?? 0,
+    status: dto.status,
   };
 }

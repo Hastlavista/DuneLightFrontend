@@ -32,7 +32,7 @@ export class ListToolbarComponent {
   readonly showInactiveToggle = input(true);
   /** Hides the "new" button for a viewer who holds the page's `.view` grant
    * but not its `.manage` grant (see CurrentEmployeeService.can() /
-   * action-grants.ts) - defaults to true so existing callers are unaffected
+   * action-policies.ts) - defaults to true so existing callers are unaffected
    * until they opt in. */
   readonly canCreate = input(true);
 

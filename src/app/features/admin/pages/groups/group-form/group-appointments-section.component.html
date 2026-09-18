@@ -16,6 +16,7 @@
               <th>{{ 'GROUPS.APPOINTMENTS.COL_COMPANY' | translate }}</th>
               <th>{{ 'GROUPS.APPOINTMENTS.COL_TRAINER' | translate }}</th>
               <th>{{ 'GROUPS.APPOINTMENTS.COL_OCCUPANCY' | translate }}</th>
+              <th>{{ 'GROUPS.APPOINTMENTS.COL_STATUS' | translate }}</th>
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-appointment>
@@ -25,11 +26,14 @@
               <td>{{ appointment.companyName }}</td>
               <td>{{ appointment.employeeName || '—' }}</td>
               <td>{{ occupancyLabel(appointment) }}</td>
+              <td>
+                <p-tag [severity]="appointmentStatusSeverity(appointment.status)" [value]="appointmentStatusTranslationKey(appointment.status) | translate" />
+              </td>
             </tr>
           </ng-template>
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td colspan="5" class="group-appointments-section__empty">
+              <td colspan="6" class="group-appointments-section__empty">
                 {{ 'GROUPS.APPOINTMENTS.EMPTY_UPCOMING' | translate }}
               </td>
             </tr>
@@ -46,6 +50,7 @@
               <th>{{ 'GROUPS.APPOINTMENTS.COL_COMPANY' | translate }}</th>
               <th>{{ 'GROUPS.APPOINTMENTS.COL_TRAINER' | translate }}</th>
               <th>{{ 'GROUPS.APPOINTMENTS.COL_OCCUPANCY' | translate }}</th>
+              <th>{{ 'GROUPS.APPOINTMENTS.COL_STATUS' | translate }}</th>
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-appointment>
@@ -55,11 +60,14 @@
               <td>{{ appointment.companyName }}</td>
               <td>{{ appointment.employeeName || '—' }}</td>
               <td>{{ appointment.attendanceCount }}</td>
+              <td>
+                <p-tag [severity]="appointmentStatusSeverity(appointment.status)" [value]="appointmentStatusTranslationKey(appointment.status) | translate" />
+              </td>
             </tr>
           </ng-template>
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td colspan="5" class="group-appointments-section__empty">
+              <td colspan="6" class="group-appointments-section__empty">
                 {{ 'GROUPS.APPOINTMENTS.EMPTY_PAST' | translate }}
               </td>
             </tr>
