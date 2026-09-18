@@ -1,0 +1,16 @@
+<p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '26rem' }" [header]="'CHECKOUT.VOID_PAYMENT.TITLE' | translate">
+  <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+    <div class="dl-form__field">
+      <label for="void-payment-reason">{{ 'CHECKOUT.VOID_PAYMENT.FIELD_REASON' | translate }}</label>
+      <textarea id="void-payment-reason" rows="3" formControlName="reason" maxlength="500"></textarea>
+      @if (form.controls.reason.invalid && form.controls.reason.touched) {
+        <span class="dl-form__error">{{ 'CHECKOUT.VOID_PAYMENT.ERRORS.REASON_REQUIRED' | translate }}</span>
+      }
+    </div>
+
+    <div class="dl-form__actions">
+      <p-button type="button" [text]="true" severity="secondary" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" />
+      <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" severity="danger" />
+    </div>
+  </form>
+</p-dialog>

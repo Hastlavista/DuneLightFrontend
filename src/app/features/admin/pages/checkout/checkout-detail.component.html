@@ -1,0 +1,173 @@
+@if (checkout(); as checkout) {
+  <div class="checkout-detail">
+    <button type="button" class="checkout-detail__back" (click)="goBack()">
+      <i class="pi pi-arrow-left"></i>{{ 'CHECKOUT.DETAIL.BACK' | translate }}
+    </button>
+
+    <header class="checkout-detail__header">
+      <div>
+        <h1>{{ checkout.clientName }}</h1>
+        <p>{{ checkout.companyName }}</p>
+      </div>
+      <p-tag [severity]="checkoutStatusSeverity(checkout.status)" [value]="checkoutStatusTranslationKey(checkout.status) | translate" />
+    </header>
+
+    <section class="checkout-detail__section">
+      <div class="checkout-detail__section-header">
+        <h2>{{ 'CHECKOUT.DETAIL.ITEMS_TITLE' | translate }}</h2>
+        @if (isOpen() && canManage()) {
+          <p-button [label]="'CHECKOUT.DETAIL.ADD_ITEM' | translate" icon="pi pi-plus" (onClick)="addItemDialogVisible.set(true)" />
+        }
+      </div>
+
+      <p-table [value]="checkout.items" dataKey="id">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>{{ 'CHECKOUT.DETAIL.COL_TYPE' | translate }}</th>
+            <th>{{ 'CHECKOUT.DETAIL.COL_DESCRIPTION' | translate }}</th>
+            <th>{{ 'CHECKOUT.DETAIL.COL_UNIT_PRICE' | translate }}</th>
+            <th>{{ 'CHECKOUT.DETAIL.COL_QUANTITY' | translate }}</th>
+            <th>{{ 'CHECKOUT.DETAIL.COL_RETAIL' | translate }}</th>
+            <th>{{ 'CHECKOUT.DETAIL.COL_MONETARY_DUE' | translate }}</th>
+            <th>{{ 'CHECKOUT.DETAIL.COL_PAID' | translate }}</th>
+            <th>{{ 'CHECKOUT.DETAIL.COL_OUTSTANDING' | translate }}</th>
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-item>
+          <tr>
+            <td><i class="pi" [class]="checkoutItemTypeIcon(item.type)"></i> {{ checkoutItemTypeTranslationKey(item.type) | translate }}</td>
+            <td>
+              {{ item.description }}
+              @if (isPackageCovered(item)) {
+                <p-tag severity="success" [value]="'CHECKOUT.DETAIL.PACKAGE_COVERED' | translate" />
+              }
+            </td>
+            <td>{{ item.unitPrice | eurCurrency }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.retailAmount | eurCurrency }}</td>
+            <td>{{ item.monetaryDue | eurCurrency }}</td>
+            <td>{{ item.paidAmount | eurCurrency }}</td>
+            <td>{{ item.outstandingAmount | eurCurrency }}</td>
+            <td>
+              @if (isOpen() && canManage()) {
+                <p-button
+                  [text]="true"
+                  severity="danger"
+                  icon="pi pi-trash"
+                  [loading]="removingItemId() === item.id"
+                  (onClick)="confirmRemoveItem(item)"
+                />
+              }
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="9">{{ 'CHECKOUT.DETAIL.EMPTY_ITEMS' | translate }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </section>
+
+    <section class="checkout-detail__section checkout-detail__summary">
+      <h2>{{ 'CHECKOUT.DETAIL.SUMMARY_TITLE' | translate }}</h2>
+      <dl>
+        <div><dt>{{ 'CHECKOUT.DETAIL.RETAIL_TOTAL' | translate }}</dt><dd>{{ checkout.totals.retailTotal | eurCurrency }}</dd></div>
+        <div><dt>{{ 'CHECKOUT.DETAIL.MONETARY_DUE' | translate }}</dt><dd>{{ checkout.totals.monetaryDue | eurCurrency }}</dd></div>
+        <div><dt>{{ 'CHECKOUT.DETAIL.PAID_AMOUNT' | translate }}</dt><dd>{{ checkout.totals.paidAmount | eurCurrency }}</dd></div>
+        <div class="checkout-detail__summary-outstanding">
+          <dt>{{ 'CHECKOUT.DETAIL.OUTSTANDING_AMOUNT' | translate }}</dt>
+          <dd>{{ checkout.totals.outstandingAmount | eurCurrency }}</dd>
+        </div>
+      </dl>
+      @if (checkout.totals.isFullyPaid) {
+        <p-tag severity="success" [value]="'CHECKOUT.DETAIL.FULLY_PAID' | translate" />
+      }
+    </section>
+
+    <section class="checkout-detail__section">
+      <div class="checkout-detail__section-header">
+        <h2>{{ 'CHECKOUT.DETAIL.PAYMENTS_TITLE' | translate }}</h2>
+        @if (isOpen() && canManage() && checkout.totals.outstandingAmount > 0) {
+          <p-button [label]="'CHECKOUT.DETAIL.ADD_PAYMENT' | translate" icon="pi pi-plus" (onClick)="addPaymentDialogVisible.set(true)" />
+        }
+      </div>
+
+      <p-table [value]="checkout.payments" dataKey="id">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>{{ 'CHECKOUT.DETAIL.COL_AMOUNT' | translate }}</th>
+            <th>{{ 'CHECKOUT.DETAIL.COL_METHOD' | translate }}</th>
+            <th>{{ 'CHECKOUT.DETAIL.COL_STATUS' | translate }}</th>
+            <th>{{ 'CHECKOUT.DETAIL.COL_CREATED_AT' | translate }}</th>
+            <th>{{ 'CHECKOUT.DETAIL.COL_NOTE' | translate }}</th>
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-payment>
+          <tr>
+            <td>{{ payment.amount | eurCurrency }}</td>
+            <td>{{ paymentMethodTranslationKey(payment.method) | translate }}</td>
+            <td>
+              <p-tag [severity]="paymentStatusSeverity(payment.status)" [value]="paymentStatusTranslationKey(payment.status) | translate" />
+              @if (payment.isCheckInGenerated) {
+                <p-tag severity="secondary" [value]="'CHECKOUT.DETAIL.CHECK_IN_GENERATED' | translate" />
+              }
+            </td>
+            <td>
+              {{ payment.createdAt | hrDate }}
+              @if (payment.status === 'Voided') {
+                <div class="checkout-detail__void-hint">
+                  {{ 'CHECKOUT.DETAIL.VOIDED_HINT' | translate: { date: (payment.voidedAt | hrDate), reason: payment.voidReason } }}
+                </div>
+              }
+            </td>
+            <td>{{ payment.note }}</td>
+            <td>
+              @if (isOpen() && canManage() && payment.status === 'Completed') {
+                <p-button [text]="true" severity="danger" [label]="'CHECKOUT.DETAIL.VOID_PAYMENT' | translate" (onClick)="openVoidPayment(payment)" />
+              }
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6">{{ 'CHECKOUT.DETAIL.EMPTY_PAYMENTS' | translate }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </section>
+
+    @if (isOpen() && canManage()) {
+      <footer class="checkout-detail__actions">
+        <p-button
+          [text]="true"
+          severity="danger"
+          [label]="'CHECKOUT.DETAIL.CANCEL' | translate"
+          [loading]="cancelling()"
+          (onClick)="confirmCancel()"
+        />
+        <p-button
+          [label]="'CHECKOUT.DETAIL.COMPLETE' | translate"
+          [loading]="completing()"
+          [disabled]="!checkout.totals.isFullyPaid"
+          (onClick)="confirmComplete()"
+        />
+      </footer>
+      @if (!checkout.totals.isFullyPaid) {
+        <p class="checkout-detail__hint">{{ 'CHECKOUT.DETAIL.NOT_FULLY_PAID_HINT' | translate }}</p>
+      }
+    }
+
+    <app-add-checkout-item-dialog [(visible)]="addItemDialogVisible" [checkout]="checkout" (saved)="onItemsChanged($event)" />
+    <app-add-payment-dialog [(visible)]="addPaymentDialogVisible" [checkout]="checkout" (saved)="onPaymentAdded($event)" />
+    <app-void-payment-dialog
+      [visible]="voidPaymentTarget() !== null"
+      (visibleChange)="onVoidDialogVisibleChange($event)"
+      [checkout]="checkout"
+      [payment]="voidPaymentTarget()"
+      (saved)="onPaymentVoided($event)"
+    />
+  </div>
+}

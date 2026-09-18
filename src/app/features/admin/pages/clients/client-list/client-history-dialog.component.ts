@@ -4,9 +4,8 @@ import { Button } from 'primeng/button';
 import { Dialog } from 'primeng/dialog';
 import { finalize, forkJoin } from 'rxjs';
 import {
-  AppointmentDto,
-  appointmentStatusTranslationKey,
-  paymentMethodTranslationKey,
+  ClientAppointmentHistoryDto,
+  bookingStatusTranslationKey,
 } from '../../../../../core/models/appointment.model';
 import { coverageTypeTranslationKey } from '../../../../../core/models/group-attendance.model';
 import {
@@ -40,22 +39,25 @@ export class ClientHistoryDialogComponent {
   readonly loading = signal(false);
   readonly activeTab = signal<HistoryTab>('all');
   readonly summary = signal<ClientHistorySummaryDto | null>(null);
-  readonly appointments = signal<AppointmentDto[]>([]);
+  readonly appointments = signal<ClientAppointmentHistoryDto[]>([]);
   readonly packages = signal<ClientPackageDto[]>([]);
   readonly groups = signal<ClientGroupMembershipDto[]>([]);
-  readonly appointmentStatusTranslationKey = appointmentStatusTranslationKey;
-  readonly paymentMethodTranslationKey = paymentMethodTranslationKey;
+  readonly bookingStatusTranslationKey = bookingStatusTranslationKey;
   readonly coverageTypeTranslationKey = coverageTypeTranslationKey;
   readonly clientPackageStatusTranslationKey = clientPackageStatusTranslationKey;
   readonly dayOfWeekShortTranslationKey = dayOfWeekShortTranslationKey;
 
+  /** Uses bookingStatus (THIS client's own outcome), not the appointment-level
+   * status - a group session can be Completed for the occurrence while this
+   * client specifically was NoShow, which the appointment-level status alone
+   * can't represent. */
   readonly completedHours = computed(() => this.appointments()
-    .filter((item) => item.status === 'Completed')
+    .filter((item) => item.bookingStatus === 'Completed')
     .reduce((total, item) => total + item.durationMinutes, 0) / 60);
   readonly filteredAppointments = computed(() => {
     const tab = this.activeTab();
-    if (tab === 'training') return this.appointments().filter((item) => item.status === 'Completed' || item.status === 'Scheduled');
-    if (tab === 'cancelled') return this.appointments().filter((item) => item.status === 'Cancelled' || item.status === 'NoShow');
+    if (tab === 'training') return this.appointments().filter((item) => item.bookingStatus === 'Completed' || item.bookingStatus === 'Confirmed');
+    if (tab === 'cancelled') return this.appointments().filter((item) => item.bookingStatus === 'Cancelled' || item.bookingStatus === 'NoShow');
     return this.appointments();
   });
 
@@ -104,7 +106,7 @@ export class ClientHistoryDialogComponent {
     return new Intl.DateTimeFormat('hr-HR', { month: 'long', year: 'numeric' }).format(new Date(value)).toUpperCase();
   }
 
-  timeRange(item: AppointmentDto): string {
+  timeRange(item: ClientAppointmentHistoryDto): string {
     const start = new Date(item.startsAt);
     const end = new Date(start.getTime() + item.durationMinutes * 60_000);
     const time = (date: Date) => `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
@@ -130,10 +132,6 @@ export class ClientHistoryDialogComponent {
 
   slotTimeLabel(startTime: string): string {
     return startTime.slice(0, 5);
-  }
-
-  clientNamesLabel(item: AppointmentDto): string {
-    return item.clients.map((client) => client.clientName).join(', ');
   }
 
   private load(clientId: string): void {

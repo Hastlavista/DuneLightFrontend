@@ -1,0 +1,43 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '54rem', maxWidth: 'calc(100vw - 2rem)' }"
+  styleClass="stock-movements-dialog"
+  (onShow)="onDialogShow()"
+>
+  <ng-template #header>
+    <h2>{{ 'STOCK.MOVEMENTS.TITLE' | translate: { product: productName() } }}</h2>
+  </ng-template>
+
+  <p-table [value]="movements()" [loading]="loading()" dataKey="id" responsiveLayout="scroll">
+    <ng-template pTemplate="header">
+      <tr>
+        <th>{{ 'STOCK.MOVEMENTS.COL_DATE' | translate }}</th>
+        <th>{{ 'STOCK.MOVEMENTS.COL_TYPE' | translate }}</th>
+        <th>{{ 'STOCK.MOVEMENTS.COL_COMPANY' | translate }}</th>
+        <th>{{ 'STOCK.MOVEMENTS.COL_QUANTITY_DELTA' | translate }}</th>
+        <th>{{ 'STOCK.MOVEMENTS.COL_RELATED_COMPANY' | translate }}</th>
+        <th>{{ 'STOCK.MOVEMENTS.COL_REASON' | translate }}</th>
+        <th>{{ 'STOCK.MOVEMENTS.COL_REFERENCE' | translate }}</th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-movement>
+      <tr>
+        <td>{{ dateTimeLabel(movement.createdAt) }}</td>
+        <td><p-tag [severity]="severityFor(movement.type)" [value]="('STOCK.MOVEMENTS.TYPE.' + movement.type) | translate" /></td>
+        <td>{{ movement.companyName }}</td>
+        <td [class.stock-movements-dialog__delta--negative]="movement.quantityDelta < 0" [class.stock-movements-dialog__delta--positive]="movement.quantityDelta > 0">
+          {{ movement.quantityDelta > 0 ? '+' : '' }}{{ movement.quantityDelta }}
+        </td>
+        <td>{{ movement.relatedCompanyName || '—' }}</td>
+        <td class="stock-movements-dialog__reason" [title]="movement.reason || ''">{{ movement.reason || '—' }}</td>
+        <td>{{ movement.checkoutItemId ? ('STOCK.MOVEMENTS.SALE_REFERENCE' | translate) : '—' }}</td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="7" class="stock-movements-dialog__empty">{{ 'STOCK.MOVEMENTS.EMPTY' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</p-dialog>

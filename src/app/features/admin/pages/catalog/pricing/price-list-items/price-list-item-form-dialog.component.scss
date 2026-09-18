@@ -44,7 +44,7 @@
 .price-list-form-dialog__row { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; }
 .price-list-form-dialog__section .p-selectbutton .p-togglebutton.p-togglebutton-checked { border-color: transparent; background: var(--brand-primary-light); color: var(--brand-primary-hover); font-weight: inherit; box-shadow: none; }
 .price-list-form-dialog__section .p-selectbutton .p-togglebutton.p-togglebutton-checked .p-togglebutton-content { background: transparent; box-shadow: none; }
-.price-list-form-dialog__actions { display: flex; align-items: center; justify-content: space-between; gap: .6rem; padding: .9rem 1.35rem; background: var(--surface-warm); }
+.price-list-form-dialog__actions { display: flex; align-items: center; justify-content: space-between; gap: .6rem; padding: .9rem 1.35rem 1.3rem; background: var(--surface-warm); }
 .price-list-form-dialog__actions > span { color: var(--ink-muted); font-size: .72rem; }
 .price-list-form-dialog__actions > div { display: flex; gap: .5rem; }
 

@@ -9,7 +9,6 @@ import { Select } from 'primeng/select';
 import { Tag } from 'primeng/tag';
 import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
-import { AuthService } from '../../../../../core/auth/auth.service';
 import { ClientTagDto } from '../../../../../core/models/client-tag.model';
 import { ClientDto } from '../../../../../core/models/client.model';
 import { EmployeeDirectoryDto } from '../../../../../core/models/employee.model';
@@ -18,6 +17,7 @@ import { ClientTagsService } from '../../../../../core/services/client-tags.serv
 import { ClientsService } from '../../../../../core/services/clients.service';
 import { EmployeesService } from '../../../../../core/services/employees.service';
 import { CompaniesService } from '../../../../../core/services/companies.service';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { translationReadySignal } from '../../../../../core/utils/translation-signal.util';
 import { ListToolbarComponent } from '../../../../../shared/components/list-toolbar/list-toolbar.component';
@@ -63,7 +63,7 @@ export class ClientListComponent {
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
-  private readonly authService = inject(AuthService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly router = inject(Router);
 
   @ViewChild('dt') private table!: Table;
@@ -74,15 +74,10 @@ export class ClientListComponent {
    * anyone else's - every trainer still sees every client, see MyClientsComponent. */
   readonly mineFirst = input(false);
 
-  /** Deactivate/activate/delete/anonymize stay Admin-only wherever this list is
-   * mounted (admin Klijenti or /app/my-clients) - a trainer may still edit basic
-   * info and issue packages, per the Klijenti module contract. */
-  readonly isAdmin = computed(() => this.authService.currentRole() === 'Admin');
-
   /** This component is reused verbatim at /app/my-clients (see MyClientsComponent) -
    * resolved once from the current URL rather than an input, since it's a route
    * concern, not something the host page should have to pass down. */
-  private readonly basePath = this.router.url.startsWith('/app') ? '/app/my-clients' : '/admin/clients';
+  private readonly basePath = this.router.url.includes('/my-clients') ? '/app/my-clients' : '/app/clients';
 
   readonly items = signal<ClientDto[]>([]);
   readonly totalCount = signal(0);

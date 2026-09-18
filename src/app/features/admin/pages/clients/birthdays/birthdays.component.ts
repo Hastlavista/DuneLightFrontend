@@ -121,7 +121,7 @@ export class BirthdaysComponent {
   }
 
   openClient(item: BirthdayDto): void {
-    this.router.navigate(['/admin/clients', item.id]);
+    this.router.navigate(['/app/clients', item.id]);
   }
 
   private fetch(from: Date, to: Date): void {

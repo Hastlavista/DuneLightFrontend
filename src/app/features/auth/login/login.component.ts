@@ -5,11 +5,12 @@ import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { Password } from 'primeng/password';
-import { distinctUntilChanged, finalize, map, startWith } from 'rxjs';
+import { distinctUntilChanged, finalize, map, startWith, switchMap } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { KnownUsersService } from '../../../core/auth/known-users.service';
 import { AppError } from '../../../core/models/api-error.model';
 import { BrandingService, resolveBrandingAssetUrl } from '../../../core/services/branding.service';
+import { CurrentEmployeeService } from '../../../core/services/current-employee.service';
 import { resolveErrorMessage } from '../../../core/utils/error-translation.util';
 import { PinLockOverlayComponent } from '../../../shared/components/pin-lock-overlay/pin-lock-overlay.component';
 
@@ -22,6 +23,7 @@ import { PinLockOverlayComponent } from '../../../shared/components/pin-lock-ove
 export class LoginComponent {
   private readonly fb = inject(FormBuilder);
   private readonly authService = inject(AuthService);
+  private readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly knownUsersService = inject(KnownUsersService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -73,10 +75,19 @@ export class LoginComponent {
     }
     this.loading.set(true);
     this.errorMessage.set(null);
-    this.authService.login(this.form.getRawValue()).pipe(finalize(() => this.loading.set(false))).subscribe({
-      next: (response) => this.router.navigate([response.role === 'Admin' ? '/admin' : '/app']),
-      error: (error: AppError) => this.errorMessage.set(resolveErrorMessage(this.translate, error.code)),
-    });
+    this.authService
+      .login(this.form.getRawValue())
+      .pipe(
+        switchMap(() => {
+          this.currentEmployeeService.clear();
+          return this.currentEmployeeService.load();
+        }),
+        finalize(() => this.loading.set(false)),
+      )
+      .subscribe({
+        next: () => this.router.navigate(['/app']),
+        error: (error: AppError) => this.errorMessage.set(resolveErrorMessage(this.translate, error.code)),
+      });
   }
 
   showChooserAgain(): void {

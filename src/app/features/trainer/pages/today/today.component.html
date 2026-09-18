@@ -25,19 +25,23 @@
       (ngModelChange)="serviceFilter.set($event)"
     />
 
-    <p-button
-      class="today-page__new-appointment"
-      icon="pi pi-plus"
-      [label]="'SCHEDULE.LOG_APPOINTMENT_BUTTON' | translate"
-      (onClick)="openNewAppointment()"
-    />
-    <p-button
-      class="today-page__new-break"
-      [outlined]="true"
-      icon="pi pi-pause"
-      [label]="'SCHEDULE.BREAK.NEW_BUTTON' | translate"
-      (onClick)="openNewBreak()"
-    />
+    @if (canCreateAppointments()) {
+      <p-button
+        class="today-page__new-appointment"
+        icon="pi pi-plus"
+        [label]="'SCHEDULE.LOG_APPOINTMENT_BUTTON' | translate"
+        (onClick)="openNewAppointment()"
+      />
+    }
+    @if (canCreateBreaks()) {
+      <p-button
+        class="today-page__new-break"
+        [outlined]="true"
+        icon="pi pi-pause"
+        [label]="'SCHEDULE.BREAK.NEW_BUTTON' | translate"
+        (onClick)="openNewBreak()"
+      />
+    }
   </div>
 
   <app-schedule-legend [services]="activeServices()" />
@@ -59,7 +63,7 @@
   [(visible)]="detailVisible"
   [appointmentId]="detailAppointmentId()"
   [employees]="activeEmployees()"
-  [companies]="activeCompanies()"
+  [companies]="dialogCompanies()"
   [allowEmployeeChange]="true"
   (saved)="refreshGrid()"
 />
@@ -74,8 +78,8 @@
 <app-new-appointment-dialog
   [(visible)]="newAppointmentVisible"
   [employees]="activeEmployees()"
-  [companies]="activeCompanies()"
-  [services]="activeServices()"
+  [companies]="dialogCompanies()"
+  [services]="dialogServices()"
   [initial]="newAppointmentInitial()"
   (created)="refreshGrid()"
 />
@@ -89,7 +93,7 @@
 <app-schedule-break-form-dialog
   [(visible)]="newBreakVisible"
   [employees]="activeEmployees()"
-  [companies]="activeCompanies()"
+  [companies]="dialogCompanies()"
   [initial]="newBreakInitial()"
   (created)="refreshGrid()"
 />

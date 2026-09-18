@@ -10,10 +10,16 @@ import {
   AppointmentMoveRequest,
   AppointmentScheduleQuery,
   AvailableSlotsResponseDto,
+  BookingCancelRequest,
+  BookingCreateRequest,
+  BookingDto,
+  ClientAppointmentHistoryDto,
+  PaymentDto,
   RecurringAppointmentCreateRequest,
 } from '../models/appointment.model';
 import { PagedResult } from '../models/paged-result.model';
 import { ScheduleFeedDto } from '../models/schedule-break.model';
+import { WaitlistEntryDto } from '../models/waitlist.model';
 import { SUPPRESS_ERROR_TOAST } from '../http/http-context.tokens';
 import { PlusSafeUrlCodec } from '../http/plus-safe-url-codec';
 
@@ -67,13 +73,14 @@ export class AppointmentsService {
   }
 
   /** GET /api/appointments/by-client/{clientId} - paged appointment history for
-   * one client, individual and group termini together, newest first. A group
-   * row's `clientAttendance` reflects THIS client's own attendance/coverage on
-   * it (see AppointmentDto.clientAttendance) - feeds the client detail page's
+   * one client, individual and group termini together, newest first. Returns
+   * `ClientAppointmentHistoryDto`, NOT `AppointmentDto` - a flatter,
+   * this-client-only shape that deliberately omits the other clients on a
+   * shared appointment (see that DTO's doc) - feeds the client detail page's
    * Termini tab. */
-  getByClient(clientId: string, query: { page: number; pageSize: number }): Observable<PagedResult<AppointmentDto>> {
+  getByClient(clientId: string, query: { page: number; pageSize: number }): Observable<PagedResult<ClientAppointmentHistoryDto>> {
     const params = new HttpParams().set('page', query.page).set('pageSize', query.pageSize);
-    return this.http.get<PagedResult<AppointmentDto>>(`${this.resourceUrl}/by-client/${clientId}`, { params });
+    return this.http.get<PagedResult<ClientAppointmentHistoryDto>>(`${this.resourceUrl}/by-client/${clientId}`, { params });
   }
 
   /** GET /api/appointments/by-employee/{employeeId} - paged history of an
@@ -162,5 +169,71 @@ export class AppointmentsService {
       params,
       context: new HttpContext().set(SUPPRESS_ERROR_TOAST, true),
     });
+  }
+
+  /** GET /api/appointments/{appointmentId}/bookings - every client's Booking
+   * row on one appointment (same shape as AppointmentDto.bookings, fetched on
+   * its own when only the bookings are needed). */
+  getBookings(appointmentId: string): Observable<BookingDto[]> {
+    return this.http.get<BookingDto[]>(`${this.resourceUrl}/${appointmentId}/bookings`);
+  }
+
+  /** POST /api/appointments/{appointmentId}/bookings - ad-hoc add one client to
+   * an existing appointment (e.g. a guest/replacement on a group occurrence
+   * outside its member list). */
+  addBooking(appointmentId: string, request: BookingCreateRequest): Observable<BookingDto> {
+    return this.http.post<BookingDto>(`${this.resourceUrl}/${appointmentId}/bookings`, request);
+  }
+
+  /** PATCH /api/appointments/{appointmentId}/bookings/{clientId}/cancel - cancel
+   * ONE client's booking without touching the others on the same appointment
+   * (e.g. one of two on a duo termin). */
+  cancelBooking(appointmentId: string, clientId: string, request: BookingCancelRequest): Observable<BookingDto> {
+    return this.http.patch<BookingDto>(`${this.resourceUrl}/${appointmentId}/bookings/${clientId}/cancel`, request);
+  }
+
+  /** PATCH /api/appointments/{appointmentId}/bookings/{clientId}/no-show - same
+   * shape as cancelBooking(), for a single client's no-show. */
+  markBookingNoShow(appointmentId: string, clientId: string, request: BookingCancelRequest): Observable<BookingDto> {
+    return this.http.patch<BookingDto>(`${this.resourceUrl}/${appointmentId}/bookings/${clientId}/no-show`, request);
+  }
+
+  /** GET /api/appointments/{appointmentId}/bookings/{clientId}/payments - full
+   * payment history (incl. voided) of one client's booking - same rows as
+   * BookingDto.payments, fetched on their own. */
+  getBookingPayments(appointmentId: string, clientId: string): Observable<PaymentDto[]> {
+    return this.http.get<PaymentDto[]>(`${this.resourceUrl}/${appointmentId}/bookings/${clientId}/payments`);
+  }
+
+  /** PATCH /api/appointments/{appointmentId}/bookings/{clientId}/confirm - no
+   * request body. Reverses a Group booking's check-in/cancel back to Confirmed
+   * (Completed/NoShow/Cancelled -> Confirmed) - an admin correction, rejected
+   * by the backend for Form=Individual. May void a check-in-generated Payment
+   * and/or restore a consumed package entry server-side - always reload the
+   * Booking (and any locally-held payment/package state) from the response,
+   * never patch it locally. */
+  confirmBooking(appointmentId: string, clientId: string): Observable<BookingDto> {
+    return this.http.patch<BookingDto>(`${this.resourceUrl}/${appointmentId}/bookings/${clientId}/confirm`, null);
+  }
+
+  /** GET /api/appointments/{appointmentId}/waitlist - full history for the
+   * occurrence, including terminal Promoted/Cancelled/Expired rows, not just
+   * the active Waiting queue. */
+  getWaitlist(appointmentId: string): Observable<WaitlistEntryDto[]> {
+    return this.http.get<WaitlistEntryDto[]>(`${this.resourceUrl}/${appointmentId}/waitlist`);
+  }
+
+  /** POST /api/appointments/{appointmentId}/waitlist - only allowed when the
+   * occurrence is actually full (409 CAPACITY_AVAILABLE otherwise), and only
+   * once per client per occurrence while a Waiting entry is active (409
+   * ALREADY_WAITLISTED). */
+  joinWaitlist(appointmentId: string, clientId: string): Observable<WaitlistEntryDto> {
+    return this.http.post<WaitlistEntryDto>(`${this.resourceUrl}/${appointmentId}/waitlist`, { clientId });
+  }
+
+  /** DELETE /api/appointments/{appointmentId}/waitlist/{clientId} - Waiting ->
+   * Cancelled, idempotent (a no-op on an already-terminal entry). */
+  cancelWaitlistEntry(appointmentId: string, clientId: string): Observable<WaitlistEntryDto> {
+    return this.http.delete<WaitlistEntryDto>(`${this.resourceUrl}/${appointmentId}/waitlist/${clientId}`);
   }
 }

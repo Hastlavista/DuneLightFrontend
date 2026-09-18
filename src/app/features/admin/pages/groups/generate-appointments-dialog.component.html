@@ -63,7 +63,7 @@
           [label]="'COMMON.CANCEL' | translate"
           (onClick)="onCancel()"
         />
-        <p-button type="submit" [label]="'GROUPS.GENERATE.SUBMIT' | translate" [loading]="saving()" />
+        <p-button type="submit" [label]="'GROUPS.GENERATE.SUBMIT' | translate" [loading]="saving()" [disabled]="!currentEmployeeService.can('groups.manage')" />
       </div>
     </form>
   }

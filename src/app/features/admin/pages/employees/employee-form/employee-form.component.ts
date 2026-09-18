@@ -115,7 +115,7 @@ export class EmployeeFormComponent {
   private readonly engagementTypesService = inject(EngagementTypesService);
   private readonly grantGroupsService = inject(GrantGroupsService);
   private readonly rolesService = inject(PermissionRolesService);
-  private readonly currentEmployeeService = inject(CurrentEmployeeService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
@@ -285,8 +285,15 @@ export class EmployeeFormComponent {
     this.loadActiveCompanies();
     this.loadActiveServices();
     this.loadActiveEngagementTypes();
-    this.loadActiveGrantGroups();
-    this.loadActiveRoles();
+    // GrantGroupsController/RolesController are BOTH [RequireOwner] end to end
+    // (list included, not just the assignment endpoints) - a non-Owner viewer
+    // (even one holding employees.manage) gets a 403 on GetAll, so don't even
+    // attempt these fetches for them (see the matching skip in applyEmployee()
+    // and onSave()'s update branch).
+    if (this.currentEmployeeService.isOwner()) {
+      this.loadActiveGrantGroups();
+      this.loadActiveRoles();
+    }
 
     if (id) {
       this.loadEmployee(id);
@@ -298,10 +305,13 @@ export class EmployeeFormComponent {
     // GrantGroups are required for every employee except the Owner editing
     // their own record (see isSelfOwnerEdit) - reactive rather than set once,
     // since isSelfOwnerEdit can only be known once CurrentEmployeeService's
-    // async /me load resolves.
+    // async /me load resolves. A non-Owner viewer never sees/populates this
+    // field at all (see the isOwner() guard above), so it must not be
+    // required for them either - otherwise the form is permanently invalid
+    // and Save silently does nothing.
     effect(() => {
       const control = this.form.controls.grantGroupIds;
-      if (this.isSelfOwnerEdit()) {
+      if (this.isSelfOwnerEdit() || !this.currentEmployeeService.isOwner()) {
         control.clearValidators();
       } else {
         control.setValidators(requiredGrantGroupsValidator);
@@ -342,14 +352,20 @@ export class EmployeeFormComponent {
         .subscribe({
           next: () => {
             const raw = this.form.getRawValue();
-            const assignments$: Observable<unknown> = userId
-              ? forkJoin([
-                  this.isSelfOwnerEdit()
-                    ? of(null)
-                    : this.grantGroupsService.setAssignments(userId, { grantGroupIds: raw.grantGroupIds }),
-                  this.rolesService.setAssignments(userId, { roleIds: raw.roleIds }),
-                ])
-              : of(null);
+            // Both endpoints are [RequireOwner] server-side (see the matching
+            // skip in the constructor/applyEmployee()) - calling them for a
+            // non-Owner viewer would 403 and swallow an otherwise-successful
+            // employee update in the generic `error: () => {}` below, leaving
+            // Save looking like it silently did nothing.
+            const assignments$: Observable<unknown> =
+              userId && this.currentEmployeeService.isOwner()
+                ? forkJoin([
+                    this.isSelfOwnerEdit()
+                      ? of(null)
+                      : this.grantGroupsService.setAssignments(userId, { grantGroupIds: raw.grantGroupIds }),
+                    this.rolesService.setAssignments(userId, { roleIds: raw.roleIds }),
+                  ])
+                : of(null);
             assignments$.pipe(finalize(() => this.saving.set(false))).subscribe({
               next: () => {
                 this.notifications.showSuccess(this.translate.instant('EMPLOYEES.UPDATED'));
@@ -378,7 +394,7 @@ export class EmployeeFormComponent {
             // it can no longer even show.
             this.form.controls.password.clearValidators();
             this.form.controls.password.updateValueAndValidity();
-            this.location.replaceState(`/admin/employees/${response.employeeId}`);
+            this.location.replaceState(`/app/employees/${response.employeeId}`);
             this.notifications.showSuccess(this.translate.instant('EMPLOYEES.CREATED'));
             this.goToNextWizardStep('data');
           },
@@ -561,15 +577,23 @@ export class EmployeeFormComponent {
       { emitEvent: false },
     );
 
-    forkJoin([this.grantGroupsService.getAssignments(employee.userId), this.rolesService.getAssignments(employee.userId)])
-      .pipe(finalize(() => this.loading.set(false)))
-      .subscribe(([grantGroupIds, roleIds]) => {
-        this.form.patchValue({ grantGroupIds, roleIds }, { emitEvent: false });
-      });
+    // Same [RequireOwner] reasoning as the constructor's loadActiveGrantGroups/
+    // loadActiveRoles skip - a non-Owner viewer can't read these either, so
+    // don't attempt the fetch (would 403 and leave `loading` stuck without
+    // the finalize below).
+    if (this.currentEmployeeService.isOwner()) {
+      forkJoin([this.grantGroupsService.getAssignments(employee.userId), this.rolesService.getAssignments(employee.userId)])
+        .pipe(finalize(() => this.loading.set(false)))
+        .subscribe(([grantGroupIds, roleIds]) => {
+          this.form.patchValue({ grantGroupIds, roleIds }, { emitEvent: false });
+        });
+    } else {
+      this.loading.set(false);
+    }
   }
 
   private navigateBack(): void {
-    this.router.navigate(['/admin/employees'], { queryParams: { tab: 'employees' } });
+    this.router.navigate(['/app/employees'], { queryParams: { tab: 'employees' } });
   }
 }
 

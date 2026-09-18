@@ -169,6 +169,7 @@
           type="button"
           [label]="'CATALOG.COMPANIES.SAVE_CHANGES' | translate"
           [loading]="saving()"
+          [disabled]="!currentEmployeeService.can('catalog.companies.manage')"
           (onClick)="onSave()"
         />
       </div>

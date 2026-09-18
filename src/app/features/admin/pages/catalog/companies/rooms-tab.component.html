@@ -1,6 +1,7 @@
 <div class="rooms-tab">
   <app-list-toolbar
     [newLabelKey]="'CATALOG.ROOMS.NEW'"
+    [canCreate]="currentEmployeeService.can('catalog.rooms.manage')"
     [search]="search()"
     [showInactive]="showInactive()"
     (searchChange)="onSearchChange($event)"
@@ -36,44 +37,46 @@
         <td>{{ (room.allowConcurrentBookings ? 'COMMON.YES' : 'COMMON.NO') | translate }}</td>
         <td><app-status-tag [active]="room.isActive" /></td>
         <td class="rooms-tab__actions">
-          <p-button
-            icon="pi pi-pencil"
-            [text]="true"
-            [rounded]="true"
-            [ariaLabel]="'COMMON.EDIT' | translate"
-            [title]="'COMMON.EDIT' | translate"
-            (onClick)="openEdit(room)"
-          />
-          @if (room.isActive) {
+          @if (currentEmployeeService.can('catalog.rooms.manage')) {
             <p-button
-              icon="pi pi-eye-slash"
-              severity="warn"
+              icon="pi pi-pencil"
               [text]="true"
               [rounded]="true"
-              [ariaLabel]="'COMMON.DEACTIVATE' | translate"
-              [title]="'COMMON.DEACTIVATE' | translate"
-              (onClick)="confirmDeactivate(room)"
+              [ariaLabel]="'COMMON.EDIT' | translate"
+              [title]="'COMMON.EDIT' | translate"
+              (onClick)="openEdit(room)"
             />
-          } @else {
+            @if (room.isActive) {
+              <p-button
+                icon="pi pi-eye-slash"
+                severity="warn"
+                [text]="true"
+                [rounded]="true"
+                [ariaLabel]="'COMMON.DEACTIVATE' | translate"
+                [title]="'COMMON.DEACTIVATE' | translate"
+                (onClick)="confirmDeactivate(room)"
+              />
+            } @else {
+              <p-button
+                icon="pi pi-eye"
+                severity="success"
+                [text]="true"
+                [rounded]="true"
+                [ariaLabel]="'COMMON.ACTIVATE' | translate"
+                [title]="'COMMON.ACTIVATE' | translate"
+                (onClick)="activate(room)"
+              />
+            }
             <p-button
-              icon="pi pi-eye"
-              severity="success"
+              icon="pi pi-trash"
+              severity="danger"
               [text]="true"
               [rounded]="true"
-              [ariaLabel]="'COMMON.ACTIVATE' | translate"
-              [title]="'COMMON.ACTIVATE' | translate"
-              (onClick)="activate(room)"
+              [ariaLabel]="'COMMON.DELETE' | translate"
+              [title]="'COMMON.DELETE' | translate"
+              (onClick)="confirmDelete(room)"
             />
           }
-          <p-button
-            icon="pi pi-trash"
-            severity="danger"
-            [text]="true"
-            [rounded]="true"
-            [ariaLabel]="'COMMON.DELETE' | translate"
-            [title]="'COMMON.DELETE' | translate"
-            (onClick)="confirmDelete(room)"
-          />
         </td>
       </tr>
     </ng-template>

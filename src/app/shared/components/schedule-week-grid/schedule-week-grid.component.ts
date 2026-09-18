@@ -128,9 +128,9 @@ export class ScheduleWeekGridComponent {
 
   /** Cancelled termini free their slot and never render on the grid - a
    * cancelled slot looks like plain empty space, clickable like any other
-   * empty cell to book a new termin. NoShow keeps rendering (dimmed/
-   * struck-through, see toScheduleGridCell) since that status stays visible
-   * by design. */
+   * empty cell to book a new termin. There is no appointment-level NoShow to
+   * filter (see AppointmentStatus's doc - only a per-client Booking can be
+   * NoShow, and the lightweight schedule feed doesn't carry that yet). */
   readonly gridCells = computed<ScheduleGridCell[]>(() => {
     const showCompanyBadge = this.companyContext.selectedCompanyId() === null;
     const colors = this.companyColors();

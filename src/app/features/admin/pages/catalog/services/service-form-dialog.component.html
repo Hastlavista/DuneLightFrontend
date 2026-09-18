@@ -58,7 +58,7 @@
 
       <div class="service-form-dialog__actions">
         <span>@if (form.controls.name.invalid) { Nedostaje naziv usluge. } @else { Spremno za spremanje. }</span>
-        <div><p-button type="button" [outlined]="true" severity="secondary" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" /><p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" [disabled]="form.invalid" /></div>
+        <div><p-button type="button" [outlined]="true" severity="secondary" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" /><p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" [disabled]="form.invalid || !currentEmployeeService.can('catalog.services.manage')" /></div>
       </div>
     </form>
   }

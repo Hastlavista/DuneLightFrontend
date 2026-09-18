@@ -48,7 +48,7 @@ deploying.
 src/app/
   core/                     # cross-cutting, singleton stuff — no UI
     auth/auth.service.ts    # login/logout/changePassword, session signal, localStorage persistence
-    guards/                 # authGuard, adminGuard, guestGuard (functional CanActivateFn)
+    guards/                 # authGuard, grantGuard, ownerGuard, guestGuard (functional CanActivateFn)
     interceptors/           # auth (Bearer token) + error (parsing, toasts, 401 handling)
     services/               # CurrentEmployeeService, LocationContextService, NotificationService
     models/                 # DTOs + the UserRole type + role → translation-key map
@@ -56,10 +56,10 @@ src/app/
     http/                   # HttpContext tokens shared by interceptors/services
 
   layout/                   # the app shell
-    shell/                  # sidebar + topbar + <router-outlet>, one instance for /admin and /app
-    sidebar/                # nav list (per section) + logged-in user card
-    topbar/                 # page title, location switcher, admin/trainer view switch
-    nav-items.ts            # nav item definitions (path, icon, translation key) per section
+    shell/                  # sidebar + topbar + <router-outlet>, single instance for /app
+    sidebar/                # nav list (grant-filtered) + logged-in user card
+    topbar/                 # page title, location switcher
+    nav-items.ts            # nav item definitions (path, icon, translation key, required grants)
 
   features/
     auth/login/             # the login screen
@@ -125,10 +125,10 @@ comparisons, request bodies. The Croatian on-screen label (Admin/Trener/Recepcij
 only exists as a translation key (`ROLES.ADMIN` etc.), resolved via the `translate`
 pipe — never hardcoded.
 
-- `/admin/**` — `authGuard` + `adminGuard` (role must be `"Admin"`)
-- `/app/**` — `authGuard` only (any logged-in role, including `Reception`, per the
-  current spec — there's no dedicated Reception UI yet)
-- `/login` — `guestGuard` redirects an already-logged-in user to their section
+- `/app/**` — `authGuard` only; individual pages add `grantGuard`/`ownerGuard` as needed
+  (see admin.routes.ts) — there's no separate admin section anymore, visibility is
+  purely grant-based
+- `/login` — `guestGuard` redirects an already-logged-in user to `/app`
 
 ## Internationalization
 

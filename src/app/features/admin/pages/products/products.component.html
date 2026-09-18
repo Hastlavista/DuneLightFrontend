@@ -1,0 +1,14 @@
+<p-tabs [value]="initialTab">
+  <p-tablist>
+    <p-tab value="products">{{ 'CATALOG.PRODUCTS_TAB_LABEL' | translate }}</p-tab>
+    <p-tab value="stock">{{ 'CATALOG.STOCK_TAB_LABEL' | translate }}</p-tab>
+  </p-tablist>
+  <p-tabpanels>
+    <p-tabpanel value="products">
+      <app-admin-catalog-products (changed)="stock.refresh()" />
+    </p-tabpanel>
+    <p-tabpanel value="stock">
+      <app-admin-stock #stock />
+    </p-tabpanel>
+  </p-tabpanels>
+</p-tabs>

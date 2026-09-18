@@ -1,5 +1,5 @@
 import { Component, computed, inject, input, output } from '@angular/core';
-import { Router, RouterLink, RouterLinkActive } from '@angular/router';
+import { Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Popover } from 'primeng/popover';
 import { AuthService } from '../../core/auth/auth.service';
@@ -14,7 +14,7 @@ interface CompanyOption {
 
 @Component({
   selector: 'app-topbar',
-  imports: [RouterLink, RouterLinkActive, TranslatePipe, Popover],
+  imports: [TranslatePipe, Popover],
   templateUrl: './topbar.component.html',
   styleUrl: './topbar.component.scss',
 })
@@ -26,12 +26,10 @@ export class TopbarComponent {
   private readonly router = inject(Router);
   private readonly translate = inject(TranslateService);
 
-  readonly section = input.required<'admin' | 'trainer'>();
   readonly titleKey = input<string | null>(null);
   readonly menuToggle = output<void>();
 
-  readonly isAdmin = computed(() => this.authService.currentRole() === 'Admin');
-  readonly basePath = computed(() => (this.section() === 'admin' ? '/admin' : '/app'));
+  readonly basePath = '/app';
 
   readonly user = this.authService.currentUser;
   readonly employee = this.currentEmployeeService.employee;
@@ -58,11 +56,13 @@ export class TopbarComponent {
   readonly avatarColor = computed(() => this.employee()?.colorHex || 'var(--brand-primary)');
 
   readonly companyOptions = computed<CompanyOption[]>(() => [
-    { label: this.translate.instant('LAYOUT.TOPBAR.ALL_COMPANIES'), value: null },
-    ...this.companyContextService
-      .companies()
-      .map((company) => ({ label: company.name, value: company.id })),
+    ...(this.companyContextService.canSelectAllCompanies()
+      ? [{ label: this.translate.instant('LAYOUT.TOPBAR.ALL_COMPANIES'), value: null }]
+      : []),
+    ...this.companyContextService.companies().map((company) => ({ label: company.name, value: company.id })),
   ]);
+
+  readonly hasCompanyOptions = computed(() => this.companyOptions().length > 0);
 
   readonly selectedCompanyId = this.companyContextService.selectedCompanyId;
 
@@ -71,7 +71,7 @@ export class TopbarComponent {
   }
 
   openProfile(): void {
-    this.router.navigate([this.basePath(), 'profile']);
+    this.router.navigate([this.basePath, 'profile']);
   }
 
   logout(): void {

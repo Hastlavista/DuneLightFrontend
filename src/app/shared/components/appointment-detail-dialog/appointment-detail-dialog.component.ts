@@ -11,15 +11,17 @@ import { finalize } from 'rxjs';
 import { AppError } from '../../../core/models/api-error.model';
 import {
   AppointmentCancelRequest,
-  AppointmentClientRef,
+  AppointmentClientSettlement,
   AppointmentCompleteRequest,
   AppointmentDto,
   AppointmentMoveRequest,
+  BookingDto,
   PAYMENT_METHODS,
-  PackageSelection,
   PaymentMethod,
   appointmentStatusSeverity,
   appointmentStatusTranslationKey,
+  bookingStatusSeverity,
+  bookingStatusTranslationKey,
   paymentMethodTranslationKey,
 } from '../../../core/models/appointment.model';
 import { ClientPackageDto } from '../../../core/models/client-package.model';
@@ -53,6 +55,16 @@ interface PackageRowState {
 
 type DetailMode = 'view' | 'billing' | 'cancel' | 'noShow';
 
+/** Same "PaymentMethod or the pseudo-value 'Package'" per-booking billing
+ * choice as NewAppointmentDialogComponent's SettlementChoice - see that
+ * type's doc and AppointmentClientSettlement. */
+type SettlementChoice = PaymentMethod | 'Package';
+
+interface SettlementSelectOption {
+  label: string;
+  value: SettlementChoice;
+}
+
 /**
  * Appointment detail (GET /api/appointments/{id}) plus:
  * - an inline edit form for moving it - time/trainer/company are the only
@@ -61,17 +73,18 @@ type DetailMode = 'view' | 'billing' | 'cancel' | 'noShow';
  *   ScheduleGridComponent's drag & drop used to call directly; a modal form is
  *   more reliable to hit than pixel-precise dragging, especially for short
  *   appointments.
- * - "Naplati" (Scheduled only) - reveals a payment-method + per-client package
- *   picker (same EligiblePackageSelectComponent/0-1-many rule as
- *   NewAppointmentDialogComponent) and calls PATCH /{id}/complete, resending
- *   the appointment's own already-known fields since that endpoint takes the
- *   same full AppointmentCompleteRequest shape as creating one.
+ * - "Naplati" (Scheduled only) - reveals a per-booking settlement choice
+ *   (payment method, or "Paket" + the EligiblePackageSelectComponent 0/1/>1
+ *   rule, same as NewAppointmentDialogComponent - see SettlementChoice) and
+ *   calls PATCH /{id}/complete, resending the appointment's own already-known
+ *   fields since that endpoint takes the same full AppointmentCompleteRequest
+ *   shape as creating one.
  * - "Otkaži"/"Nije došao" (Scheduled only) - separate flows, not a shared
- *   toggle: cancel defaults every returnable client's "vrati ulazak" checkbox
- *   ON, no-show defaults it OFF. Both list only appt.clients entries where
- *   packageEntryDeducted && !packageEntryReturned - that per-client pair is
- *   the real state (see AppointmentClientRef's doc), not something derived
- *   from a single appointment-level payment field.
+ *   toggle: cancel defaults every returnable booking's "vrati ulazak" checkbox
+ *   ON, no-show defaults it OFF. Both list only appt.bookings entries where
+ *   packageCoverageApplied && !packageCoverageReturned - that per-booking pair
+ *   is the real state (see BookingDto's doc), not something derived from a
+ *   single appointment-level payment field.
  * `mode` gates which of these is showing; switching `appointmentId` or
  * closing the dialog always resets it back to 'view'.
  *
@@ -122,9 +135,9 @@ export class AppointmentDetailDialogComponent {
 
   readonly mode = signal<DetailMode>('view');
 
-  readonly billingPaymentMethod = signal<PaymentMethod | null>(null);
   readonly billingSaving = signal(false);
   readonly billingAttempted = signal(false);
+  private readonly billingSettlementChoiceMap = signal<Map<string, SettlementChoice | null>>(new Map());
   private readonly billingPackageRows = signal<Map<string, PackageRowState>>(new Map());
   private readonly billingSelectedPackages = signal<Map<string, string | null>>(new Map());
 
@@ -134,16 +147,19 @@ export class AppointmentDetailDialogComponent {
 
   readonly appointmentStatusTranslationKey = appointmentStatusTranslationKey;
   readonly appointmentStatusSeverity = appointmentStatusSeverity;
+  readonly bookingStatusTranslationKey = bookingStatusTranslationKey;
+  readonly bookingStatusSeverity = bookingStatusSeverity;
 
   private readonly translationsReady = translationReadySignal(this.translate);
 
   readonly isMovable = computed(() => {
     const appt = this.appointment();
-    return appt !== null && appt.status !== 'Cancelled' && appt.status !== 'NoShow';
+    return appt !== null && appt.status !== 'Cancelled';
   });
 
   /** "Naplati"/"Otkaži"/"Nije došao" only make sense for a still-Scheduled
-   * appointment - already Completed/Cancelled/NoShow disables all three. */
+   * appointment - already Completed/Cancelled disables all three (there is no
+   * appointment-level NoShow - see AppointmentStatus's doc). */
   readonly isScheduled = computed(() => this.appointment()?.status === 'Scheduled');
 
   readonly employeeOptions = computed<SelectOption[]>(() =>
@@ -178,9 +194,12 @@ export class AppointmentDetailDialogComponent {
     return isOutsideAvailability(minutes, minutes, avail.effectiveIntervals);
   });
 
-  readonly paymentMethodOptions = computed<SelectOption[]>(() => {
+  readonly settlementChoiceOptions = computed<SettlementSelectOption[]>(() => {
     this.translationsReady();
-    return PAYMENT_METHODS.map((method) => ({ label: this.translate.instant(paymentMethodTranslationKey(method)), value: method }));
+    return [
+      ...PAYMENT_METHODS.map((method) => ({ label: this.translate.instant(paymentMethodTranslationKey(method)), value: method as SettlementChoice })),
+      { label: this.translate.instant('SCHEDULE.PACKAGE_COVERAGE'), value: 'Package' as SettlementChoice },
+    ];
   });
 
   readonly form = this.fb.nonNullable.group({
@@ -242,7 +261,7 @@ export class AppointmentDetailDialogComponent {
     }
 
     if (reasons.length === 0) {
-      this.performMove();
+      this.performMove(false);
       return;
     }
 
@@ -253,11 +272,13 @@ export class AppointmentDetailDialogComponent {
       acceptLabel: this.translate.instant('SCHEDULING_WARNINGS.CONTINUE_ANYWAY'),
       rejectLabel: this.translate.instant('COMMON.CANCEL'),
       acceptButtonProps: { severity: 'warn' },
-      accept: () => this.performMove(),
+      // See AppointmentMoveRequest.overrideAvailability's doc - without this,
+      // the confirmed retry would hit the exact same 409 again.
+      accept: () => this.performMove(true),
     });
   }
 
-  private performMove(): void {
+  private performMove(overrideAvailability: boolean): void {
     const appt = this.appointment();
     if (!appt) {
       return;
@@ -273,6 +294,7 @@ export class AppointmentDetailDialogComponent {
       startsAt: toLocalIsoFromDate(raw.startsAt as Date),
       companyId: raw.companyId,
       roomId: raw.roomId || null,
+      overrideAvailability,
       ...(this.allowEmployeeChange() ? { employeeId: raw.employeeId } : {}),
     };
 
@@ -301,24 +323,40 @@ export class AppointmentDetailDialogComponent {
     if (appointment.form === 'Group') {
       return appointment.groupName ?? '';
     }
-    return appointment.clients.map((client) => client.clientName).join(', ');
+    return appointment.bookings.map((booking) => booking.clientName).join(', ');
   }
 
   onOpenBilling(): void {
     this.mode.set('billing');
-    this.billingPaymentMethod.set(null);
     this.billingAttempted.set(false);
+    this.billingSettlementChoiceMap.set(new Map());
     this.billingPackageRows.set(new Map());
     this.billingSelectedPackages.set(new Map());
   }
 
-  onBillingPaymentMethodChange(method: PaymentMethod): void {
-    this.billingPaymentMethod.set(method);
-    if (method === 'Package') {
-      this.refreshBillingEligiblePackages();
+  billingSettlementChoice(clientId: string): SettlementChoice | null {
+    return this.billingSettlementChoiceMap().get(clientId) ?? null;
+  }
+
+  onBillingSettlementChoiceChange(clientId: string, choice: SettlementChoice): void {
+    this.billingSettlementChoiceMap.update((map) => {
+      const next = new Map(map);
+      next.set(clientId, choice);
+      return next;
+    });
+    if (choice === 'Package') {
+      this.refreshBillingEligiblePackagesForClient(clientId);
     } else {
-      this.billingPackageRows.set(new Map());
-      this.billingSelectedPackages.set(new Map());
+      this.billingPackageRows.update((map) => {
+        const next = new Map(map);
+        next.delete(clientId);
+        return next;
+      });
+      this.billingSelectedPackages.update((map) => {
+        const next = new Map(map);
+        next.delete(clientId);
+        return next;
+      });
     }
   }
 
@@ -335,21 +373,14 @@ export class AppointmentDetailDialogComponent {
   }
 
   canConfirmBilling(): boolean {
-    const method = this.billingPaymentMethod();
-    if (!method) {
-      return false;
-    }
-    if (method !== 'Package') {
-      return true;
-    }
-    return this.buildBillingPackageSelections() !== null;
+    return this.buildBillingSettlements() !== null;
   }
 
   onConfirmBilling(): void {
     this.billingAttempted.set(true);
     const appt = this.appointment();
-    const method = this.billingPaymentMethod();
-    if (!appt || !method || !this.canConfirmBilling()) {
+    const settlements = this.buildBillingSettlements();
+    if (!appt || !settlements) {
       return;
     }
 
@@ -358,11 +389,10 @@ export class AppointmentDetailDialogComponent {
       serviceId: appt.serviceId,
       employeeId: appt.employeeId,
       companyId: appt.companyId,
-      clientIds: appt.clients.map((client) => client.clientId),
-      amount: appt.amount,
+      clientIds: appt.bookings.map((booking) => booking.clientId),
       note: appt.note ?? null,
-      paymentMethod: method,
-      packageSelections: method === 'Package' ? (this.buildBillingPackageSelections() ?? []) : [],
+      overrideAvailability: false,
+      settlements,
     };
 
     this.billingSaving.set(true);
@@ -401,8 +431,8 @@ export class AppointmentDetailDialogComponent {
     this.mode.set('view');
   }
 
-  returnableClients(): AppointmentClientRef[] {
-    return (this.appointment()?.clients ?? []).filter((client) => client.packageEntryDeducted && !client.packageEntryReturned);
+  returnableClients(): BookingDto[] {
+    return (this.appointment()?.bookings ?? []).filter((booking) => booking.packageCoverageApplied && !booking.packageCoverageReturned);
   }
 
   isReturnEntryChecked(clientId: string): boolean {
@@ -471,54 +501,65 @@ export class AppointmentDetailDialogComponent {
       .map(([clientId]) => clientId);
   }
 
-  private buildBillingPackageSelections(): PackageSelection[] | null {
+  /** Builds one AppointmentClientSettlement per booking on this appointment, or
+   * null while any booking still needs a choice made - same rule as
+   * NewAppointmentDialogComponent.buildSettlements. Per-booking amount
+   * override isn't exposed here (same simplification as the new-appointment
+   * dialog) - omitted, the backend resolves each client's own suggested
+   * price. */
+  private buildBillingSettlements(): AppointmentClientSettlement[] | null {
     const appt = this.appointment();
     if (!appt) {
       return null;
     }
-    const selections: PackageSelection[] = [];
-    for (const client of appt.clients) {
-      const packageId = this.billingSelectedPackages().get(client.clientId);
-      if (!packageId) {
+    const settlements: AppointmentClientSettlement[] = [];
+    for (const booking of appt.bookings) {
+      const choice = this.billingSettlementChoice(booking.clientId);
+      if (!choice) {
         return null;
       }
-      selections.push({ clientId: client.clientId, clientPackageId: packageId });
+      if (choice === 'Package') {
+        const packageId = this.billingSelectedPackages().get(booking.clientId);
+        if (!packageId) {
+          return null;
+        }
+        settlements.push({ clientId: booking.clientId, clientPackageId: packageId, isPaid: true });
+      } else {
+        settlements.push({ clientId: booking.clientId, paymentMethod: choice, isPaid: true });
+      }
     }
-    return selections;
+    return settlements;
   }
 
-  private refreshBillingEligiblePackages(): void {
+  private refreshBillingEligiblePackagesForClient(clientId: string): void {
     const appt = this.appointment();
     if (!appt) {
       return;
     }
 
-    const initialState = new Map<string, PackageRowState>();
-    for (const client of appt.clients) {
-      initialState.set(client.clientId, { eligible: null, loading: true });
-    }
-    this.billingPackageRows.set(initialState);
-    this.billingSelectedPackages.set(new Map());
+    this.billingPackageRows.update((map) => {
+      const next = new Map(map);
+      next.set(clientId, { eligible: null, loading: true });
+      return next;
+    });
 
-    for (const client of appt.clients) {
-      this.clientPackagesService.getEligible(client.clientId, appt.serviceId, appt.startsAt).subscribe((eligible) => {
-        this.billingPackageRows.update((map) => {
-          const next = new Map(map);
-          next.set(client.clientId, { eligible, loading: false });
-          return next;
-        });
-        if (eligible.length <= 1) {
-          const packageId = eligible[0]?.id ?? null;
-          if (packageId) {
-            this.billingSelectedPackages.update((map) => {
-              const next = new Map(map);
-              next.set(client.clientId, packageId);
-              return next;
-            });
-          }
-        }
+    this.clientPackagesService.getEligible(clientId, appt.serviceId, appt.startsAt).subscribe((eligible) => {
+      this.billingPackageRows.update((map) => {
+        const next = new Map(map);
+        next.set(clientId, { eligible, loading: false });
+        return next;
       });
-    }
+      if (eligible.length <= 1) {
+        const packageId = eligible[0]?.id ?? null;
+        if (packageId) {
+          this.billingSelectedPackages.update((map) => {
+            const next = new Map(map);
+            next.set(clientId, packageId);
+            return next;
+          });
+        }
+      }
+    });
   }
 
   private refreshRooms(): void {
@@ -568,7 +609,7 @@ export class AppointmentDetailDialogComponent {
           companyId: dto.companyId,
           roomId: dto.roomId ?? null,
         });
-        if (dto.status === 'Cancelled' || dto.status === 'NoShow') {
+        if (dto.status === 'Cancelled') {
           this.form.disable();
         } else {
           this.form.enable();

@@ -5,7 +5,7 @@
         <span class="grant-group-form-page__summary-icon"><i class="pi pi-shield"></i></span>
         <div>
           <strong>{{ (isEditMode() ? 'PERMISSIONS.GRANT_GROUPS.EDIT_TITLE' : 'PERMISSIONS.GRANT_GROUPS.NEW_TITLE') | translate }}</strong>
-          <small>Grupirajte dozvole koje se zajedno dodjeljuju korisnicima.</small>
+          <small>Grupirajte mogućnosti koje se zajedno dodjeljuju korisnicima.</small>
         </div>
         <button type="button" class="grant-group-form-page__back" (click)="onCancel()"><i class="pi pi-angle-left"></i>{{ 'PERMISSIONS.GRANT_GROUPS.BACK_TO_LIST' | translate }}</button>
       </div>
@@ -23,39 +23,66 @@
 
       <section class="grant-group-form-page__section grant-group-form-page__section--grants">
         <div class="grant-group-form-page__section-heading">
-          <div><h3>{{ 'PERMISSIONS.GRANT_GROUPS.FIELD_GRANTS' | translate }}</h3><p>Otvorite modul i odaberite dozvole koje pripadaju ovoj grupi.</p></div>
-          <span>{{ selectedGrants().size }} odabrano</span>
+          <div><h3>{{ 'PERMISSIONS.GRANT_GROUPS.FIELD_GRANTS' | translate }}</h3><p>Odaberite što ova grupa smije raditi po stranici.</p></div>
         </div>
 
         @if (loading()) {
           <p class="grant-group-form-page__loading">Učitavanje dozvola…</p>
         } @else {
           <div class="grant-group-form-page__modules">
-            @for (group of moduleGroups(); track group.module) {
-              <details class="grant-group-form-page__module" [open]="moduleCheckedCount(group) > 0">
+            @for (section of sections; track section.id) {
+              <details class="grant-group-form-page__module" [open]="sectionCheckedCount(section) > 0">
                 <summary>
-                  <span class="grant-group-form-page__module-name">{{ 'PERMISSIONS.MODULES.' + group.module | translate }}</span>
-                  <span class="grant-group-form-page__module-count">{{ moduleCheckedCount(group) }}/{{ group.grants.length }}</span>
+                  <span class="grant-group-form-page__module-name">{{ section.labelKey | translate }}</span>
+                  <span class="grant-group-form-page__module-count">{{ sectionCheckedCount(section) }}/{{ section.capabilities.length }}</span>
                 </summary>
                 <div class="grant-group-form-page__grant-list">
-                  @for (grant of group.grants; track grant.key) {
-                    <label class="grant-group-form-page__grant-row" [class.grant-group-form-page__grant-row--checked]="isChecked(grant.key)">
-                      <input type="checkbox" [checked]="isChecked(grant.key)" (change)="onToggle(grant.key, $any($event.target).checked)" />
+                  @for (capability of section.capabilities; track capability.primaryGrant) {
+                    <label
+                      class="grant-group-form-page__grant-row"
+                      [class.grant-group-form-page__grant-row--checked]="isCapabilityEnabled(capability.primaryGrant)"
+                    >
+                      <input
+                        type="checkbox"
+                        [checked]="isCapabilityEnabled(capability.primaryGrant)"
+                        (change)="onToggleCapability(capability.primaryGrant, $any($event.target).checked)"
+                      />
                       <span class="grant-group-form-page__grant-text">
-                        <span class="grant-group-form-page__grant-key">{{ grant.key }}</span>
-                        <span class="grant-group-form-page__grant-description">{{ grant.description }}</span>
+                        <span class="grant-group-form-page__grant-key">{{ capability.labelKey | translate }}</span>
+                        <span class="grant-group-form-page__grant-description">{{ capability.descriptionKey | translate }}</span>
                       </span>
                     </label>
                   }
                 </div>
               </details>
             }
+
+            <details class="grant-group-form-page__module" [open]="unmanagedSelected().size > 0">
+              <summary>
+                <span class="grant-group-form-page__module-name">{{ 'PERMISSIONS.SECTIONS.ADVANCED' | translate }}</span>
+                <span class="grant-group-form-page__module-count">{{ unmanagedSelected().size }}</span>
+              </summary>
+              <div class="grant-group-form-page__grant-list">
+                @for (group of unmanagedGroups(); track group.module) {
+                  <div class="grant-group-form-page__module-name">{{ 'PERMISSIONS.MODULES.' + group.module | translate }} ({{ unmanagedCheckedCount(group) }}/{{ group.grants.length }})</div>
+                  @for (grant of group.grants; track grant.key) {
+                    <label class="grant-group-form-page__grant-row" [class.grant-group-form-page__grant-row--checked]="isUnmanagedChecked(grant.key)">
+                      <input type="checkbox" [checked]="isUnmanagedChecked(grant.key)" (change)="onToggleUnmanaged(grant.key, $any($event.target).checked)" />
+                      <span class="grant-group-form-page__grant-text">
+                        <span class="grant-group-form-page__grant-key">{{ grant.key }}</span>
+                        <span class="grant-group-form-page__grant-description">{{ grant.description }}</span>
+                      </span>
+                    </label>
+                  }
+                }
+              </div>
+            </details>
           </div>
         }
       </section>
 
       <div class="dl-form__actions">
-        <span class="grant-group-form-page__footer-hint">@if (form.controls.name.invalid) { Za spremanje je potreban naziv grupe. } @else { {{ selectedGrants().size }} dozvola u grupi. }</span>
+        <span class="grant-group-form-page__footer-hint">@if (form.controls.name.invalid) { Za spremanje je potreban naziv grupe. }</span>
         <div>
           <p-button type="button" severity="secondary" [outlined]="true" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" />
           <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />

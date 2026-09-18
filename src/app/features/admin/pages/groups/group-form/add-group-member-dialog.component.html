@@ -50,7 +50,7 @@
               [text]="true"
               [rounded]="true"
               [loading]="addingClientId() === client.id"
-              [disabled]="!!addingClientId()"
+              [disabled]="!!addingClientId() || !currentEmployeeService.can('groups.manage')"
               [ariaLabel]="'GROUPS.MEMBERS.ADD_ROW' | translate"
               [title]="'GROUPS.MEMBERS.ADD_ROW' | translate"
               (onClick)="addClient(client, $event)"

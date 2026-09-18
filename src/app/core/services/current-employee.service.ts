@@ -8,6 +8,7 @@ import { AuthService } from '../auth/auth.service';
 import { SUPPRESS_ERROR_TOAST } from '../http/http-context.tokens';
 import { CurrentEmployee } from '../models/employee.model';
 import { resolveErrorMessage } from '../utils/error-translation.util';
+import { ACTION_GRANTS, ActionKey } from '../permissions/action-grants';
 import { NotificationService } from './notification.service';
 
 @Injectable({ providedIn: 'root' })
@@ -76,8 +77,8 @@ export class CurrentEmployeeService {
    * already completed, otherwise triggers one - use this instead of load()
    * anywhere the caller doesn't want to force a redundant re-fetch (guards
    * that may run before ShellComponent's constructor gets a chance to call
-   * load() itself - see admin.guard.ts/owner.guard.ts's own doc comments for
-   * why that ordering matters here). */
+   * load() itself - see owner.guard.ts's own doc comment for why that
+   * ordering matters here). */
   ensureLoaded(): Observable<CurrentEmployee | null> {
     if (this.loadedState()) {
       return of(this.employeeState());
@@ -99,11 +100,22 @@ export class CurrentEmployeeService {
     return this.isOwner() || (this.employeeState()?.grants.includes(key) ?? false);
   }
 
-  hasAnyGrant(keys: string[]): boolean {
+  hasAnyGrant(keys: readonly string[]): boolean {
     if (this.isOwner()) {
       return true;
     }
     const grants = this.employeeState()?.grants;
     return grants ? keys.some((key) => grants.includes(key)) : false;
+  }
+
+  /** Action-level (button/field) grant check - looks the key up in the
+   * centralized ACTION_GRANTS catalog instead of taking raw grant keys, so
+   * the grant a UI action checks can never drift from what its target
+   * endpoint's [RequireGrant] actually enforces (see action-grants.ts). Use
+   * for "should I show this button" (*ngIf) or "should this field be
+   * editable" ([disabled]) decisions - PAGE_GRANTS/grantGuard already
+   * covers whether the user can reach the page at all. */
+  can(action: ActionKey): boolean {
+    return this.hasAnyGrant(ACTION_GRANTS[action]);
   }
 }

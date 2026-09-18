@@ -51,7 +51,6 @@
           <th>{{ 'CLIENTS.APPOINTMENTS.COL_DATETIME' | translate }}</th>
           <th>{{ 'CLIENTS.APPOINTMENTS.COL_TYPE' | translate }}</th>
           <th>{{ 'CLIENTS.APPOINTMENTS.COL_NAME' | translate }}</th>
-          <th>{{ 'CLIENTS.APPOINTMENTS.COL_CLIENTS' | translate }}</th>
           <th>{{ 'COMMON.COL_STATUS' | translate }}</th>
           <th>{{ 'CLIENTS.APPOINTMENTS.COL_AMOUNT_COVERAGE' | translate }}</th>
         </tr>
@@ -67,29 +66,18 @@
             />
           </td>
           <td>{{ appt.form === 'Group' ? appt.groupName : appt.serviceName }}</td>
-          <td>{{ appt.form === 'Group' ? '—' : clientNamesLabel(appt) }}</td>
           <td>
-            @if (appt.form === 'Group') {
-              <p-tag
-                [severity]="appt.clientAttendance?.attended ? 'success' : 'warn'"
-                [value]="(appt.clientAttendance?.attended ? 'CLIENTS.APPOINTMENTS.ATTENDED_YES' : 'CLIENTS.APPOINTMENTS.ATTENDED_NO') | translate"
-              />
-            } @else {
-              <p-tag [severity]="appointmentStatusSeverity(appt.status)" [value]="appointmentStatusTranslationKey(appt.status) | translate" />
-            }
+            <p-tag [severity]="bookingStatusSeverity(appt.bookingStatus)" [value]="bookingStatusTranslationKey(appt.bookingStatus) | translate" />
           </td>
           <td>
-            @if (appt.form === 'Group') {
-              @if (appt.clientAttendance?.coverageType; as coverage) {
+            @if (appt.packageCoverageApplied) {
+              @if (appt.coverageType; as coverage) {
                 {{ coverageTypeTranslationKey(coverage) | translate }}
               } @else {
-                —
+                {{ 'CLIENTS.APPOINTMENTS.COVERED_BY_PACKAGE' | translate }}
               }
             } @else {
-              {{ appt.amount | eurCurrency }}
-              @if (paymentLabel(appt.paymentMethod); as method) {
-                · {{ method | translate }}
-              }
+              {{ appt.amount | eurCurrency }} · {{ (appt.isPaid ? 'SCHEDULE.DETAIL.PAID' : 'SCHEDULE.DETAIL.UNPAID') | translate }}
             }
           </td>
         </tr>
@@ -97,7 +85,7 @@
 
       <ng-template pTemplate="emptymessage">
         <tr>
-          <td colspan="6" class="client-appointments-tab__empty">{{ 'CLIENTS.APPOINTMENTS.HISTORY_EMPTY' | translate }}</td>
+          <td colspan="5" class="client-appointments-tab__empty">{{ 'CLIENTS.APPOINTMENTS.HISTORY_EMPTY' | translate }}</td>
         </tr>
       </ng-template>
     </p-table>

@@ -1,0 +1,37 @@
+<p-dialog [(visible)]="visible" [modal]="true" [style]="{ width: '26rem' }" [header]="'CHECKOUT.ADD_PAYMENT.TITLE' | translate">
+  <form [formGroup]="form" (ngSubmit)="onSave()" class="dl-form" novalidate>
+    <p class="dl-form__hint">{{ 'CHECKOUT.ADD_PAYMENT.OUTSTANDING_HINT' | translate: { amount: checkout().totals.outstandingAmount } }}</p>
+
+    <div class="dl-form__field">
+      <label for="payment-amount">{{ 'CHECKOUT.ADD_PAYMENT.FIELD_AMOUNT' | translate }}</label>
+      <p-inputnumber
+        id="payment-amount"
+        fluid
+        formControlName="amount"
+        mode="currency"
+        currency="EUR"
+        locale="hr-HR"
+        [minFractionDigits]="2"
+        [maxFractionDigits]="2"
+      />
+      @if (form.controls.amount.invalid && form.controls.amount.touched) {
+        <span class="dl-form__error">{{ 'CHECKOUT.ADD_PAYMENT.ERRORS.AMOUNT_REQUIRED' | translate }}</span>
+      }
+    </div>
+
+    <div class="dl-form__field">
+      <label for="payment-method">{{ 'CHECKOUT.ADD_PAYMENT.FIELD_METHOD' | translate }}</label>
+      <p-selectbutton id="payment-method" fluid formControlName="method" [options]="paymentMethodOptions()" optionLabel="label" optionValue="value" />
+    </div>
+
+    <div class="dl-form__field">
+      <label for="payment-note">{{ 'CHECKOUT.ADD_PAYMENT.FIELD_NOTE' | translate }}</label>
+      <textarea id="payment-note" rows="2" formControlName="note"></textarea>
+    </div>
+
+    <div class="dl-form__actions">
+      <p-button type="button" [text]="true" severity="secondary" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" />
+      <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+    </div>
+  </form>
+</p-dialog>

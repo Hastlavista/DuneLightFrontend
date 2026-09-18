@@ -44,7 +44,7 @@ interface FilterOption<T> {
 })
 export class EmployeeListComponent {
   private readonly employeesService = inject(EmployeesService);
-  private readonly currentEmployeeService = inject(CurrentEmployeeService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly companiesService = inject(CompaniesService);
   private readonly engagementTypesService = inject(EngagementTypesService);
   private readonly notifications = inject(NotificationService);
@@ -119,11 +119,11 @@ export class EmployeeListComponent {
   }
 
   openCreate(): void {
-    this.router.navigate(['/admin/employees/new']);
+    this.router.navigate(['/app/employees/new']);
   }
 
   openEdit(employee: EmployeeDto): void {
-    this.router.navigate(['/admin/employees', employee.id]);
+    this.router.navigate(['/app/employees', employee.id]);
   }
 
   /** Shortcut to the "Povijest" tab on the employee profile - same
@@ -133,7 +133,7 @@ export class EmployeeListComponent {
    * to a query param since the employee profile is a full tabbed page, not a
    * modal). */
   openHistory(employee: EmployeeDto): void {
-    this.router.navigate(['/admin/employees', employee.id], { queryParams: { tab: 'history' } });
+    this.router.navigate(['/app/employees', employee.id], { queryParams: { tab: 'history' } });
   }
 
   activate(employee: EmployeeDto): void {

@@ -7,6 +7,7 @@ import { Paginator, PaginatorState } from 'primeng/paginator';
 import { finalize } from 'rxjs';
 import { entryModeTranslationKey, PackageDto } from '../../../../../core/models/package.model';
 import { ActivePackagesStore } from '../../../../../core/services/active-packages.store';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { PackagesService } from '../../../../../core/services/packages.service';
 import { ListToolbarComponent } from '../../../../../shared/components/list-toolbar/list-toolbar.component';
@@ -33,6 +34,7 @@ const DEFAULT_PAGE_SIZE = 20;
 export class PackagesComponent {
   private readonly packagesService = inject(PackagesService);
   private readonly activePackagesStore = inject(ActivePackagesStore);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
@@ -71,11 +73,11 @@ export class PackagesComponent {
   }
 
   openCreate(): void {
-    this.router.navigate(['/admin/services/packages/new']);
+    this.router.navigate(['/app/services/packages/new']);
   }
 
   openEdit(pkg: PackageDto): void {
-    this.router.navigate(['/admin/services/packages', pkg.id]);
+    this.router.navigate(['/app/services/packages', pkg.id]);
   }
 
   activate(pkg: PackageDto): void {

@@ -52,8 +52,8 @@ export class RegisterComponent {
       .register(this.form.getRawValue())
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe({
-        next: (response) => {
-          this.router.navigate([response.role === 'Admin' ? '/admin' : '/app']);
+        next: () => {
+          this.router.navigate(['/app']);
         },
         error: (err: AppError) => {
           this.errorMessage.set(resolveErrorMessage(this.translate, err.code));

@@ -1,0 +1,83 @@
+<div class="checkout-entry">
+  <h1 class="checkout-entry__title">{{ 'CHECKOUT.ENTRY.TITLE' | translate }}</h1>
+
+  <section class="checkout-entry__search dl-form">
+    <div class="dl-form__field">
+      <label for="checkout-client-search">{{ 'CHECKOUT.ENTRY.SEARCH_CLIENT_LABEL' | translate }}</label>
+      <p-autoComplete
+        inputId="checkout-client-search"
+        fluid
+        [minLength]="1"
+        [delay]="250"
+        [ngModel]="selectedClient()"
+        [ngModelOptions]="{ standalone: true }"
+        (ngModelChange)="onSelectedClientChange($event)"
+        [suggestions]="clientResults()"
+        optionLabel="name"
+        [placeholder]="'CHECKOUT.ENTRY.SEARCH_CLIENT_PLACEHOLDER' | translate"
+        (completeMethod)="onClientSearch($event)"
+      />
+    </div>
+  </section>
+
+  @if (!selectedClient()) {
+    <p class="checkout-entry__hint">{{ 'CHECKOUT.ENTRY.SELECT_CLIENT_HINT' | translate }}</p>
+  } @else {
+    <section class="checkout-entry__new dl-form">
+      <div class="dl-form__row">
+        <div class="dl-form__field">
+          <label for="checkout-company">{{ 'CHECKOUT.ENTRY.SELECT_COMPANY_LABEL' | translate }}</label>
+          <p-select
+            inputId="checkout-company"
+            fluid
+            [options]="companyContextService.companies()"
+            optionLabel="name"
+            optionValue="id"
+            [ngModel]="selectedCompanyId()"
+            [ngModelOptions]="{ standalone: true }"
+            (ngModelChange)="selectedCompanyId.set($event)"
+          />
+        </div>
+        <p-button
+          [label]="'CHECKOUT.ENTRY.CREATE_BUTTON' | translate"
+          [loading]="creating()"
+          [disabled]="!currentEmployeeService.can('checkout.manage') || !selectedCompanyId()"
+          (onClick)="createCheckout()"
+        />
+      </div>
+    </section>
+
+    <section class="checkout-entry__history">
+      <h2>{{ 'CHECKOUT.ENTRY.HISTORY_TITLE' | translate }}</h2>
+      <p-table [value]="checkouts()" [loading]="loadingCheckouts()" dataKey="id">
+        <ng-template pTemplate="header">
+          <tr>
+            <th>{{ 'CHECKOUT.ENTRY.COL_STATUS' | translate }}</th>
+            <th>{{ 'CHECKOUT.ENTRY.COL_COMPANY' | translate }}</th>
+            <th>{{ 'CHECKOUT.ENTRY.COL_TOTAL' | translate }}</th>
+            <th>{{ 'CHECKOUT.ENTRY.COL_OUTSTANDING' | translate }}</th>
+            <th>{{ 'CHECKOUT.ENTRY.COL_CREATED_AT' | translate }}</th>
+            <th></th>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="body" let-checkout>
+          <tr>
+            <td><p-tag [severity]="checkoutStatusSeverity(checkout.status)" [value]="checkoutStatusTranslationKey(checkout.status) | translate" /></td>
+            <td>{{ checkout.companyName }}</td>
+            <td>{{ checkout.totals.retailTotal | eurCurrency }}</td>
+            <td>{{ checkout.totals.outstandingAmount | eurCurrency }}</td>
+            <td>{{ checkout.createdAt | hrDate }}</td>
+            <td>
+              <p-button [text]="true" [label]="'CHECKOUT.ENTRY.OPEN_BUTTON' | translate" (onClick)="openCheckout(checkout)" />
+            </td>
+          </tr>
+        </ng-template>
+        <ng-template pTemplate="emptymessage">
+          <tr>
+            <td colspan="6">{{ 'CHECKOUT.ENTRY.EMPTY' | translate }}</td>
+          </tr>
+        </ng-template>
+      </p-table>
+    </section>
+  }
+</div>

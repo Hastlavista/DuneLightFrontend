@@ -5,6 +5,7 @@ import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { EngagementTypeDto } from '../../../../../core/models/engagement-type.model';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { EngagementTypesService } from '../../../../../core/services/engagement-types.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { EngagementTypeFormDialogComponent } from './engagement-type-form-dialog.component';
@@ -23,6 +24,7 @@ const DEFAULT_PAGE_SIZE = 20;
 })
 export class EngagementTypesComponent {
   private readonly engagementTypesService = inject(EngagementTypesService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);

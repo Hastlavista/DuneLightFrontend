@@ -80,7 +80,7 @@
         <span class="group-form-page__footer-hint">Za spremanje trebaju biti popunjena obavezna polja.</span>
         <div class="group-form-page__footer-buttons">
           <p-button type="button" [outlined]="true" severity="secondary" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" />
-          <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+          <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" [disabled]="!currentEmployeeService.can('groups.manage')" />
         </div>
       </div>
     </form>
@@ -88,9 +88,9 @@
 
   @if (isEditMode() && loadedGroup(); as group) {
     <div class="group-form-page__related">
-      <app-admin-group-slots-section [group]="group" (changed)="onChildChanged()" />
-      <app-admin-group-members-section [group]="group" (changed)="onChildChanged()" />
-      <app-admin-group-appointments-section [group]="group" />
+      <app-admin-group-slots-section [group]="group" [readOnly]="!currentEmployeeService.can('groups.manage')" (changed)="onChildChanged()" />
+      <app-admin-group-members-section [group]="group" [readOnly]="!currentEmployeeService.can('groups.manage')" (changed)="onChildChanged()" />
+      <app-admin-group-appointments-section [group]="group" (changed)="onChildChanged()" />
     </div>
   }
 </div>

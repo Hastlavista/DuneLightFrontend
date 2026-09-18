@@ -37,9 +37,10 @@ export interface RoomOccupancyCandidate {
 }
 
 /** Whether the candidate [start, start+durationMinutes) range overlaps any
- * existing, still-relevant (not Cancelled/NoShow) appointment already booked
- * for that room - `excludeAppointmentId` leaves out the appointment being
- * moved/edited itself, since it always "overlaps" its own current slot. */
+ * existing, still-relevant (not Cancelled) appointment already booked for
+ * that room - `excludeAppointmentId` leaves out the appointment being
+ * moved/edited itself, since it always "overlaps" its own current slot. An
+ * occurrence can never itself be NoShow (see AppointmentStatus's doc). */
 export function isRoomOccupied(
   candidateStart: Date,
   durationMinutes: number,
@@ -52,7 +53,7 @@ export function isRoomOccupied(
     if (excludeAppointmentId && appt.id === excludeAppointmentId) {
       return false;
     }
-    if (appt.status === 'Cancelled' || appt.status === 'NoShow') {
+    if (appt.status === 'Cancelled') {
       return false;
     }
     const apptStart = new Date(appt.startsAt).getTime();

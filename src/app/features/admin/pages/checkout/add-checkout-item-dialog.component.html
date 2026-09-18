@@ -1,0 +1,147 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '52rem', maxWidth: 'calc(100vw - 2rem)', height: 'min(85vh, 40rem)' }"
+  [header]="'CHECKOUT.ADD_ITEM.TITLE' | translate"
+  (onShow)="onDialogShow()"
+>
+  <p-tabs [value]="activeTab()" (valueChange)="onTabChange($event)">
+    <p-tablist>
+      <p-tab value="booking">{{ 'CHECKOUT.ADD_ITEM.TAB_BOOKING' | translate }}</p-tab>
+      <p-tab value="product">{{ 'CHECKOUT.ADD_ITEM.TAB_PRODUCT' | translate }}</p-tab>
+      <p-tab value="package">{{ 'CHECKOUT.ADD_ITEM.TAB_PACKAGE' | translate }}</p-tab>
+    </p-tablist>
+    <p-tabpanels>
+      <p-tabpanel value="booking">
+        <p-table [value]="bookings()" [loading]="bookingsLoading()" [lazy]="true" (onLazyLoad)="onBookingLazyLoad($event)"
+          [paginator]="true" [rows]="10" [totalRecords]="bookingsTotalCount()">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>{{ 'CHECKOUT.ADD_ITEM.COL_DATE' | translate }}</th>
+              <th>{{ 'CHECKOUT.ADD_ITEM.COL_SERVICE' | translate }}</th>
+              <th>{{ 'CHECKOUT.ADD_ITEM.COL_COMPANY' | translate }}</th>
+              <th>{{ 'CHECKOUT.ADD_ITEM.COL_STATUS' | translate }}</th>
+              <th>{{ 'CHECKOUT.ADD_ITEM.COL_OUTSTANDING' | translate }}</th>
+              <th></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-booking>
+            <tr [class.add-checkout-item-dialog__row--ineligible]="!isEligibleBooking(booking)">
+              <td>{{ dateTimeLabel(booking.startsAt) }}</td>
+              <td>{{ booking.serviceName }}</td>
+              <td>{{ booking.companyName }}</td>
+              <td><p-tag [severity]="bookingStatusSeverity(booking.bookingStatus)" [value]="bookingStatusTranslationKey(booking.bookingStatus) | translate" /></td>
+              <td>{{ booking.outstandingAmount | eurCurrency }}</td>
+              <td>
+                <p-button
+                  [text]="true"
+                  [label]="'CHECKOUT.ADD_ITEM.ADD_BUTTON' | translate"
+                  [disabled]="!isEligibleBooking(booking)"
+                  [loading]="addingBookingId() === booking.bookingId"
+                  (onClick)="addBooking(booking)"
+                />
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="6">{{ 'CHECKOUT.ADD_ITEM.BOOKING_EMPTY' | translate }}</td></tr>
+          </ng-template>
+        </p-table>
+      </p-tabpanel>
+
+      <p-tabpanel value="product">
+        <input
+          type="text"
+          pInputText
+          fluid
+          [ngModel]="productSearch()"
+          (ngModelChange)="onProductSearchInput($event)"
+          [placeholder]="'CHECKOUT.ADD_ITEM.PRODUCT_SEARCH_PLACEHOLDER' | translate"
+          class="add-checkout-item-dialog__search"
+        />
+        <p-table [value]="products()" [loading]="productsLoading()">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>{{ 'CHECKOUT.ADD_ITEM.COL_PRODUCT' | translate }}</th>
+              <th>{{ 'CHECKOUT.ADD_ITEM.COL_STOCK' | translate }}</th>
+              <th>{{ 'CHECKOUT.ADD_ITEM.COL_PRICE' | translate }}</th>
+              <th>{{ 'CHECKOUT.ADD_ITEM.COL_QUANTITY' | translate }}</th>
+              <th></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-product>
+            <tr>
+              <td>{{ product.name }}</td>
+              <td>{{ stockFor(product.id) }}</td>
+              <td>{{ product.defaultPrice | eurCurrency }}</td>
+              <td>
+                <p-inputnumber
+                  [ngModel]="quantityFor(product.id)"
+                  (ngModelChange)="setQuantity(product.id, $event)"
+                  [min]="1"
+                  [showButtons]="true"
+                  buttonLayout="horizontal"
+                  spinnerMode="horizontal"
+                  inputStyleClass="add-checkout-item-dialog__qty-input"
+                />
+              </td>
+              <td>
+                <p-button
+                  [text]="true"
+                  [label]="'CHECKOUT.ADD_ITEM.ADD_BUTTON' | translate"
+                  [loading]="addingProductId() === product.id"
+                  (onClick)="addProduct(product)"
+                />
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="5">{{ 'CHECKOUT.ADD_ITEM.PRODUCT_EMPTY' | translate }}</td></tr>
+          </ng-template>
+        </p-table>
+      </p-tabpanel>
+
+      <p-tabpanel value="package">
+        <input
+          type="text"
+          pInputText
+          fluid
+          [ngModel]="packageSearch()"
+          (ngModelChange)="onPackageSearchInput($event)"
+          [placeholder]="'CHECKOUT.ADD_ITEM.PACKAGE_SEARCH_PLACEHOLDER' | translate"
+          class="add-checkout-item-dialog__search"
+        />
+        <p-table [value]="packages()" [loading]="packagesLoading()">
+          <ng-template pTemplate="header">
+            <tr>
+              <th>{{ 'CHECKOUT.ADD_ITEM.COL_PACKAGE' | translate }}</th>
+              <th>{{ 'CHECKOUT.ADD_ITEM.COL_PRICE' | translate }}</th>
+              <th></th>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="body" let-pkg>
+            <tr>
+              <td>{{ pkg.name }}</td>
+              <td>{{ pkg.defaultPrice | eurCurrency }}</td>
+              <td>
+                <p-button
+                  [text]="true"
+                  [label]="'CHECKOUT.ADD_ITEM.ADD_BUTTON' | translate"
+                  [loading]="addingPackageId() === pkg.id"
+                  (onClick)="addPackage(pkg)"
+                />
+              </td>
+            </tr>
+          </ng-template>
+          <ng-template pTemplate="emptymessage">
+            <tr><td colspan="3">{{ 'CHECKOUT.ADD_ITEM.PACKAGE_EMPTY' | translate }}</td></tr>
+          </ng-template>
+        </p-table>
+      </p-tabpanel>
+    </p-tabpanels>
+  </p-tabs>
+
+  <ng-template #footer>
+    <p-button type="button" [text]="true" severity="secondary" [label]="'COMMON.CLOSE' | translate" (onClick)="close()" />
+  </ng-template>
+</p-dialog>

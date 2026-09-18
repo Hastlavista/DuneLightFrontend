@@ -9,6 +9,7 @@ import { Paginator, PaginatorState } from 'primeng/paginator';
 import { finalize } from 'rxjs';
 import { EXECUTION_MODES, ServiceDto, ServiceExecutionMode, executionModeTranslationKey } from '../../../../../core/models/service.model';
 import { ActiveServicesStore } from '../../../../../core/services/active-services.store';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { ServicesService } from '../../../../../core/services/services.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { ColorSwatchComponent } from '../../../../../shared/components/color-swatch/color-swatch.component';
@@ -44,6 +45,7 @@ interface ExecutionModeFilterOption {
 export class CatalogServicesComponent {
   private readonly servicesService = inject(ServicesService);
   private readonly activeServicesStore = inject(ActiveServicesStore);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);

@@ -6,6 +6,8 @@ import { Button } from 'primeng/button';
 import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { catchError, finalize, forkJoin, of } from 'rxjs';
 import { CompaniesService } from '../../../../../core/services/companies.service';
+import { CompanyContextService } from '../../../../../core/services/company-context.service';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { CompanyDto } from '../../../../../core/models/company.model';
 import { DAYS_OF_WEEK, DayOfWeek } from '../../../../../core/models/group.model';
@@ -50,7 +52,9 @@ interface CompanyDayHours {
 })
 export class CompaniesComponent {
   private readonly companiesService = inject(CompaniesService);
+  private readonly companyContextService = inject(CompanyContextService);
   private readonly workingHoursService = inject(WorkingHoursTemplateService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
@@ -133,6 +137,7 @@ export class CompaniesComponent {
 
   onSaved(): void {
     this.fetch(this.table?.first ?? 0, this.rows());
+    this.companyContextService.loadCompanies();
   }
 
   activate(company: CompanyDto): void {
@@ -140,6 +145,7 @@ export class CompaniesComponent {
       next: () => {
         this.notifications.showSuccess(this.translate.instant('CATALOG.COMPANIES.ACTIVATED'));
         this.fetch(this.table?.first ?? 0, this.rows());
+        this.companyContextService.loadCompanies();
       },
       error: () => {},
     });
@@ -157,6 +163,7 @@ export class CompaniesComponent {
           next: () => {
             this.notifications.showSuccess(this.translate.instant('CATALOG.COMPANIES.DEACTIVATED'));
             this.fetch(this.table?.first ?? 0, this.rows());
+            this.companyContextService.loadCompanies();
           },
           error: () => {},
         });
@@ -177,6 +184,7 @@ export class CompaniesComponent {
           next: () => {
             this.notifications.showSuccess(this.translate.instant('CATALOG.COMPANIES.DELETED'));
             this.fetch(this.table?.first ?? 0, this.rows());
+            this.companyContextService.loadCompanies();
           },
           error: () => {},
         });

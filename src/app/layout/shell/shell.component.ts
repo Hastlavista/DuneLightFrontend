@@ -1,4 +1,4 @@
-import { Component, DestroyRef, inject, input, signal } from '@angular/core';
+import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
 import { filter, map, startWith } from 'rxjs';
@@ -20,8 +20,6 @@ import { SetPinCtaComponent } from '../../shared/components/set-pin/set-pin-cta.
   styleUrl: './shell.component.scss',
 })
 export class ShellComponent {
-  readonly section = input.required<'admin' | 'trainer'>();
-
   readonly sidebarOpen = signal(false);
   readonly locked = inject(InactivityService).locked;
 
@@ -45,7 +43,6 @@ export class ShellComponent {
     private readonly inactivityService: InactivityService,
     private readonly brandingService: BrandingService,
   ) {
-    this.companyContextService.loadCompanies();
     // Apply the org's branding (colors, logo, favicon) across the whole app
     // after login. Uses the no-auth public endpoint so every role gets the
     // look applied, not just the Owner (the owner-only /api/organization/
@@ -57,10 +54,15 @@ export class ShellComponent {
         error: () => {},
       });
     }
-    // ensureLoaded(), not load() - a guard on this navigation (adminGuard/
+    // ensureLoaded(), not load() - a guard on this navigation (grantGuard/
     // ownerGuard) may have already triggered and awaited the fetch before
     // this component ever got constructed; avoid a redundant second call.
     this.currentEmployeeService.ensureLoaded().subscribe((employee) => {
+      // The company chooser needs the employee's grants and assigned companies.
+      // Loading it only after /employees/me resolves lets it show the complete
+      // catalog for users with access and an assigned-company fallback otherwise.
+      this.companyContextService.loadCompanies();
+
       const user = this.authService.currentUser();
       if (employee && user) {
         // Keeps the device's "known users" chooser fresh on every session

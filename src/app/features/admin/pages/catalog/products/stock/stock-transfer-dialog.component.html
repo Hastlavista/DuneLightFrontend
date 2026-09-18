@@ -1,0 +1,61 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '30rem', maxWidth: 'calc(100vw - 2rem)' }"
+  styleClass="stock-transfer-dialog"
+  (onShow)="onDialogShow()"
+>
+  <ng-template #header>
+    <div class="stock-transfer-dialog__header">
+      <span class="stock-transfer-dialog__mark"><i class="pi pi-arrow-right-arrow-left"></i></span>
+      <div>
+        <h2>{{ 'STOCK.TRANSFER.TITLE' | translate }}</h2>
+        @if (source(); as source) {
+          <p>{{ source.productName }}</p>
+        }
+      </div>
+    </div>
+  </ng-template>
+
+  @if (dialogShown() && source(); as source) {
+    <form [formGroup]="form" (ngSubmit)="onSave()" class="stock-transfer-dialog__form" novalidate>
+      <div class="dl-form__field">
+        <label>{{ 'STOCK.TRANSFER.FIELD_SOURCE_COMPANY' | translate }}</label>
+        <div class="dl-form__static-value">{{ source.companyName }} — {{ 'STOCK.TRANSFER.AVAILABLE_HINT' | translate: { quantity: source.currentQuantity } }}</div>
+      </div>
+
+      <div class="dl-form__field">
+        <label for="stock-transfer-destination">{{ 'STOCK.TRANSFER.FIELD_DESTINATION_COMPANY' | translate }}</label>
+        <p-select
+          id="stock-transfer-destination"
+          fluid
+          appendTo="body"
+          formControlName="destinationCompanyId"
+          [options]="destinationOptions()"
+          optionLabel="name"
+          optionValue="id"
+        />
+        @if (form.controls.destinationCompanyId.invalid && form.controls.destinationCompanyId.touched) {
+          <span class="dl-form__error">{{ 'STOCK.TRANSFER.ERRORS.DESTINATION_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="stock-transfer-quantity">{{ 'STOCK.TRANSFER.FIELD_QUANTITY' | translate }}</label>
+        <p-inputnumber id="stock-transfer-quantity" fluid formControlName="quantity" [showButtons]="true" [min]="1" [step]="1" [minFractionDigits]="0" [maxFractionDigits]="0" />
+        @if (form.controls.quantity.invalid && form.controls.quantity.touched) {
+          <span class="dl-form__error">{{ 'STOCK.TRANSFER.ERRORS.QUANTITY_INVALID' | translate }}</span>
+        }
+      </div>
+
+      @if (localError()) {
+        <span class="dl-form__error">{{ localError() }}</span>
+      }
+
+      <div class="stock-transfer-dialog__actions">
+        <p-button type="button" severity="secondary" [outlined]="true" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" />
+        <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" [disabled]="form.invalid" />
+      </div>
+    </form>
+  }
+</p-dialog>

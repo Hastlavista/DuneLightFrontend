@@ -40,7 +40,7 @@
       <span>@if (form.controls.name.invalid) { Nedostaje naziv. }</span>
       <div>
         <p-button type="button" severity="secondary" [outlined]="true" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" />
-        <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" [disabled]="form.invalid" />
+        <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" [disabled]="form.invalid || !currentEmployeeService.can('employees.engagement-types.manage')" />
       </div>
     </div>
   </form>

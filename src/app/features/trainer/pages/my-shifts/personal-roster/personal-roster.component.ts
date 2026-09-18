@@ -54,8 +54,8 @@ function endOfCurrentMonth(): Date {
  * section) always passes false: this tab is "Moj pregled", exclusively the
  * viewer's own data, even when the viewer is an Admin browsing there via the
  * trainer-view toggle (their role is still 'Admin', but the page must behave
- * the same for everyone on it). /admin/shifts always passes true. Getting
- * this wrong once already leaked an "pick any employee" dropdown onto the
+ * the same for everyone on it). /app/shifts (admin section) always passes
+ * true. Getting this wrong once already leaked an "pick any employee" dropdown onto the
  * trainer page for an Admin account - see MyShiftsComponent/ShiftsComponent's
  * hardcoded bindings, not a computed role check. */
 @Component({

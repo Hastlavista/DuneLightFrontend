@@ -1,0 +1,10 @@
+.products-page { display: flex; flex-direction: column; gap: .85rem; }
+.products-page__header { display: flex; width: 100%; align-items: center; }
+.products-page__actions { display: flex; align-items: center; gap: .2rem; white-space: nowrap; }
+.products-page__row--inactive { opacity: .58; }
+.products-page__empty { padding: 2rem 0; color: var(--ink-muted); text-align: center; }
+:host ::ng-deep {
+  .products-page__table .p-datatable-thead > tr > th { background: var(--surface-warm); color: var(--ink-secondary); font-size: .74rem; text-transform: uppercase; letter-spacing: .03em; }
+  .products-page__table .p-datatable-tbody > tr > td { vertical-align: middle; }
+  .products-page__actions .p-button { width: 2rem; height: 2rem; }
+}

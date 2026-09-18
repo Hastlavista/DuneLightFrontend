@@ -68,9 +68,28 @@ export class MyWeekComponent {
    * be misleading here. */
   readonly hasEmployeeProfile = computed(() => this.currentEmployeeService.hasProfile());
 
+  /** Gates "Novi termin" (toolbar button + empty-slot click) - a view-only
+   * Raspored user has no reason to see a create entry point they can't
+   * actually submit; the backend would just 403 the create call. */
+  readonly canCreateAppointments = computed(() =>
+    this.currentEmployeeService.hasAnyGrant(['appointments.write.own', 'appointments.write.all']),
+  );
+
+  /** Same rationale as canCreateAppointments() - gates "+ Pauza". */
+  readonly canCreateBreaks = computed(() =>
+    this.currentEmployeeService.hasAnyGrant(['schedule.breaks.write.own', 'schedule.breaks.write.all']),
+  );
+
   readonly activeEmployees = signal<EmployeeDirectoryDto[]>([]);
   readonly activeServices = signal<ServiceDto[]>([]);
   readonly activeCompanies = signal<CompanyDto[]>([]);
+
+  /** Companies for the required companyId dropdowns in "Novi termin", the
+   * move form in AppointmentDetailDialogComponent, and ScheduleBreakFormDialogComponent
+   * - fetched unconditionally, same rationale as loadActiveServices() above.
+   * activeCompanies() above still backs only the week grid's per-company
+   * color banner and stays gated by catalog.companies.view. */
+  readonly dialogCompanies = signal<CompanyDto[]>([]);
 
   readonly detailVisible = signal(false);
   readonly detailAppointmentId = signal<string | null>(null);
@@ -92,6 +111,7 @@ export class MyWeekComponent {
     this.loadActiveEmployees();
     this.loadActiveServices();
     this.loadActiveCompanies();
+    this.loadDialogCompanies();
   }
 
   onAppointmentClicked(appointment: AppointmentScheduleCellDto): void {
@@ -104,11 +124,17 @@ export class MyWeekComponent {
   }
 
   onEmptySlotClick(event: { startsAt: Date; employeeId: string; companyId: string | null }): void {
+    if (!this.canCreateAppointments()) {
+      return;
+    }
     this.newAppointmentInitial.set(event);
     this.newAppointmentVisible.set(true);
   }
 
   openNewAppointment(): void {
+    if (!this.canCreateAppointments()) {
+      return;
+    }
     this.newAppointmentInitial.set({
       startsAt: new Date(),
       employeeId: this.currentEmployeeService.employee()?.employeeId ?? null,
@@ -123,6 +149,9 @@ export class MyWeekComponent {
   }
 
   openNewBreak(): void {
+    if (!this.canCreateBreaks()) {
+      return;
+    }
     this.newBreakInitial.set({
       startsAt: new Date(),
       employeeId: this.currentEmployeeService.employee()?.employeeId ?? null,
@@ -162,15 +191,32 @@ export class MyWeekComponent {
       .subscribe((result) => this.activeEmployees.set(result));
   }
 
+  /** Feeds only "Novi termin"'s required serviceId dropdown - this page has no
+   * service filter of its own (unlike Today/admin Raspored), so unlike those
+   * screens this must never be skipped for catalog.services.view: booking a
+   * termin isn't "browsing the catalog", and a custom GrantGroup lacking that
+   * grant would otherwise leave the dropdown silently empty. */
   private loadActiveServices(): void {
     this.servicesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
       .subscribe((result) => this.activeServices.set(result.items));
   }
 
+  /** Same rationale as loadActiveServices() - catalog.companies.view. */
   private loadActiveCompanies(): void {
+    if (!this.currentEmployeeService.hasGrant('catalog.companies.view')) {
+      return;
+    }
     this.companiesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
       .subscribe((result) => this.activeCompanies.set(result.items));
+  }
+
+  /** Feeds the required companyId dropdowns above - always called, regardless
+   * of catalog.companies.view (see dialogCompanies' doc). */
+  private loadDialogCompanies(): void {
+    this.companiesService
+      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
+      .subscribe((result) => this.dialogCompanies.set(result.items));
   }
 }

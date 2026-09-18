@@ -2,15 +2,18 @@ import { WarningDto } from './api-error.model';
 import { CoverageType } from './group-attendance.model';
 import { ServiceExecutionMode } from './service.model';
 
-/** Status values exactly as the backend sends/accepts them. Use these
- * everywhere in logic - never a display label. */
-export type AppointmentStatus = 'Scheduled' | 'Completed' | 'Cancelled' | 'NoShow';
+/** Status values exactly as the backend sends/accepts them - occurrence
+ * (resource/slot) level, NOT per-client. `NoShow` deliberately does not exist
+ * here - an appointment as such can't "not show up", only an individual
+ * Booking on it can (see BookingStatus). A whole-appointment no-show (every
+ * client) still lands in `Cancelled` here, with the per-client detail on each
+ * Booking. */
+export type AppointmentStatus = 'Scheduled' | 'Completed' | 'Cancelled';
 
 const STATUS_TRANSLATION_KEYS: Record<AppointmentStatus, string> = {
   Scheduled: 'SCHEDULE.STATUS.SCHEDULED',
   Completed: 'SCHEDULE.STATUS.COMPLETED',
   Cancelled: 'SCHEDULE.STATUS.CANCELLED',
-  NoShow: 'SCHEDULE.STATUS.NO_SHOW',
 };
 
 export function appointmentStatusTranslationKey(status: AppointmentStatus): string {
@@ -18,24 +21,95 @@ export function appointmentStatusTranslationKey(status: AppointmentStatus): stri
 }
 
 /** Display order for the status filter dropdown. */
-export const APPOINTMENT_STATUSES: AppointmentStatus[] = ['Scheduled', 'Completed', 'Cancelled', 'NoShow'];
+export const APPOINTMENT_STATUSES: AppointmentStatus[] = ['Scheduled', 'Completed', 'Cancelled'];
 
 const STATUS_SEVERITIES: Record<AppointmentStatus, 'info' | 'success' | 'danger' | 'warn'> = {
   Scheduled: 'info',
   Completed: 'success',
   Cancelled: 'danger',
-  NoShow: 'warn',
 };
 
 export function appointmentStatusSeverity(status: AppointmentStatus): 'info' | 'success' | 'danger' | 'warn' {
   return STATUS_SEVERITIES[status];
 }
 
-/** Every appointment is currently `Individual` - no endpoint returns
- * `Form: 'Group'` yet (group termini arrive with the Grupe module wiring, not
- * built here). Modeled now so the schedule grid's cell rendering and click
- * routing can branch on it without a later rewrite. */
-export type AppointmentForm = 'Individual' | 'Group';
+/** Client-specific state of one Booking row (one client on one appointment) -
+ * see BookingDto. `Confirmed` is the only non-terminal state; `Completed`/
+ * `Cancelled`/`NoShow` are terminal except for an explicit admin/trainer
+ * correction back to Confirmed via PATCH .../bookings/{clientId}/confirm (see
+ * AppointmentsService.confirmBooking) - Group bookings only, the backend
+ * rejects it for Form=Individual. That correction may void a check-in-
+ * generated Payment and/or restore a consumed package entry server-side, so
+ * callers must always reload the Booking (and its payments/package fields)
+ * from the response rather than patch local state. */
+export type BookingStatus = 'Confirmed' | 'Completed' | 'Cancelled' | 'NoShow';
+
+const BOOKING_STATUS_TRANSLATION_KEYS: Record<BookingStatus, string> = {
+  Confirmed: 'SCHEDULE.BOOKING_STATUS.CONFIRMED',
+  Completed: 'SCHEDULE.BOOKING_STATUS.COMPLETED',
+  Cancelled: 'SCHEDULE.BOOKING_STATUS.CANCELLED',
+  NoShow: 'SCHEDULE.BOOKING_STATUS.NO_SHOW',
+};
+
+export function bookingStatusTranslationKey(status: BookingStatus): string {
+  return BOOKING_STATUS_TRANSLATION_KEYS[status];
+}
+
+const BOOKING_STATUS_SEVERITIES: Record<BookingStatus, 'info' | 'success' | 'danger' | 'warn'> = {
+  Confirmed: 'info',
+  Completed: 'success',
+  Cancelled: 'danger',
+  NoShow: 'warn',
+};
+
+export function bookingStatusSeverity(status: BookingStatus): 'info' | 'success' | 'danger' | 'warn' {
+  return BOOKING_STATUS_SEVERITIES[status];
+}
+
+/** Payment method values exactly as the backend sends/accepts them. There is
+ * no `'Package'` value - package coverage is a separate concept
+ * (BookingDto.packageCoverageApplied / AppointmentClientSettlement.clientPackageId),
+ * mutually exclusive with a monetary PaymentMethod, never a PaymentMethod
+ * value itself. */
+export type PaymentMethod = 'Cash' | 'Card' | 'BankTransfer' | 'Other';
+
+const PAYMENT_METHOD_TRANSLATION_KEYS: Record<PaymentMethod, string> = {
+  Cash: 'SCHEDULE.PAYMENT_METHOD.CASH',
+  Card: 'SCHEDULE.PAYMENT_METHOD.CARD',
+  BankTransfer: 'SCHEDULE.PAYMENT_METHOD.BANK_TRANSFER',
+  Other: 'SCHEDULE.PAYMENT_METHOD.OTHER',
+};
+
+export function paymentMethodTranslationKey(method: PaymentMethod): string {
+  return PAYMENT_METHOD_TRANSLATION_KEYS[method];
+}
+
+/** Display order for the payment method select. */
+export const PAYMENT_METHODS: PaymentMethod[] = ['Cash', 'Card', 'BankTransfer', 'Other'];
+
+/** Status of one Payment ledger row - see PaymentDto. */
+export type PaymentStatus = 'Completed' | 'Voided';
+
+/** One monetary settlement event against a Checkout (PaymentDtos.cs) -
+ * surfaced read-only on BookingDto.payments; there is no dedicated Payment
+ * model/service in this pass (that arrives with Checkout/POS). */
+export interface PaymentDto {
+  id: string;
+  checkoutId: string;
+  amount: number;
+  method: PaymentMethod;
+  status: PaymentStatus;
+  note?: string;
+  /** True = auto-created during check-in/complete (an
+   * AppointmentClientSettlement/BookingSetStatusRequest with a paymentMethod),
+   * false = added manually through the Checkout POS API. Informational only. */
+  isCheckInGenerated: boolean;
+  createdAt: string;
+  createdBy?: string;
+  voidedAt?: string;
+  voidedBy?: string;
+  voidReason?: string;
+}
 
 /** GET /api/appointments/schedule - one entry of `ScheduleFeedDto.appointments`
  * (frontend #22 - the endpoint used to return this as a bare flat array; see
@@ -43,10 +117,7 @@ export type AppointmentForm = 'Individual' | 'Group';
  * envelope). Backend omits null/absent fields from the JSON entirely rather
  * than sending an explicit null (see core/utils/date.util.ts's
  * PlusSafeUrlCodec note for the same convention elsewhere) - fields that can
- * be absent are typed with `?`, never `| null`. `form`/`groupName`/
- * `attendanceCount`/`expectedCount` are forward-looking - always absent today
- * since every appointment is Individual, but the schedule grid already
- * renders them when present. */
+ * be absent are typed with `?`, never `| null`. */
 export interface AppointmentScheduleCellDto {
   id: string;
   startsAt: string;
@@ -65,7 +136,15 @@ export interface AppointmentScheduleCellDto {
    * for the birthday marker in schedule-cell-view.util.ts, which needs a
    * reliable id to match against GET /api/clients/birthdays instead of
    * matching on name, since two clients can share a name). Frontend treats
-   * this as absent until the backend adds it - see toScheduleGridCell. */
+   * this as absent until the backend adds it - see toScheduleGridCell.
+   *
+   * NOTE: the backend's EmployeeId is technically nullable (Guid?) on this DTO
+   * and on AppointmentDto, pre-dating the Booking/Payment refactor this pass
+   * targets. Modeling that properly would ripple into schedule-grid column
+   * keying and employee-assignment logic well outside this pass's scope
+   * (Appointment/Booking billing reconciliation) - left as-is, matching the
+   * frontend's pre-existing assumption that a scheduled appointment always has
+   * a trainer. Flagged here, not silently "fixed" into a wider change. */
   clientIds?: string[];
   status: AppointmentStatus;
   isCancelled: boolean;
@@ -83,41 +162,50 @@ export interface AppointmentScheduleCellDto {
   warnings: WarningDto[];
 }
 
-/** One client on a full AppointmentDto - just enough to render the read-only
- * detail panel's client list, not a full ClientDto. `packageEntryDeducted`/
- * `packageEntryReturned` are the actual per-client state (not derived from any
- * appointment-level payment field - price/isPaid/clientPackageId stay single
- * values for the whole appointment, see AppointmentDto) - cancel/no-show only
- * offers a "vrati ulazak" checkbox for a client where an entry was deducted
- * and not already returned, which also correctly covers the rare mixed state
- * left behind by multiple PATCH .../complete calls on the same appointment. */
-export interface AppointmentClientRef {
+/** Every appointment form value the backend can send. */
+export type AppointmentForm = 'Individual' | 'Group';
+
+/** One client's participation in one Appointment (BookingDto, Core/DTOs/Appointments/AppointmentDtos.cs).
+ * Amount/PaidAmount/OutstandingAmount/IsPaid live HERE, per client - NOT on
+ * AppointmentDto - since 2026-09-15 an appointment with multiple clients can
+ * have genuinely mixed billing (e.g. a duo where one pays by package and the
+ * other by card). PaidAmount/OutstandingAmount/IsPaid are derived from the
+ * Payment ledger (BookingFinancialsCalculator), never persisted directly. */
+export interface BookingDto {
+  id: string;
   clientId: string;
   clientName: string;
-  packageEntryDeducted: boolean;
-  packageEntryReturned: boolean;
-}
-
-/** Attendance/coverage of ONE client on ONE group appointment - see
- * AppointmentDto.clientAttendance. Only ever populated by GET .../by-client for
- * a Form=Group row, and only when that client has a recorded attendance/absence
- * on it (never present for an individual appointment, or a group appointment
- * this client hasn't been checked in/out on yet). */
-export interface ClientAttendanceDto {
-  attended?: boolean;
-  coverageType?: CoverageType;
+  status: BookingStatus;
+  amount: number;
+  suggestedAmount: number;
+  isAmountManuallyOverridden: boolean;
+  paidAmount: number;
+  outstandingAmount: number;
+  isPaid: boolean;
   clientPackageId?: string;
+  coverageType?: CoverageType;
+  packageCoverageApplied: boolean;
+  packageCoverageReturned: boolean;
+  /** Full payment history of this booking (incl. voided), newest first. */
+  payments: PaymentDto[];
+  note?: string;
+  cancellationReason?: string;
+  /** Classification of the cancellation moment against
+   * OrganizationSettings.CancellationCutoffMinutes - null except for a
+   * client/booking-level cancellation. */
+  isLateCancellation?: boolean;
 }
 
 /** GET /api/appointments/{id} and the body PATCH /{id}/move responds with (see
- * AppointmentsService.move). A superset of AppointmentScheduleCellDto's fields
- * plus price/payment/note/recurrence - the price/payment shape here is a single
- * total for the whole appointment (not per-client), confirmed as the intended
- * contract even though multiple clients can share one individual appointment.
+ * AppointmentsService.move). `bookings` replaces the old single appointment-
+ * level amount/isPaid/paymentMethod/clientPackageId (see BookingDto's doc) -
+ * frontend sums/derives aggregates itself where needed (e.g. "everything
+ * paid"); this DTO deliberately does not duplicate per-booking totals.
  * `warnings` is transient - only ever populated on the move (and later
  * create/complete/update) response, always empty on a plain GET. */
 export interface AppointmentDto {
   id: string;
+  form: AppointmentForm;
   startsAt: string;
   durationMinutes: number;
   serviceId: string;
@@ -130,25 +218,58 @@ export interface AppointmentDto {
   roomId?: string;
   roomName?: string;
   status: AppointmentStatus;
-  isCancelled: boolean;
-  form?: AppointmentForm;
+  note?: string;
+  /** Present only when Status is Cancelled (incl. a bulk no-show). */
+  cancellationReason?: string;
+  groupId?: string;
+  /** Present only for Form=Group, when the group was loaded (e.g. GetByClient). */
+  groupName?: string;
+  recurrenceGroupId?: string;
+  bookings: BookingDto[];
+  warnings: WarningDto[];
+  createdAt: string;
+  createdBy?: string;
+  updatedAt?: string;
+  updatedBy?: string;
+}
+
+/** One row of a specific client's appointment history (GET
+ * /api/appointments/by-client/{clientId}) - deliberately does NOT carry the
+ * other clients on the same appointment (privacy: a client's own history view
+ * must not reveal who else was booked alongside them), so it is its own flat
+ * DTO rather than AppointmentDto.bookings. Amount/PaidAmount/OutstandingAmount/
+ * IsPaid/booking* fields are THIS client's own Booking, not shared with anyone
+ * else on the same appointment. */
+export interface ClientAppointmentHistoryDto {
+  id: string;
+  form: AppointmentForm;
+  startsAt: string;
+  durationMinutes: number;
+  serviceId: string;
+  serviceName: string;
+  serviceCategoryColorHex?: string;
+  employeeId: string;
+  employeeName: string;
+  companyId: string;
+  companyName: string;
+  /** Status of the occurrence itself (Scheduled/Completed/Cancelled) - see AppointmentStatus. */
+  status: AppointmentStatus;
   groupId?: string;
   groupName?: string;
-  attendanceCount?: number;
-  expectedCount?: number;
-  clients: AppointmentClientRef[];
   amount: number;
+  paidAmount: number;
+  outstandingAmount: number;
   isPaid: boolean;
-  paymentMethod?: PaymentMethod;
+  /** This client's own Booking id - never AppointmentDto.bookings (would reveal other clients). */
+  bookingId: string;
+  bookingStatus: BookingStatus;
   clientPackageId?: string;
-  note?: string;
-  recurrenceGroupId?: string;
-  /** Only ever populated by GET .../by-client for a Form=Group row where this
-   * client has a recorded attendance/absence - see ClientAttendanceDto. */
-  clientAttendance?: ClientAttendanceDto;
-  /** Present only for Cancelled and NoShow rows returned by client history. */
-  cancellationReason?: string | null;
-  warnings: WarningDto[];
+  coverageType?: CoverageType;
+  packageCoverageApplied: boolean;
+  packageCoverageReturned: boolean;
+  bookingNote?: string;
+  /** Present only when bookingStatus is Cancelled/NoShow. */
+  bookingCancellationReason?: string;
 }
 
 /** Query params for GET /api/appointments/schedule. `from`/`to` are required
@@ -180,24 +301,14 @@ export interface AppointmentMoveRequest {
    * clear an already-assigned room, only to move to a different one (see
    * AppointmentDetailDialogComponent.onSave's doc comment). */
   roomId?: string | null;
+  /** Bypasses soft (non-blocking-by-policy) work-hours blocks - EMPLOYEE_ABSENT/
+   * EMPLOYEE_ON_BREAK/COMPANY_CLOSED_HOLIDAY/OUTSIDE_WORKING_HOURS - never
+   * structural ones (inactive/invalid Company/Service/Employee/Room, an actual
+   * double-booking). Ignored server-side unless the caller has
+   * appointments.write.all. Only meaningful on the retry after the user
+   * confirms a "Nastavi ipak?" prompt - omit/false on the first attempt. */
+  overrideAvailability?: boolean;
 }
-
-/** Payment method values exactly as the backend sends/accepts them. */
-export type PaymentMethod = 'Cash' | 'Card' | 'BankTransfer' | 'Package';
-
-const PAYMENT_METHOD_TRANSLATION_KEYS: Record<PaymentMethod, string> = {
-  Cash: 'SCHEDULE.PAYMENT_METHOD.CASH',
-  Card: 'SCHEDULE.PAYMENT_METHOD.CARD',
-  BankTransfer: 'SCHEDULE.PAYMENT_METHOD.BANK_TRANSFER',
-  Package: 'SCHEDULE.PAYMENT_METHOD.PACKAGE',
-};
-
-export function paymentMethodTranslationKey(method: PaymentMethod): string {
-  return PAYMENT_METHOD_TRANSLATION_KEYS[method];
-}
-
-/** Display order for the payment method select. */
-export const PAYMENT_METHODS: PaymentMethod[] = ['Cash', 'Card', 'BankTransfer', 'Package'];
 
 /** Recurrence values exactly as the backend sends/accepts them. `Daily` = every
  * calendar day including weekends, `Weekly` = +7 days each occurrence. */
@@ -214,13 +325,29 @@ export function recurrenceTypeTranslationKey(type: RecurrenceType): string {
 
 export const RECURRENCE_TYPES: RecurrenceType[] = ['Daily', 'Weekly'];
 
-/** One client's chosen sold package for a Package-paid POST /schedule/complete
- * (or PATCH /{id}/complete) request - `clientIds`/`packageSelections` must
- * cover each other 1:1 (every client exactly once) whenever paymentMethod is
- * `Package`, enforced server-side. */
-export interface PackageSelection {
+/** Billing for ONE client on a POST /schedule/complete or PATCH /{id}/complete
+ * request (AppointmentClientSettlement) - AppointmentCompleteRequest.settlements
+ * must cover every clientId exactly once, enabling mixed payment per client
+ * (e.g. a duo: one by package, one by card). `clientPackageId` and
+ * `paymentMethod` are mutually exclusive - when `clientPackageId` is set,
+ * `paymentMethod` is ignored server-side (the package settles the booking,
+ * no Payment row is created). When neither is set (and amount > 0), the
+ * booking is recorded but stays financially unpaid (billed later). */
+export interface AppointmentClientSettlement {
   clientId: string;
-  clientPackageId: string;
+  /** Ignored if `clientPackageId` is set. `undefined` = not charged now (billed
+   * later through the Checkout/Payment API). */
+  paymentMethod?: PaymentMethod;
+  /** Manual override of this client's suggested price. `undefined` = use the
+   * price-list-resolved suggested price. */
+  amount?: number;
+  /** Package covering this booking - when set, `paymentMethod` is ignored. */
+  clientPackageId?: string;
+  /** Default true - only relevant when `paymentMethod` is set and
+   * `clientPackageId` isn't: true records a real Payment for the full amount
+   * immediately, false records the booking as outstanding (billed later). No
+   * effect when `paymentMethod` is unset or the booking is package-covered. */
+  isPaid: boolean;
 }
 
 /** Body for POST /api/appointments/schedule - creates a Scheduled, unbilled
@@ -236,16 +363,18 @@ export interface AppointmentCreateRequest {
   clientIds: string[];
   amount?: number | null;
   note?: string | null;
+  /** See AppointmentMoveRequest.overrideAvailability - same semantics. */
+  overrideAvailability?: boolean;
 }
 
-/** Body for POST /api/appointments/schedule/complete (immediately billed, status
+/** Body for POST /api/appointments/complete (immediately billed, status
  * Completed) and PATCH /api/appointments/{id}/complete (bills an existing
- * Scheduled appointment) - identical shape for both. `packageSelections` is
- * only meaningful (and required to cover every clientId) when paymentMethod is
- * `Package` - send an empty array for any other method. */
+ * Scheduled appointment) - identical shape for both. Must contain exactly one
+ * AppointmentClientSettlement per clientId - see AppointmentClientSettlement's
+ * doc. The inherited `amount` field is ignored here; each client has their own
+ * `settlements[].amount`. */
 export interface AppointmentCompleteRequest extends AppointmentCreateRequest {
-  paymentMethod: PaymentMethod;
-  packageSelections: PackageSelection[];
+  settlements: AppointmentClientSettlement[];
 }
 
 /** Body for POST /api/appointments/recurring. No `amount` field - every
@@ -262,15 +391,8 @@ export interface RecurringAppointmentCreateRequest {
   firstOccurrenceStartsAt: string;
   endDate: string;
   note?: string | null;
-}
-
-/** Body for both POST /{id}/cancel and POST /{id}/no-show - identical shape.
- * `returnEntryForClientIds` is an explicit opt-in list, not a blanket "return
- * everyone's entry" flag - clients left off keep their deducted entry
- * (silently no-op for a client who never had one deducted). */
-export interface AppointmentCancelRequest {
-  returnEntryForClientIds: string[];
-  cancellationReason?: string | null;
+  /** See AppointmentMoveRequest.overrideAvailability - applied per occurrence. */
+  overrideAvailability?: boolean;
 }
 
 /** Why one date in a POST /recurring request collided - see RecurringConflictDetail.
@@ -299,6 +421,43 @@ const RECURRING_CONFLICT_REASON_TRANSLATION_KEYS: Record<RecurringConflictReason
 
 export function recurringConflictReasonTranslationKey(reason: RecurringConflictReason): string {
   return RECURRING_CONFLICT_REASON_TRANSLATION_KEYS[reason];
+}
+
+/** Body for both POST /{id}/cancel and POST /{id}/no-show - identical shape.
+ * `returnEntryForClientIds` is an explicit opt-in list, not a blanket "return
+ * everyone's entry" flag - clients left off keep their deducted entry
+ * (silently no-op for a client who never had one deducted). */
+export interface AppointmentCancelRequest {
+  returnEntryForClientIds: string[];
+  cancellationReason?: string | null;
+}
+
+/** Ad-hoc adding one client to an existing appointment (BookingCreateRequest) -
+ * e.g. a guest/replacement on a group occurrence outside its member list. */
+export interface BookingCreateRequest {
+  clientId: string;
+}
+
+/** Cancel/no-show for ONE booking (BookingCancelRequest) - e.g. one of two
+ * clients on a duo appointment - same shape as AppointmentCancelRequest minus
+ * the client-list (always exactly one client, known from the route). */
+export interface BookingCancelRequest {
+  returnPackageEntry: boolean;
+  cancellationReason?: string | null;
+}
+
+/** Booking status transition (BookingSetStatusRequest) - Confirmed to
+ * Completed/Cancelled/NoShow, or (Group only, and only once a backend route
+ * exposes it - see BookingStatus's doc) a reversal back to Confirmed. */
+export interface BookingSetStatusRequest {
+  status: BookingStatus;
+  clientPackageId?: string;
+  paymentMethod?: PaymentMethod;
+  amount?: number;
+  isPaid: boolean;
+  note?: string | null;
+  returnPackageEntry: boolean;
+  cancellationReason?: string | null;
 }
 
 /** One free time range within GET /api/appointments/available-slots's per-employee

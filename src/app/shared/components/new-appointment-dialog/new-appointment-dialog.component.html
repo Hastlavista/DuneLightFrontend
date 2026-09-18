@@ -250,28 +250,26 @@
           </label>
 
           @if (completeNow()) {
-            <div class="dl-form__field">
-              <label for="new-appt-payment-method">{{ 'SCHEDULE.FIELD_PAYMENT_METHOD' | translate }}</label>
-              <p-select
-                id="new-appt-payment-method"
-                fluid
-                appendTo="body"
-                formControlName="paymentMethod"
-                [options]="paymentMethodOptions()"
-                optionLabel="label"
-                optionValue="value"
-                [placeholder]="'SCHEDULE.FIELD_PAYMENT_METHOD_PLACEHOLDER' | translate"
-              />
-              @if (attemptedSubmit() && !form.controls.paymentMethod.value) {
-                <span class="dl-form__error">{{ 'SCHEDULE.NEW_APPOINTMENT.ERRORS.PAYMENT_METHOD_REQUIRED' | translate }}</span>
-              }
-            </div>
-
-            @if (form.controls.paymentMethod.value === 'Package') {
-              <div class="new-appointment-dialog__packages">
-                @for (client of selectedClients(); track client.clientId) {
-                  <div class="new-appointment-dialog__package-row">
-                    <span>{{ client.name }}</span>
+            <div class="new-appointment-dialog__packages">
+              <span class="new-appointment-dialog__label">{{ 'SCHEDULE.FIELD_PAYMENT_METHOD' | translate }}</span>
+              @for (client of selectedClients(); track client.clientId) {
+                <div class="new-appointment-dialog__package-row">
+                  <span>{{ client.name }}</span>
+                  <p-select
+                    fluid
+                    appendTo="body"
+                    [ngModel]="settlementChoice(client.clientId)"
+                    [ngModelOptions]="{ standalone: true }"
+                    (ngModelChange)="onClientSettlementChoiceChange(client.clientId, $event)"
+                    [options]="settlementChoiceOptions()"
+                    optionLabel="label"
+                    optionValue="value"
+                    [placeholder]="'SCHEDULE.FIELD_PAYMENT_METHOD_PLACEHOLDER' | translate"
+                  />
+                  @if (attemptedSubmit() && !settlementChoice(client.clientId)) {
+                    <span class="dl-form__error">{{ 'SCHEDULE.NEW_APPOINTMENT.ERRORS.PAYMENT_METHOD_REQUIRED' | translate }}</span>
+                  }
+                  @if (settlementChoice(client.clientId) === 'Package') {
                     @if (packageRow(client.clientId).loading) {
                       <span class="dl-form__hint">...</span>
                     } @else if (packageRow(client.clientId).eligible?.length === 0) {
@@ -285,10 +283,10 @@
                     } @else {
                       <span>{{ packageRow(client.clientId).eligible?.[0]?.packageName }}</span>
                     }
-                  </div>
-                }
-              </div>
-            }
+                  }
+                </div>
+              }
+            </div>
           }
         }
 

@@ -57,11 +57,20 @@ export class InactivityService {
     this.resetTimer();
   }
 
-  /** Opens the shared-device PIN chooser immediately. Unlike logout, the
-   * workspace stays mounted behind the overlay until a user authenticates. */
+  /** Opens the shared-device PIN chooser immediately. This discards the
+   * current session (token + cached employee) exactly like logout - the PIN
+   * overlay must re-authenticate through the real PinLogin endpoint to get a
+   * new token, same as the full login form. Keeping the old token "hidden"
+   * behind an overlay is not a security boundary: anyone with devtools (or
+   * just a page refresh, since `locked` lives only in memory) could reveal
+   * the still-mounted workspace underneath. ShellComponent unmounts
+   * <router-outlet> while `locked()` is true so there's also nothing left in
+   * the DOM to reveal. */
   lockNow(): void {
     this.stop();
     this.locked.set(true);
+    this.auth.logout();
+    this.currentEmployeeService.clear();
   }
 
   private resetTimer(): void {

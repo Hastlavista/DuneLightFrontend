@@ -11,6 +11,7 @@ import {
   clientPackageStatusTranslationKey,
 } from '../../../../../core/models/client-package.model';
 import { ClientPackagesService } from '../../../../../core/services/client-packages.service';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { EurCurrencyPipe } from '../../../../../shared/pipes/eur-currency.pipe';
 import { HrDatePipe } from '../../../../../shared/pipes/hr-date.pipe';
 import { IssuePackageDialogComponent } from './issue-package-dialog.component';
@@ -27,6 +28,7 @@ import { IssuePackageDialogComponent } from './issue-package-dialog.component';
 export class ClientPackagesTabComponent {
   private readonly clientPackagesService = inject(ClientPackagesService);
   private readonly translate = inject(TranslateService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
 
   readonly clientId = input.required<string>();
 

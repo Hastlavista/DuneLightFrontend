@@ -1,0 +1,71 @@
+<div class="products-page">
+  <div class="products-page__header">
+    <app-list-toolbar
+      [newLabelKey]="'CATALOG.PRODUCTS.NEW'"
+      [canCreate]="currentEmployeeService.can('products.manage')"
+      [search]="search()"
+      [showInactive]="showInactive()"
+      (searchChange)="onSearchChange($event)"
+      (showInactiveChange)="onShowInactiveChange($event)"
+      (create)="openCreate()"
+    />
+  </div>
+
+  <p-table
+    #dt
+    styleClass="products-page__table"
+    [value]="items()"
+    [lazy]="true"
+    (onLazyLoad)="onLazyLoad($event)"
+    [paginator]="true"
+    [rows]="rows()"
+    [totalRecords]="totalCount()"
+    [loading]="loading()"
+    [rowsPerPageOptions]="[20, 50, 100, 200]"
+    dataKey="id"
+    responsiveLayout="scroll"
+  >
+    <ng-template pTemplate="header">
+      <tr>
+        <th>{{ 'CATALOG.PRODUCTS.COL_NAME' | translate }}</th>
+        <th>{{ 'CATALOG.PRODUCTS.COL_SKU' | translate }}</th>
+        <th>{{ 'CATALOG.PRODUCTS.COL_PRICE' | translate }}</th>
+        <th>{{ 'COMMON.COL_STATUS' | translate }}</th>
+        <th></th>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="body" let-product>
+      <tr [class.products-page__row--inactive]="!product.isActive">
+        <td>{{ product.name }}</td>
+        <td>{{ product.sku || '—' }}</td>
+        <td>{{ product.defaultPrice | eurCurrency }}</td>
+        <td><app-status-tag [active]="product.isActive" /></td>
+        <td>
+          <div class="products-page__actions">
+            @if (currentEmployeeService.can('products.manage')) {
+              <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.EDIT' | translate" [title]="'COMMON.EDIT' | translate" (onClick)="openEdit(product)" />
+              @if (product.isActive) {
+                <p-button icon="pi pi-eye-slash" severity="warn" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.DEACTIVATE' | translate" [title]="'COMMON.DEACTIVATE' | translate" (onClick)="confirmDeactivate(product)" />
+              } @else {
+                <p-button icon="pi pi-eye" severity="success" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.ACTIVATE' | translate" [title]="'COMMON.ACTIVATE' | translate" (onClick)="activate(product)" />
+              }
+              <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.DELETE' | translate" [title]="'COMMON.DELETE' | translate" (onClick)="confirmDelete(product)" />
+            }
+          </div>
+        </td>
+      </tr>
+    </ng-template>
+    <ng-template pTemplate="emptymessage">
+      <tr>
+        <td colspan="5" class="products-page__empty">{{ 'CATALOG.PRODUCTS.EMPTY' | translate }}</td>
+      </tr>
+    </ng-template>
+  </p-table>
+</div>
+
+<app-product-form-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="onDialogVisibleChange($event)"
+  [product]="editingProduct()"
+  (saved)="onSaved()"
+/>

@@ -73,18 +73,27 @@ export interface EmployeeSummary {
 }
 
 /** Normalized shape ScheduleDayGridComponent needs for its "day x every
- * trainer" columns, filterable by the globally-selected company id
- * (CompanyContextService.selectedCompanyId). Each host maps its own
- * employee source into this: admin's ScheduleComponent has the full
- * EmployeeDto (companies already carry a companyId), the trainer's
- * TodayComponent has the lighter EmployeeDirectoryDto (companies are plain
- * names only) and must resolve those names to ids against its own
- * already-fetched company list first - see each component's own mapping. */
+ * trainer" columns, filterable by the globally-selected company (matched by
+ * NAME, not id - see ScheduleDayGridComponent's `columns`). Names are the
+ * join key on purpose: EmployeeDirectoryDto only ever carries company names
+ * (see its own doc comment), so requiring ids here would force every
+ * trainer-facing screen to fetch the full company catalog (gated behind
+ * `catalog.companies.view`) just to resolve a name->id map - if that grant
+ * happened to be missing from a role's GrantGroup, the resolution would
+ * silently fail for every employee and the grid would render with zero
+ * columns. Matching by name avoids that dependency entirely; it relies on
+ * company names being unique within a tenant, which the rest of the app
+ * already assumes (e.g. TodayComponent's employeeColumns previously joined
+ * on name for the same reason). Each host maps its own employee source into
+ * this: admin's ScheduleComponent has the full EmployeeDto (companies carry
+ * `companyName`), the trainer's TodayComponent has the lighter
+ * EmployeeDirectoryDto (companies are plain names already) - see each
+ * component's own mapping. */
 export interface EmployeeColumnEntry {
   id: string;
   firstName: string;
   lastName: string;
-  companyIds: string[];
+  companyNames: string[];
 }
 
 /** GET /api/employees/{id} and the items of its paged list. `warning` is

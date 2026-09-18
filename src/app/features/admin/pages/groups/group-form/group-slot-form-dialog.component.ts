@@ -12,6 +12,7 @@ import { DAYS_OF_WEEK, DayOfWeek, GroupDto, GroupSlotDto, dayOfWeekTranslationKe
 import { RoomDto } from '../../../../../core/models/room.model';
 import { AvailabilityService } from '../../../../../core/services/availability.service';
 import { AppointmentsService } from '../../../../../core/services/appointments.service';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { GroupsService } from '../../../../../core/services/groups.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { RoomsService } from '../../../../../core/services/rooms.service';
@@ -43,6 +44,7 @@ export class GroupSlotFormDialogComponent {
   private readonly appointmentsService = inject(AppointmentsService);
   private readonly roomsService = inject(RoomsService);
   private readonly servicesService = inject(ServicesService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);

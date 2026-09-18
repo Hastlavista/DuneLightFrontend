@@ -7,6 +7,7 @@ import { Dialog } from 'primeng/dialog';
 import { Select } from 'primeng/select';
 import { finalize } from 'rxjs';
 import { GroupDto } from '../../../../core/models/group.model';
+import { CurrentEmployeeService } from '../../../../core/services/current-employee.service';
 import { GroupsService } from '../../../../core/services/groups.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { toEndOfDayIso, toStartOfDayIso } from '../../../../core/utils/date.util';
@@ -40,6 +41,7 @@ function dateRangeValidator(group: AbstractControl): ValidationErrors | null {
 export class GenerateAppointmentsDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly groupsService = inject(GroupsService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
 

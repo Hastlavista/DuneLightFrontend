@@ -4,6 +4,7 @@
     [newLabelKey]="'CLIENTS.NEW'"
     [search]="search()"
     [showInactive]="showInactive()"
+    [canCreate]="currentEmployeeService.can('clients.manage')"
     (searchChange)="onSearchChange($event)"
     (showInactiveChange)="onShowInactiveChange($event)"
     (create)="openCreate()"
@@ -82,14 +83,16 @@
               @if (client.homeTrainerName) { <span><i class="pi pi-user"></i>{{ client.homeTrainerName }}</span> }
             </div>
             <div class="client-list-page__actions">
-          <p-button
-            icon="pi pi-pencil"
-            [text]="true"
-            [rounded]="true"
-            [ariaLabel]="'COMMON.EDIT' | translate"
-            [title]="'COMMON.EDIT' | translate"
-            (onClick)="openEdit(client)"
-          />
+          @if (currentEmployeeService.can('clients.manage')) {
+            <p-button
+              icon="pi pi-pencil"
+              [text]="true"
+              [rounded]="true"
+              [ariaLabel]="'COMMON.EDIT' | translate"
+              [title]="'COMMON.EDIT' | translate"
+              (onClick)="openEdit(client)"
+            />
+          }
           <p-button
             icon="pi pi-history"
             [text]="true"
@@ -99,15 +102,17 @@
             (onClick)="openHistory(client)"
           />
           @if (!client.isAnonymized) {
-            <p-button
-              icon="pi pi-wallet"
-              [text]="true"
-              [rounded]="true"
-              [ariaLabel]="'CLIENTS.PACKAGES.ISSUE_BUTTON' | translate"
-              [title]="'CLIENTS.PACKAGES.ISSUE_BUTTON' | translate"
-              (onClick)="openIssuePackage(client)"
-            />
-            @if (isAdmin()) {
+            @if (currentEmployeeService.can('clients.packages.manage')) {
+              <p-button
+                icon="pi pi-wallet"
+                [text]="true"
+                [rounded]="true"
+                [ariaLabel]="'CLIENTS.PACKAGES.ISSUE_BUTTON' | translate"
+                [title]="'CLIENTS.PACKAGES.ISSUE_BUTTON' | translate"
+                (onClick)="openIssuePackage(client)"
+              />
+            }
+            @if (currentEmployeeService.can('clients.status.manage')) {
               @if (client.isActive) {
                 <p-button
                   icon="pi pi-eye-slash"
@@ -131,7 +136,7 @@
               }
             }
           }
-          @if (isAdmin()) {
+          @if (currentEmployeeService.can('clients.status.manage')) {
             <p-button
               icon="pi pi-trash"
               severity="danger"
@@ -141,17 +146,17 @@
               [title]="'COMMON.DELETE' | translate"
               (onClick)="confirmDelete(client)"
             />
-            @if (!client.isAnonymized) {
-              <p-button
-                icon="pi pi-ellipsis-v"
-                [text]="true"
-                [rounded]="true"
-                severity="secondary"
-                [ariaLabel]="'CLIENTS.MORE_ACTIONS' | translate"
-                [title]="'CLIENTS.MORE_ACTIONS' | translate"
-                (onClick)="openRowMenu($event, client)"
-              />
-            }
+          }
+          @if (!client.isAnonymized && currentEmployeeService.can('clients.anonymize')) {
+            <p-button
+              icon="pi pi-ellipsis-v"
+              [text]="true"
+              [rounded]="true"
+              severity="secondary"
+              [ariaLabel]="'CLIENTS.MORE_ACTIONS' | translate"
+              [title]="'CLIENTS.MORE_ACTIONS' | translate"
+              (onClick)="openRowMenu($event, client)"
+            />
           }
             </div>
           </article>

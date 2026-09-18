@@ -23,6 +23,7 @@ import {
   PriceListUpdateRequest,
 } from '../../../../../../core/models/price-list.model';
 import { ServiceDto } from '../../../../../../core/models/service.model';
+import { CurrentEmployeeService } from '../../../../../../core/services/current-employee.service';
 import { NotificationService } from '../../../../../../core/services/notification.service';
 import { PriceListService } from '../../../../../../core/services/price-list.service';
 import { toEndOfDayIso, toStartOfDayIso } from '../../../../../../core/utils/date.util';
@@ -87,6 +88,7 @@ function subjectRequiredValidator(group: AbstractControl): ValidationErrors | nu
 export class PriceListItemFormDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly priceListService = inject(PriceListService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
 

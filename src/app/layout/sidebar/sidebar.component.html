@@ -1,4 +1,4 @@
-<div class="sidebar" [class.sidebar--admin]="section() === 'admin'">
+<div class="sidebar">
   <div class="sidebar__brand">
     @if (logoUrl(); as url) {
       <img class="sidebar__brand-logo" [src]="url" alt="Organization logo" />
@@ -17,7 +17,7 @@
         @for (item of group.items; track item.path) {
           <a
             class="sidebar__nav-item"
-            [routerLink]="[basePath(), item.path]"
+            [routerLink]="[basePath, item.path]"
             routerLinkActive="sidebar__nav-item--active"
             (click)="onNavigate()"
           >

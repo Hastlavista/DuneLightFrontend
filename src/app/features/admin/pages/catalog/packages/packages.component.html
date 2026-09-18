@@ -1,6 +1,6 @@
 <section class="packages-page">
   <div class="packages-page__header">
-    <app-list-toolbar [newLabelKey]="'CATALOG.PACKAGES.NEW'" [search]="search()" [showInactive]="showInactive()" (searchChange)="onSearchChange($event)" (showInactiveChange)="onShowInactiveChange($event)" (create)="openCreate()" />
+    <app-list-toolbar [newLabelKey]="'CATALOG.PACKAGES.NEW'" [canCreate]="currentEmployeeService.can('catalog.packages.manage')" [search]="search()" [showInactive]="showInactive()" (searchChange)="onSearchChange($event)" (showInactiveChange)="onShowInactiveChange($event)" (create)="openCreate()" />
   </div>
 
   @if (loading()) {
@@ -31,13 +31,15 @@
             </span>
           </div>
           <div class="packages-page__actions">
-            <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.EDIT' | translate" [title]="'COMMON.EDIT' | translate" (onClick)="openEdit(pkg)" />
-            @if (pkg.isActive) {
-              <p-button icon="pi pi-eye-slash" severity="warn" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.DEACTIVATE' | translate" [title]="'COMMON.DEACTIVATE' | translate" (onClick)="confirmDeactivate(pkg)" />
-            } @else {
-              <p-button icon="pi pi-eye" severity="success" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.ACTIVATE' | translate" [title]="'COMMON.ACTIVATE' | translate" (onClick)="activate(pkg)" />
+            @if (currentEmployeeService.can('catalog.packages.manage')) {
+              <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.EDIT' | translate" [title]="'COMMON.EDIT' | translate" (onClick)="openEdit(pkg)" />
+              @if (pkg.isActive) {
+                <p-button icon="pi pi-eye-slash" severity="warn" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.DEACTIVATE' | translate" [title]="'COMMON.DEACTIVATE' | translate" (onClick)="confirmDeactivate(pkg)" />
+              } @else {
+                <p-button icon="pi pi-eye" severity="success" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.ACTIVATE' | translate" [title]="'COMMON.ACTIVATE' | translate" (onClick)="activate(pkg)" />
+              }
+              <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.DELETE' | translate" [title]="'COMMON.DELETE' | translate" (onClick)="confirmDelete(pkg)" />
             }
-            <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.DELETE' | translate" [title]="'COMMON.DELETE' | translate" (onClick)="confirmDelete(pkg)" />
           </div>
         </article>
       }

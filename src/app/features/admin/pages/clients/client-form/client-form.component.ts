@@ -10,11 +10,11 @@ import { finalize } from 'rxjs';
 import { ClientTagDto } from '../../../../../core/models/client-tag.model';
 import { ClientDto, ClientUpsertRequest } from '../../../../../core/models/client.model';
 import { EmployeeDirectoryDto } from '../../../../../core/models/employee.model';
-import { CompanyDto } from '../../../../../core/models/company.model';
 import { ClientTagsService } from '../../../../../core/services/client-tags.service';
 import { ClientsService } from '../../../../../core/services/clients.service';
 import { EmployeesService } from '../../../../../core/services/employees.service';
 import { CompaniesService } from '../../../../../core/services/companies.service';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { toStartOfDayIso } from '../../../../../core/utils/date.util';
 import { translationReadySignal } from '../../../../../core/utils/translation-signal.util';
@@ -76,6 +76,7 @@ export class ClientFormComponent {
   private readonly clientsService = inject(ClientsService);
   private readonly companiesService = inject(CompaniesService);
   private readonly employeesService = inject(EmployeesService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly clientTagsService = inject(ClientTagsService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
@@ -90,13 +91,13 @@ export class ClientFormComponent {
   /** This component is reused verbatim at /app/my-clients/:id (see
    * trainer.routes.ts) - resolved once from the current URL rather than an
    * input, since it's a route concern, not something the host page passes down. */
-  private readonly isTrainerContext = this.router.url.startsWith('/app');
+  private readonly isTrainerContext = this.router.url.includes('/my-clients');
 
   private readonly loadedClient = signal<ClientDto | null>(null);
   readonly isAnonymized = computed(() => this.loadedClient()?.isAnonymized ?? false);
   readonly noShowCount = computed(() => this.loadedClient()?.noShowCount ?? 0);
 
-  readonly activeCompanies = signal<CompanyDto[]>([]);
+  readonly activeCompanies = signal<ClientRefOption[]>([]);
   readonly activeEmployees = signal<EmployeeDirectoryDto[]>([]);
   readonly activeTags = signal<ClientTagDto[]>([]);
 
@@ -113,7 +114,7 @@ export class ClientFormComponent {
 
   readonly homeCompanyOptions = computed<ClientRefOption[]>(() =>
     this.mergeOptions(
-      this.activeCompanies().map((company) => ({ id: company.id, name: company.name })),
+      this.activeCompanies(),
       this.loadedHomeCompany() ? [this.loadedHomeCompany()!] : [],
     ),
   );
@@ -259,10 +260,33 @@ export class ClientFormComponent {
     this.clientsService.getNextMemberNumber().subscribe((next) => this.form.controls.memberNumber.setValue(next));
   }
 
+  /** GET /api/catalog/companies requires catalog.companies.view/manage, which
+   * not every role that can reach this page holds (e.g. Reception via
+   * clients.manage) - same 403 concern as loadActiveEmployees() below, and
+   * the same fallback CompanyContextService.loadCompanies() uses: fall back
+   * to the employee's own assigned companies instead of leaving the "Matična
+   * poslovnica" picker empty. */
   private loadActiveCompanies(): void {
+    if (!this.currentEmployeeService.hasAnyGrant(['catalog.companies.view', 'catalog.companies.manage'])) {
+      this.activeCompanies.set(this.assignedCompanies());
+      return;
+    }
+
     this.companiesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeCompanies.set(result.items));
+      .subscribe({
+        next: (result) => this.activeCompanies.set(result.items.map((company) => ({ id: company.id, name: company.name }))),
+        error: () => this.activeCompanies.set(this.assignedCompanies()),
+      });
+  }
+
+  private assignedCompanies(): ClientRefOption[] {
+    return (
+      this.currentEmployeeService.employee()?.companies.map((company) => ({
+        id: company.companyId,
+        name: company.companyName,
+      })) ?? []
+    );
   }
 
   /** GET /api/employees/directory, not getPage()/`/api/employees` - only feeds
@@ -335,7 +359,7 @@ export class ClientFormComponent {
     if (this.isTrainerContext) {
       this.router.navigate(['/app/my-clients']);
     } else {
-      this.router.navigate(['/admin/clients'], { queryParams: { tab: 'clients' } });
+      this.router.navigate(['/app/clients'], { queryParams: { tab: 'clients' } });
     }
   }
 }

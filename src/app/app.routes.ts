@@ -1,5 +1,4 @@
 import { Routes } from '@angular/router';
-import { adminGuard } from './core/guards/admin.guard';
 import { authGuard } from './core/guards/auth.guard';
 import { guestGuard } from './core/guards/guest.guard';
 
@@ -16,18 +15,17 @@ export const routes: Routes = [
     loadComponent: () => import('./features/auth/register/register.component').then((m) => m.RegisterComponent),
   },
   {
-    path: 'admin',
-    canActivate: [authGuard, adminGuard],
-    loadComponent: () => import('./layout/shell/shell.component').then((m) => m.ShellComponent),
-    data: { section: 'admin' },
-    loadChildren: () => import('./features/admin/admin.routes').then((m) => m.ADMIN_ROUTES),
-  },
-  {
+    // One shell for every authenticated employee - no more separate
+    // admin/trainer sections. Page and sidebar-item visibility comes purely
+    // from grants (see nav-items.ts's requiredGrants and each route's
+    // grantGuard/ownerGuard below), not from which "area" the URL is under.
     path: 'app',
     canActivate: [authGuard],
     loadComponent: () => import('./layout/shell/shell.component').then((m) => m.ShellComponent),
-    data: { section: 'trainer' },
-    loadChildren: () => import('./features/trainer/trainer.routes').then((m) => m.TRAINER_ROUTES),
+    loadChildren: () =>
+      Promise.all([import('./features/admin/admin.routes'), import('./features/trainer/trainer.routes')]).then(
+        ([admin, trainer]) => [...admin.ADMIN_ROUTES, ...trainer.TRAINER_ROUTES],
+      ),
   },
   { path: '**', redirectTo: 'login' },
 ];

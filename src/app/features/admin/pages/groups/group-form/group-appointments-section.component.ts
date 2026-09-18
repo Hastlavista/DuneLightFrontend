@@ -1,4 +1,4 @@
-import { Component, input, signal } from '@angular/core';
+import { Component, input, output, signal } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { TableModule } from 'primeng/table';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
@@ -20,6 +20,12 @@ import { GroupAttendanceDialogComponent } from '../attendance/group-attendance-d
 export class GroupAppointmentsSectionComponent {
   readonly group = input.required<GroupDetailDto>();
 
+  /** Forwarded from GroupAttendanceDialogComponent's own `changed` output -
+   * seat cancel/correct, waitlist join/cancel, or occurrence complete can all
+   * change this group's occupancy/occurrence list, same reload convention as
+   * GroupMembersSectionComponent's `changed`. */
+  readonly changed = output<void>();
+
   readonly attendanceDialogVisible = signal(false);
   readonly selectedAppointment = signal<GroupAppointmentCellDto | null>(null);
 
@@ -30,5 +36,9 @@ export class GroupAppointmentsSectionComponent {
 
   occupancyLabel(appointment: GroupAppointmentCellDto): string {
     return `${appointment.expectedCount}/${this.group().capacity}`;
+  }
+
+  timeLabel(appointment: GroupAppointmentCellDto): string {
+    return new Date(appointment.startsAt).toLocaleTimeString('hr-HR', { hour: '2-digit', minute: '2-digit' });
   }
 }

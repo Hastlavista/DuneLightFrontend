@@ -10,6 +10,7 @@ import { finalize } from 'rxjs';
 import { OrganizationBranding, OrganizationBrandingResponse } from '../../../../core/models/branding.model';
 import { BrandingService, resolveBrandingAssetUrl } from '../../../../core/services/branding.service';
 import { deriveBrandCssVariables } from '../../../../core/services/branding-colors.util';
+import { CurrentEmployeeService } from '../../../../core/services/current-employee.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 
 const DEFAULT_PRIMARY = '#0D5C63';
@@ -27,6 +28,7 @@ const ALLOWED_EXTENSIONS = new Set(['png', 'jpg', 'jpeg', 'gif', 'webp', 'ico', 
 export class BrandingComponent {
   private readonly fb = inject(FormBuilder);
   private readonly brandingService = inject(BrandingService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly confirmation = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
@@ -70,6 +72,7 @@ export class BrandingComponent {
   }
 
   saveColors(): void {
+    if (!this.currentEmployeeService.can('organization.branding.manage')) return;
     if (this.form.controls.primaryColor.invalid || this.form.controls.secondaryColor.invalid || (this.surfaceColorCustom() && this.form.controls.surfaceColor.invalid)) { this.form.markAllAsTouched(); return; }
     this.savingColors.set(true);
     this.brandingService.updateColors({
@@ -81,6 +84,7 @@ export class BrandingComponent {
   }
 
   resetColors(): void {
+    if (!this.currentEmployeeService.can('organization.branding.manage')) return;
     this.confirm('BRANDING.CONFIRM_RESET_COLORS', 'pi pi-refresh', 'BRANDING.RESET_COLORS', () =>
       this.brandingService.resetColors().subscribe({ next: (updated) => { this.update(updated); this.success('BRANDING.COLORS_RESET'); }, error: () => {} }),
     );
@@ -93,6 +97,7 @@ export class BrandingComponent {
   upload(kind: 'logo' | 'favicon', event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0]; input.value = '';
+    if (!this.currentEmployeeService.can('organization.branding.manage')) return;
     if (!file || !this.validFile(file)) return;
     this.setPreview(kind, URL.createObjectURL(file));
     this.uploading.set(kind);
@@ -104,6 +109,7 @@ export class BrandingComponent {
   }
 
   removeAsset(kind: 'logo' | 'favicon'): void {
+    if (!this.currentEmployeeService.can('organization.branding.manage')) return;
     this.confirm('BRANDING.CONFIRM_REMOVE_ASSET', 'pi pi-trash', 'COMMON.DELETE', () => {
       const request = kind === 'logo' ? this.brandingService.deleteLogo() : this.brandingService.deleteFavicon();
       request.subscribe({ next: (updated) => { this.update(updated); this.success(kind === 'logo' ? 'BRANDING.LOGO_REMOVED' : 'BRANDING.FAVICON_REMOVED'); }, error: () => {} });

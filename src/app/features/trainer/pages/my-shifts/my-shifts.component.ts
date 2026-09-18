@@ -19,10 +19,9 @@ const DEFAULT_TAB = 'team';
 
 /**
  * "Moje smjene" nav entry, repurposed as Roster (frontend #11)'s main screen -
- * reachable by any authenticated role (authGuard only, no adminGuard), which
- * is exactly why the team-monthly matrix and personal view live here rather
- * than under /admin: both must be visible to Member too, and /admin is
- * Admin-only. Owns the one entry-form dialog both tabs share (mirrors
+ * has no requiredGrants (see nav-items.ts), so both the team-monthly matrix
+ * and personal view are visible to every employee, not just grant-holders.
+ * Owns the one entry-form dialog both tabs share (mirrors
  * ScheduleComponent owning dialogs both grids open), plus the active
  * employees/roster-types/companies lookups the dialog and the two tabs need.
  *
@@ -125,12 +124,20 @@ export class MyShiftsComponent {
       .subscribe((result) => this.activeEmployees.set(result));
   }
 
+  /** Feeds the entry-form dialog's required roster-type dropdown - this page
+   * has no filter of its own for this list, so unlike an admin-only screen
+   * this must never be skipped for roster.types.view: logging a shift isn't
+   * "browsing the catalog", and a custom GrantGroup lacking that grant would
+   * otherwise leave the dropdown silently empty. */
   private loadActiveRosterTypes(): void {
     this.rosterTypesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
       .subscribe((result) => this.activeRosterTypes.set(result.items));
   }
 
+  /** Same rationale as loadActiveRosterTypes() - feeds the entry-form
+   * dialog's required company dropdown, must never be skipped for
+   * catalog.companies.view. */
   private loadActiveCompanies(): void {
     this.companiesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })

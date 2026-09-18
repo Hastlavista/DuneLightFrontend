@@ -15,6 +15,7 @@ import {
   ServiceUpsertRequest,
   executionModeTranslationKey,
 } from '../../../../../core/models/service.model';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { ServicesService } from '../../../../../core/services/services.service';
 
@@ -61,6 +62,7 @@ const SERVICE_COLORS: ServiceColorOption[] = [
 export class ServiceFormDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly servicesService = inject(ServicesService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
 

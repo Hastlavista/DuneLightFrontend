@@ -1,7 +1,9 @@
 <div class="client-tags-page">
   <header class="client-tags-page__header">
     <p>{{ totalCount() }} oznaka · {{ activeCount() }} aktivnih</p>
-    <p-button icon="pi pi-plus" [label]="'CLIENTS.TAGS.NEW' | translate" (onClick)="openCreate()" />
+    @if (currentEmployeeService.can('clients.tags.manage')) {
+      <p-button icon="pi pi-plus" [label]="'CLIENTS.TAGS.NEW' | translate" (onClick)="openCreate()" />
+    }
   </header>
 
   @if (loading()) {
@@ -15,44 +17,46 @@
             <span>Redoslijed {{ tag.sortOrder }}</span>
           </div>
           <div class="client-tags-page__actions">
-          <p-button
-            icon="pi pi-pencil"
-            [text]="true"
-            [rounded]="true"
-            [ariaLabel]="'COMMON.EDIT' | translate"
-            [title]="'COMMON.EDIT' | translate"
-            (onClick)="openEdit(tag)"
-          />
-          @if (tag.isActive) {
+          @if (currentEmployeeService.can('clients.tags.manage')) {
             <p-button
-              icon="pi pi-eye-slash"
-              severity="warn"
+              icon="pi pi-pencil"
               [text]="true"
               [rounded]="true"
-              [ariaLabel]="'COMMON.DEACTIVATE' | translate"
-              [title]="'COMMON.DEACTIVATE' | translate"
-              (onClick)="confirmDeactivate(tag)"
+              [ariaLabel]="'COMMON.EDIT' | translate"
+              [title]="'COMMON.EDIT' | translate"
+              (onClick)="openEdit(tag)"
             />
-          } @else {
+            @if (tag.isActive) {
+              <p-button
+                icon="pi pi-eye-slash"
+                severity="warn"
+                [text]="true"
+                [rounded]="true"
+                [ariaLabel]="'COMMON.DEACTIVATE' | translate"
+                [title]="'COMMON.DEACTIVATE' | translate"
+                (onClick)="confirmDeactivate(tag)"
+              />
+            } @else {
+              <p-button
+                icon="pi pi-eye"
+                severity="success"
+                [text]="true"
+                [rounded]="true"
+                [ariaLabel]="'COMMON.ACTIVATE' | translate"
+                [title]="'COMMON.ACTIVATE' | translate"
+                (onClick)="activate(tag)"
+              />
+            }
             <p-button
-              icon="pi pi-eye"
-              severity="success"
+              icon="pi pi-trash"
+              severity="danger"
               [text]="true"
               [rounded]="true"
-              [ariaLabel]="'COMMON.ACTIVATE' | translate"
-              [title]="'COMMON.ACTIVATE' | translate"
-              (onClick)="activate(tag)"
+              [ariaLabel]="'COMMON.DELETE' | translate"
+              [title]="'COMMON.DELETE' | translate"
+              (onClick)="confirmDelete(tag)"
             />
           }
-          <p-button
-            icon="pi pi-trash"
-            severity="danger"
-            [text]="true"
-            [rounded]="true"
-            [ariaLabel]="'COMMON.DELETE' | translate"
-            [title]="'COMMON.DELETE' | translate"
-            (onClick)="confirmDelete(tag)"
-          />
           </div>
         </article>
       }

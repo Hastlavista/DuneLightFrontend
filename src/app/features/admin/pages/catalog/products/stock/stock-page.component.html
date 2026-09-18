@@ -1,0 +1,65 @@
+<section class="stock-page">
+  <div class="stock-page__header">
+    <app-list-toolbar [canCreate]="false" [search]="search()" [showInactive]="showInactive()" (searchChange)="onSearchChange($event)" (showInactiveChange)="onShowInactiveChange($event)">
+      <div class="stock-page__company">
+        <span>{{ 'STOCK.SELECT_COMPANY_LABEL' | translate }}</span>
+        <p-select [options]="companyContextService.companies()" optionLabel="name" optionValue="id" [ngModel]="selectedCompanyId()" (ngModelChange)="onCompanyChange($event)" />
+      </div>
+    </app-list-toolbar>
+  </div>
+
+  @if (!selectedCompanyId()) {
+    <p class="stock-page__empty">{{ 'STOCK.SELECT_COMPANY_HINT' | translate }}</p>
+  } @else if (loading()) {
+    <p class="stock-page__empty">Učitavanje...</p>
+  } @else if (items().length === 0) {
+    <p class="stock-page__empty">{{ 'STOCK.EMPTY' | translate }}</p>
+  } @else {
+    <table class="stock-page__table">
+      <thead>
+        <tr>
+          <th>{{ 'STOCK.COL_PRODUCT' | translate }}</th>
+          <th>{{ 'STOCK.COL_SKU' | translate }}</th>
+          <th>{{ 'STOCK.COL_QUANTITY' | translate }}</th>
+          <th>{{ 'STOCK.COL_UPDATED_AT' | translate }}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (product of items(); track product.id) {
+          <tr [class.stock-page__row--inactive]="!product.isActive">
+            <td>{{ product.name }}</td>
+            <td>{{ product.sku || '—' }}</td>
+            <td class="stock-page__quantity">
+              {{ quantityFor(product.id) }}
+              @if (!hasStockRow(product.id)) {
+                <span class="stock-page__hint">{{ 'STOCK.NOT_INITIALIZED' | translate }}</span>
+              }
+            </td>
+            <td>
+              @if (updatedAtFor(product.id); as updatedAt) {
+                {{ updatedAt | hrDate }}
+              } @else {
+                —
+              }
+            </td>
+            <td>
+              <div class="stock-page__actions">
+                @if (currentEmployeeService.can('stock.manage')) {
+                  <p-button icon="pi pi-sliders-h" [text]="true" [rounded]="true" [ariaLabel]="'STOCK.ADJUST_BUTTON' | translate" [title]="'STOCK.ADJUST_BUTTON' | translate" (onClick)="openAdjust(product)" />
+                  <p-button icon="pi pi-arrow-right-arrow-left" [text]="true" [rounded]="true" [ariaLabel]="'STOCK.TRANSFER_BUTTON' | translate" [title]="'STOCK.TRANSFER_BUTTON' | translate" (onClick)="openTransfer(product)" />
+                }
+                <p-button icon="pi pi-history" [text]="true" [rounded]="true" [ariaLabel]="'STOCK.HISTORY_BUTTON' | translate" [title]="'STOCK.HISTORY_BUTTON' | translate" (onClick)="openMovements(product)" />
+              </div>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <p-paginator [first]="first()" [rows]="rows()" [totalRecords]="totalCount()" [rowsPerPageOptions]="[20, 50, 100, 200]" (onPageChange)="onPageChange($event)" />
+  }
+</section>
+
+<app-stock-adjust-dialog [(visible)]="adjustDialogVisible" [target]="adjustTarget()" (adjusted)="onAdjusted($event)" />
+<app-stock-transfer-dialog [(visible)]="transferDialogVisible" [source]="transferSource()" (transferred)="onTransferred($event)" (sourceQuantityChanged)="onTransferSourceQuantityChanged($event)" />
+<app-stock-movements-dialog [(visible)]="movementsDialogVisible" [productId]="movementsProductId()" [productName]="movementsProductName()" />

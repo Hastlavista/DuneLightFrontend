@@ -74,10 +74,47 @@
     "HOLIDAY_CATALOG_NOT_DEFINED_FOR_COUNTRY": "Praznici za ovu državu nisu unaprijed definirani. Dodajte ih ručno.",
     "ROOM_COMPANY_MISMATCH": "Odabrana prostorija ne pripada odabranoj poslovnici.",
 
+    "INACTIVE_COMPANY": "Odabrana poslovnica je neaktivna.",
+    "INACTIVE_CLIENT": "Odabrani klijent je neaktivan.",
+    "INACTIVE_PACKAGE": "Odabrani paket je neaktivan.",
+    "INACTIVE_PRODUCT": "Odabrani proizvod je neaktivan.",
+    "CHECKOUT_NOT_OPEN": "Checkout nije otvoren pa se ne može mijenjati.",
+    "CHECKOUT_HAS_ACTIVE_PAYMENTS": "Checkout ima aktivna plaćanja - prvo ih poništite.",
+    "CHECKOUT_OUTSTANDING_BALANCE": "Checkout nije u potpunosti podmiren.",
+    "CHECKOUT_ITEM_COMPANY_MISMATCH": "Odabrana stavka ne pripada poslovnici ovog checkouta.",
+    "CHECKOUT_ITEM_CLIENT_MISMATCH": "Odabrana stavka ne pripada klijentu ovog checkouta.",
+    "CHECKOUT_ITEM_HAS_ALLOCATIONS": "Stavku nije moguće ukloniti jer ima evidentirano plaćanje - prvo poništite plaćanje.",
+    "CHECKOUT_ITEM_NOT_ELIGIBLE": "Odabrana stavka nije prikladna za dodavanje.",
+    "BOOKING_ALREADY_IN_OPEN_CHECKOUT": "Ovaj termin je već dodan u drugi otvoreni checkout.",
+    "BOOKING_ALREADY_HAS_MONETARY_PAYMENT": "Ovaj termin već ima evidentirano novčano plaćanje.",
+    "ALLOCATION_EXCEEDS_ITEM_OUTSTANDING": "Iznos alokacije premašuje preostali dug odabrane stavke.",
+    "ALLOCATION_AMOUNT_MISMATCH": "Zbroj alokacija ne odgovara ukupnom iznosu plaćanja.",
+    "INSUFFICIENT_STOCK": "Nema dovoljno zalihe odabranog proizvoda.",
+    "INVALID_QUANTITY": "Količina/iznos mora biti veći od nule.",
+    "DUPLICATE_SKU": "Taj SKU je već zauzet (uklj. neaktivne proizvode).",
+    "TRANSFER_SAME_COMPANY": "Izvorišna i odredišna poslovnica ne smiju biti iste.",
+    "STOCK_ADJUSTMENT_REASON_REQUIRED": "Razlog ručne korekcije zalihe je obavezan.",
+    "CONCURRENCY_CONFLICT": "Zapis je u međuvremenu promijenjen. Podaci su osvježeni, pokušajte ponovno.",
+    "PAYMENT_EXCEEDS_OUTSTANDING_AMOUNT": "Iznos plaćanja premašuje preostali dug.",
+    "PAYMENT_NOT_ALLOWED": "Plaćanje nije dopušteno za odabranu stavku.",
+    "PAYMENT_ALREADY_VOIDED": "Ovo plaćanje je već poništeno.",
+    "PAYMENT_VOID_REASON_REQUIRED": "Razlog poništenja je obavezan.",
+    "COMMISSION_RULE_ALREADY_EXISTS": "Za ovog zaposlenika i odabrani predmet već postoji aktivno pravilo provizije.",
+    "COMMISSION_GROUP_PERCENTAGE_NOT_SUPPORTED": "Za grupnu uslugu podržana je samo fiksna provizija.",
+
     "LEAVE_FUND_TYPE_MUST_BE_ABSENCE": "Fond godišnjeg mogu trošiti samo vrste odsutnosti.",
     "LEAVE_FUND_ENTRY_REQUIRES_END_DATE": "Za godišnji odmor morate unijeti datum završetka.",
     "LEAVE_FUND_EXCEEDED": "Zaposlenik nema dovoljno preostalih dana godišnjeg odmora.",
     "LEAVE_SETTINGS_NOT_CONFIGURED": "Fond godišnjeg odmora nije postavljen za ovog zaposlenika.",
+
+    "GROUP_CAPACITY_REACHED": "Grupa je popunjena — nema više slobodnih mjesta.",
+    "ATTENDANCE_BEFORE_START": "Prisutnost nije moguće upisati prije početka termina.",
+    "PACKAGE_ALREADY_CANCELLED": "Ovaj ulazak paketa je već otkazan/vraćen.",
+    "WAITLIST_NOT_AVAILABLE": "Lista čekanja nije dostupna za ovaj termin.",
+    "ALREADY_WAITLISTED": "Klijent je već na listi čekanja za ovaj termin.",
+    "ALREADY_BOOKED": "Klijent već ima rezervaciju na ovom terminu.",
+    "CAPACITY_AVAILABLE": "Termin još ima slobodnih mjesta — lista čekanja nije potrebna.",
+    "WAITLIST_ENTRY_NOT_ACTIVE": "Ovaj zapis na listi čekanja više nije aktivan.",
 
     "UNKNOWN": "Došlo je do greške. Pokušajte ponovno."
   },
@@ -87,6 +124,7 @@
     "OUTSIDE_WORKING_HOURS_WARNING": "Odabrani termin je izvan radnog vremena zaposlenika ili poslovnice.",
     "COMPANY_CLOSED_HOLIDAY": "Poslovnica je zatvorena zbog praznika u odabranom terminu.",
     "GROUP_CAPACITY_EXCEEDED": "Broj aktivnih članova grupe ({{activeMemberCount}}) premašuje kapacitet ({{capacity}}).",
+    "GROUP_APPOINTMENT_UNRESOLVED_BOOKINGS": "Neki polaznici još nemaju upisanu prisutnost.",
     "ROSTER_ENTRY_OVERLAP": "Novi zapis se preklapa s postojećim zapisom \"{{rosterTypeName}}\".",
     "EMPLOYEE_HAS_FUTURE_APPOINTMENTS": "Zaposlenik ima buduće termine.",
 
@@ -100,13 +138,17 @@
   "NAV": {
     "ADMIN": {
       "DASHBOARD": "Nadzorna ploča",
+      "COMMISSIONS": "Provizije",
+      "NOTIFICATIONS": "Obavijesti",
       "COMPANIES": "Poslovnice",
+      "CHECKOUT": "Blagajna",
       "SCHEDULE": "Raspored",
       "SHIFTS": "Vrste evidencije",
       "CLIENTS": "Klijenti",
       "EMPLOYEES": "Zaposlenici",
       "GROUPS": "Grupe",
       "SERVICES": "Usluge i cjenik",
+      "PRODUCTS": "Proizvodi i zaliha",
       "PERMISSIONS": "Dozvole",
       "BRANDING": "Branding",
       "FINANCE": "Financije",
@@ -139,7 +181,6 @@
       "ALL_COMPANIES": "Sve poslovnice",
       "OPEN_MENU": "Otvori izbornik",
       "VIEW_ADMIN": "Admin",
-      "VIEW_MEMBER": "Trener",
       "COMPANY_LABEL": "Poslovnica",
       "COMPANY_SWITCHER": "Odabir poslovnice"
     }
@@ -148,6 +189,8 @@
     "SERVICES_TAB_LABEL": "Usluge",
     "PRICING_TAB_LABEL": "Cjenik",
     "PACKAGES_TAB_LABEL": "Paketi",
+    "PRODUCTS_TAB_LABEL": "Proizvodi",
+    "STOCK_TAB_LABEL": "Zaliha",
     "COMPANIES": {
       "NEW": "Nova poslovnica",
       "NEW_TITLE": "Nova poslovnica",
@@ -387,6 +430,211 @@
       "DELETED": "Paket je izbrisan.",
       "CONFIRM_DEACTIVATE": "Jeste li sigurni da želite deaktivirati paket \"{{name}}\"?",
       "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati paket \"{{name}}\"? Ova radnja je nepovratna."
+    },
+    "PRODUCTS": {
+      "NEW": "Novi proizvod",
+      "NEW_TITLE": "Novi proizvod",
+      "EDIT_TITLE": "Uredi proizvod",
+      "COL_NAME": "Naziv",
+      "COL_SKU": "SKU",
+      "COL_PRICE": "Zadana cijena",
+      "EMPTY": "Nema pronađenih proizvoda.",
+      "FIELD_NAME": "Naziv",
+      "FIELD_DESCRIPTION": "Opis",
+      "FIELD_SKU": "SKU",
+      "FIELD_SKU_HINT": "Neobavezno. Ako je unesen, mora biti jedinstven u organizaciji (uklj. neaktivne proizvode).",
+      "FIELD_PRICE": "Zadana cijena",
+      "ERRORS": {
+        "NAME_REQUIRED": "Naziv je obavezan.",
+        "PRICE_INVALID": "Cijena ne smije biti negativna."
+      },
+      "CREATED": "Proizvod je uspješno kreiran.",
+      "UPDATED": "Proizvod je uspješno ažuriran.",
+      "ACTIVATED": "Proizvod je aktiviran.",
+      "DEACTIVATED": "Proizvod je deaktiviran.",
+      "DELETED": "Proizvod je izbrisan.",
+      "CONFIRM_DEACTIVATE": "Jeste li sigurni da želite deaktivirati proizvod \"{{name}}\"?",
+      "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati proizvod \"{{name}}\"? Ova radnja je nepovratna."
+    }
+  },
+  "STOCK": {
+    "SELECT_COMPANY_LABEL": "Poslovnica",
+    "SELECT_COMPANY_HINT": "Odaberite poslovnicu za prikaz zalihe.",
+    "COL_PRODUCT": "Proizvod",
+    "COL_SKU": "SKU",
+    "COL_QUANTITY": "Zaliha",
+    "COL_UPDATED_AT": "Zadnja promjena",
+    "EMPTY": "Nema pronađenih proizvoda.",
+    "NOT_INITIALIZED": "Zaliha još nije evidentirana",
+    "ADJUST_BUTTON": "Korekcija",
+    "TRANSFER_BUTTON": "Transfer",
+    "HISTORY_BUTTON": "Povijest",
+    "ADJUST": {
+      "TITLE": "Korekcija zalihe",
+      "FIELD_PRODUCT": "Proizvod",
+      "FIELD_COMPANY": "Poslovnica",
+      "FIELD_CURRENT_QUANTITY": "Trenutna količina",
+      "FIELD_NEW_QUANTITY": "Nova količina",
+      "FIELD_REASON": "Razlog",
+      "FIELD_REASON_PLACEHOLDER": "npr. Fizički popis, ispravak unosa...",
+      "ERRORS": {
+        "QUANTITY_INVALID": "Količina ne smije biti negativna.",
+        "REASON_REQUIRED": "Razlog je obavezan."
+      },
+      "ADJUSTED": "Zaliha je ažurirana."
+    },
+    "TRANSFER": {
+      "TITLE": "Transfer zalihe",
+      "FIELD_PRODUCT": "Proizvod",
+      "FIELD_SOURCE_COMPANY": "Izvorišna poslovnica",
+      "FIELD_DESTINATION_COMPANY": "Odredišna poslovnica",
+      "FIELD_QUANTITY": "Količina",
+      "AVAILABLE_HINT": "Dostupno: {{quantity}}",
+      "ERRORS": {
+        "SAME_COMPANY": "Odredišna poslovnica mora biti različita od izvorišne.",
+        "QUANTITY_INVALID": "Količina mora biti veća od nule.",
+        "DESTINATION_REQUIRED": "Odaberite odredišnu poslovnicu."
+      },
+      "TRANSFERRED": "Transfer je uspješno izvršen."
+    },
+    "MOVEMENTS": {
+      "TITLE": "Povijest kretanja zalihe — {{product}}",
+      "COL_DATE": "Datum",
+      "COL_TYPE": "Vrsta",
+      "COL_COMPANY": "Poslovnica",
+      "COL_QUANTITY_DELTA": "Promjena",
+      "COL_REASON": "Razlog",
+      "COL_RELATED_COMPANY": "Povezana poslovnica",
+      "COL_REFERENCE": "Referenca",
+      "EMPTY": "Nema evidentiranih kretanja zalihe.",
+      "SALE_REFERENCE": "Prodaja (checkout stavka)",
+      "TYPE": {
+        "Initial": "Početno stanje",
+        "Adjustment": "Ručna korekcija",
+        "Sale": "Prodaja",
+        "SaleReversal": "Storno prodaje",
+        "TransferOut": "Transfer — odlazni",
+        "TransferIn": "Transfer — dolazni"
+      }
+    }
+  },
+  "CHECKOUT": {
+    "ITEM_TYPE": {
+      "BOOKING": "Termin",
+      "PACKAGE": "Paket",
+      "PRODUCT": "Proizvod"
+    },
+    "STATUS": {
+      "OPEN": "Otvoren",
+      "COMPLETED": "Zatvoren",
+      "CANCELLED": "Otkazan",
+      "VOIDED": "Poništen"
+    },
+    "PAYMENT_STATUS": {
+      "COMPLETED": "Izvršeno",
+      "VOIDED": "Poništeno"
+    },
+    "ENTRY": {
+      "TITLE": "Blagajna",
+      "SEARCH_CLIENT_LABEL": "Klijent",
+      "SEARCH_CLIENT_PLACEHOLDER": "Pretraži klijenta...",
+      "SELECT_CLIENT_HINT": "Odaberite klijenta za prikaz ili otvaranje checkouta.",
+      "HISTORY_TITLE": "Checkouti klijenta",
+      "NEW_BUTTON": "Novi checkout",
+      "OPEN_BUTTON": "Otvori",
+      "EMPTY": "Klijent još nema checkouta.",
+      "COL_STATUS": "Status",
+      "COL_COMPANY": "Poslovnica",
+      "COL_TOTAL": "Ukupno",
+      "COL_OUTSTANDING": "Preostalo",
+      "COL_CREATED_AT": "Otvoren",
+      "SELECT_COMPANY_LABEL": "Poslovnica",
+      "CREATE_BUTTON": "Otvori checkout",
+      "CREATED": "Checkout je otvoren."
+    },
+    "DETAIL": {
+      "BACK": "Natrag na blagajnu",
+      "ITEMS_TITLE": "Stavke",
+      "ADD_ITEM": "Dodaj stavku",
+      "EMPTY_ITEMS": "Nema dodanih stavki.",
+      "COL_TYPE": "Vrsta",
+      "COL_DESCRIPTION": "Opis",
+      "COL_UNIT_PRICE": "Jed. cijena",
+      "COL_QUANTITY": "Kol.",
+      "COL_RETAIL": "Maloprodajna vrijednost",
+      "COL_MONETARY_DUE": "Za platiti",
+      "COL_PAID": "Plaćeno",
+      "COL_OUTSTANDING": "Preostalo",
+      "COL_ACTIONS": "",
+      "PACKAGE_COVERED": "Pokriveno paketom",
+      "REMOVE_ITEM_CONFIRM": "Jeste li sigurni da želite ukloniti stavku \"{{description}}\"?",
+      "ITEM_REMOVED": "Stavka je uklonjena.",
+      "SUMMARY_TITLE": "Financijski pregled",
+      "RETAIL_TOTAL": "Maloprodajna vrijednost",
+      "MONETARY_DUE": "Za platiti",
+      "PAID_AMOUNT": "Plaćeno",
+      "OUTSTANDING_AMOUNT": "Preostalo",
+      "FULLY_PAID": "Podmireno",
+      "PAYMENTS_TITLE": "Plaćanja",
+      "ADD_PAYMENT": "Dodaj plaćanje",
+      "EMPTY_PAYMENTS": "Nema evidentiranih plaćanja.",
+      "COL_AMOUNT": "Iznos",
+      "COL_METHOD": "Način",
+      "COL_STATUS": "Status",
+      "COL_CREATED_AT": "Datum",
+      "COL_NOTE": "Napomena",
+      "CHECK_IN_GENERATED": "Automatski (check-in)",
+      "VOID_PAYMENT": "Poništi",
+      "VOIDED_HINT": "Poništeno {{date}} - {{reason}}",
+      "COMPLETE": "Zatvori checkout",
+      "CANCEL": "Otkaži checkout",
+      "CONFIRM_COMPLETE": "Jeste li sigurni da želite zatvoriti checkout? Ova radnja je nepovratna.",
+      "CONFIRM_CANCEL": "Jeste li sigurni da želite otkazati checkout? Ova radnja je nepovratna.",
+      "COMPLETED_SUCCESS": "Checkout je uspješno zatvoren.",
+      "CANCELLED_SUCCESS": "Checkout je otkazan.",
+      "NOT_FULLY_PAID_HINT": "Checkout mora biti u potpunosti podmiren prije zatvaranja."
+    },
+    "ADD_ITEM": {
+      "TITLE": "Dodaj stavku",
+      "TAB_BOOKING": "Termin",
+      "TAB_PRODUCT": "Proizvod",
+      "TAB_PACKAGE": "Paket",
+      "BOOKING_EMPTY": "Klijent nema termina za dodavanje.",
+      "COL_DATE": "Datum",
+      "COL_SERVICE": "Usluga",
+      "COL_COMPANY": "Poslovnica",
+      "COL_STATUS": "Status",
+      "COL_OUTSTANDING": "Preostalo",
+      "PRODUCT_SEARCH_PLACEHOLDER": "Pretraži proizvod...",
+      "PRODUCT_EMPTY": "Nema pronađenih proizvoda.",
+      "COL_PRODUCT": "Proizvod",
+      "COL_STOCK": "Zaliha",
+      "COL_PRICE": "Cijena",
+      "COL_QUANTITY": "Količina",
+      "PACKAGE_SEARCH_PLACEHOLDER": "Pretraži paket...",
+      "PACKAGE_EMPTY": "Nema pronađenih paketa.",
+      "COL_PACKAGE": "Paket",
+      "ADD_BUTTON": "Dodaj",
+      "ITEM_ADDED": "Stavka je dodana."
+    },
+    "ADD_PAYMENT": {
+      "TITLE": "Dodaj plaćanje",
+      "FIELD_AMOUNT": "Iznos",
+      "FIELD_METHOD": "Način plaćanja",
+      "FIELD_NOTE": "Napomena",
+      "OUTSTANDING_HINT": "Preostali dug: {{amount}}",
+      "ERRORS": {
+        "AMOUNT_REQUIRED": "Iznos mora biti veći od nule."
+      },
+      "PAID": "Plaćanje je evidentirano."
+    },
+    "VOID_PAYMENT": {
+      "TITLE": "Poništi plaćanje",
+      "FIELD_REASON": "Razlog",
+      "ERRORS": {
+        "REASON_REQUIRED": "Razlog je obavezan."
+      },
+      "VOIDED": "Plaćanje je poništeno."
     }
   },
   "CLIENTS": {
@@ -547,12 +795,10 @@
       "COL_DATETIME": "Datum i vrijeme",
       "COL_TYPE": "Vrsta",
       "COL_NAME": "Naziv",
-      "COL_CLIENTS": "Klijenti",
       "COL_AMOUNT_COVERAGE": "Iznos / pokriće",
       "TYPE_INDIVIDUAL": "Individualno",
       "TYPE_GROUP": "Grupno",
-      "ATTENDED_YES": "Bio",
-      "ATTENDED_NO": "Nije bio",
+      "COVERED_BY_PACKAGE": "Pokriveno paketom",
       "HISTORY_EMPTY": "Klijent još nema evidentiranih termina."
     }
   },
@@ -632,6 +878,7 @@
     "FIELD_ROLES": "Poslovne oznake",
     "FIELD_ROLES_PLACEHOLDER": "Odaberite poslovne oznake (opcionalno)",
     "GRANT_GROUPS_NOT_APPLICABLE_OWNER": "Vlasnik organizacije uvijek ima puni pristup i ne treba grant grupu.",
+    "PERMISSIONS_OWNER_ONLY": "Dodjelu grant grupa i poslovnih oznaka upravlja isključivo vlasnik organizacije.",
     "OWNER_BADGE": "Vlasnik",
     "ERRORS": {
       "FIRST_NAME_REQUIRED": "Ime je obavezno.",
@@ -744,6 +991,9 @@
       "OWNER_PROFILE_TITLE": "Vaš profil",
       "OWNER_PROFILE_DESC": "Dovršite svoj profil zaposlenika.",
       "OWNER_PROFILE_ACTION": "Dovrši profil",
+      "GRANT_GROUP_TITLE": "Ovlasti",
+      "GRANT_GROUP_DESC": "Kreirajte barem jednu grupu ovlasti - svaki zaposlenik mora imati dodijeljenu barem jednu kako bi mogao raditi bilo što u sustavu.",
+      "GRANT_GROUP_ACTION": "Kreiraj grupu ovlasti",
       "OTHER_EMPLOYEE_TITLE": "Zaposlenici",
       "OTHER_EMPLOYEE_DESC": "Dodajte svoj tim.",
       "OTHER_EMPLOYEE_ACTION": "Dodaj zaposlenika",
@@ -875,11 +1125,14 @@
     "ATTENDANCE": {
       "TITLE": "Prisutnost",
       "SUBTITLE": "{{date}} u {{time}} - {{company}}",
+      "RESERVED": "Rezervirano",
       "EXPECTED_SECTION": "Očekivani članovi",
       "RECORDED_SECTION": "Upisano",
       "COL_NAME": "Ime i prezime",
+      "COL_STATUS": "Status",
       "COL_ATTENDED": "Prisutan",
       "COL_COVERAGE": "Pokriće",
+      "COL_ACTIONS": "Radnje",
       "GUEST_BADGE": "gost",
       "ADD_GUEST": "Dodaj gosta",
       "ADD_GUEST_PLACEHOLDER": "Pretraži klijenta...",
@@ -887,15 +1140,47 @@
       "EMPTY_EXPECTED": "Nema očekivanih članova bez upisane prisutnosti.",
       "EMPTY_RECORDED": "Još nitko nije upisan.",
       "SAVED": "Prisutnost je spremljena.",
+      "CHARGE_LATER": "Naplati kasnije",
+      "CANCEL_SEAT": "Otkaži",
+      "CORRECT_TO_CONFIRMED": "Vrati na potvrđeno",
+      "CONFIRM_CORRECTION": "Jeste li sigurni da želite vratiti status klijenta \"{{name}}\" na potvrđeno? Ovo može poništiti naplatu s check-ina i/ili vratiti iskorišteni ulazak paketa.",
+      "CORRECTED": "Status je vraćen na potvrđeno.",
+      "CONFIRM_CANCEL_SEAT": "Jeste li sigurni da želite otkazati rezervaciju klijenta \"{{name}}\" na ovom terminu?",
+      "SEAT_CANCELLED": "Rezervacija je otkazana.",
+      "COMPLETE_APPOINTMENT": "Završi termin",
+      "CONFIRM_COMPLETE": "Jeste li sigurni da želite označiti ovaj termin kao završen?",
+      "COMPLETED": "Termin je označen kao završen.",
       "COVERAGE": {
         "MONTHLY_PACKAGE": "Mjesečni paket",
         "SESSION_PACKAGE": "Paket na ulaske",
         "SINGLE_PAID": "Pojedinačno plaćeno"
       }
+    },
+    "WAITLIST": {
+      "TITLE": "Lista čekanja",
+      "COL_NAME": "Ime i prezime",
+      "COL_STATUS": "Status",
+      "COL_POSITION": "Mjesto",
+      "COL_JOINED_AT": "Prijavljen",
+      "COL_ACTIONS": "Radnje",
+      "JOIN_PLACEHOLDER": "Pretraži klijenta za dodavanje na listu čekanja...",
+      "NO_RESULTS": "Nema pronađenih klijenata.",
+      "EMPTY": "Lista čekanja je prazna.",
+      "JOINED": "Klijent je dodan na listu čekanja.",
+      "CANCEL": "Ukloni",
+      "CONFIRM_CANCEL": "Jeste li sigurni da želite ukloniti klijenta \"{{name}}\" s liste čekanja?",
+      "CANCELLED": "Klijent je uklonjen s liste čekanja.",
+      "STATUS": {
+        "WAITING": "Čeka",
+        "PROMOTED": "Promoviran",
+        "CANCELLED": "Otkazano",
+        "EXPIRED": "Isteklo"
+      }
     }
   },
   "PERMISSIONS": {
     "MODULES": {
+      "organization": "Organizacija",
       "employees": "Zaposlenici",
       "catalog": "Katalog",
       "clients": "Klijenti",
@@ -903,6 +1188,161 @@
       "groups": "Grupe",
       "roster": "Roster",
       "schedule-breaks": "Pauze u rasporedu"
+    },
+    "SECTIONS": {
+      "SCHEDULE": "Raspored",
+      "SHIFTS": "Smjene",
+      "COMPANIES": "Poslovnice",
+      "WORKING_HOURS": "Radno vrijeme i praznici",
+      "CLIENTS": "Klijenti",
+      "EMPLOYEES": "Zaposlenici",
+      "GROUPS": "Grupe",
+      "CATALOG_ITEMS": "Usluge, paketi i cjenik",
+      "ORGANIZATION": "Organizacija",
+      "CHECKOUT": "Blagajna",
+      "ADVANCED": "Napredno"
+    },
+    "CAPABILITIES": {
+      "APPOINTMENTS_VIEW": {
+        "LABEL": "Može vidjeti raspored",
+        "DESCRIPTION": "Pregled termina u Rasporedu; uključuje pregled usluga i poslovnica potrebnih za filtre i legendu."
+      },
+      "APPOINTMENTS_WRITE_OWN": {
+        "LABEL": "Može kreirati i uređivati vlastite termine",
+        "DESCRIPTION": "Otvara 'Novi termin'; uključuje pregled usluga i poslovnica potrebnih za tu formu."
+      },
+      "APPOINTMENTS_WRITE_ALL": {
+        "LABEL": "Može kreirati i uređivati termine bilo kojeg trenera",
+        "DESCRIPTION": "Isto kao vlastiti termini, uz mogućnost odabira bilo kojeg trenera u Rasporedu."
+      },
+      "APPOINTMENTS_DELETE": {
+        "LABEL": "Može brisati termine",
+        "DESCRIPTION": "Trajno uklanjanje termina iz rasporeda."
+      },
+      "SCHEDULE_BREAKS_VIEW": {
+        "LABEL": "Može vidjeti pauze u rasporedu",
+        "DESCRIPTION": "Pregled postojećih pauza na rasporedu."
+      },
+      "SCHEDULE_BREAKS_WRITE_OWN": {
+        "LABEL": "Može kreirati i uređivati vlastite pauze",
+        "DESCRIPTION": "Dodavanje, uređivanje i brisanje vlastitih pauza u rasporedu."
+      },
+      "SCHEDULE_BREAKS_WRITE_ALL": {
+        "LABEL": "Može kreirati i uređivati pauze bilo kojeg trenera",
+        "DESCRIPTION": "Isto kao vlastite pauze, uz mogućnost odabira bilo kojeg trenera."
+      },
+      "ROSTER_TYPES_VIEW": {
+        "LABEL": "Može vidjeti vrste smjena",
+        "DESCRIPTION": "Pregled šifrarnika vrsta smjena u Smjenama."
+      },
+      "ROSTER_TYPES_MANAGE": {
+        "LABEL": "Može uređivati vrste smjena",
+        "DESCRIPTION": "Kreiranje, uređivanje i brisanje vrsta smjena."
+      },
+      "CATALOG_COMPANIES_VIEW": {
+        "LABEL": "Može vidjeti poslovnice",
+        "DESCRIPTION": "Pregled popisa poslovnica (lokacija)."
+      },
+      "CATALOG_COMPANIES_MANAGE": {
+        "LABEL": "Može uređivati poslovnice",
+        "DESCRIPTION": "Kreiranje, uređivanje i deaktivacija poslovnica."
+      },
+      "CATALOG_ROOMS_VIEW": {
+        "LABEL": "Može vidjeti prostorije",
+        "DESCRIPTION": "Pregled prostorija unutar poslovnice."
+      },
+      "CATALOG_ROOMS_MANAGE": {
+        "LABEL": "Može uređivati prostorije",
+        "DESCRIPTION": "Kreiranje, uređivanje i brisanje prostorija."
+      },
+      "ROSTER_TEMPLATES_VIEW": {
+        "LABEL": "Može vidjeti radno vrijeme i praznike",
+        "DESCRIPTION": "Pregled predložaka radnog vremena i praznika, na poslovnici i kod zaposlenika."
+      },
+      "ROSTER_TEMPLATES_MANAGE": {
+        "LABEL": "Može uređivati radno vrijeme i praznike",
+        "DESCRIPTION": "Uređivanje predložaka radnog vremena i praznika."
+      },
+      "CLIENTS_VIEW": {
+        "LABEL": "Može vidjeti klijente",
+        "DESCRIPTION": "Pregled popisa i podataka klijenata."
+      },
+      "CLIENTS_MANAGE": {
+        "LABEL": "Može uređivati klijente",
+        "DESCRIPTION": "Kreiranje i uređivanje klijenata; uključuje pregled poslovnica potrebnih za tu formu."
+      },
+      "CLIENTS_STATUS_MANAGE": {
+        "LABEL": "Može mijenjati status klijenta",
+        "DESCRIPTION": "Promjena statusa klijenta (npr. aktivan/neaktivan)."
+      },
+      "CLIENTS_ANONYMIZE": {
+        "LABEL": "Može anonimizirati klijenta",
+        "DESCRIPTION": "Trajno uklanjanje osobnih podataka klijenta."
+      },
+      "CLIENTS_TAGS_MANAGE": {
+        "LABEL": "Može upravljati oznakama klijenata",
+        "DESCRIPTION": "Dodavanje i uređivanje oznaka na klijentima."
+      },
+      "CLIENTS_PACKAGES_MANAGE": {
+        "LABEL": "Može upravljati paketima klijenata",
+        "DESCRIPTION": "Dodjela i uređivanje paketa klijenata."
+      },
+      "EMPLOYEES_VIEW": {
+        "LABEL": "Može vidjeti zaposlenike",
+        "DESCRIPTION": "Pregled popisa i podataka zaposlenika."
+      },
+      "EMPLOYEES_MANAGE": {
+        "LABEL": "Može uređivati zaposlenike",
+        "DESCRIPTION": "Kreiranje, uređivanje i deaktivacija zaposlenika."
+      },
+      "EMPLOYEES_ENGAGEMENT_TYPES_MANAGE": {
+        "LABEL": "Može uređivati vrste angažmana",
+        "DESCRIPTION": "Šifrarnik vrsta angažmana zaposlenika."
+      },
+      "ROSTER_LEAVE_FUND_SETTINGS_VIEW": {
+        "LABEL": "Može vidjeti postavke godišnjeg odmora",
+        "DESCRIPTION": "Pregled postavki fonda godišnjeg odmora zaposlenika."
+      },
+      "ROSTER_LEAVE_FUND_SETTINGS_MANAGE": {
+        "LABEL": "Može uređivati postavke godišnjeg odmora",
+        "DESCRIPTION": "Uređivanje postavki fonda godišnjeg odmora."
+      },
+      "ROSTER_LEAVE_FUND_VIEW_OWN": {
+        "LABEL": "Može vidjeti vlastiti fond godišnjeg odmora",
+        "DESCRIPTION": "Pregled vlastitog stanja godišnjeg odmora."
+      },
+      "ROSTER_LEAVE_FUND_VIEW_ALL": {
+        "LABEL": "Može vidjeti fondove svih zaposlenika",
+        "DESCRIPTION": "Pregled stanja godišnjeg odmora svih zaposlenika."
+      },
+      "GROUPS_VIEW": {
+        "LABEL": "Može vidjeti grupe",
+        "DESCRIPTION": "Pregled popisa grupa."
+      },
+      "GROUPS_MANAGE": {
+        "LABEL": "Može uređivati grupe",
+        "DESCRIPTION": "Kreiranje i uređivanje grupa; uključuje pregled usluga i poslovnica potrebnih za tu formu."
+      },
+      "CATALOG_SERVICES_VIEW": {
+        "LABEL": "Može vidjeti usluge, pakete i cjenik",
+        "DESCRIPTION": "Pregled kataloga usluga, paketa i cjenika."
+      },
+      "CATALOG_SERVICES_MANAGE": {
+        "LABEL": "Može uređivati usluge, pakete i cjenik",
+        "DESCRIPTION": "Uređivanje kataloga usluga, paketa i cjenika."
+      },
+      "ORGANIZATION_BRANDING_MANAGE": {
+        "LABEL": "Može uređivati brendiranje",
+        "DESCRIPTION": "Uređivanje boja, logotipa i izgleda organizacije."
+      },
+      "CHECKOUT_VIEW": {
+        "LABEL": "Može vidjeti blagajnu",
+        "DESCRIPTION": "Pregled checkouta i povijesti plaćanja klijenta; uključuje pregled termina, paketa i proizvoda potrebnih za prikaz stavki."
+      },
+      "CHECKOUT_MANAGE": {
+        "LABEL": "Može upravljati blagajnom",
+        "DESCRIPTION": "Otvaranje checkouta, dodavanje/uklanjanje stavki, unos i poništavanje plaćanja te zatvaranje/otkazivanje checkouta."
+      }
     },
     "GRANT_GROUPS": {
       "TAB_LABEL": "Grant grupe",
@@ -969,6 +1409,11 @@
     "STATUS": {
       "SCHEDULED": "Zakazano",
       "COMPLETED": "Završeno",
+      "CANCELLED": "Otkazano"
+    },
+    "BOOKING_STATUS": {
+      "CONFIRMED": "Potvrđeno",
+      "COMPLETED": "Odrađeno",
       "CANCELLED": "Otkazano",
       "NO_SHOW": "Nije se pojavio/la"
     },
@@ -990,7 +1435,9 @@
       "PAID": "Plaćeno",
       "UNPAID": "Nije plaćeno",
       "NOTE": "Napomena",
-      "NOT_MOVABLE_HINT": "Otkazani termini i termini na kojima se klijent nije pojavio ne mogu se premjestiti.",
+      "BOOKINGS": "Klijenti i naplata",
+      "PACKAGE_COVERED": "Pokriveno paketom",
+      "NOT_MOVABLE_HINT": "Otkazani termini ne mogu se premjestiti.",
       "ERRORS": {
         "STARTS_AT_REQUIRED": "Datum i vrijeme su obavezni.",
         "TRAINER_REQUIRED": "Trener je obavezan.",
@@ -1003,8 +1450,9 @@
       "CASH": "Gotovina",
       "CARD": "Kartica",
       "BANK_TRANSFER": "Transakcija",
-      "PACKAGE": "Paket"
+      "OTHER": "Ostalo"
     },
+    "PACKAGE_COVERAGE": "Paket",
     "RECURRENCE_TYPE": {
       "DAILY": "Dnevno",
       "WEEKLY": "Tjedno"

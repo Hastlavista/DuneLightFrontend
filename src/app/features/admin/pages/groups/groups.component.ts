@@ -8,6 +8,7 @@ import { Paginator, PaginatorState } from 'primeng/paginator';
 import { Select } from 'primeng/select';
 import { finalize } from 'rxjs';
 import { DAYS_OF_WEEK, GroupDto, dayOfWeekShortTranslationKey } from '../../../../core/models/group.model';
+import { CurrentEmployeeService } from '../../../../core/services/current-employee.service';
 import { GroupsService } from '../../../../core/services/groups.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { timeOfDayLabel } from '../../../../core/utils/time-of-day.util';
@@ -35,6 +36,7 @@ const DEFAULT_PAGE_SIZE = 20;
 })
 export class GroupsComponent {
   private readonly groupsService = inject(GroupsService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
@@ -162,11 +164,11 @@ export class GroupsComponent {
   }
 
   openCreate(): void {
-    this.router.navigate(['/admin/groups/new']);
+    this.router.navigate(['/app/groups/new']);
   }
 
   openEdit(group: GroupDto): void {
-    this.router.navigate(['/admin/groups', group.id]);
+    this.router.navigate(['/app/groups', group.id]);
   }
 
   openGenerateForAll(): void {

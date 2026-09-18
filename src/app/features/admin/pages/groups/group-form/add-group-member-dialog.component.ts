@@ -11,6 +11,7 @@ import { TimeoutError, finalize, timeout } from 'rxjs';
 import { ClientDto } from '../../../../../core/models/client.model';
 import { GroupDetailDto } from '../../../../../core/models/group.model';
 import { ClientsService } from '../../../../../core/services/clients.service';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { GroupsService } from '../../../../../core/services/groups.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { resolveWarningMessage } from '../../../../../core/utils/warning-translation.util';
@@ -65,6 +66,7 @@ const ADD_MEMBER_TIMEOUT_MS = 20000;
 export class AddGroupMemberDialogComponent {
   private readonly clientsService = inject(ClientsService);
   private readonly groupsService = inject(GroupsService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
   private readonly destroyRef = inject(DestroyRef);
@@ -127,7 +129,7 @@ export class AddGroupMemberDialogComponent {
 
   addClient(client: ClientDto, event?: Event): void {
     event?.stopPropagation();
-    if (this.addingClientId()) {
+    if (this.addingClientId() || !this.currentEmployeeService.can('groups.manage')) {
       return;
     }
 

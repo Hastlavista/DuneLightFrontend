@@ -1,0 +1,12 @@
+.add-checkout-item-dialog__search {
+  margin-bottom: 0.75rem;
+}
+
+.add-checkout-item-dialog__qty-input {
+  width: 3.5rem;
+  text-align: center;
+}
+
+:host ::ng-deep .add-checkout-item-dialog__row--ineligible {
+  opacity: 0.55;
+}

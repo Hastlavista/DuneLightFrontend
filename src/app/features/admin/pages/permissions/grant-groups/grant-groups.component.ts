@@ -45,11 +45,11 @@ export class GrantGroupsComponent {
   }
 
   openCreate(): void {
-    this.router.navigate(['/admin/permissions/grant-groups/new']);
+    this.router.navigate(['/app/permissions/grant-groups/new']);
   }
 
   openEdit(group: GrantGroupDto): void {
-    this.router.navigate(['/admin/permissions/grant-groups', group.id]);
+    this.router.navigate(['/app/permissions/grant-groups', group.id]);
   }
 
   confirmDelete(group: GrantGroupDto): void {

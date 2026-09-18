@@ -30,6 +30,7 @@ import {
 } from '../../../../../../core/models/package.model';
 import { ActivePackagesStore } from '../../../../../../core/services/active-packages.store';
 import { ActiveServicesStore } from '../../../../../../core/services/active-services.store';
+import { CurrentEmployeeService } from '../../../../../../core/services/current-employee.service';
 import { NotificationService } from '../../../../../../core/services/notification.service';
 import { PackagesService } from '../../../../../../core/services/packages.service';
 import { toEndOfDayIso } from '../../../../../../core/utils/date.util';
@@ -93,6 +94,7 @@ export class PackageFormComponent {
   private readonly packagesService = inject(PackagesService);
   private readonly activeServicesStore = inject(ActiveServicesStore);
   private readonly activePackagesStore = inject(ActivePackagesStore);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
@@ -384,6 +386,6 @@ export class PackageFormComponent {
   }
 
   private navigateBack(): void {
-    this.router.navigate(['/admin/services'], { queryParams: { tab: 'packages' } });
+    this.router.navigate(['/app/services'], { queryParams: { tab: 'packages' } });
   }
 }

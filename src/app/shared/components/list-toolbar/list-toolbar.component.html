@@ -30,10 +30,12 @@
   </div>
   }
 
+  @if (canCreate()) {
   <p-button
     class="list-toolbar__new"
     icon="pi pi-plus"
     [label]="newLabelKey() | translate"
     (onClick)="create.emit()"
   />
+  }
 </div>

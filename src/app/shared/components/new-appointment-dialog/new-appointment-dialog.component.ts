@@ -13,10 +13,10 @@ import { ToggleSwitch } from 'primeng/toggleswitch';
 import { finalize } from 'rxjs';
 import { AppError } from '../../../core/models/api-error.model';
 import {
+  AppointmentClientSettlement,
   AppointmentCompleteRequest,
   AppointmentCreateRequest,
   PAYMENT_METHODS,
-  PackageSelection,
   PaymentMethod,
   RECURRENCE_TYPES,
   RecurrenceType,
@@ -84,6 +84,20 @@ interface ClientPackageRowState {
   loading: boolean;
 }
 
+/** One selected client's billing choice on "Upiši odrađeno" - a monetary
+ * PaymentMethod, or the pseudo-value `'Package'` meaning "cover this client's
+ * booking from a package" (see AppointmentClientSettlement's doc - package and
+ * payment method are mutually exclusive, and `'Package'` is NOT a real
+ * PaymentMethod value on the backend). Per-client, not one global choice for
+ * every selected client - the backend explicitly supports mixed billing on the
+ * same appointment (e.g. a duo: one by package, one by card). */
+type SettlementChoice = PaymentMethod | 'Package';
+
+interface SelectOptionValue<T extends string> {
+  label: string;
+  value: T;
+}
+
 /** Prefill for the form, resolved by the caller before opening - either from a
  * schedule grid's empty-slot click (own date/trainer/company context) or a
  * blank "Novi termin" toolbar button (only startsAt defaults to now). */
@@ -96,10 +110,10 @@ export interface NewAppointmentInitial {
 /**
  * "Novi termin" - covers all three ways an appointment gets created: plain
  * schedule (POST /schedule), immediately billed (POST /complete, with a
- * per-client package selection when paymentMethod is Package - reuses
+ * per-client settlement choice - payment method, or "Paket" which reuses
  * EligiblePackageSelectComponent, same 0/1/>1 rule as Grupe's attendance
- * modal), and a recurring series (POST /recurring, never billed immediately -
- * every instance is created Scheduled).
+ * modal - see SettlementChoice), and a recurring series (POST /recurring,
+ * never billed immediately - every instance is created Scheduled).
  *
  * Trainer field is locked to the logged-in employee for role Member - the
  * backend rejects a termin created for someone else (NOT_OWNER) but there's no
@@ -191,6 +205,7 @@ export class NewAppointmentDialogComponent {
 
   private readonly packageRowState = signal<Map<string, ClientPackageRowState>>(new Map());
   private readonly selectedPackageByClient = signal<Map<string, string | null>>(new Map());
+  private readonly clientSettlementChoice = signal<Map<string, SettlementChoice | null>>(new Map());
 
   readonly recurringConflictReasonTranslationKey = recurringConflictReasonTranslationKey;
 
@@ -208,9 +223,14 @@ export class NewAppointmentDialogComponent {
    * spot on a group session goes through Grupe's attendance flow instead. */
   readonly individualServices = computed(() => this.services().filter((service) => service.executionMode === 'Individual'));
 
-  readonly paymentMethodOptions = computed<SelectOption[]>(() => {
+  /** Per-client settlement select options - every PaymentMethod plus the
+   * pseudo-choice `'Package'` (see SettlementChoice's doc). */
+  readonly settlementChoiceOptions = computed<SelectOptionValue<SettlementChoice>[]>(() => {
     this.translationsReady();
-    return PAYMENT_METHODS.map((method) => ({ label: this.translate.instant(paymentMethodTranslationKey(method)), value: method }));
+    return [
+      ...PAYMENT_METHODS.map((method) => ({ label: this.translate.instant(paymentMethodTranslationKey(method)), value: method as SettlementChoice })),
+      { label: this.translate.instant('SCHEDULE.PACKAGE_COVERAGE'), value: 'Package' as SettlementChoice },
+    ];
   });
 
   readonly recurrenceTypeOptions = computed<SelectOption[]>(() => {
@@ -259,7 +279,6 @@ export class NewAppointmentDialogComponent {
     startsAt: this.fb.control<Date | null>(null, Validators.required),
     note: this.fb.nonNullable.control<string>(''),
     amount: this.fb.control<number | null>(null),
-    paymentMethod: this.fb.control<PaymentMethod | null>(null),
     recurrenceType: this.fb.control<RecurrenceType | null>(null),
     endDate: this.fb.control<Date | null>(null),
   });
@@ -326,15 +345,20 @@ export class NewAppointmentDialogComponent {
     });
 
     effect(() => {
-      // Re-run whenever the picked clients change, so a client added/removed
-      // while paymentMethod is already Package keeps the package rows in sync.
-      this.selectedClients();
-      this.refreshEligiblePackages();
+      // Re-run whenever the picked clients change, so a client removed while
+      // set to 'Package' doesn't leave stale state behind, and so a newly
+      // added client already in a 'Package'-choice appointment gets its
+      // eligible packages resolved.
+      const clientIds = new Set(this.selectedClients().map((client) => client.clientId));
+      this.clientSettlementChoice.update((map) => new Map([...map].filter(([clientId]) => clientIds.has(clientId))));
+      this.packageRowState.update((map) => new Map([...map].filter(([clientId]) => clientIds.has(clientId))));
+      this.selectedPackageByClient.update((map) => new Map([...map].filter(([clientId]) => clientIds.has(clientId))));
+      this.refreshEligiblePackagesForClientsInPackageMode();
     });
 
     this.form.controls.serviceId.valueChanges.subscribe(() => {
       this.refreshSuggestedAmount();
-      this.refreshEligiblePackages();
+      this.refreshEligiblePackagesForClientsInPackageMode();
     });
     this.form.controls.employeeId.valueChanges.subscribe(() => this.refreshAvailability());
     this.form.controls.companyId.valueChanges.subscribe(() => {
@@ -344,10 +368,9 @@ export class NewAppointmentDialogComponent {
     });
     this.form.controls.startsAt.valueChanges.subscribe(() => {
       this.refreshSuggestedAmount();
-      this.refreshEligiblePackages();
+      this.refreshEligiblePackagesForClientsInPackageMode();
       this.refreshAvailability();
     });
-    this.form.controls.paymentMethod.valueChanges.subscribe(() => this.refreshEligiblePackages());
   }
 
   onDialogShow(): void {
@@ -362,15 +385,47 @@ export class NewAppointmentDialogComponent {
     this.isRecurring.set(value);
     if (value) {
       this.completeNow.set(false);
-      this.form.controls.paymentMethod.setValue(null);
+      this.clearSettlementState();
     }
   }
 
   onCompleteNowToggle(value: boolean): void {
     this.completeNow.set(value);
     if (!value) {
-      this.form.controls.paymentMethod.setValue(null);
+      this.clearSettlementState();
     }
+  }
+
+  settlementChoice(clientId: string): SettlementChoice | null {
+    return this.clientSettlementChoice().get(clientId) ?? null;
+  }
+
+  onClientSettlementChoiceChange(clientId: string, choice: SettlementChoice): void {
+    this.clientSettlementChoice.update((map) => {
+      const next = new Map(map);
+      next.set(clientId, choice);
+      return next;
+    });
+    if (choice === 'Package') {
+      this.refreshEligiblePackagesForClient(clientId);
+    } else {
+      this.packageRowState.update((map) => {
+        const next = new Map(map);
+        next.delete(clientId);
+        return next;
+      });
+      this.selectedPackageByClient.update((map) => {
+        const next = new Map(map);
+        next.delete(clientId);
+        return next;
+      });
+    }
+  }
+
+  private clearSettlementState(): void {
+    this.clientSettlementChoice.set(new Map());
+    this.packageRowState.set(new Map());
+    this.selectedPackageByClient.set(new Map());
   }
 
   onClientSearch(event: AutoCompleteCompleteEvent): void {
@@ -453,11 +508,10 @@ export class NewAppointmentDialogComponent {
     this.setSelectedPackage(clientId, clientPackageId);
   }
 
+  /** Every selected client needs a settlement choice, and every client chosen
+   * as 'Package' needs a resolved clientPackageId (see buildSettlements). */
   canConfirmComplete(): boolean {
-    if (this.form.controls.paymentMethod.value !== 'Package') {
-      return true;
-    }
-    return this.buildPackageSelections() !== null;
+    return this.buildSettlements() !== null;
   }
 
   onSubmit(): void {
@@ -479,7 +533,7 @@ export class NewAppointmentDialogComponent {
         return;
       }
     } else if (this.completeNow()) {
-      if (!this.form.controls.paymentMethod.value || !this.canConfirmComplete()) {
+      if (!this.canConfirmComplete()) {
         return;
       }
     }
@@ -497,7 +551,7 @@ export class NewAppointmentDialogComponent {
   private confirmSchedulingWarningsThenDispatch(): void {
     const reasons = this.buildSchedulingWarnings();
     if (reasons.length === 0) {
-      this.dispatchSubmit();
+      this.dispatchSubmit(false);
       return;
     }
     this.confirmationService.confirm({
@@ -507,7 +561,10 @@ export class NewAppointmentDialogComponent {
       acceptLabel: this.translate.instant('SCHEDULING_WARNINGS.CONTINUE_ANYWAY'),
       rejectLabel: this.translate.instant('COMMON.CANCEL'),
       acceptButtonProps: { severity: 'warn' },
-      accept: () => this.dispatchSubmit(),
+      // The soft warning is exactly the case OverrideAvailability exists for -
+      // without it, the confirmed retry would hit the same 409 again (see
+      // AppointmentCreateRequest.overrideAvailability's doc).
+      accept: () => this.dispatchSubmit(true),
     });
   }
 
@@ -519,17 +576,17 @@ export class NewAppointmentDialogComponent {
     return reasons;
   }
 
-  private dispatchSubmit(): void {
+  private dispatchSubmit(overrideAvailability: boolean): void {
     if (this.isRecurring()) {
-      this.submitRecurring();
+      this.submitRecurring(overrideAvailability);
     } else if (this.completeNow()) {
-      this.submitComplete();
+      this.submitComplete(overrideAvailability);
     } else {
-      this.submitCreate();
+      this.submitCreate(overrideAvailability);
     }
   }
 
-  private submitCreate(): void {
+  private submitCreate(overrideAvailability: boolean): void {
     const raw = this.form.getRawValue();
     const request: AppointmentCreateRequest = {
       startsAt: toLocalIsoFromDate(raw.startsAt as Date),
@@ -540,6 +597,7 @@ export class NewAppointmentDialogComponent {
       clientIds: this.selectedClients().map((client) => client.clientId),
       amount: raw.amount,
       note: raw.note || null,
+      overrideAvailability,
     };
 
     this.saving.set(true);
@@ -557,9 +615,12 @@ export class NewAppointmentDialogComponent {
       });
   }
 
-  private submitComplete(): void {
+  private submitComplete(overrideAvailability: boolean): void {
     const raw = this.form.getRawValue();
-    const packageSelections = this.buildPackageSelections() ?? [];
+    const settlements = this.buildSettlements();
+    if (!settlements) {
+      return;
+    }
     const request: AppointmentCompleteRequest = {
       startsAt: toLocalIsoFromDate(raw.startsAt as Date),
       serviceId: raw.serviceId,
@@ -567,10 +628,9 @@ export class NewAppointmentDialogComponent {
       companyId: raw.companyId,
       roomId: raw.roomId || null,
       clientIds: this.selectedClients().map((client) => client.clientId),
-      amount: raw.amount,
       note: raw.note || null,
-      paymentMethod: raw.paymentMethod as PaymentMethod,
-      packageSelections,
+      overrideAvailability,
+      settlements,
     };
 
     this.saving.set(true);
@@ -588,7 +648,7 @@ export class NewAppointmentDialogComponent {
       });
   }
 
-  private submitRecurring(): void {
+  private submitRecurring(overrideAvailability: boolean): void {
     const raw = this.form.getRawValue();
     const request: RecurringAppointmentCreateRequest = {
       recurrenceType: raw.recurrenceType as RecurrenceType,
@@ -600,6 +660,7 @@ export class NewAppointmentDialogComponent {
       firstOccurrenceStartsAt: toLocalIsoFromDate(raw.startsAt as Date),
       endDate: toEndOfDayIso(raw.endDate as Date),
       note: raw.note || null,
+      overrideAvailability,
     };
 
     this.recurringConflicts.set(null);
@@ -633,16 +694,32 @@ export class NewAppointmentDialogComponent {
       });
   }
 
-  private buildPackageSelections(): PackageSelection[] | null {
-    const selections: PackageSelection[] = [];
+  /** Builds one AppointmentClientSettlement per selected client, or null while
+   * any client still needs a choice made (no settlement choice yet, or
+   * 'Package' chosen but no clientPackageId resolved yet) - see
+   * canConfirmComplete/SettlementChoice's doc. The shared `amount` field
+   * (same UX as before this pass) is applied to every settlement alike -
+   * per-client amount overrides aren't exposed in this pass, the backend
+   * resolves each client's own suggested price when omitted. */
+  private buildSettlements(): AppointmentClientSettlement[] | null {
+    const amount = this.form.controls.amount.value ?? undefined;
+    const settlements: AppointmentClientSettlement[] = [];
     for (const client of this.selectedClients()) {
-      const packageId = this.selectedPackageId(client.clientId);
-      if (!packageId) {
+      const choice = this.settlementChoice(client.clientId);
+      if (!choice) {
         return null;
       }
-      selections.push({ clientId: client.clientId, clientPackageId: packageId });
+      if (choice === 'Package') {
+        const packageId = this.selectedPackageId(client.clientId);
+        if (!packageId) {
+          return null;
+        }
+        settlements.push({ clientId: client.clientId, clientPackageId: packageId, isPaid: true });
+      } else {
+        settlements.push({ clientId: client.clientId, paymentMethod: choice, amount, isPaid: true });
+      }
     }
-    return selections;
+    return settlements;
   }
 
   private setSelectedPackage(clientId: string, packageId: string | null): void {
@@ -653,49 +730,38 @@ export class NewAppointmentDialogComponent {
     });
   }
 
-  private refreshEligiblePackages(): void {
-    if (this.form.controls.paymentMethod.value !== 'Package') {
-      this.packageRowState.set(new Map());
-      this.selectedPackageByClient.set(new Map());
-      return;
+  private refreshEligiblePackagesForClientsInPackageMode(): void {
+    for (const client of this.selectedClients()) {
+      if (this.settlementChoice(client.clientId) === 'Package') {
+        this.refreshEligiblePackagesForClient(client.clientId);
+      }
     }
+  }
 
+  private refreshEligiblePackagesForClient(clientId: string): void {
     const serviceId = this.form.controls.serviceId.value;
-    const clients = this.selectedClients();
-    if (!serviceId || clients.length === 0) {
-      this.packageRowState.set(new Map());
-      this.selectedPackageByClient.set(new Map());
+    if (!serviceId) {
       return;
     }
-
     const startsAt = this.form.controls.startsAt.value;
     const date = startsAt ? toLocalIsoFromDate(startsAt) : undefined;
 
-    const initialState = new Map<string, ClientPackageRowState>();
-    for (const client of clients) {
-      initialState.set(client.clientId, { eligible: null, loading: true });
-    }
-    this.packageRowState.set(initialState);
-    this.selectedPackageByClient.update((map) => {
-      const next = new Map<string, string | null>();
-      for (const client of clients) {
-        next.set(client.clientId, map.get(client.clientId) ?? null);
-      }
+    this.packageRowState.update((map) => {
+      const next = new Map(map);
+      next.set(clientId, { eligible: null, loading: true });
       return next;
     });
 
-    for (const client of clients) {
-      this.clientPackagesService.getEligible(client.clientId, serviceId, date).subscribe((eligible) => {
-        this.packageRowState.update((map) => {
-          const next = new Map(map);
-          next.set(client.clientId, { eligible, loading: false });
-          return next;
-        });
-        if (eligible.length <= 1) {
-          this.setSelectedPackage(client.clientId, eligible[0]?.id ?? null);
-        }
+    this.clientPackagesService.getEligible(clientId, serviceId, date).subscribe((eligible) => {
+      this.packageRowState.update((map) => {
+        const next = new Map(map);
+        next.set(clientId, { eligible, loading: false });
+        return next;
       });
-    }
+      if (eligible.length <= 1) {
+        this.setSelectedPackage(clientId, eligible[0]?.id ?? null);
+      }
+    });
   }
 
   private refreshRooms(): void {
@@ -756,7 +822,6 @@ export class NewAppointmentDialogComponent {
       startsAt: init?.startsAt ?? new Date(),
       note: '',
       amount: null,
-      paymentMethod: null,
       recurrenceType: null,
       endDate: null,
     });
@@ -773,6 +838,7 @@ export class NewAppointmentDialogComponent {
     this.isRecurring.set(false);
     this.completeNow.set(false);
     this.recurringConflicts.set(null);
+    this.clientSettlementChoice.set(new Map());
     this.packageRowState.set(new Map());
     this.selectedPackageByClient.set(new Map());
     this.attemptedSubmit.set(false);

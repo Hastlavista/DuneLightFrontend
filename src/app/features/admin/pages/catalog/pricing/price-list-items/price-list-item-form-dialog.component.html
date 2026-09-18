@@ -151,7 +151,12 @@
         [label]="'COMMON.CANCEL' | translate"
         (onClick)="onCancel()"
       />
-      <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+      <p-button
+        type="submit"
+        [label]="'COMMON.SAVE' | translate"
+        [loading]="saving()"
+        [disabled]="!currentEmployeeService.can('catalog.price-list.manage')"
+      />
       </div>
     </div>
   </form>

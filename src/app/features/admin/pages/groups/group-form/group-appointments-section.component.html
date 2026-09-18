@@ -20,10 +20,10 @@
           </ng-template>
           <ng-template pTemplate="body" let-appointment>
             <tr class="group-appointments-section__row" (click)="openAttendance(appointment)">
-              <td>{{ appointment.date | hrDate }}</td>
-              <td>{{ appointment.startTime?.slice(0, 5) ?? '—' }}</td>
+              <td>{{ appointment.startsAt | hrDate }}</td>
+              <td>{{ timeLabel(appointment) }}</td>
               <td>{{ appointment.companyName }}</td>
-              <td>{{ appointment.trainerName || '—' }}</td>
+              <td>{{ appointment.employeeName || '—' }}</td>
               <td>{{ occupancyLabel(appointment) }}</td>
             </tr>
           </ng-template>
@@ -50,10 +50,10 @@
           </ng-template>
           <ng-template pTemplate="body" let-appointment>
             <tr class="group-appointments-section__row" (click)="openAttendance(appointment)">
-              <td>{{ appointment.date | hrDate }}</td>
-              <td>{{ appointment.startTime?.slice(0, 5) ?? '—' }}</td>
+              <td>{{ appointment.startsAt | hrDate }}</td>
+              <td>{{ timeLabel(appointment) }}</td>
               <td>{{ appointment.companyName }}</td>
-              <td>{{ appointment.trainerName || '—' }}</td>
+              <td>{{ appointment.employeeName || '—' }}</td>
               <td>{{ appointment.attendanceCount }}</td>
             </tr>
           </ng-template>
@@ -74,4 +74,5 @@
   [(visible)]="attendanceDialogVisible"
   [group]="group()"
   [appointment]="selectedAppointment()"
+  (changed)="changed.emit()"
 />

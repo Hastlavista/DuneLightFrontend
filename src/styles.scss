@@ -95,6 +95,14 @@
   box-sizing: border-box;
 }
 
+/* Baseline breathing room below the last field/button in any PrimeNG dialog
+   that doesn't define its own footer bar padding (see the many `.xxx-dialog
+   .p-dialog-content` overrides below). Zero-specificity so every one of
+   those overrides keeps winning; this only fills in the plain dialogs. */
+:where(.p-dialog-content) {
+  padding-bottom: 1.5rem;
+}
+
 html,
 body {
   height: 100%;
@@ -748,7 +756,7 @@ input[type='checkbox'] {
 .client-tag-dialog__palette button, .client-tag-dialog__sort-options button { display: inline-flex; min-height: 2.2rem; align-items: center; gap: .45rem; padding: .3rem .7rem; border: 1px solid var(--rose-border); border-radius: 9px; background: var(--surface-card); color: var(--ink-secondary); font: inherit; font-size: .76rem; cursor: pointer; }
 .client-tag-dialog__palette i { width: .85rem; height: .85rem; border-radius: 999px; }
 .client-tag-dialog__palette button.client-tag-dialog__choice--active, .client-tag-dialog__sort-options button.client-tag-dialog__choice--active { border-color: var(--brand-primary); background: var(--brand-primary-light); color: var(--brand-primary-hover); font-weight: 600; }
-.client-tag-dialog__actions { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: .1rem -1.35rem 0; padding: 1rem 1.35rem; border-top: 1px solid var(--rose-border); }
+.client-tag-dialog__actions { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: .1rem -1.35rem 0; padding: 1rem 1.35rem 1.3rem; border-top: 1px solid var(--rose-border); }
 .client-tag-dialog__actions > span { color: var(--ink-muted); font-size: .75rem; }
 .client-tag-dialog__actions > div { display: flex; gap: .55rem; }
 @media (max-width: 560px) { .client-tag-dialog__actions { align-items: stretch; flex-direction: column; } .client-tag-dialog__actions > div { justify-content: flex-end; } }
@@ -769,7 +777,7 @@ input[type='checkbox'] {
 .role-dialog__field { display: flex; flex-direction: column; gap: .38rem; }
 .role-dialog__field > label { color: var(--ink-secondary); font-size: .68rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
 .role-dialog__field input { min-height: 2.65rem; border-color: var(--rose-border-strong); border-radius: 10px; background: var(--surface-warm); }
-.role-dialog__actions { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: .1rem -1.35rem 0; padding: 1rem 1.35rem; border-top: 1px solid var(--rose-border); }
+.role-dialog__actions { display: flex; align-items: center; justify-content: space-between; gap: .75rem; margin: .1rem -1.35rem 0; padding: 1rem 1.35rem 1.3rem; border-top: 1px solid var(--rose-border); }
 .role-dialog__actions > span { color: var(--ink-muted); font-size: .75rem; }
 .role-dialog__actions > div { display: flex; gap: .55rem; }
 @media (max-width: 560px) { .role-dialog__actions { align-items: stretch; flex-direction: column; } .role-dialog__actions > div { justify-content: flex-end; } }

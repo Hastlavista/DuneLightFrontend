@@ -5,6 +5,7 @@ import { Button } from 'primeng/button';
 import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { RoomDto } from '../../../../../core/models/room.model';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { RoomsService } from '../../../../../core/services/rooms.service';
 import { ListToolbarComponent } from '../../../../../shared/components/list-toolbar/list-toolbar.component';
@@ -17,10 +18,9 @@ const DEFAULT_PAGE_SIZE = 20;
  * same self-contained-per-owner shape as CompanyHolidaysTabComponent, but a
  * full šifrarnik (edit/activate/deactivate/delete, not just add+delete) so it
  * mirrors CompaniesComponent/CatalogServicesComponent's table+dialog pair
- * instead. No internal manage-vs-view action gating, same as those two - only
- * the tab's own visibility is grant-gated (see CompanyFormDialogComponent.canViewRooms),
- * per-action gating isn't done anywhere in this app yet (see nav-items.ts's
- * own doc comment on that). */
+ * instead. Action-level gating on catalog.rooms.manage (see ACTION_GRANTS) -
+ * the tab's own visibility is separately grant-gated on catalog.rooms.view/.manage
+ * (see CompanyFormDialogComponent.canViewRooms). */
 @Component({
   selector: 'app-rooms-tab',
   imports: [TableModule, Button, TranslatePipe, ListToolbarComponent, StatusTagComponent, RoomFormDialogComponent],
@@ -29,6 +29,7 @@ const DEFAULT_PAGE_SIZE = 20;
 })
 export class RoomsTabComponent {
   private readonly roomsService = inject(RoomsService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);

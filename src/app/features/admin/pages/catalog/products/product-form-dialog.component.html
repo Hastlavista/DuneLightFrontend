@@ -1,0 +1,56 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '34rem', maxWidth: 'calc(100vw - 2rem)' }"
+  styleClass="product-dialog"
+  (onShow)="onDialogShow()"
+>
+  <ng-template #header>
+    <div class="product-dialog__header">
+      <span class="product-dialog__mark"><i class="pi pi-box"></i></span>
+      <div>
+        <h2>{{ (isEditMode() ? 'CATALOG.PRODUCTS.EDIT_TITLE' : 'CATALOG.PRODUCTS.NEW_TITLE') | translate }}</h2>
+      </div>
+    </div>
+  </ng-template>
+
+  @if (dialogShown()) {
+    <form [formGroup]="form" (ngSubmit)="onSave()" class="product-dialog__form" novalidate>
+      <div class="dl-form__field">
+        <label for="product-name">{{ 'CATALOG.PRODUCTS.FIELD_NAME' | translate }}</label>
+        <input id="product-name" type="text" pInputText fluid formControlName="name" maxlength="255" />
+        @if (form.controls.name.invalid && form.controls.name.touched) {
+          <span class="dl-form__error">{{ 'CATALOG.PRODUCTS.ERRORS.NAME_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      <div class="dl-form__row">
+        <div class="dl-form__field">
+          <label for="product-sku">{{ 'CATALOG.PRODUCTS.FIELD_SKU' | translate }}</label>
+          <input id="product-sku" type="text" pInputText fluid formControlName="sku" maxlength="100" />
+          <span class="dl-form__hint">{{ 'CATALOG.PRODUCTS.FIELD_SKU_HINT' | translate }}</span>
+        </div>
+        <div class="dl-form__field">
+          <label for="product-price">{{ 'CATALOG.PRODUCTS.FIELD_PRICE' | translate }}</label>
+          <p-inputnumber id="product-price" fluid formControlName="defaultPrice" mode="currency" currency="EUR" locale="hr-HR" [minFractionDigits]="2" [maxFractionDigits]="2" />
+          @if (form.controls.defaultPrice.invalid && form.controls.defaultPrice.touched) {
+            <span class="dl-form__error">{{ 'CATALOG.PRODUCTS.ERRORS.PRICE_INVALID' | translate }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="dl-form__field">
+        <label for="product-description">{{ 'CATALOG.PRODUCTS.FIELD_DESCRIPTION' | translate }}</label>
+        <textarea id="product-description" rows="3" formControlName="description"></textarea>
+      </div>
+
+      <div class="product-dialog__actions">
+        <span>@if (form.controls.name.invalid) { {{ 'CATALOG.PRODUCTS.ERRORS.NAME_REQUIRED' | translate }} }</span>
+        <div>
+          <p-button type="button" severity="secondary" [outlined]="true" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" />
+          <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" [disabled]="form.invalid || !currentEmployeeService.can('products.manage')" />
+        </div>
+      </div>
+    </form>
+  }
+</p-dialog>

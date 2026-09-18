@@ -1,6 +1,6 @@
 <section class="services-page">
   <div class="services-page__header">
-    <app-list-toolbar [newLabelKey]="'CATALOG.SERVICES.NEW'" [search]="search()" [showInactive]="showInactive()" (searchChange)="onSearchChange($event)" (showInactiveChange)="onShowInactiveChange($event)" (create)="openCreate()">
+    <app-list-toolbar [newLabelKey]="'CATALOG.SERVICES.NEW'" [canCreate]="currentEmployeeService.can('catalog.services.manage')" [search]="search()" [showInactive]="showInactive()" (searchChange)="onSearchChange($event)" (showInactiveChange)="onShowInactiveChange($event)" (create)="openCreate()">
       <div class="services-page__filter-group">
         <span>Način izvođenja</span>
         <p-select class="services-page__filter" [options]="executionModeFilterOptions()" optionLabel="label" optionValue="value" [ngModel]="executionModeFilter()" (ngModelChange)="onExecutionModeFilterChange($event)" />
@@ -27,13 +27,15 @@
             <span class="services-page__color"><app-color-swatch [colorHex]="service.colorHex" />Boja usluge</span>
           </div>
           <div class="services-page__actions">
-            <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.EDIT' | translate" [title]="'COMMON.EDIT' | translate" (onClick)="openEdit(service)" />
-            @if (service.isActive) {
-              <p-button icon="pi pi-eye-slash" severity="warn" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.DEACTIVATE' | translate" [title]="'COMMON.DEACTIVATE' | translate" (onClick)="confirmDeactivate(service)" />
-            } @else {
-              <p-button icon="pi pi-eye" severity="success" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.ACTIVATE' | translate" [title]="'COMMON.ACTIVATE' | translate" (onClick)="activate(service)" />
+            @if (currentEmployeeService.can('catalog.services.manage')) {
+              <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.EDIT' | translate" [title]="'COMMON.EDIT' | translate" (onClick)="openEdit(service)" />
+              @if (service.isActive) {
+                <p-button icon="pi pi-eye-slash" severity="warn" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.DEACTIVATE' | translate" [title]="'COMMON.DEACTIVATE' | translate" (onClick)="confirmDeactivate(service)" />
+              } @else {
+                <p-button icon="pi pi-eye" severity="success" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.ACTIVATE' | translate" [title]="'COMMON.ACTIVATE' | translate" (onClick)="activate(service)" />
+              }
+              <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.DELETE' | translate" [title]="'COMMON.DELETE' | translate" (onClick)="confirmDelete(service)" />
             }
-            <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.DELETE' | translate" [title]="'COMMON.DELETE' | translate" (onClick)="confirmDelete(service)" />
           </div>
         </article>
       }

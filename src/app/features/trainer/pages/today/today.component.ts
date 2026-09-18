@@ -13,6 +13,7 @@ import { EmployeesService } from '../../../../core/services/employees.service';
 import { GroupsService } from '../../../../core/services/groups.service';
 import { CompanyContextService } from '../../../../core/services/company-context.service';
 import { CompaniesService } from '../../../../core/services/companies.service';
+import { CurrentEmployeeService } from '../../../../core/services/current-employee.service';
 import { ServicesService } from '../../../../core/services/services.service';
 import { translationReadySignal } from '../../../../core/utils/translation-signal.util';
 import { AppointmentDetailDialogComponent } from '../../../../shared/components/appointment-detail-dialog/appointment-detail-dialog.component';
@@ -64,6 +65,7 @@ export class TodayComponent {
   private readonly companyContext = inject(CompanyContextService);
   private readonly companiesService = inject(CompaniesService);
   private readonly servicesService = inject(ServicesService);
+  private readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly translate = inject(TranslateService);
 
   readonly dayGrid = viewChild<ScheduleDayGridComponent>('dayGrid');
@@ -75,6 +77,21 @@ export class TodayComponent {
   readonly activeEmployees = signal<EmployeeDirectoryDto[]>([]);
   readonly activeServices = signal<ServiceDto[]>([]);
   readonly activeCompanies = signal<CompanyDto[]>([]);
+
+  /** Services for "Novi termin"'s own serviceId dropdown (Validators.required)
+   * - fetched unconditionally, unlike activeServices() below which backs only
+   * the optional service FILTER and is intentionally skipped when the viewer
+   * lacks catalog.services.view. Booking a termin isn't "browsing the
+   * catalog", so it must not go empty just because a custom GrantGroup
+   * doesn't happen to include that grant. */
+  readonly dialogServices = signal<ServiceDto[]>([]);
+
+  /** Companies for the required companyId dropdowns in "Novi termin", the
+   * move form in AppointmentDetailDialogComponent, and ScheduleBreakFormDialogComponent
+   * - fetched unconditionally, same rationale as dialogServices above.
+   * activeCompanies() below still backs only the day grid's per-company color
+   * banner and stays gated by catalog.companies.view. */
+  readonly dialogCompanies = signal<CompanyDto[]>([]);
 
   readonly detailVisible = signal(false);
   readonly detailAppointmentId = signal<string | null>(null);
@@ -94,24 +111,34 @@ export class TodayComponent {
 
   private readonly translationsReady = translationReadySignal(this.translate);
 
-  /** ScheduleDayGridComponent's columns need per-company ids to filter by the
-   * globally-selected company - EmployeeDirectoryDto only carries company
-   * NAMES (no ids, see its own doc comment), so this resolves each name
-   * against the already-fetched activeCompanies() list before handing the
-   * grid anything. A name with no match (shouldn't happen - the directory and
-   * companies endpoints describe the same studio) is simply dropped rather
-   * than crashing. */
-  readonly employeeColumns = computed<EmployeeColumnEntry[]>(() => {
-    const companyIdByName = new Map(this.activeCompanies().map((company) => [company.name, company.id]));
-    return this.activeEmployees().map((employee) => ({
+  /** Gates "Novi termin" (toolbar button + empty-slot click) - a view-only
+   * Raspored user has no reason to see a create entry point they can't
+   * actually submit; the backend would just 403 the create call. */
+  readonly canCreateAppointments = computed(() =>
+    this.currentEmployeeService.hasAnyGrant(['appointments.write.own', 'appointments.write.all']),
+  );
+
+  /** Same rationale as canCreateAppointments() - gates "+ Pauza". */
+  readonly canCreateBreaks = computed(() =>
+    this.currentEmployeeService.hasAnyGrant(['schedule.breaks.write.own', 'schedule.breaks.write.all']),
+  );
+
+  /** ScheduleDayGridComponent's columns filter by company NAME, not id (see
+   * EmployeeColumnEntry's doc comment) - EmployeeDirectoryDto.companies is
+   * already a plain name array, so this needs no join against
+   * activeCompanies() at all, unlike the old id-based version. That matters
+   * here specifically: activeCompanies() is only fetched when the viewer
+   * holds `catalog.companies.view` (see loadActiveCompanies below), which
+   * Reception isn't guaranteed to have - an id-based join would silently
+   * resolve to zero columns for that role whenever the grant is absent. */
+  readonly employeeColumns = computed<EmployeeColumnEntry[]>(() =>
+    this.activeEmployees().map((employee) => ({
       id: employee.id,
       firstName: employee.firstName,
       lastName: employee.lastName,
-      companyIds: employee.companies
-        .map((name) => companyIdByName.get(name))
-        .filter((id): id is string => id !== undefined),
-    }));
-  });
+      companyNames: employee.companies,
+    })),
+  );
 
   /** Excludes `Cancelled` - a cancelled termin never renders on the grid
    * regardless of this filter (see ScheduleDayGridComponent's `gridCells`),
@@ -148,6 +175,8 @@ export class TodayComponent {
     this.loadActiveEmployees();
     this.loadActiveServices();
     this.loadActiveCompanies();
+    this.loadDialogServices();
+    this.loadDialogCompanies();
   }
 
   onAppointmentClicked(appointment: AppointmentScheduleCellDto): void {
@@ -160,11 +189,17 @@ export class TodayComponent {
   }
 
   onEmptySlotClick(event: { startsAt: Date; employeeId: string; companyId: string | null }): void {
+    if (!this.canCreateAppointments()) {
+      return;
+    }
     this.newAppointmentInitial.set(event);
     this.newAppointmentVisible.set(true);
   }
 
   openNewAppointment(): void {
+    if (!this.canCreateAppointments()) {
+      return;
+    }
     this.newAppointmentInitial.set({ startsAt: new Date(), employeeId: null, companyId: this.companyContext.selectedCompanyId() });
     this.newAppointmentVisible.set(true);
   }
@@ -175,6 +210,9 @@ export class TodayComponent {
   }
 
   openNewBreak(): void {
+    if (!this.canCreateBreaks()) {
+      return;
+    }
     this.newBreakInitial.set({ startsAt: new Date(), employeeId: null, companyId: this.companyContext.selectedCompanyId() });
     this.newBreakVisible.set(true);
   }
@@ -210,15 +248,42 @@ export class TodayComponent {
       .subscribe((result) => this.activeEmployees.set(result));
   }
 
+  /** GET /api/catalog/services requires catalog.services.view - the default
+   * Trener GrantGroup includes it, but a custom one might not. Skip the call
+   * entirely rather than firing a request the current grants can't pass; the
+   * service filter simply stays empty for that edge case. */
   private loadActiveServices(): void {
+    if (!this.currentEmployeeService.hasGrant('catalog.services.view')) {
+      return;
+    }
     this.servicesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
       .subscribe((result) => this.activeServices.set(result.items));
   }
 
+  /** Feeds only "Novi termin"'s required serviceId dropdown - always called,
+   * regardless of catalog.services.view (see dialogServices' doc). */
+  private loadDialogServices(): void {
+    this.servicesService
+      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
+      .subscribe((result) => this.dialogServices.set(result.items));
+  }
+
+  /** Same rationale as loadActiveServices() - catalog.companies.view. */
   private loadActiveCompanies(): void {
+    if (!this.currentEmployeeService.hasGrant('catalog.companies.view')) {
+      return;
+    }
     this.companiesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
       .subscribe((result) => this.activeCompanies.set(result.items));
+  }
+
+  /** Feeds the required companyId dropdowns above - always called, regardless
+   * of catalog.companies.view (see dialogCompanies' doc). */
+  private loadDialogCompanies(): void {
+    this.companiesService
+      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
+      .subscribe((result) => this.dialogCompanies.set(result.items));
   }
 }

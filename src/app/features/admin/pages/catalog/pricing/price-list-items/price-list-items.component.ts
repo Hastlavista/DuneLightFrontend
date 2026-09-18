@@ -18,6 +18,7 @@ import {
 import { ActivePackagesStore } from '../../../../../../core/services/active-packages.store';
 import { ActiveServicesStore } from '../../../../../../core/services/active-services.store';
 import { CompaniesService } from '../../../../../../core/services/companies.service';
+import { CurrentEmployeeService } from '../../../../../../core/services/current-employee.service';
 import { NotificationService } from '../../../../../../core/services/notification.service';
 import { PriceListService } from '../../../../../../core/services/price-list.service';
 import { translationReadySignal } from '../../../../../../core/utils/translation-signal.util';
@@ -62,6 +63,7 @@ export class PriceListItemsComponent {
   private readonly activeServicesStore = inject(ActiveServicesStore);
   private readonly activePackagesStore = inject(ActivePackagesStore);
   private readonly companiesService = inject(CompaniesService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);

@@ -1,7 +1,9 @@
 import { Routes } from '@angular/router';
 
+// No '' redirect or 'profile' route here - both are already defined in
+// admin.routes.ts (which loads first in app.routes.ts's merged children) and
+// ProfileComponent is shared verbatim either way, see its own route there.
 export const TRAINER_ROUTES: Routes = [
-  { path: '', pathMatch: 'full', redirectTo: 'my-week' },
   {
     path: 'my-week',
     loadComponent: () => import('./pages/my-week/my-week.component').then((m) => m.MyWeekComponent),
@@ -43,10 +45,5 @@ export const TRAINER_ROUTES: Routes = [
     path: 'my-shifts',
     loadComponent: () => import('./pages/my-shifts/my-shifts.component').then((m) => m.MyShiftsComponent),
     data: { titleKey: 'NAV.TRAINER.MY_SHIFTS' },
-  },
-  {
-    path: 'profile',
-    loadComponent: () => import('../profile/profile.component').then((m) => m.ProfileComponent),
-    data: { titleKey: 'NAV.TRAINER.MY_PROFILE' },
   },
 ];

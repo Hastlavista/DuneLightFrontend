@@ -6,6 +6,7 @@ import { Dialog } from 'primeng/dialog';
 import { InputText } from 'primeng/inputtext';
 import { finalize } from 'rxjs';
 import { RosterTypeDto, RosterTypeUpsertRequest } from '../../../../../core/models/roster.model';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { RosterTypesService } from '../../../../../core/services/roster-types.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 
@@ -20,6 +21,7 @@ const ROSTER_TYPE_COLORS = ['0D5C63', '128089', '8E3A4A', '7A5D61', '545863', 'A
 export class RosterTypeFormDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly rosterTypesService = inject(RosterTypesService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
 

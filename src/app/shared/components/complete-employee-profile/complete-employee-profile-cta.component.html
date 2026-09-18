@@ -6,9 +6,9 @@
       @if (prerequisitesMissing()) {
         <span>{{ 'COMPLETE_PROFILE.PREREQUISITES_MISSING' | translate }}</span>
         <span class="complete-profile-cta__links">
-          <a routerLink="/admin/companies">{{ 'NAV.ADMIN.COMPANIES' | translate }}</a>
+          <a routerLink="/app/companies">{{ 'NAV.ADMIN.COMPANIES' | translate }}</a>
           <span aria-hidden="true">·</span>
-          <a [routerLink]="['/admin/employees']" [queryParams]="{ tab: 'engagement-types' }">
+          <a [routerLink]="['/app/employees']" [queryParams]="{ tab: 'engagement-types' }">
             {{ 'EMPLOYEES.ENGAGEMENT_TYPES.TAB_LABEL' | translate }}
           </a>
         </span>

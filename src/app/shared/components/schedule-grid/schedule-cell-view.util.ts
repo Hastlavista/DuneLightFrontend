@@ -10,10 +10,6 @@ const DEFAULT_COLOR_HEX = '#C1A5A9';
  * deliberately not any real category color, see toScheduleBreakGridCell. */
 const BREAK_COLOR_HEX = '#7A5D61';
 
-function pad(value: number): string {
-  return value.toString().padStart(2, '0');
-}
-
 /** Maps one flat schedule row (AppointmentScheduleCellDto) into the grid's
  * generic cell view model. `columnId` is resolved by the caller since it means
  * different things per grid (employeeId for grid A, a local date key for grid
@@ -21,6 +17,9 @@ function pad(value: number): string {
  * filter out `Cancelled` rows before calling this - a cancelled appointment
  * frees its slot and should render as empty grid space, not a cell; see each
  * caller's `gridCells` computed.
+ *
+ * `noShow` is always false (see the field's own comment below) - kept on the
+ * cell model for when the feed eventually carries per-booking status.
  *
  * Individual appointments show the (first) client name, "+N" when there are
  * more. Group appointments (form === 'Group' - not returned by any endpoint
@@ -73,7 +72,11 @@ export function toScheduleGridCell(
     title,
     subtitle: dto.serviceName,
     roomName: dto.roomName,
-    noShow: dto.status === 'NoShow',
+    // An Appointment (occurrence) can never itself be NoShow - only a Booking
+    // (per-client) can, see AppointmentStatus's doc. The lightweight schedule
+    // feed doesn't carry per-booking status, so there is currently no signal
+    // to render this from; always false until the feed is enriched.
+    noShow: false,
     status: dto.status,
     hasBirthday,
     source: dto,
@@ -113,17 +116,13 @@ export function toScheduleBreakGridCell(
 /** Adapts a group appointment's flat schedule row into the
  * GroupAppointmentCellDto shape GroupAttendanceDialogComponent expects -
  * lets the schedule grids reuse that dialog (from the Grupe module) without
- * a separate schedule-specific attendance endpoint. `date` stays the full
- * ISO `startsAt` string since HrDatePipe/`new Date()` parse that fine and
- * only render the day portion. */
+ * a separate schedule-specific attendance endpoint. */
 export function toGroupAppointmentCell(dto: AppointmentScheduleCellDto): GroupAppointmentCellDto {
-  const startsAt = new Date(dto.startsAt);
   return {
     id: dto.id,
-    date: dto.startsAt,
-    startTime: `${pad(startsAt.getHours())}:${pad(startsAt.getMinutes())}:00`,
+    startsAt: dto.startsAt,
     companyName: dto.companyName,
-    trainerName: dto.employeeName,
+    employeeName: dto.employeeName,
     expectedCount: dto.expectedCount ?? 0,
     attendanceCount: dto.attendanceCount ?? 0,
   };

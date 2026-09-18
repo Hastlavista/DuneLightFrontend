@@ -2,6 +2,7 @@
   <div class="companies-page__header">
     <app-list-toolbar
       [newLabelKey]="'CATALOG.COMPANIES.NEW'"
+      [canCreate]="currentEmployeeService.can('catalog.companies.manage')"
       [search]="search()"
       [showInactive]="showInactive()"
       (searchChange)="onSearchChange($event)"
@@ -57,44 +58,46 @@
             </div>
 
             <div class="companies-page__actions">
-              <p-button
-                icon="pi pi-pencil"
-                [outlined]="true"
-                [rounded]="true"
-                [routerLink]="['/admin/companies', company.id]"
-                [ariaLabel]="'COMMON.EDIT' | translate"
-                [title]="'COMMON.EDIT' | translate"
-              />
-              @if (company.isActive) {
+              @if (currentEmployeeService.can('catalog.companies.manage')) {
                 <p-button
-                  icon="pi pi-eye-slash"
-                  severity="warn"
+                  icon="pi pi-pencil"
                   [outlined]="true"
                   [rounded]="true"
-                  [ariaLabel]="'COMMON.DEACTIVATE' | translate"
-                  [title]="'COMMON.DEACTIVATE' | translate"
-                  (onClick)="confirmDeactivate(company)"
+                  [routerLink]="['/app/companies', company.id]"
+                  [ariaLabel]="'COMMON.EDIT' | translate"
+                  [title]="'COMMON.EDIT' | translate"
                 />
-              } @else {
+                @if (company.isActive) {
+                  <p-button
+                    icon="pi pi-eye-slash"
+                    severity="warn"
+                    [outlined]="true"
+                    [rounded]="true"
+                    [ariaLabel]="'COMMON.DEACTIVATE' | translate"
+                    [title]="'COMMON.DEACTIVATE' | translate"
+                    (onClick)="confirmDeactivate(company)"
+                  />
+                } @else {
+                  <p-button
+                    icon="pi pi-eye"
+                    severity="success"
+                    [outlined]="true"
+                    [rounded]="true"
+                    [ariaLabel]="'COMMON.ACTIVATE' | translate"
+                    [title]="'COMMON.ACTIVATE' | translate"
+                    (onClick)="activate(company)"
+                  />
+                }
                 <p-button
-                  icon="pi pi-eye"
-                  severity="success"
+                  icon="pi pi-trash"
+                  severity="danger"
                   [outlined]="true"
                   [rounded]="true"
-                  [ariaLabel]="'COMMON.ACTIVATE' | translate"
-                  [title]="'COMMON.ACTIVATE' | translate"
-                  (onClick)="activate(company)"
+                  [ariaLabel]="'COMMON.DELETE' | translate"
+                  [title]="'COMMON.DELETE' | translate"
+                  (onClick)="confirmDelete(company)"
                 />
               }
-              <p-button
-                icon="pi pi-trash"
-                severity="danger"
-                [outlined]="true"
-                [rounded]="true"
-                [ariaLabel]="'COMMON.DELETE' | translate"
-                [title]="'COMMON.DELETE' | translate"
-                (onClick)="confirmDelete(company)"
-              />
             </div>
           </article>
         </td>

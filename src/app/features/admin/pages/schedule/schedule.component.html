@@ -54,19 +54,23 @@
       </div>
 
       <div class="schedule-page__actions">
-        <p-button
-          class="schedule-page__new-appointment"
-          icon="pi pi-plus"
-          [label]="'SCHEDULE.NEW_APPOINTMENT_BUTTON' | translate"
-          (onClick)="openNewAppointment()"
-        />
-        <p-button
-          class="schedule-page__new-break"
-          [outlined]="true"
-          icon="pi pi-pause"
-          [label]="'SCHEDULE.BREAK.NEW_BUTTON' | translate"
-          (onClick)="openNewBreak()"
-        />
+        @if (canCreateAppointments()) {
+          <p-button
+            class="schedule-page__new-appointment"
+            icon="pi pi-plus"
+            [label]="'SCHEDULE.NEW_APPOINTMENT_BUTTON' | translate"
+            (onClick)="openNewAppointment()"
+          />
+        }
+        @if (canCreateBreaks()) {
+          <p-button
+            class="schedule-page__new-break"
+            [outlined]="true"
+            icon="pi pi-pause"
+            [label]="'SCHEDULE.BREAK.NEW_BUTTON' | translate"
+            (onClick)="openNewBreak()"
+          />
+        }
       </div>
     </div>
 

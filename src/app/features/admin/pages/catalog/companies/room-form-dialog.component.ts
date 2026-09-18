@@ -8,6 +8,7 @@ import { InputText } from 'primeng/inputtext';
 import { ToggleSwitch } from 'primeng/toggleswitch';
 import { finalize } from 'rxjs';
 import { RoomDto, RoomUpsertRequest } from '../../../../../core/models/room.model';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { RoomsService } from '../../../../../core/services/rooms.service';
 
@@ -22,6 +23,7 @@ import { RoomsService } from '../../../../../core/services/rooms.service';
 export class RoomFormDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly roomsService = inject(RoomsService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
 

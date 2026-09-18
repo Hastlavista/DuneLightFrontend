@@ -50,7 +50,7 @@ export class EmployeeHistoryTabComponent {
   }
 
   clientNamesLabel(appt: AppointmentDto): string {
-    return appt.clients.map((client) => client.clientName).join(', ');
+    return appt.bookings.map((booking) => booking.clientName).join(', ');
   }
 
   private formatDate(date: Date): string {

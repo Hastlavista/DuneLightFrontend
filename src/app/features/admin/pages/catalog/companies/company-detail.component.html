@@ -99,7 +99,12 @@
             <div class="company-detail__actions">
               <span>{{ 'CATALOG.COMPANIES.MODAL_FOOTER_HINT' | translate }}</span>
               <p-button type="button" severity="secondary" [outlined]="true" [label]="'COMMON.CANCEL' | translate" (onClick)="goBack()" />
-              <p-button type="submit" [label]="'CATALOG.COMPANIES.SAVE_CHANGES' | translate" [loading]="saving()" />
+              <p-button
+                type="submit"
+                [label]="'CATALOG.COMPANIES.SAVE_CHANGES' | translate"
+                [loading]="saving()"
+                [disabled]="!currentEmployeeService.can('catalog.companies.manage')"
+              />
             </div>
           </form>
         </p-tabpanel>

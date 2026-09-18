@@ -23,8 +23,8 @@ function passwordsMatchValidator(group: AbstractControl): ValidationErrors | nul
 }
 
 /**
- * "Moj profil" - shared as-is between /admin/profile and /app/profile (see
- * admin.routes.ts / trainer.routes.ts), since there's nothing role-specific
+ * "Moj profil" - shared as-is between the admin and trainer sections, both
+ * mounted under /app (see admin.routes.ts / trainer.routes.ts), since there's nothing role-specific
  * about it: read-only identity info from CurrentEmployeeService plus a change-
  * password form against the already-existing AuthService.changePassword().
  * The error interceptor already routes /api/public/Auth/* failures away from

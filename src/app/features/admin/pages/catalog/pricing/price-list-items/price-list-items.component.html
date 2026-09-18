@@ -1,6 +1,6 @@
 <section class="price-list-page">
   <div class="price-list-page__header">
-    <app-list-toolbar [newLabelKey]="'CATALOG.PRICING.NEW'" [search]="search()" [showInactive]="showInactive()" (searchChange)="onSearchChange($event)" (showInactiveChange)="onShowInactiveChange($event)" (create)="openCreate()">
+    <app-list-toolbar [newLabelKey]="'CATALOG.PRICING.NEW'" [canCreate]="currentEmployeeService.can('catalog.price-list.manage')" [search]="search()" [showInactive]="showInactive()" (searchChange)="onSearchChange($event)" (showInactiveChange)="onShowInactiveChange($event)" (create)="openCreate()">
       <div class="price-list-page__filter-group">
         <span>Vrsta stavke</span>
         <p-select class="price-list-page__filter" [options]="subjectTypeFilterOptions()" optionLabel="label" optionValue="value" [ngModel]="subjectTypeFilter()" (ngModelChange)="onSubjectTypeFilterChange($event)" />
@@ -79,13 +79,15 @@
             <span class="price-list-page__validity">Do {{ item.validTo ? (item.validTo | hrDate) : ('CATALOG.PRICING.UNLIMITED' | translate) }}</span>
           </div>
           <div class="price-list-page__actions">
-            <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.EDIT' | translate" [title]="'COMMON.EDIT' | translate" (onClick)="openEdit(item)" />
-            @if (item.isActive) {
-              <p-button icon="pi pi-eye-slash" severity="warn" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.DEACTIVATE' | translate" [title]="'COMMON.DEACTIVATE' | translate" (onClick)="confirmDeactivate(item)" />
-            } @else {
-              <p-button icon="pi pi-eye" severity="success" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.ACTIVATE' | translate" [title]="'COMMON.ACTIVATE' | translate" (onClick)="activate(item)" />
+            @if (currentEmployeeService.can('catalog.price-list.manage')) {
+              <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.EDIT' | translate" [title]="'COMMON.EDIT' | translate" (onClick)="openEdit(item)" />
+              @if (item.isActive) {
+                <p-button icon="pi pi-eye-slash" severity="warn" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.DEACTIVATE' | translate" [title]="'COMMON.DEACTIVATE' | translate" (onClick)="confirmDeactivate(item)" />
+              } @else {
+                <p-button icon="pi pi-eye" severity="success" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.ACTIVATE' | translate" [title]="'COMMON.ACTIVATE' | translate" (onClick)="activate(item)" />
+              }
+              <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.DELETE' | translate" [title]="'COMMON.DELETE' | translate" (onClick)="confirmDelete(item)" />
             }
-            <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.DELETE' | translate" [title]="'COMMON.DELETE' | translate" (onClick)="confirmDelete(item)" />
           </div>
         </article>
       }

@@ -39,11 +39,13 @@ export interface ScheduleGridCell {
   subtitle: string;
   /** Only set for `kind === 'appointment'` when a room is assigned. */
   roomName?: string;
-  /** True only for an appointment's `NoShow` status - `Cancelled` appointments
-   * never reach the grid at all (filtered out before toScheduleGridCell() is
-   * called, see ScheduleDayGridComponent/ScheduleWeekGridComponent's
-   * `gridCells`), so a cancelled slot renders as plain empty space rather than
-   * a dimmed block. Always false for a break. */
+  /** Always false today - an Appointment occurrence can never itself be
+   * NoShow, only a per-client Booking can (see AppointmentStatus's doc), and
+   * the lightweight schedule feed carries no per-booking status to derive
+   * this from. `Cancelled` appointments never reach the grid at all (filtered
+   * out before toScheduleGridCell() is called, see
+   * ScheduleDayGridComponent/ScheduleWeekGridComponent's `gridCells`), so a
+   * cancelled slot renders as plain empty space. Always false for a break. */
   noShow: boolean;
   /** Only set for `kind === 'appointment'`. */
   status?: AppointmentStatus;

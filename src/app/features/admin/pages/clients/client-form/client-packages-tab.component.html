@@ -1,7 +1,9 @@
 <div class="client-packages-tab">
   <div class="client-packages-tab__toolbar">
     <h3>{{ 'CLIENTS.PACKAGES.TITLE' | translate }}</h3>
-    <p-button icon="pi pi-plus" [label]="'CLIENTS.PACKAGES.ISSUE_BUTTON' | translate" (onClick)="openIssueDialog()" />
+    @if (currentEmployeeService.can('clients.packages.manage')) {
+      <p-button icon="pi pi-plus" [label]="'CLIENTS.PACKAGES.ISSUE_BUTTON' | translate" (onClick)="openIssueDialog()" />
+    }
   </div>
 
   <p-table [value]="items()" [loading]="loading()" dataKey="id" responsiveLayout="scroll">

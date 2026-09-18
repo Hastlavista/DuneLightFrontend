@@ -18,7 +18,7 @@
 .service-form-dialog__custom-color { display: inline-flex; min-height: 2.1rem; align-items: center; gap: .35rem; padding: .18rem .45rem; border: 1px dashed var(--rose-border-strong); border-radius: 8px; }
 .service-form-dialog__custom-color em { color: var(--ink-muted); font-size: .7rem; font-style: normal; }
 .service-form-dialog__field textarea { width: 100%; min-height: 4.25rem; padding: .65rem .75rem; border: 1px solid var(--rose-border-strong); border-radius: 9px; background: var(--surface-warm); color: var(--ink); font: inherit; resize: vertical; }
-.service-form-dialog__actions { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin: 0 -1.35rem; padding: .9rem 1.35rem; border-top: 1px solid var(--rose-border); background: var(--surface-warm); }
+.service-form-dialog__actions { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin: 0 -1.35rem; padding: .9rem 1.35rem 1.3rem; border-top: 1px solid var(--rose-border); background: var(--surface-warm); }
 .service-form-dialog__actions > span { color: var(--ink-muted); font-size: .72rem; }
 .service-form-dialog__actions > div { display: flex; gap: .5rem; }
 :host ::ng-deep .service-form-dialog .p-inputtext, :host ::ng-deep .service-form-dialog .p-select, :host ::ng-deep .service-form-dialog .p-inputnumber { border-color: var(--rose-border-strong); border-radius: 9px; background: var(--surface-warm); }

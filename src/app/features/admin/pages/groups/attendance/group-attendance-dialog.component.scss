@@ -28,4 +28,47 @@
     padding: 1rem 0;
     color: var(--olive-gold);
   }
+
+  &__payment-choice {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 12rem;
+  }
+
+  &__skip-payment {
+    background: none;
+    border: none;
+    padding: 0;
+    font-size: 0.78rem;
+    color: var(--olive-gold);
+    text-decoration: underline;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  &__capacity {
+    margin: -0.5rem 0 0;
+    font-size: 0.85rem;
+    color: var(--olive-gold);
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+
+  &__cancellation-reason {
+    margin-top: 0.15rem;
+    font-size: 0.75rem;
+    color: var(--olive-gold);
+  }
+
+  &__footer {
+    display: flex;
+    justify-content: flex-end;
+    border-top: 1px solid var(--sand-deep);
+    padding-top: 0.75rem;
+  }
 }

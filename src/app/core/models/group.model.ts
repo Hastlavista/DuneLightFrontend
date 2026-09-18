@@ -77,17 +77,16 @@ export interface GroupMemberDto {
 }
 
 /**
- * Minimal subset of the schedule grid's appointment cell needed by the group
- * detail page's "nadolazeći/prošli termini" lists. The full shape belongs to
- * Raspored (frontend #8, not yet built) - only the fields this screen actually
- * renders are declared here; extend once that module lands.
+ * Minimal subset of the schedule appointment shape returned by GET /api/groups/{id}
+ * for the detail page's "nadolazeći/prošli termini" lists. The full shape belongs
+ * to Raspored (frontend #8, not yet built) - only fields this screen renders are
+ * declared here; extend once that module lands.
  */
 export interface GroupAppointmentCellDto {
   id: string;
-  date: string;
-  startTime: string;
+  startsAt: string;
   companyName: string;
-  trainerName: string | null;
+  employeeName: string | null;
   expectedCount: number;
   attendanceCount: number;
 }

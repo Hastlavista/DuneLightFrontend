@@ -161,7 +161,12 @@
                 [label]="'COMMON.CANCEL' | translate"
                 (onClick)="onCancel()"
               />
-              <p-button type="submit" [label]="'CLIENTS.SAVE' | translate" [loading]="saving()" />
+              <p-button
+                type="submit"
+                [label]="'CLIENTS.SAVE' | translate"
+                [loading]="saving()"
+                [disabled]="!currentEmployeeService.can('clients.manage')"
+              />
               </div>
             </div>
           }

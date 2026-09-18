@@ -30,6 +30,11 @@ export class ListToolbarComponent {
   /** Some flat registries (e.g. roles and grant groups) have no inactive
    * state, so their toolbar keeps the shared layout without a dead switch. */
   readonly showInactiveToggle = input(true);
+  /** Hides the "new" button for a viewer who holds the page's `.view` grant
+   * but not its `.manage` grant (see CurrentEmployeeService.can() /
+   * action-grants.ts) - defaults to true so existing callers are unaffected
+   * until they opt in. */
+  readonly canCreate = input(true);
 
   readonly searchChange = output<string>();
   readonly showInactiveChange = output<boolean>();

@@ -1,0 +1,56 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '30rem', maxWidth: 'calc(100vw - 2rem)' }"
+  styleClass="stock-adjust-dialog"
+  (onShow)="onDialogShow()"
+>
+  <ng-template #header>
+    <div class="stock-adjust-dialog__header">
+      <span class="stock-adjust-dialog__mark"><i class="pi pi-sliders-h"></i></span>
+      <div>
+        <h2>{{ 'STOCK.ADJUST.TITLE' | translate }}</h2>
+        @if (target(); as target) {
+          <p>{{ target.productName }} · {{ target.companyName }}</p>
+        }
+      </div>
+    </div>
+  </ng-template>
+
+  @if (dialogShown() && target(); as target) {
+    <form [formGroup]="form" (ngSubmit)="onSave()" class="stock-adjust-dialog__form" novalidate>
+      <div class="dl-form__field">
+        <label>{{ 'STOCK.ADJUST.FIELD_CURRENT_QUANTITY' | translate }}</label>
+        <div class="dl-form__static-value">{{ target.currentQuantity }}</div>
+      </div>
+
+      <div class="dl-form__field">
+        <label for="stock-adjust-quantity">{{ 'STOCK.ADJUST.FIELD_NEW_QUANTITY' | translate }}</label>
+        <p-inputnumber id="stock-adjust-quantity" fluid formControlName="quantity" [showButtons]="true" [min]="0" [step]="1" [minFractionDigits]="0" [maxFractionDigits]="0" />
+        @if (form.controls.quantity.invalid && form.controls.quantity.touched) {
+          <span class="dl-form__error">{{ 'STOCK.ADJUST.ERRORS.QUANTITY_INVALID' | translate }}</span>
+        }
+        @if (delta() !== 0) {
+          <span class="dl-form__hint stock-adjust-dialog__delta" [class.stock-adjust-dialog__delta--negative]="delta() < 0">{{ delta() > 0 ? '+' : '' }}{{ delta() }}</span>
+        }
+      </div>
+
+      <div class="dl-form__field">
+        <label for="stock-adjust-reason">{{ 'STOCK.ADJUST.FIELD_REASON' | translate }}</label>
+        <textarea id="stock-adjust-reason" rows="2" formControlName="reason" [placeholder]="'STOCK.ADJUST.FIELD_REASON_PLACEHOLDER' | translate"></textarea>
+        @if (form.controls.reason.touched && !form.controls.reason.value.trim()) {
+          <span class="dl-form__error">{{ 'STOCK.ADJUST.ERRORS.REASON_REQUIRED' | translate }}</span>
+        }
+      </div>
+
+      @if (localError()) {
+        <span class="dl-form__error">{{ localError() }}</span>
+      }
+
+      <div class="stock-adjust-dialog__actions">
+        <p-button type="button" severity="secondary" [outlined]="true" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" />
+        <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" [disabled]="form.invalid || !form.controls.reason.value.trim()" />
+      </div>
+    </form>
+  }
+</p-dialog>

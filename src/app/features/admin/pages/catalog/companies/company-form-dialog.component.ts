@@ -55,7 +55,7 @@ const COUNTRY_OPTIONS = [
 export class CompanyFormDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly companiesService = inject(CompaniesService);
-  private readonly currentEmployeeService = inject(CurrentEmployeeService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
 

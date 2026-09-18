@@ -1,0 +1,12 @@
+:host ::ng-deep .product-dialog { overflow: hidden; border: 1px solid var(--rose-border); border-radius: 16px; background: var(--surface-card); box-shadow: 0 24px 50px -28px rgba(46, 50, 60, .35); }
+:host ::ng-deep .product-dialog .p-dialog-header { padding: 1.2rem 1.35rem .9rem; border-bottom: 1px solid var(--rose-border); }
+:host ::ng-deep .product-dialog .p-dialog-content { padding: 1rem 1.35rem 0; background: var(--surface-card); }
+:host ::ng-deep .product-dialog .p-dialog-close-button { width: 2rem; height: 2rem; border: 1px solid var(--rose-border); border-radius: 9px; color: var(--ink-muted); }
+.product-dialog__header { display: flex; align-items: center; gap: .75rem; }
+.product-dialog__mark { display: flex; width: 2.35rem; height: 2.35rem; align-items: center; justify-content: center; border: 1px solid var(--rose-border); border-radius: 10px; background: var(--surface-soft); color: var(--brand-primary); }
+.product-dialog__header h2 { margin: 0; font-size: 1.25rem; }
+.product-dialog__form { display: flex; flex-direction: column; gap: 1rem; }
+.product-dialog__actions { display: flex; align-items: center; justify-content: space-between; gap: .6rem; margin: 0 -1.35rem; padding: .9rem 1.35rem 1.3rem; border-top: 1px solid var(--rose-border); background: var(--surface-warm); }
+.product-dialog__actions > span { color: var(--rose-text); font-size: .72rem; }
+.product-dialog__actions > div { display: flex; gap: .5rem; }
+@media (max-width: 560px) { .product-dialog__actions { align-items: stretch; flex-direction: column; } .product-dialog__actions > div { justify-content: flex-end; } }

@@ -14,6 +14,7 @@ import { EmployeesService } from '../../../../core/services/employees.service';
 import { GroupsService } from '../../../../core/services/groups.service';
 import { CompanyContextService } from '../../../../core/services/company-context.service';
 import { CompaniesService } from '../../../../core/services/companies.service';
+import { CurrentEmployeeService } from '../../../../core/services/current-employee.service';
 import { RoomsService } from '../../../../core/services/rooms.service';
 import { ServicesService } from '../../../../core/services/services.service';
 import { translationReadySignal } from '../../../../core/utils/translation-signal.util';
@@ -82,6 +83,7 @@ export class ScheduleComponent {
   private readonly companiesService = inject(CompaniesService);
   private readonly roomsService = inject(RoomsService);
   private readonly servicesService = inject(ServicesService);
+  private readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly translate = inject(TranslateService);
 
   readonly dayGrid = viewChild<ScheduleDayGridComponent>('dayGrid');
@@ -118,16 +120,27 @@ export class ScheduleComponent {
 
   private readonly translationsReady = translationReadySignal(this.translate);
 
-  /** ScheduleDayGridComponent's columns need per-company ids to filter by the
-   * globally-selected company, which EmployeeDto already carries directly
-   * (unlike the trainer-safe EmployeeDirectoryDto used by TodayComponent, see
-   * EmployeeColumnEntry's doc comment). */
+  /** Gates "Novi termin" (toolbar button + empty-slot click) - a view-only
+   * Raspored user has no reason to see a create entry point they can't
+   * actually submit; the backend would just 403 the create call. Uses the
+   * shared ACTION_GRANTS 'appointments.manage' key (see action-grants.ts)
+   * rather than a locally-duplicated grant list, so this can never drift
+   * from what POST /api/appointments/schedule actually requires. */
+  readonly canCreateAppointments = computed(() => this.currentEmployeeService.can('appointments.manage'));
+
+  /** Same rationale as canCreateAppointments() - gates "+ Pauza" against
+   * ACTION_GRANTS 'schedule-breaks.manage' (POST /api/schedule-breaks). */
+  readonly canCreateBreaks = computed(() => this.currentEmployeeService.can('schedule-breaks.manage'));
+
+  /** ScheduleDayGridComponent's columns filter by company NAME, not id - see
+   * EmployeeColumnEntry's doc comment for why. EmployeeDto's `companies`
+   * already carries `companyName` directly. */
   readonly employeeColumns = computed<EmployeeColumnEntry[]>(() =>
     this.activeEmployees().map((employee) => ({
       id: employee.id,
       firstName: employee.firstName,
       lastName: employee.lastName,
-      companyIds: employee.companies.map((company) => company.companyId),
+      companyNames: employee.companies.map((company) => company.companyName),
     })),
   );
 
@@ -214,6 +227,9 @@ export class ScheduleComponent {
    * already scoped to) - either way the event carries the same three fields,
    * see DayEmptySlotEvent/WeekEmptySlotEvent. */
   onEmptySlotClick(event: { startsAt: Date; employeeId: string; companyId: string | null }): void {
+    if (!this.canCreateAppointments()) {
+      return;
+    }
     this.newAppointmentInitial.set(event);
     this.newAppointmentVisible.set(true);
   }
@@ -221,6 +237,9 @@ export class ScheduleComponent {
   /** "Novi termin" toolbar button - no cell context, so only startsAt (now)
    * and the global company switcher's current selection are prefilled. */
   openNewAppointment(): void {
+    if (!this.canCreateAppointments()) {
+      return;
+    }
     this.newAppointmentInitial.set({ startsAt: new Date(), employeeId: null, companyId: this.companyContext.selectedCompanyId() });
     this.newAppointmentVisible.set(true);
   }
@@ -237,6 +256,9 @@ export class ScheduleComponent {
 
   /** "+ Pauza" toolbar button - same prefill convention as "Novi termin". */
   openNewBreak(): void {
+    if (!this.canCreateBreaks()) {
+      return;
+    }
     this.newBreakInitial.set({ startsAt: new Date(), employeeId: null, companyId: this.companyContext.selectedCompanyId() });
     this.newBreakVisible.set(true);
   }

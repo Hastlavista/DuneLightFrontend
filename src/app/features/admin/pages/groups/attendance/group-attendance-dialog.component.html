@@ -1,13 +1,18 @@
 <p-dialog
   [(visible)]="visible"
   [modal]="true"
-  [style]="{ width: '40rem' }"
+  [style]="{ width: '46rem' }"
   [header]="'GROUPS.ATTENDANCE.TITLE' | translate"
   (onShow)="onDialogShow()"
 >
   @if (dialogShown() && appointment(); as appointment) {
     <div class="group-attendance-dialog">
       <p class="dl-form__hint">{{ subtitle(appointment) }}</p>
+      @if (hasAppointmentsView()) {
+        <p class="group-attendance-dialog__capacity">
+          {{ 'GROUPS.ATTENDANCE.RESERVED' | translate }}: <strong>{{ capacityLabel() }}</strong>
+        </p>
+      }
 
       <section class="group-attendance-dialog__section">
         <h4>{{ 'GROUPS.ATTENDANCE.EXPECTED_SECTION' | translate }}</h4>
@@ -26,7 +31,7 @@
                 <input
                   type="checkbox"
                   [checked]="row.attended"
-                  [disabled]="row.saving"
+                  [disabled]="row.saving || !currentEmployeeService.can('groups.attendance.manage')"
                   (change)="onToggleAttended(row, $any($event.target).checked)"
                 />
               </td>
@@ -39,6 +44,20 @@
                     [serviceId]="group()!.serviceId"
                     (packageSelected)="onPackageChosen(row, $event)"
                   />
+                } @else if (row.needsPaymentMethod) {
+                  <div class="group-attendance-dialog__payment-choice">
+                    <p-select
+                      [options]="paymentMethodOptions()"
+                      optionLabel="label"
+                      optionValue="value"
+                      appendTo="body"
+                      [placeholder]="'SCHEDULE.FIELD_PAYMENT_METHOD_PLACEHOLDER' | translate"
+                      (onChange)="onPaymentMethodChosen(row, $event.value)"
+                    />
+                    <button type="button" class="group-attendance-dialog__skip-payment" (click)="onSkipPayment(row)">
+                      {{ 'GROUPS.ATTENDANCE.CHARGE_LATER' | translate }}
+                    </button>
+                  </div>
                 } @else {
                   —
                 }
@@ -61,8 +80,14 @@
           <ng-template pTemplate="header">
             <tr>
               <th>{{ 'GROUPS.ATTENDANCE.COL_NAME' | translate }}</th>
+              @if (hasAppointmentsView()) {
+                <th>{{ 'GROUPS.ATTENDANCE.COL_STATUS' | translate }}</th>
+              }
               <th>{{ 'GROUPS.ATTENDANCE.COL_ATTENDED' | translate }}</th>
               <th>{{ 'GROUPS.ATTENDANCE.COL_COVERAGE' | translate }}</th>
+              @if (hasAppointmentsView()) {
+                <th>{{ 'GROUPS.ATTENDANCE.COL_ACTIONS' | translate }}</th>
+              }
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-row>
@@ -72,14 +97,26 @@
                 @if (!row.isMember) {
                   <span class="group-attendance-dialog__guest-badge">{{ 'GROUPS.ATTENDANCE.GUEST_BADGE' | translate }}</span>
                 }
+                @if (row.bookingStatus === 'Cancelled' && row.cancellationReason) {
+                  <div class="group-attendance-dialog__cancellation-reason">{{ row.cancellationReason }}</div>
+                }
               </td>
+              @if (hasAppointmentsView()) {
+                <td>
+                  @if (row.bookingStatus) {
+                    <p-tag [severity]="bookingStatusSeverity(row.bookingStatus)" [value]="bookingStatusTranslationKey(row.bookingStatus) | translate" />
+                  }
+                </td>
+              }
               <td>
-                <input
-                  type="checkbox"
-                  [checked]="row.attended"
-                  [disabled]="row.saving"
-                  (change)="onToggleAttended(row, $any($event.target).checked)"
-                />
+                @if (row.bookingStatus !== 'Cancelled') {
+                  <input
+                    type="checkbox"
+                    [checked]="row.attended"
+                    [disabled]="row.saving || row.correcting || row.cancelling || !currentEmployeeService.can('groups.attendance.manage')"
+                    (change)="onToggleAttended(row, $any($event.target).checked)"
+                  />
+                }
               </td>
               <td>
                 @if (row.attended && row.coverageType) {
@@ -90,15 +127,58 @@
                     [serviceId]="group()!.serviceId"
                     (packageSelected)="onPackageChosen(row, $event)"
                   />
+                } @else if (row.needsPaymentMethod) {
+                  <div class="group-attendance-dialog__payment-choice">
+                    <p-select
+                      [options]="paymentMethodOptions()"
+                      optionLabel="label"
+                      optionValue="value"
+                      appendTo="body"
+                      [placeholder]="'SCHEDULE.FIELD_PAYMENT_METHOD_PLACEHOLDER' | translate"
+                      (onChange)="onPaymentMethodChosen(row, $event.value)"
+                    />
+                    <button type="button" class="group-attendance-dialog__skip-payment" (click)="onSkipPayment(row)">
+                      {{ 'GROUPS.ATTENDANCE.CHARGE_LATER' | translate }}
+                    </button>
+                  </div>
                 } @else {
                   —
                 }
               </td>
+              @if (hasAppointmentsView()) {
+                <td class="group-attendance-dialog__actions">
+                  @if (currentEmployeeService.can('appointments.manage')) {
+                    @if (canCancelSeat(row)) {
+                      <p-button
+                        type="button"
+                        size="small"
+                        severity="danger"
+                        [text]="true"
+                        [loading]="row.cancelling"
+                        [disabled]="row.saving || row.correcting"
+                        [label]="'GROUPS.ATTENDANCE.CANCEL_SEAT' | translate"
+                        (onClick)="confirmCancelSeat(row)"
+                      />
+                    }
+                    @if (canCorrectToConfirmed(row)) {
+                      <p-button
+                        type="button"
+                        size="small"
+                        [text]="true"
+                        [loading]="row.correcting"
+                        [disabled]="row.saving || row.cancelling"
+                        [label]="'GROUPS.ATTENDANCE.CORRECT_TO_CONFIRMED' | translate"
+                        (onClick)="confirmCorrectToConfirmed(row)"
+                      />
+                    }
+                  }
+                </td>
+              }
             </tr>
           </ng-template>
           <ng-template pTemplate="emptymessage">
             <tr>
-              <td colspan="3" class="group-attendance-dialog__empty">
+              <td [attr.colspan]="hasAppointmentsView() ? 5 : 3" class="group-attendance-dialog__empty">
                 {{ 'GROUPS.ATTENDANCE.EMPTY_RECORDED' | translate }}
               </td>
             </tr>
@@ -120,6 +200,80 @@
           appendTo="body"
         />
       </section>
+
+      @if (hasAppointmentsView() && isFutureOccurrence()) {
+        <section class="group-attendance-dialog__section">
+          <h4>{{ 'GROUPS.WAITLIST.TITLE' | translate }}</h4>
+          <p-table [value]="waitlistEntries()" dataKey="id" responsiveLayout="scroll">
+            <ng-template pTemplate="header">
+              <tr>
+                <th>{{ 'GROUPS.WAITLIST.COL_NAME' | translate }}</th>
+                <th>{{ 'GROUPS.WAITLIST.COL_STATUS' | translate }}</th>
+                <th>{{ 'GROUPS.WAITLIST.COL_POSITION' | translate }}</th>
+                <th>{{ 'GROUPS.WAITLIST.COL_JOINED_AT' | translate }}</th>
+                <th>{{ 'GROUPS.WAITLIST.COL_ACTIONS' | translate }}</th>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="body" let-entry>
+              <tr>
+                <td>{{ entry.clientName }}</td>
+                <td>
+                  <p-tag [severity]="waitlistEntryStatusSeverity(entry.status)" [value]="waitlistEntryStatusTranslationKey(entry.status) | translate" />
+                </td>
+                <td>{{ entry.status === 'Waiting' ? entry.position : '—' }}</td>
+                <td>{{ waitlistTimestampLabel(entry.joinedAt) }}</td>
+                <td>
+                  @if (entry.status === 'Waiting' && currentEmployeeService.can('appointments.manage')) {
+                    <p-button
+                      type="button"
+                      size="small"
+                      severity="danger"
+                      [text]="true"
+                      [loading]="cancellingWaitlistClientId() === entry.clientId"
+                      [label]="'GROUPS.WAITLIST.CANCEL' | translate"
+                      (onClick)="confirmCancelWaitlistEntry(entry)"
+                    />
+                  }
+                </td>
+              </tr>
+            </ng-template>
+            <ng-template pTemplate="emptymessage">
+              <tr>
+                <td colspan="5" class="group-attendance-dialog__empty">
+                  {{ 'GROUPS.WAITLIST.EMPTY' | translate }}
+                </td>
+              </tr>
+            </ng-template>
+          </p-table>
+
+          @if (currentEmployeeService.can('appointments.manage')) {
+            <p-autoComplete
+              class="group-attendance-dialog__guest-search"
+              [(ngModel)]="selectedWaitlistOption"
+              [suggestions]="waitlistResults()"
+              optionLabel="name"
+              [disabled]="joiningWaitlist()"
+              [placeholder]="'GROUPS.WAITLIST.JOIN_PLACEHOLDER' | translate"
+              [emptyMessage]="'GROUPS.WAITLIST.NO_RESULTS' | translate"
+              (completeMethod)="onWaitlistSearch($event)"
+              (onSelect)="onWaitlistClientSelected($event)"
+              appendTo="body"
+            />
+          }
+        </section>
+      }
+
+      @if (currentEmployeeService.can('appointments.manage')) {
+        <div class="group-attendance-dialog__footer">
+          <p-button
+            type="button"
+            [outlined]="true"
+            [loading]="completing()"
+            [label]="'GROUPS.ATTENDANCE.COMPLETE_APPOINTMENT' | translate"
+            (onClick)="confirmCompleteAppointment()"
+          />
+        </div>
+      }
     </div>
   }
 </p-dialog>

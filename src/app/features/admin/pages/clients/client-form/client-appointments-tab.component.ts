@@ -4,11 +4,11 @@ import { Tag } from 'primeng/tag';
 import { TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import {
-  AppointmentDto,
-  PaymentMethod,
+  ClientAppointmentHistoryDto,
   appointmentStatusSeverity,
   appointmentStatusTranslationKey,
-  paymentMethodTranslationKey,
+  bookingStatusSeverity,
+  bookingStatusTranslationKey,
 } from '../../../../../core/models/appointment.model';
 import { coverageTypeTranslationKey } from '../../../../../core/models/group-attendance.model';
 import { ClientGroupMembershipDto, dayOfWeekShortTranslationKey } from '../../../../../core/models/group.model';
@@ -26,10 +26,11 @@ const DEFAULT_PAGE_SIZE = 20;
  * - "Moje grupe": GET /api/clients/{clientId}/groups, a flat array (not
  *   paged), same convention as ClientPackagesTabComponent's packages read.
  * - "Povijest termina": GET /api/appointments/by-client/{clientId}, individual
- *   AND group termini in one chronological paged table (newest first). A
- *   group row is only ever present once this client has a recorded
- *   attendance/absence on it - see AppointmentDto.clientAttendance - there are
- *   no "empty" group rows.
+ *   AND group termini in one chronological paged table (newest first).
+ *   Returns ClientAppointmentHistoryDto - a flat, this-client-only shape
+ *   (deliberately doesn't reveal co-clients on a shared appointment, see that
+ *   DTO's doc) - a group row is only ever present once this client has a
+ *   recorded attendance/absence on it, there are no "empty" group rows.
  */
 @Component({
   selector: 'app-client-appointments-tab',
@@ -46,15 +47,16 @@ export class ClientAppointmentsTabComponent {
   readonly groups = signal<ClientGroupMembershipDto[]>([]);
   readonly groupsLoading = signal(false);
 
-  readonly items = signal<AppointmentDto[]>([]);
+  readonly items = signal<ClientAppointmentHistoryDto[]>([]);
   readonly totalCount = signal(0);
   readonly loading = signal(false);
   readonly rows = signal(DEFAULT_PAGE_SIZE);
 
   readonly appointmentStatusTranslationKey = appointmentStatusTranslationKey;
   readonly appointmentStatusSeverity = appointmentStatusSeverity;
+  readonly bookingStatusTranslationKey = bookingStatusTranslationKey;
+  readonly bookingStatusSeverity = bookingStatusSeverity;
   readonly coverageTypeTranslationKey = coverageTypeTranslationKey;
-  readonly paymentMethodTranslationKey = paymentMethodTranslationKey;
   readonly dayOfWeekShortTranslationKey = dayOfWeekShortTranslationKey;
 
   constructor() {
@@ -75,18 +77,10 @@ export class ClientAppointmentsTabComponent {
 
   /** "23.07.2026. 17:00" - hrDate has no time component, so this combines it
    * with a manual HH:mm, same approach as AppointmentDetailDialog's timeRangeLabel. */
-  dateTimeLabel(appt: AppointmentDto): string {
+  dateTimeLabel(appt: ClientAppointmentHistoryDto): string {
     const date = new Date(appt.startsAt);
     const time = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
     return `${this.formatDate(date)} ${time}`;
-  }
-
-  clientNamesLabel(appt: AppointmentDto): string {
-    return appt.clients.map((client) => client.clientName).join(', ');
-  }
-
-  paymentLabel(paymentMethod: PaymentMethod | undefined): string | null {
-    return paymentMethod ? paymentMethodTranslationKey(paymentMethod) : null;
   }
 
   private formatDate(date: Date): string {

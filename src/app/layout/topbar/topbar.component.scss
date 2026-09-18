@@ -43,30 +43,6 @@
   gap: 0.75rem;
 }
 
-.topbar__view-switch {
-  display: flex;
-  padding: 3px;
-  background: var(--surface-soft-2);
-  border: 1px solid var(--rose-border);
-  border-radius: 10px;
-}
-
-.topbar__view-switch-btn {
-  padding: 0.375rem 0.875rem;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 500;
-  text-decoration: none;
-  color: var(--ink-muted);
-  white-space: nowrap;
-
-  &--active {
-    background: var(--brand-primary);
-    color: var(--brand-primary-contrast);
-    font-weight: 600;
-  }
-}
-
 .topbar__company-switcher {
   display: flex;
   align-items: center;
@@ -296,10 +272,6 @@
 @media (max-width: 768px) {
   .topbar__menu-btn {
     display: flex;
-  }
-
-  .topbar__view-switch {
-    display: none;
   }
 
   .topbar__company-switcher {

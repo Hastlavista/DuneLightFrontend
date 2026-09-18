@@ -29,7 +29,6 @@
             <h3>{{ appt.serviceName }}</h3>
             <p>{{ clientsLabel(appt) }}</p>
           </div>
-          <strong>{{ appt.amount | eurCurrency }}</strong>
         </section>
 
         <section class="appointment-detail__section">
@@ -108,10 +107,6 @@
             <span>{{ 'SCHEDULE.DETAIL.CLIENTS' | translate }}</span>
             <strong>{{ clientsLabel(appt) }}</strong>
           </div>
-          <div>
-            <span>{{ 'SCHEDULE.DETAIL.PRICE' | translate }}</span>
-            <strong>{{ appt.amount | eurCurrency }} · {{ (appt.isPaid ? 'SCHEDULE.DETAIL.PAID' : 'SCHEDULE.DETAIL.UNPAID') | translate }}</strong>
-          </div>
           @if (appt.note) {
             <div>
               <span>{{ 'SCHEDULE.DETAIL.NOTE' | translate }}</span>
@@ -120,52 +115,77 @@
           }
         </section>
 
+        @if (appt.bookings.length > 0) {
+          <section class="appointment-detail__bookings">
+            <span class="appointment-detail__label">{{ 'SCHEDULE.DETAIL.BOOKINGS' | translate }}</span>
+            @for (booking of appt.bookings; track booking.id) {
+              <div class="appointment-detail__booking-row">
+                <div>
+                  <strong>{{ booking.clientName }}</strong>
+                  <p-tag [severity]="bookingStatusSeverity(booking.status)" [value]="bookingStatusTranslationKey(booking.status) | translate" />
+                </div>
+                <div>
+                  <span>{{ booking.amount | eurCurrency }}</span>
+                  @if (booking.packageCoverageApplied) {
+                    <small>{{ 'SCHEDULE.DETAIL.PACKAGE_COVERED' | translate }}</small>
+                  } @else {
+                    <small>
+                      {{ (booking.isPaid ? 'SCHEDULE.DETAIL.PAID' : 'SCHEDULE.DETAIL.UNPAID') | translate }}
+                      @if (!booking.isPaid && booking.outstandingAmount > 0) {
+                        · {{ booking.outstandingAmount | eurCurrency }}
+                      }
+                    </small>
+                  }
+                </div>
+              </div>
+            }
+          </section>
+        }
+
         @if (mode() === 'view' && !isMovable()) {
           <span class="appointment-detail__hint">{{ 'SCHEDULE.DETAIL.NOT_MOVABLE_HINT' | translate }}</span>
         }
 
         @if (mode() === 'billing') {
           <section class="appointment-detail__section">
-            <label class="appointment-detail__label" for="appt-payment-method">{{ 'SCHEDULE.FIELD_PAYMENT_METHOD' | translate }}</label>
-            <p-select
-              id="appt-payment-method"
-              fluid
-              appendTo="body"
-              [ngModel]="billingPaymentMethod()"
-              [ngModelOptions]="{ standalone: true }"
-              (ngModelChange)="onBillingPaymentMethodChange($event)"
-              [options]="paymentMethodOptions()"
-              optionLabel="label"
-              optionValue="value"
-              [placeholder]="'SCHEDULE.FIELD_PAYMENT_METHOD_PLACEHOLDER' | translate"
-            />
-            @if (billingAttempted() && !billingPaymentMethod()) {
-              <span class="appointment-detail__error">{{ 'SCHEDULE.NEW_APPOINTMENT.ERRORS.PAYMENT_METHOD_REQUIRED' | translate }}</span>
-            }
-          </section>
-
-          @if (billingPaymentMethod() === 'Package') {
+            <span class="appointment-detail__label">{{ 'SCHEDULE.FIELD_PAYMENT_METHOD' | translate }}</span>
             <div class="appointment-detail__packages">
-              @for (client of appt.clients; track client.clientId) {
+              @for (booking of appt.bookings; track booking.clientId) {
                 <div class="appointment-detail__package-row">
-                  <span>{{ client.clientName }}</span>
-                  @if (billingPackageRow(client.clientId).loading) {
-                    <span class="appointment-detail__hint">...</span>
-                  } @else if (billingPackageRow(client.clientId).eligible?.length === 0) {
-                    <span class="appointment-detail__error">{{ 'SCHEDULE.NO_ELIGIBLE_PACKAGE' | translate }}</span>
-                  } @else if ((billingPackageRow(client.clientId).eligible?.length ?? 0) > 1) {
-                    <app-eligible-package-select
-                      [packages]="billingPackageRow(client.clientId).eligible!"
-                      [serviceId]="appt.serviceId"
-                      (packageSelected)="onBillingPackageChosen(client.clientId, $event)"
-                    />
-                  } @else {
-                    <span>{{ billingPackageRow(client.clientId).eligible?.[0]?.packageName }}</span>
+                  <span>{{ booking.clientName }}</span>
+                  <p-select
+                    fluid
+                    appendTo="body"
+                    [ngModel]="billingSettlementChoice(booking.clientId)"
+                    [ngModelOptions]="{ standalone: true }"
+                    (ngModelChange)="onBillingSettlementChoiceChange(booking.clientId, $event)"
+                    [options]="settlementChoiceOptions()"
+                    optionLabel="label"
+                    optionValue="value"
+                    [placeholder]="'SCHEDULE.FIELD_PAYMENT_METHOD_PLACEHOLDER' | translate"
+                  />
+                  @if (billingAttempted() && !billingSettlementChoice(booking.clientId)) {
+                    <span class="appointment-detail__error">{{ 'SCHEDULE.NEW_APPOINTMENT.ERRORS.PAYMENT_METHOD_REQUIRED' | translate }}</span>
+                  }
+                  @if (billingSettlementChoice(booking.clientId) === 'Package') {
+                    @if (billingPackageRow(booking.clientId).loading) {
+                      <span class="appointment-detail__hint">...</span>
+                    } @else if (billingPackageRow(booking.clientId).eligible?.length === 0) {
+                      <span class="appointment-detail__error">{{ 'SCHEDULE.NO_ELIGIBLE_PACKAGE' | translate }}</span>
+                    } @else if ((billingPackageRow(booking.clientId).eligible?.length ?? 0) > 1) {
+                      <app-eligible-package-select
+                        [packages]="billingPackageRow(booking.clientId).eligible!"
+                        [serviceId]="appt.serviceId"
+                        (packageSelected)="onBillingPackageChosen(booking.clientId, $event)"
+                      />
+                    } @else {
+                      <span>{{ billingPackageRow(booking.clientId).eligible?.[0]?.packageName }}</span>
+                    }
                   }
                 </div>
               }
             </div>
-          }
+          </section>
         }
 
         @if (mode() === 'cancel' || mode() === 'noShow') {

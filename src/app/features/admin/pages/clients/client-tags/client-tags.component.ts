@@ -5,6 +5,7 @@ import { Button } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { ClientTagDto } from '../../../../../core/models/client-tag.model';
 import { ClientTagsService } from '../../../../../core/services/client-tags.service';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { StatusTagComponent } from '../../../../../shared/components/status-tag/status-tag.component';
 import { ClientTagFormDialogComponent } from './client-tag-form-dialog.component';
@@ -27,6 +28,7 @@ export class ClientTagsComponent {
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
 
   readonly items = signal<ClientTagDto[]>([]);
   readonly totalCount = signal(0);

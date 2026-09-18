@@ -10,17 +10,7 @@
   <h1 class="topbar__title">{{ (titleKey() ?? '') | translate }}</h1>
 
   <div class="topbar__actions">
-    @if (isAdmin()) {
-      <div class="topbar__view-switch">
-        <a routerLink="/admin" routerLinkActive="topbar__view-switch-btn--active" class="topbar__view-switch-btn">
-          {{ 'LAYOUT.TOPBAR.VIEW_ADMIN' | translate }}
-        </a>
-        <a routerLink="/app" routerLinkActive="topbar__view-switch-btn--active" class="topbar__view-switch-btn">
-          {{ 'LAYOUT.TOPBAR.VIEW_MEMBER' | translate }}
-        </a>
-      </div>
-    }
-
+    @if (hasCompanyOptions()) {
     <div class="topbar__company-switcher" [attr.aria-label]="'LAYOUT.TOPBAR.COMPANY_SWITCHER' | translate">
       @for (company of companyOptions(); track company.value ?? 'all') {
         <button
@@ -36,6 +26,7 @@
         </button>
       }
     </div>
+    }
 
     <button type="button" class="topbar__user" (click)="userMenu.toggle($event)">
       <span class="topbar__avatar" [style.background]="avatarColor()">{{ initials() }}</span>

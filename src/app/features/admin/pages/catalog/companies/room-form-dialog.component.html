@@ -32,7 +32,12 @@
 
       <div class="dl-form__actions">
         <p-button type="button" [text]="true" severity="secondary" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" />
-        <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+        <p-button
+          type="submit"
+          [label]="'COMMON.SAVE' | translate"
+          [loading]="saving()"
+          [disabled]="!currentEmployeeService.can('catalog.rooms.manage')"
+        />
       </div>
     </form>
   }

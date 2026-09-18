@@ -3,7 +3,7 @@ import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
-import { finalize, map, switchMap } from 'rxjs';
+import { finalize, switchMap } from 'rxjs';
 import { AuthService } from '../../../core/auth/auth.service';
 import { InactivityService } from '../../../core/auth/inactivity.service';
 import { KnownDeviceUser, KnownUsersService } from '../../../core/auth/known-users.service';
@@ -66,16 +66,16 @@ export class PinLockOverlayComponent {
         // dashboard. Load the new employee before unmasking that existing
         // shell, otherwise its navigation signals still describe the previous
         // user until a browser refresh.
-        switchMap((response) => {
+        switchMap(() => {
           this.currentEmployeeService.clear();
-          return this.currentEmployeeService.load().pipe(map(() => response));
+          return this.currentEmployeeService.load();
         }),
         finalize(() => this.loading.set(false)),
       )
       .subscribe({
-        next: (response) => {
+        next: () => {
           this.inactivity.unlock();
-          this.router.navigate([response.role === 'Admin' ? '/admin' : '/app']);
+          this.router.navigate(['/app']);
         },
         error: () => { this.failed.set(true); this.form.reset({ pin: '' }); },
       });

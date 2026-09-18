@@ -16,7 +16,7 @@ import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
 import { finalize } from 'rxjs';
-import { EmployeeDto } from '../../../../../core/models/employee.model';
+import { EmployeeDirectoryDto } from '../../../../../core/models/employee.model';
 import {
   DAYS_OF_WEEK,
   DayOfWeek,
@@ -32,6 +32,7 @@ import { ServiceDto, ServiceExecutionMode } from '../../../../../core/models/ser
 import { EmployeesService } from '../../../../../core/services/employees.service';
 import { GroupsService } from '../../../../../core/services/groups.service';
 import { CompaniesService } from '../../../../../core/services/companies.service';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { RoomsService } from '../../../../../core/services/rooms.service';
 import { ServicesService } from '../../../../../core/services/services.service';
@@ -91,6 +92,7 @@ export class GroupFormComponent {
   private readonly companiesService = inject(CompaniesService);
   private readonly employeesService = inject(EmployeesService);
   private readonly roomsService = inject(RoomsService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
@@ -105,7 +107,7 @@ export class GroupFormComponent {
 
   readonly activeServices = signal<ServiceDto[]>([]);
   readonly activeCompanies = signal<CompanyDto[]>([]);
-  readonly activeTrainers = signal<EmployeeDto[]>([]);
+  readonly activeTrainers = signal<EmployeeDirectoryDto[]>([]);
   readonly activeRooms = signal<RoomDto[]>([]);
 
   private readonly translationsReady = translationReadySignal(this.translate);
@@ -325,10 +327,14 @@ export class GroupFormComponent {
       .subscribe((result) => this.activeCompanies.set(result.items));
   }
 
+  /** GET /api/employees/directory, not getPage()/`/api/employees` - the
+   * trainer picker only needs id/firstName/lastName, not the full EmployeeDto
+   * (salary/OIB/contact data included) that getPage() returns; the lighter
+   * endpoint also doesn't require employees.view/.manage to succeed. */
   private loadActiveTrainers(): void {
     this.employeesService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeTrainers.set(result.items));
+      .getDirectory(true, { suppressErrorToast: true })
+      .subscribe((result) => this.activeTrainers.set(result));
   }
 
   private loadActiveRooms(): void {
@@ -378,6 +384,6 @@ export class GroupFormComponent {
   }
 
   private navigateBack(): void {
-    this.router.navigate(['/admin/groups']);
+    this.router.navigate(['/app/groups']);
   }
 }

@@ -138,7 +138,7 @@
           [label]="'COMMON.CANCEL' | translate"
           (onClick)="onCancel()"
         />
-        <p-button type="submit" [label]="'ROSTER.TYPES.SAVE_BUTTON' | translate" [loading]="saving()" />
+        <p-button type="submit" [label]="'ROSTER.TYPES.SAVE_BUTTON' | translate" [loading]="saving()" [disabled]="!currentEmployeeService.can('roster.types.manage')" />
       </div>
     </form>
   }

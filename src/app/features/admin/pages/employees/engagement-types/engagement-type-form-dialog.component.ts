@@ -7,6 +7,7 @@ import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { finalize } from 'rxjs';
 import { EngagementTypeDto, EngagementTypeUpsertRequest } from '../../../../../core/models/engagement-type.model';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { EngagementTypesService } from '../../../../../core/services/engagement-types.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 
@@ -19,6 +20,7 @@ import { NotificationService } from '../../../../../core/services/notification.s
 export class EngagementTypeFormDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly engagementTypesService = inject(EngagementTypesService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
 

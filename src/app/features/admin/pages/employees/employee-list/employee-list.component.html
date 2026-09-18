@@ -2,6 +2,7 @@
   <div class="employee-list-page__header">
     <app-list-toolbar
       [newLabelKey]="'EMPLOYEES.NEW'"
+      [canCreate]="currentEmployeeService.can('employees.manage')"
       [search]="search()"
       [showInactive]="showInactive()"
       (searchChange)="onSearchChange($event)"
@@ -62,14 +63,16 @@
             }
           </div>
           <div class="employee-list-page__actions">
-          <p-button
-            icon="pi pi-pencil"
-            [text]="true"
-            [rounded]="true"
-            [ariaLabel]="'COMMON.EDIT' | translate"
-            [title]="'COMMON.EDIT' | translate"
-            (onClick)="openEdit(employee)"
-          />
+          @if (currentEmployeeService.can('employees.manage')) {
+            <p-button
+              icon="pi pi-pencil"
+              [text]="true"
+              [rounded]="true"
+              [ariaLabel]="'COMMON.EDIT' | translate"
+              [title]="'COMMON.EDIT' | translate"
+              (onClick)="openEdit(employee)"
+            />
+          }
           <p-button
             icon="pi pi-history"
             [text]="true"
@@ -78,36 +81,38 @@
             [title]="'EMPLOYEES.HISTORY_SHORTCUT' | translate"
             (onClick)="openHistory(employee)"
           />
-          @if (employee.isActive) {
+          @if (currentEmployeeService.can('employees.manage')) {
+            @if (employee.isActive) {
+              <p-button
+                icon="pi pi-eye-slash"
+                severity="warn"
+                [text]="true"
+                [rounded]="true"
+                [ariaLabel]="'COMMON.DEACTIVATE' | translate"
+                [title]="'COMMON.DEACTIVATE' | translate"
+                (onClick)="confirmDeactivate(employee)"
+              />
+            } @else {
+              <p-button
+                icon="pi pi-eye"
+                severity="success"
+                [text]="true"
+                [rounded]="true"
+                [ariaLabel]="'COMMON.ACTIVATE' | translate"
+                [title]="'COMMON.ACTIVATE' | translate"
+                (onClick)="activate(employee)"
+              />
+            }
             <p-button
-              icon="pi pi-eye-slash"
-              severity="warn"
+              icon="pi pi-trash"
+              severity="danger"
               [text]="true"
               [rounded]="true"
-              [ariaLabel]="'COMMON.DEACTIVATE' | translate"
-              [title]="'COMMON.DEACTIVATE' | translate"
-              (onClick)="confirmDeactivate(employee)"
-            />
-          } @else {
-            <p-button
-              icon="pi pi-eye"
-              severity="success"
-              [text]="true"
-              [rounded]="true"
-              [ariaLabel]="'COMMON.ACTIVATE' | translate"
-              [title]="'COMMON.ACTIVATE' | translate"
-              (onClick)="activate(employee)"
+              [ariaLabel]="'COMMON.DELETE' | translate"
+              [title]="'COMMON.DELETE' | translate"
+              (onClick)="confirmDelete(employee)"
             />
           }
-          <p-button
-            icon="pi pi-trash"
-            severity="danger"
-            [text]="true"
-            [rounded]="true"
-            [ariaLabel]="'COMMON.DELETE' | translate"
-            [title]="'COMMON.DELETE' | translate"
-            (onClick)="confirmDelete(employee)"
-          />
           </div>
         </article>
       }

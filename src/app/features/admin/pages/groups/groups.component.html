@@ -9,6 +9,7 @@
   <div class="groups-page__header">
     <app-list-toolbar
       [newLabelKey]="'GROUPS.NEW'"
+      [canCreate]="currentEmployeeService.can('groups.manage')"
       [search]="search()"
       [showInactive]="showInactive()"
       (searchChange)="onSearchChange($event)"
@@ -55,8 +56,10 @@
             </div>
           </div>
           <div class="groups-page__card-actions">
-            <p-button icon="pi pi-pencil" [outlined]="true" [label]="'COMMON.EDIT' | translate" (onClick)="openEdit(group)" />
-            <p-button [icon]="group.isActive ? 'pi pi-eye-slash' : 'pi pi-eye'" severity="secondary" [outlined]="true" [label]="group.isActive ? ('COMMON.DEACTIVATE' | translate) : ('COMMON.ACTIVATE' | translate)" (onClick)="group.isActive ? confirmDeactivate(group) : activate(group)" />
+            @if (currentEmployeeService.can('groups.manage')) {
+              <p-button icon="pi pi-pencil" [outlined]="true" [label]="'COMMON.EDIT' | translate" (onClick)="openEdit(group)" />
+              <p-button [icon]="group.isActive ? 'pi pi-eye-slash' : 'pi pi-eye'" severity="secondary" [outlined]="true" [label]="group.isActive ? ('COMMON.DEACTIVATE' | translate) : ('COMMON.ACTIVATE' | translate)" (onClick)="group.isActive ? confirmDeactivate(group) : activate(group)" />
+            }
           </div>
           <div class="groups-page__slots">
             @for (slot of group.slots; track slot.id) { @if (slot.isActive) { <span>{{ dayOfWeekShortTranslationKey(slot.dayOfWeek) | translate }} {{ slot.startTime.slice(0, 5) }}</span> } }
@@ -66,7 +69,7 @@
             <div class="groups-page__progress"><i [style.width.%]="occupancyFor(group)"></i></div>
             <small>{{ freePlacesLabel(group) }}</small>
           </section>
-          <footer><span><i class="pi pi-calendar"></i>{{ slotsSummary(group) || 'Nema aktivnih termina' }}</span><p-button icon="pi pi-sync" severity="secondary" [outlined]="true" [label]="'GROUPS.GENERATE.BUTTON' | translate" (onClick)="openGenerateForGroup(group)" /></footer>
+          <footer><span><i class="pi pi-calendar"></i>{{ slotsSummary(group) || 'Nema aktivnih termina' }}</span>@if (currentEmployeeService.can('groups.manage')) { <p-button icon="pi pi-sync" severity="secondary" [outlined]="true" [label]="'GROUPS.GENERATE.BUTTON' | translate" (onClick)="openGenerateForGroup(group)" /> }</footer>
         </article>
       }
     </div>

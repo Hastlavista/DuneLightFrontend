@@ -5,34 +5,6 @@
   background: var(--brand-surface);
   color: var(--ink);
   border-right: 1px solid var(--rose-border-strong);
-
-  &--admin {
-    background: var(--brand-surface);
-    color: var(--ink);
-    border-right-color: var(--rose-border-strong);
-
-    .sidebar__brand-name {
-      color: var(--ink);
-    }
-
-    .sidebar__nav-item {
-      color: var(--ink);
-
-      &:hover {
-        background: rgba(255, 255, 255, 0.38);
-      }
-
-      &--active {
-        background: var(--brand-primary);
-        color: var(--brand-primary-contrast);
-      }
-    }
-
-    .sidebar__nav-group-label {
-      color: var(--ink-sidebar);
-    }
-
-  }
 }
 
 .sidebar__brand {

@@ -5,6 +5,7 @@ import { Button } from 'primeng/button';
 import { Table, TableLazyLoadEvent, TableModule } from 'primeng/table';
 import { finalize } from 'rxjs';
 import { RosterTypeDto } from '../../../../../core/models/roster.model';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { RosterTypesService } from '../../../../../core/services/roster-types.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { ListToolbarComponent } from '../../../../../shared/components/list-toolbar/list-toolbar.component';
@@ -32,6 +33,7 @@ const DEFAULT_PAGE_SIZE = 20;
 })
 export class RosterTypesComponent {
   private readonly rosterTypesService = inject(RosterTypesService);
+  protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
