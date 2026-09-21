@@ -21,6 +21,7 @@
     "STATUS_ACTIVE": "Aktivno",
     "STATUS_INACTIVE": "Neaktivno",
     "SELECT_PACKAGE_PLACEHOLDER": "Odaberite paket",
+    "RETRY": "Pokušaj ponovno",
     "MONTHS": {
       "JANUARY": "Siječanj",
       "FEBRUARY": "Veljača",
@@ -118,6 +119,13 @@
     "ALREADY_BOOKED": "Klijent već ima rezervaciju na ovom terminu.",
     "CAPACITY_AVAILABLE": "Termin još ima slobodnih mjesta — lista čekanja nije potrebna.",
     "WAITLIST_ENTRY_NOT_ACTIVE": "Ovaj zapis na listi čekanja više nije aktivan.",
+    "CAPABILITY_UNKNOWN": "Odabrana sposobnost više ne postoji.",
+    "CAPABILITY_VERSION_NOT_FOUND": "Odabrana verzija sposobnosti ne postoji.",
+    "CAPABILITY_VERSION_NOT_AVAILABLE": "Odabrana verzija sposobnosti više nije dostupna.",
+    "CAPABILITY_SCOPE_ILLEGAL": "Odabrani opseg nije dopušten za ovu sposobnost.",
+    "DUPLICATE_CAPABILITY_SELECTION": "Ista sposobnost ne može biti odabrana više puta.",
+    "GRANT_KEY_UNKNOWN": "Odabrana ručna ovlast više ne postoji.",
+    "GRANT_ALREADY_CAPABILITY_DERIVED": "Ručna ovlast već je izvedena iz odabrane sposobnosti.",
 
     "UNKNOWN": "Došlo je do greške. Pokušajte ponovno."
   },
@@ -134,9 +142,9 @@
     "UNKNOWN": "Upozorenje."
   },
   "ROLES": {
-    "ADMIN": "Admin",
-    "MEMBER": "Trener",
-    "RECEPTION": "Recepcija"
+    "ADMIN": "Administrator (legacy)",
+    "MEMBER": "Član (legacy)",
+    "RECEPTION": "Recepcija (legacy)"
   },
   "NAV": {
     "ADMIN": {
@@ -856,6 +864,7 @@
     "SECTION_SERVICES": "Usluge koje izvodi",
     "SECTION_LOGIN": "Login",
     "SECTION_PERMISSIONS": "Dozvole",
+    "SECTION_ROLE_ASSIGNMENT": "Računska uloga (legacy)",
     "FIELD_FIRST_NAME": "Ime",
     "FIELD_LAST_NAME": "Prezime",
     "FIELD_PHONE": "Telefon",
@@ -880,7 +889,10 @@
     "FIELD_SERVICES_PLACEHOLDER": "Odaberite usluge",
     "SERVICES_EMPTY_HINT": "Prazan odabir znači da zaposlenik smije izvoditi sve usluge.",
     "FIELD_PASSWORD": "Lozinka",
-    "FIELD_ROLE": "Uloga",
+    "FIELD_ROLE": "Računska uloga (legacy)",
+    "LEGACY_ROLE_HINT": "Računska uloga je naslijeđena postavka računa i nije isto što i uloga dozvola.",
+    "SAVE_HINT": "Za spremanje trebaju biti popunjena obavezna polja.",
+    "INVALID_FORM_HINT": "Provjerite označena obavezna polja prije spremanja.",
     "FIELD_GRANT_GROUPS": "Grant grupe",
     "FIELD_GRANT_GROUPS_PLACEHOLDER": "Odaberite grant grupe",
     "FIELD_ROLES": "Poslovne oznake",
@@ -1196,161 +1208,245 @@
       "appointments": "Raspored",
       "groups": "Grupe",
       "roster": "Roster",
-      "schedule-breaks": "Pauze u rasporedu"
+      "schedule-breaks": "Pauze u rasporedu",
+      "checkout": "Blagajna",
+      "products": "Proizvodi i zalihe",
+      "commissions": "Provizije",
+      "dashboard": "Nadzorna ploča",
+      "notifications": "Obavijesti"
     },
     "SECTIONS": {
-      "SCHEDULE": "Raspored",
-      "SHIFTS": "Smjene",
-      "COMPANIES": "Poslovnice",
-      "WORKING_HOURS": "Radno vrijeme i praznici",
-      "CLIENTS": "Klijenti",
-      "EMPLOYEES": "Zaposlenici",
-      "GROUPS": "Grupe",
-      "CATALOG_ITEMS": "Usluge, paketi i cjenik",
-      "ORGANIZATION": "Organizacija",
-      "CHECKOUT": "Blagajna",
       "ADVANCED": "Napredno"
     },
+    "CATEGORIES": {
+      "schedule": "Raspored",
+      "roster": "Roster",
+      "clients": "Klijenti",
+      "groups": "Grupe",
+      "checkout": "Blagajna",
+      "catalog": "Katalog",
+      "employees": "Zaposlenici",
+      "products": "Proizvodi i zalihe",
+      "commissions": "Provizije",
+      "operations": "Operativno",
+      "organization": "Organizacija"
+    },
+    "SENSITIVITY": {
+      "Normal": "Standardno",
+      "Sensitive": "Osjetljivo",
+      "HighRisk": "Visokorizično"
+    },
+    "SCOPE_CONTROL": {
+      "OFF": "Isključeno",
+      "ON": "Uključeno",
+      "NO_ACCESS": "Nema pristupa",
+      "VIEW": "Pregled",
+      "MANAGE": "Uređivanje",
+      "OWN": "Samo vlastito",
+      "ALL": "Sve"
+    },
+    "ROLE_SUMMARY": {
+      "TITLE": "Sažetak uloge",
+      "EMPTY": "Ova uloga trenutno nema dodijeljenih ovlasti."
+    },
     "CAPABILITIES": {
-      "APPOINTMENTS_VIEW": {
-        "LABEL": "Može vidjeti raspored",
-        "DESCRIPTION": "Pregled termina u Rasporedu; uključuje pregled usluga i poslovnica potrebnih za filtre i legendu."
+      "schedule": {
+        "appointments": {
+          "manage": {
+            "LABEL": "Upravljanje terminima",
+            "DESCRIPTION": "Zakazivanje, uređivanje i pregled termina u rasporedu."
+          },
+          "delete": {
+            "LABEL": "Brisanje termina",
+            "DESCRIPTION": "Trajno uklanjanje termina iz rasporeda."
+          }
+        },
+        "breaks": {
+          "manage": {
+            "LABEL": "Upravljanje pauzama",
+            "DESCRIPTION": "Dodavanje, uređivanje i pregled pauza u rasporedu."
+          }
+        }
       },
-      "APPOINTMENTS_WRITE_OWN": {
-        "LABEL": "Može kreirati i uređivati vlastite termine",
-        "DESCRIPTION": "Otvara 'Novi termin'; uključuje pregled usluga i poslovnica potrebnih za tu formu."
+      "roster": {
+        "entries": {
+          "manage": {
+            "LABEL": "Upravljanje rosterom",
+            "DESCRIPTION": "Uređivanje i pregled zapisa rasporeda smjena (rostera)."
+          }
+        },
+        "types": {
+          "manage": {
+            "LABEL": "Vrste smjena",
+            "DESCRIPTION": "Pregled i uređivanje šifrarnika vrsta smjena."
+          }
+        },
+        "templates": {
+          "manage": {
+            "LABEL": "Radno vrijeme i praznici",
+            "DESCRIPTION": "Pregled i uređivanje predložaka radnog vremena i praznika."
+          }
+        },
+        "reviews": {
+          "team": {
+            "view": {
+              "LABEL": "Timski pregled rostera",
+              "DESCRIPTION": "Pregled mjesečnog rostera cijelog tima."
+            }
+          },
+          "personal": {
+            "manage": {
+              "LABEL": "Osobni pregled rostera",
+              "DESCRIPTION": "Pregled osobnog mjesečnog rostera zaposlenika."
+            }
+          }
+        },
+        "leave-fund": {
+          "view": {
+            "LABEL": "Pregled fonda godišnjeg odmora",
+            "DESCRIPTION": "Pregled stanja fonda godišnjeg odmora zaposlenika."
+          },
+          "manage": {
+            "LABEL": "Korekcija fonda godišnjeg odmora",
+            "DESCRIPTION": "Ručno otvaranje ili korekcija fonda godišnjeg odmora za određenu godinu."
+          },
+          "settings": {
+            "manage": {
+              "LABEL": "Postavke godišnjeg odmora",
+              "DESCRIPTION": "Pregled i uređivanje postavki fonda godišnjeg odmora (broj dana, datumi obnove i prijenosa)."
+            }
+          }
+        }
       },
-      "APPOINTMENTS_WRITE_ALL": {
-        "LABEL": "Može kreirati i uređivati termine bilo kojeg trenera",
-        "DESCRIPTION": "Isto kao vlastiti termini, uz mogućnost odabira bilo kojeg trenera u Rasporedu."
+      "clients": {
+        "manage": {
+          "LABEL": "Upravljanje klijentima",
+          "DESCRIPTION": "Kreiranje, uređivanje i pregled klijenata."
+        },
+        "status": {
+          "manage": {
+            "LABEL": "Status klijenta",
+            "DESCRIPTION": "Promjena statusa klijenta (npr. aktivan/neaktivan)."
+          }
+        },
+        "tags": {
+          "manage": {
+            "LABEL": "Oznake klijenata",
+            "DESCRIPTION": "Pregled i uređivanje oznaka na klijentima."
+          }
+        },
+        "packages": {
+          "manage": {
+            "LABEL": "Paketi klijenata",
+            "DESCRIPTION": "Dodjela i uređivanje paketa klijenata."
+          }
+        },
+        "anonymize": {
+          "LABEL": "Anonimizacija klijenta",
+          "DESCRIPTION": "Trajno uklanjanje osobnih podataka klijenta."
+        }
       },
-      "APPOINTMENTS_DELETE": {
-        "LABEL": "Može brisati termine",
-        "DESCRIPTION": "Trajno uklanjanje termina iz rasporeda."
+      "groups": {
+        "manage": {
+          "LABEL": "Upravljanje grupama",
+          "DESCRIPTION": "Kreiranje, uređivanje i pregled grupa."
+        },
+        "attendance": {
+          "manage": {
+            "LABEL": "Prisutnost na grupnim terminima",
+            "DESCRIPTION": "Evidentiranje i pregled prisutnosti na grupnim terminima."
+          }
+        }
       },
-      "SCHEDULE_BREAKS_VIEW": {
-        "LABEL": "Može vidjeti pauze u rasporedu",
-        "DESCRIPTION": "Pregled postojećih pauza na rasporedu."
+      "checkout": {
+        "manage": {
+          "LABEL": "Blagajna",
+          "DESCRIPTION": "Otvaranje i upravljanje blagajnom (checkout), naplata i pregled povijesti plaćanja."
+        }
       },
-      "SCHEDULE_BREAKS_WRITE_OWN": {
-        "LABEL": "Može kreirati i uređivati vlastite pauze",
-        "DESCRIPTION": "Dodavanje, uređivanje i brisanje vlastitih pauza u rasporedu."
+      "catalog": {
+        "services": {
+          "manage": {
+            "LABEL": "Usluge, paketi i cjenik",
+            "DESCRIPTION": "Pregled i upravljanje uslugama, paketima i cjenikom."
+          }
+        },
+        "companies": {
+          "manage": {
+            "LABEL": "Poslovnice i prostorije",
+            "DESCRIPTION": "Pregled i upravljanje poslovnicama i prostorijama."
+          }
+        }
       },
-      "SCHEDULE_BREAKS_WRITE_ALL": {
-        "LABEL": "Može kreirati i uređivati pauze bilo kojeg trenera",
-        "DESCRIPTION": "Isto kao vlastite pauze, uz mogućnost odabira bilo kojeg trenera."
+      "employees": {
+        "directory": {
+          "view": {
+            "LABEL": "Kolegijalni pregled zaposlenika",
+            "DESCRIPTION": "Osnovni pregled popisa zaposlenika, bez osjetljivih podataka."
+          }
+        },
+        "manage": {
+          "LABEL": "Upravljanje zaposlenicima",
+          "DESCRIPTION": "Kreiranje, uređivanje, aktivacija i deaktivacija zaposlenika."
+        },
+        "role": {
+          "manage": {
+            "LABEL": "Promjena uloge zaposlenika",
+            "DESCRIPTION": "Promjena razine ovlasti (uloge) drugog korisnika."
+          }
+        },
+        "engagement-types": {
+          "manage": {
+            "LABEL": "Vrste angažmana",
+            "DESCRIPTION": "Pregled i uređivanje šifrarnika vrsta angažmana zaposlenika."
+          }
+        }
       },
-      "ROSTER_TYPES_VIEW": {
-        "LABEL": "Može vidjeti vrste smjena",
-        "DESCRIPTION": "Pregled šifrarnika vrsta smjena u Smjenama."
+      "products": {
+        "manage": {
+          "LABEL": "Proizvodi",
+          "DESCRIPTION": "Pregled i upravljanje katalogom proizvoda."
+        }
       },
-      "ROSTER_TYPES_MANAGE": {
-        "LABEL": "Može uređivati vrste smjena",
-        "DESCRIPTION": "Kreiranje, uređivanje i brisanje vrsta smjena."
+      "stock": {
+        "manage": {
+          "LABEL": "Zalihe",
+          "DESCRIPTION": "Pregled i upravljanje zalihama proizvoda."
+        }
       },
-      "CATALOG_COMPANIES_VIEW": {
-        "LABEL": "Može vidjeti poslovnice",
-        "DESCRIPTION": "Pregled popisa poslovnica (lokacija)."
+      "commissions": {
+        "manage": {
+          "LABEL": "Provizije",
+          "DESCRIPTION": "Pregled i konfiguracija provizija osoblja."
+        }
       },
-      "CATALOG_COMPANIES_MANAGE": {
-        "LABEL": "Može uređivati poslovnice",
-        "DESCRIPTION": "Kreiranje, uređivanje i deaktivacija poslovnica."
+      "operations": {
+        "dashboard": {
+          "view": {
+            "LABEL": "Nadzorna ploča",
+            "DESCRIPTION": "Pregled operativne nadzorne ploče (raspored, osoblje, financije, upozorenja)."
+          }
+        },
+        "notifications": {
+          "view": {
+            "LABEL": "Obavijesti",
+            "DESCRIPTION": "Pregled povijesti obavijesti po klijentu."
+          }
+        }
       },
-      "CATALOG_ROOMS_VIEW": {
-        "LABEL": "Može vidjeti prostorije",
-        "DESCRIPTION": "Pregled prostorija unutar poslovnice."
-      },
-      "CATALOG_ROOMS_MANAGE": {
-        "LABEL": "Može uređivati prostorije",
-        "DESCRIPTION": "Kreiranje, uređivanje i brisanje prostorija."
-      },
-      "ROSTER_TEMPLATES_VIEW": {
-        "LABEL": "Može vidjeti radno vrijeme i praznike",
-        "DESCRIPTION": "Pregled predložaka radnog vremena i praznika, na poslovnici i kod zaposlenika."
-      },
-      "ROSTER_TEMPLATES_MANAGE": {
-        "LABEL": "Može uređivati radno vrijeme i praznike",
-        "DESCRIPTION": "Uređivanje predložaka radnog vremena i praznika."
-      },
-      "CLIENTS_VIEW": {
-        "LABEL": "Može vidjeti klijente",
-        "DESCRIPTION": "Pregled popisa i podataka klijenata."
-      },
-      "CLIENTS_MANAGE": {
-        "LABEL": "Može uređivati klijente",
-        "DESCRIPTION": "Kreiranje i uređivanje klijenata; uključuje pregled poslovnica potrebnih za tu formu."
-      },
-      "CLIENTS_STATUS_MANAGE": {
-        "LABEL": "Može mijenjati status klijenta",
-        "DESCRIPTION": "Promjena statusa klijenta (npr. aktivan/neaktivan)."
-      },
-      "CLIENTS_ANONYMIZE": {
-        "LABEL": "Može anonimizirati klijenta",
-        "DESCRIPTION": "Trajno uklanjanje osobnih podataka klijenta."
-      },
-      "CLIENTS_TAGS_MANAGE": {
-        "LABEL": "Može upravljati oznakama klijenata",
-        "DESCRIPTION": "Dodavanje i uređivanje oznaka na klijentima."
-      },
-      "CLIENTS_PACKAGES_MANAGE": {
-        "LABEL": "Može upravljati paketima klijenata",
-        "DESCRIPTION": "Dodjela i uređivanje paketa klijenata."
-      },
-      "EMPLOYEES_VIEW": {
-        "LABEL": "Može vidjeti zaposlenike",
-        "DESCRIPTION": "Pregled popisa i podataka zaposlenika."
-      },
-      "EMPLOYEES_MANAGE": {
-        "LABEL": "Može uređivati zaposlenike",
-        "DESCRIPTION": "Kreiranje, uređivanje i deaktivacija zaposlenika."
-      },
-      "EMPLOYEES_ENGAGEMENT_TYPES_MANAGE": {
-        "LABEL": "Može uređivati vrste angažmana",
-        "DESCRIPTION": "Šifrarnik vrsta angažmana zaposlenika."
-      },
-      "ROSTER_LEAVE_FUND_SETTINGS_VIEW": {
-        "LABEL": "Može vidjeti postavke godišnjeg odmora",
-        "DESCRIPTION": "Pregled postavki fonda godišnjeg odmora zaposlenika."
-      },
-      "ROSTER_LEAVE_FUND_SETTINGS_MANAGE": {
-        "LABEL": "Može uređivati postavke godišnjeg odmora",
-        "DESCRIPTION": "Uređivanje postavki fonda godišnjeg odmora."
-      },
-      "ROSTER_LEAVE_FUND_VIEW_OWN": {
-        "LABEL": "Može vidjeti vlastiti fond godišnjeg odmora",
-        "DESCRIPTION": "Pregled vlastitog stanja godišnjeg odmora."
-      },
-      "ROSTER_LEAVE_FUND_VIEW_ALL": {
-        "LABEL": "Može vidjeti fondove svih zaposlenika",
-        "DESCRIPTION": "Pregled stanja godišnjeg odmora svih zaposlenika."
-      },
-      "GROUPS_VIEW": {
-        "LABEL": "Može vidjeti grupe",
-        "DESCRIPTION": "Pregled popisa grupa."
-      },
-      "GROUPS_MANAGE": {
-        "LABEL": "Može uređivati grupe",
-        "DESCRIPTION": "Kreiranje i uređivanje grupa; uključuje pregled usluga i poslovnica potrebnih za tu formu."
-      },
-      "CATALOG_SERVICES_VIEW": {
-        "LABEL": "Može vidjeti usluge, pakete i cjenik",
-        "DESCRIPTION": "Pregled kataloga usluga, paketa i cjenika."
-      },
-      "CATALOG_SERVICES_MANAGE": {
-        "LABEL": "Može uređivati usluge, pakete i cjenik",
-        "DESCRIPTION": "Uređivanje kataloga usluga, paketa i cjenika."
-      },
-      "ORGANIZATION_BRANDING_MANAGE": {
-        "LABEL": "Može uređivati brendiranje",
-        "DESCRIPTION": "Uređivanje boja, logotipa i izgleda organizacije."
-      },
-      "CHECKOUT_VIEW": {
-        "LABEL": "Može vidjeti blagajnu",
-        "DESCRIPTION": "Pregled checkouta i povijesti plaćanja klijenta; uključuje pregled termina, paketa i proizvoda potrebnih za prikaz stavki."
-      },
-      "CHECKOUT_MANAGE": {
-        "LABEL": "Može upravljati blagajnom",
-        "DESCRIPTION": "Otvaranje checkouta, dodavanje/uklanjanje stavki, unos i poništavanje plaćanja te zatvaranje/otkazivanje checkouta."
+      "organization": {
+        "branding": {
+          "manage": {
+            "LABEL": "Brendiranje",
+            "DESCRIPTION": "Uređivanje vizualnog identiteta organizacije (logotip, boje, izgled)."
+          }
+        },
+        "settings": {
+          "manage": {
+            "LABEL": "Postavke organizacije",
+            "DESCRIPTION": "Uređivanje poslovnih postavki organizacije."
+          }
+        }
       }
     },
     "GRANT_GROUPS": {
@@ -1358,13 +1454,41 @@
       "NEW": "Nova grant grupa",
       "NEW_TITLE": "Nova grant grupa",
       "EDIT_TITLE": "Uredi grant grupu",
+      "SUBTITLE": "Grupirajte sposobnosti koje se zajedno dodjeljuju korisnicima.",
       "BACK_TO_LIST": "Natrag na popis",
       "COL_NAME": "Naziv",
       "COL_GRANT_COUNT": "Broj grantova",
       "COL_ASSIGNED_COUNT": "Broj korisnika",
       "EMPTY": "Nema pronađenih grant grupa.",
+      "BASIC_DATA": "Osnovni podaci",
       "FIELD_NAME": "Naziv",
-      "FIELD_GRANTS": "Grantovi",
+      "FIELD_GRANTS": "Sposobnosti",
+      "FIELD_GRANTS_HINT": "Odaberite koje sposobnosti ova grupa ima, po području.",
+      "LOADING": "Učitavanje sposobnosti…",
+      "CATALOG_ERROR": "Nije moguće učitati katalog sposobnosti. Provjerite vezu i pokušajte ponovno.",
+      "CATALOG_EMPTY": "Trenutno nema dostupnih sposobnosti.",
+      "PREVIEW_NOTICE": "Odabir sposobnosti se sprema kroz capability editor.",
+      "TEMPLATE_SOURCE": "Predložak: {{template}} v{{version}}",
+      "CUSTOMIZED": "Prilagođeno",
+      "LEGACY_BADGE": "Legacy uloga",
+      "LEGACY_NOTICE": "Prilagođena/legacy uloga. Spremanje kroz novi editor pretvorit će ovu ulogu u capability-managed ulogu.",
+      "CONVERT_CONFIRM": "Pretvoriti legacy ulogu? Trenutno ima {{raw}} sirovih ovlasti; {{explained}} će objasniti odabrane sposobnosti, {{manual}} ostaje ručno dodano, a {{removed}} ovlasti će biti uklonjeno.",
+      "LEGACY_BADGE": "Legacy uloga",
+      "LEGACY_NOTICE": "Prilagođena/legacy uloga. Spremanje kroz novi editor pretvorit će ovu ulogu u capability-managed ulogu.",
+      "CONVERT_CONFIRM": "Pretvoriti legacy ulogu? Trenutno ima {{raw}} sirovih ovlasti; {{explained}} će objasniti odabrane sposobnosti, {{manual}} ostaje ručno dodano, a {{removed}} ovlasti će biti uklonjeno.",
+      "LEGACY_BADGE": "Legacy uloga",
+      "LEGACY_NOTICE": "Prilagođena/legacy uloga. Spremanje kroz novi editor pretvorit će ovu ulogu u capability-managed ulogu.",
+      "CONVERT_CONFIRM": "Pretvoriti legacy ulogu? Trenutno ima {{raw}} sirovih ovlasti; {{explained}} će objasniti odabrane sposobnosti, {{manual}} ostaje ručno dodano, a {{removed}} ovlasti će biti uklonjeno.",
+      "UNMATCHED_HINT": "Postojeće ovlasti ne odgovaraju točno niti jednom opsegu - sačuvane su u odjeljku \"Napredno\".",
+      "DERIVED_FROM_CAPABILITY": "Izvedeno iz sposobnosti (samo za pregled)",
+      "DERIVED_READ_ONLY": "Izvedeno — samo za pregled",
+      "DERIVED_READ_ONLY": "Izvedeno — samo za pregled",
+      "DERIVED_READ_ONLY": "Izvedeno — samo za pregled",
+      "DERIVED_SOURCE": "Izvor: {{label}}",
+      "DERIVED_FROM_TEMPLATE": "Izvedeno iz predloška (samo za pregled)",
+      "MANUAL_ADVANCED": "Ručno dodane ovlasti",
+      "NAME_REQUIRED_HINT": "Za spremanje je potreban naziv grupe.",
+      "SAVE_FAILED": "Ulogu nije moguće spremiti. Provjerite podatke i pokušajte ponovno.",
       "ERRORS": {
         "NAME_REQUIRED": "Naziv je obavezan."
       },

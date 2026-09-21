@@ -7,6 +7,7 @@ import { Button } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
 import { InputText } from 'primeng/inputtext';
 import { Password } from 'primeng/password';
+import { Select } from 'primeng/select';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { Observable, finalize, forkJoin, of } from 'rxjs';
 import {
@@ -19,6 +20,7 @@ import {
 import { EngagementTypeDto } from '../../../../../core/models/engagement-type.model';
 import { CompanyDto } from '../../../../../core/models/company.model';
 import { GrantGroupDto, RoleDto } from '../../../../../core/models/permissions.model';
+import { roleTranslationKey, UserRole, USER_ROLES } from '../../../../../core/models/role';
 import { ServiceDto } from '../../../../../core/models/service.model';
 import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { EmployeesService } from '../../../../../core/services/employees.service';
@@ -93,6 +95,7 @@ function employmentDatesValidator(group: AbstractControl): ValidationErrors | nu
     InputText,
     DatePicker,
     Password,
+    Select,
     Button,
     Tabs,
     TabList,
@@ -126,6 +129,7 @@ export class EmployeeFormComponent {
   readonly isEditMode = computed(() => this.editingId() !== null);
   readonly loading = signal(false);
   readonly saving = signal(false);
+  readonly validationAttempted = signal(false);
 
   /** True from the moment "Podaci" creates the employee (id: null -> id) for
    * the rest of this component's lifetime - distinguishes the "still walking
@@ -233,6 +237,24 @@ export class EmployeeFormComponent {
     this.activeRoles().map((role) => ({ id: role.id, name: role.name })),
   );
 
+  /** PATCH /api/employees/{id}/role is RequireGrant(employees.role.manage),
+   * NOT Owner-only (unlike GrantGroup/business-Role assignment above) - a
+   * non-Owner Admin holding this grant may change an employee's coarse
+   * UserRole even though GrantGroup/Role definition stays Owner-only. Uses
+   * the existing ACTION_POLICY (see action-policies.ts) rather than
+   * isOwner(), so this section's visibility can never drift from what the
+   * backend endpoint actually allows (Part P of the FAZA 1 role editor). */
+  readonly canManageEmployeeRole = computed(() => this.currentEmployeeService.can('employees.role.manage'));
+
+  readonly userRoleSelectOptions = computed(() => {
+    this.translationsReady();
+    return USER_ROLES.map((role) => ({ value: role, label: this.translate.instant(roleTranslationKey(role)) }));
+  });
+
+  /** The UserRole loaded from the server, to diff against on save - only
+   * calls updateRole() when the Owner/Admin actually changed it. */
+  private readonly loadedUserRole = signal<UserRole | null>(null);
+
   /** Owner editing their own Employee record - GrantGroups are meaningless for
    * the Owner (see Grants.cs: IsOwner bypasses every check), so the field is
    * hidden entirely rather than shown as an always-invalid required multiselect. */
@@ -264,6 +286,7 @@ export class EmployeeFormComponent {
       password: [''],
       grantGroupIds: this.fb.nonNullable.control<string[]>([]),
       roleIds: this.fb.nonNullable.control<string[]>([]),
+      userRole: this.fb.control<UserRole | null>(null),
     },
     { validators: [primaryCompanyValidator, employmentDatesValidator] },
   );
@@ -337,8 +360,11 @@ export class EmployeeFormComponent {
   onSave(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.validationAttempted.set(true);
       return;
     }
+
+    this.validationAttempted.set(false);
 
     const id = this.editingId();
     this.saving.set(true);
@@ -350,20 +376,26 @@ export class EmployeeFormComponent {
         .subscribe({
           next: () => {
             const raw = this.form.getRawValue();
-            // Both endpoints are [RequireOwner] server-side (see the matching
-            // skip in the constructor/applyEmployee()) - calling them for a
-            // non-Owner viewer would 403 and swallow an otherwise-successful
-            // employee update in the generic `error: () => {}` below, leaving
-            // Save looking like it silently did nothing.
-            const assignments$: Observable<unknown> =
-              userId && this.currentEmployeeService.isOwner()
-                ? forkJoin([
-                    this.isSelfOwnerEdit()
-                      ? of(null)
-                      : this.grantGroupsService.setAssignments(userId, { grantGroupIds: raw.grantGroupIds }),
-                    this.rolesService.setAssignments(userId, { roleIds: raw.roleIds }),
-                  ])
-                : of(null);
+            // GrantGroup/business-Role endpoints are [RequireOwner] server-side
+            // (see the matching skip in the constructor/applyEmployee()) -
+            // calling them for a non-Owner viewer would 403 and swallow an
+            // otherwise-successful employee update in the generic
+            // `error: () => {}` below, leaving Save looking like it silently
+            // did nothing. UserRole (Podaci > Uloga) is a SEPARATE endpoint
+            // gated by employees.role.manage, not Owner-only - see
+            // canManageEmployeeRole's own doc - only called when it actually
+            // changed, to avoid a pointless LastActiveAdmin re-check on every save.
+            const calls: Observable<unknown>[] = [];
+            if (userId && this.currentEmployeeService.isOwner()) {
+              if (!this.isSelfOwnerEdit()) {
+                calls.push(this.grantGroupsService.setAssignments(userId, { grantGroupIds: raw.grantGroupIds }));
+              }
+              calls.push(this.rolesService.setAssignments(userId, { roleIds: raw.roleIds }));
+            }
+            if (this.canManageEmployeeRole() && raw.userRole && raw.userRole !== this.loadedUserRole()) {
+              calls.push(this.employeesService.updateRole(id, raw.userRole));
+            }
+            const assignments$: Observable<unknown> = calls.length > 0 ? forkJoin(calls) : of(null);
             assignments$.pipe(finalize(() => this.saving.set(false))).subscribe({
               next: () => {
                 this.notifications.showSuccess(this.translate.instant('EMPLOYEES.UPDATED'));
@@ -546,6 +578,7 @@ export class EmployeeFormComponent {
       employee.engagementTypeName ? { id: employee.engagementTypeId, name: employee.engagementTypeName } : null,
     );
     this.loadedUserId.set(employee.userId);
+    this.loadedUserRole.set(employee.role);
 
     const primary = employee.companies.find((company) => company.isPrimary);
 
@@ -571,6 +604,7 @@ export class EmployeeFormComponent {
         password: '',
         grantGroupIds: [],
         roleIds: [],
+        userRole: employee.role,
       },
       { emitEvent: false },
     );

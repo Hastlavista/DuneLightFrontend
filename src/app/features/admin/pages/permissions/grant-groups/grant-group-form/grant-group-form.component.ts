@@ -2,49 +2,29 @@ import { Component, computed, inject, signal } from '@angular/core';
 import { FormBuilder, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
-import { finalize, forkJoin, of } from 'rxjs';
-import { GrantDto, GrantGroupUpsertRequest } from '../../../../../../core/models/permissions.model';
+import { catchError, finalize, forkJoin, of } from 'rxjs';
+import { CapabilityDefinitionDto, CapabilitySelectedScope, GrantGroupAuthoringStateDto, GrantGroupCapabilityWriteRequest } from '../../../../../../core/models/capability.model';
+import { GrantDto } from '../../../../../../core/models/permissions.model';
+import { CapabilityReconstruction, CapabilitySelectionResult, materializeCapability, reconstructGrantProvenance } from '../../../../../../core/permissions/capability-materialization';
+import { capabilityDescriptionKey, capabilityLabelKey, categoryLabelKey, CapabilityCategoryGroup, groupByCategory, resolveOrFallback } from '../../../../../../core/permissions/capability-presentation';
+import { CapabilitiesService } from '../../../../../../core/services/capabilities.service';
 import { GrantGroupsService } from '../../../../../../core/services/grant-groups.service';
 import { GrantsService } from '../../../../../../core/services/grants.service';
 import { NotificationService } from '../../../../../../core/services/notification.service';
-import { ALL_CAPABILITIES, CAPABILITY_SECTIONS, CapabilitySection, MANAGED_GRANT_KEYS } from './grant-capabilities';
+import { CapabilityScopeControlComponent } from './capability-scope-control/capability-scope-control.component';
+import { CapabilitySensitivityBadgeComponent } from './capability-sensitivity-badge/capability-sensitivity-badge.component';
+import { RoleSummaryComponent } from './role-summary/role-summary.component';
 
-/** Route param sentinel for create mode - same convention as Zaposlenici/Grupe. */
 const NEW_ID = 'new';
+interface ModuleGroup { module: string; grants: GrantDto[]; }
 
-interface ModuleGroup {
-  module: string;
-  grants: GrantDto[];
-}
-
-/** GrantGroup form (Owner-only) - a full routed page rather than a modal, since
- * the ~42-entry grant catalog needs real room to stay scannable.
- *
- * The grant catalog itself (GrantDto{key, module, description}) stays exactly
- * as granular as the backend defines it - what changed is how it's presented:
- * instead of one flat "raw key" checkbox list grouped by backend module, the
- * bulk of the catalog is now organized into page/action "capabilities" (see
- * grant-capabilities.ts) - an Owner picks "Raspored: može kreirati vlastite
- * termine" instead of separately hunting down `appointments.write.own` AND
- * the `catalog.services.view`/`catalog.companies.view` it silently needs to
- * actually work. Any raw grant the capability catalog doesn't yet know about
- * (a brand new backend grant, or one this file hasn't been updated for) still
- * shows up, unmodeled, in the "Napredno" fallback section at the bottom -
- * nothing becomes ungrantable through this UI.
- *
- * Saving sends the full resolved key list (GrantGroupUpsertRequest.grants) -
- * there's no incremental add/remove endpoint. */
+/** Owner-only editor. The backend, never Angular, materializes raw grants. */
 @Component({
   selector: 'app-admin-grant-group-form',
-  imports: [
-    ReactiveFormsModule,
-    FormsModule,
-    InputText,
-    Button,
-    TranslatePipe,
-  ],
+  imports: [ReactiveFormsModule, FormsModule, InputText, Button, TranslatePipe, CapabilityScopeControlComponent, CapabilitySensitivityBadgeComponent, RoleSummaryComponent],
   templateUrl: './grant-group-form.component.html',
   styleUrl: './grant-group-form.component.scss',
 })
@@ -52,7 +32,9 @@ export class GrantGroupFormComponent {
   private readonly fb = inject(FormBuilder);
   private readonly grantGroupsService = inject(GrantGroupsService);
   private readonly grantsService = inject(GrantsService);
+  private readonly capabilitiesService = inject(CapabilitiesService);
   private readonly notifications = inject(NotificationService);
+  private readonly confirmation = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
@@ -61,152 +43,162 @@ export class GrantGroupFormComponent {
   readonly isEditMode = computed(() => this.editingId() !== null);
   readonly loading = signal(false);
   readonly saving = signal(false);
+  readonly dirty = signal(false);
+  readonly catalogError = signal(false);
+  readonly capabilities = signal<CapabilityDefinitionDto[]>([]);
+  readonly rawCatalog = signal<GrantDto[]>([]);
+  readonly authoringState = signal<GrantGroupAuthoringStateDto | null>(null);
+  private readonly legacyRawGrants = signal<string[]>([]);
+  private readonly loadedCapabilityDerived = signal<Set<string>>(new Set());
+  private baseline = '';
 
-  readonly catalog = signal<GrantDto[]>([]);
-
-  /** Capability-level selection (drives every named section) - keyed by each
-   * capability's primaryGrant, which is unique across the whole catalog. */
-  readonly enabledCapabilities = signal<Set<string>>(new Set());
-
-  /** Manual raw-key selection for the "Napredno" fallback section only. */
-  readonly unmanagedSelected = signal<Set<string>>(new Set());
-
-  readonly sections: CapabilitySection[] = CAPABILITY_SECTIONS;
-
-  /** Whatever the live catalog contains that no capability above claims
-   * (either as its primaryGrant or one of its impliedGrants) - grouped by raw
-   * backend module exactly like the old flat UI, as a safety net. */
-  readonly unmanagedGroups = computed<ModuleGroup[]>(() => {
-    const byModule = new Map<string, GrantDto[]>();
-    for (const grant of this.catalog()) {
-      if (MANAGED_GRANT_KEYS.has(grant.key)) {
-        continue;
-      }
-      const list = byModule.get(grant.module) ?? [];
-      list.push(grant);
-      byModule.set(grant.module, list);
+  readonly selectedScopes = signal<Map<string, CapabilitySelectedScope>>(new Map());
+  readonly manualAdvancedSelected = signal<Set<string>>(new Set());
+  readonly reconstruction = computed<CapabilityReconstruction>(() => reconstructGrantProvenance(this.capabilities(), this.legacyRawGrants(), null));
+  readonly categoryGroups = computed<CapabilityCategoryGroup[]>(() => groupByCategory(this.capabilities()));
+  readonly isLegacy = computed(() => this.isEditMode() && this.authoringState()?.hasCapabilityMetadata === false);
+  readonly derivedGrantKeys = computed(() => {
+    const state = this.authoringState();
+    const keys = this.materializedSelectedCapabilityKeys();
+    if (state?.hasCapabilityMetadata) {
+      // Preserve template compatibility extras as read-only, while allowing
+      // grants released by a changed capability selection to become unclaimed.
+      const compatibilityExtras = state.derivedGrantKeys.filter((key) => !this.loadedCapabilityDerived().has(key));
+      compatibilityExtras.forEach((key) => keys.add(key));
     }
-    return Array.from(byModule.entries()).map(([module, grants]) => ({ module, grants }));
+    return keys;
   });
-
-  readonly form = this.fb.nonNullable.group({
-    name: ['', [Validators.required, Validators.maxLength(255)]],
+  readonly manualPickableGroups = computed<ModuleGroup[]>(() => {
+    const derived = this.derivedGrantKeys();
+    const byModule = new Map<string, GrantDto[]>();
+    for (const grant of this.rawCatalog()) {
+      if (derived.has(grant.key)) continue;
+      const grants = byModule.get(grant.module) ?? [];
+      grants.push(grant);
+      byModule.set(grant.module, grants);
+    }
+    return [...byModule].map(([module, grants]) => ({ module, grants }));
   });
+  readonly form = this.fb.nonNullable.group({ name: ['', [Validators.required, Validators.maxLength(255)]] });
 
   constructor() {
-    const idParam = this.route.snapshot.paramMap.get('id');
-    const id = idParam && idParam !== NEW_ID ? idParam : null;
-    this.editingId.set(id);
+    const param = this.route.snapshot.paramMap.get('id');
+    this.editingId.set(param && param !== NEW_ID ? param : null);
+    this.form.valueChanges.subscribe(() => this.refreshDirty());
+    this.load();
+  }
 
-    this.loading.set(true);
+  retryLoadCatalog(): void { this.load(); }
+  private load(): void {
+    this.catalogError.set(false); this.loading.set(true);
+    const id = this.editingId();
     forkJoin({
-      catalog: this.grantsService.getAll(),
-      group: id ? this.grantGroupsService.getById(id) : of(null),
-    })
-      .pipe(finalize(() => this.loading.set(false)))
-      .subscribe({
-        next: ({ catalog, group }) => {
-          this.catalog.set(catalog);
-          if (group) {
-            this.form.reset({ name: group.name });
-            const grants = new Set(group.grants);
-            this.enabledCapabilities.set(
-              new Set(ALL_CAPABILITIES.filter((capability) => grants.has(capability.primaryGrant)).map((capability) => capability.primaryGrant)),
-            );
-            this.unmanagedSelected.set(new Set(group.grants.filter((key) => !MANAGED_GRANT_KEYS.has(key))));
-          }
-        },
-        error: () => this.navigateBack(),
-      });
-  }
-
-  isCapabilityEnabled(primaryGrant: string): boolean {
-    return this.enabledCapabilities().has(primaryGrant);
-  }
-
-  onToggleCapability(primaryGrant: string, checked: boolean): void {
-    this.enabledCapabilities.update((current) => {
-      const next = new Set(current);
-      if (checked) {
-        next.add(primaryGrant);
-      } else {
-        next.delete(primaryGrant);
-      }
-      return next;
+      capabilities: this.capabilitiesService.getDefinitions().pipe(catchError(() => { this.catalogError.set(true); return of([] as CapabilityDefinitionDto[]); })),
+      rawCatalog: this.grantsService.getAll(),
+      state: id ? this.grantGroupsService.getAuthoringState(id) : of(null),
+    }).pipe(finalize(() => this.loading.set(false))).subscribe({
+      next: ({ capabilities, rawCatalog, state }) => { this.capabilities.set(capabilities); this.rawCatalog.set(rawCatalog); this.applyAuthoritativeState(state); },
+      error: () => this.navigateBack(),
     });
   }
-
-  sectionCheckedCount(section: CapabilitySection): number {
-    const enabled = this.enabledCapabilities();
-    return section.capabilities.filter((capability) => enabled.has(capability.primaryGrant)).length;
+  private applyAuthoritativeState(state: GrantGroupAuthoringStateDto | null): void {
+    this.authoringState.set(state);
+    this.legacyRawGrants.set(state?.grantGroup.grants ?? []);
+    this.form.reset({ name: state?.grantGroup.name ?? '' }, { emitEvent: false });
+    if (state?.hasCapabilityMetadata) {
+      const scopes = new Map<string, CapabilitySelectedScope>(this.capabilities().map((capability) => [capability.key, 'None']));
+      state.capabilitySelections.forEach((selection) => scopes.set(selection.capabilityKey, selection.selectedScope));
+      this.selectedScopes.set(scopes);
+      this.manualAdvancedSelected.set(new Set(state.manualGrantKeys));
+      this.loadedCapabilityDerived.set(this.materializedSelectedCapabilityKeys());
+    } else {
+      const recon = this.reconstruction();
+      this.selectedScopes.set(new Map(recon.selections.map((s) => [s.capability.key, s.selectedScope ?? 'None'])));
+      // Unmatched legacy grants remain explicit manual grants on conversion.
+      this.manualAdvancedSelected.set(new Set(recon.manualGrantKeys));
+      this.loadedCapabilityDerived.set(new Set());
+    }
+    this.resetBaseline();
   }
 
-  isUnmanagedChecked(key: string): boolean {
-    return this.unmanagedSelected().has(key);
+  scopeFor(key: string): CapabilitySelectedScope { return this.selectedScopes().get(key) ?? 'None'; }
+  onScopeChange(key: string, scope: CapabilitySelectedScope): void {
+    this.selectedScopes.update((current) => { const next = new Map(current); next.set(key, scope); return next; });
+    this.manualAdvancedSelected.update((current) => new Set([...current].filter((grant) => !this.derivedGrantKeys().has(grant))));
+    this.refreshDirty();
   }
-
-  onToggleUnmanaged(key: string, checked: boolean): void {
-    this.unmanagedSelected.update((current) => {
-      const next = new Set(current);
-      if (checked) {
-        next.add(key);
-      } else {
-        next.delete(key);
-      }
-      return next;
-    });
+  get previewSelections(): CapabilitySelectionResult[] { return this.capabilities().map((capability) => ({ capability, selectedScope: this.scopeFor(capability.key), claimedGrantKeys: new Set<string>() })); }
+  isCapabilityUnmatched(key: string): boolean { return this.isLegacy() && this.reconstruction().selections.some((s) => s.capability.key === key && s.selectedScope === null); }
+  labelFor(key: string): string { return resolveOrFallback(this.translate, capabilityLabelKey(key), key); }
+  descriptionFor(key: string): string { return resolveOrFallback(this.translate, capabilityDescriptionKey(key), key); }
+  categoryLabel(key: string): string { return resolveOrFallback(this.translate, categoryLabelKey(key), key); }
+  isManualChecked(key: string): boolean { return this.manualAdvancedSelected().has(key); }
+  onToggleManual(key: string, checked: boolean): void {
+    if (checked && this.derivedGrantKeys().has(key)) return;
+    this.manualAdvancedSelected.update((current) => { const next = new Set(current); checked ? next.add(key) : next.delete(key); return next; });
+    this.refreshDirty();
   }
-
-  unmanagedCheckedCount(group: ModuleGroup): number {
-    const selected = this.unmanagedSelected();
-    return group.grants.filter((grant) => selected.has(grant.key)).length;
-  }
+  manualCheckedCount(group: ModuleGroup): number { return group.grants.filter((g) => this.isManualChecked(g.key)).length; }
+  rawGrantDescription(key: string): string { return this.rawCatalog().find((g) => g.key === key)?.description ?? key; }
 
   onSave(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+    if (this.saving() || !this.dirty()) return;
+    if (this.form.invalid) { this.form.markAllAsTouched(); return; }
+    if (this.isLegacy()) {
+      this.confirmation.confirm({
+        header: this.translate.instant('COMMON.CONFIRM_HEADER'), icon: 'pi pi-exclamation-triangle',
+        message: this.translate.instant('PERMISSIONS.GRANT_GROUPS.CONVERT_CONFIRM', this.legacyDiff()),
+        acceptLabel: this.translate.instant('COMMON.YES'), rejectLabel: this.translate.instant('COMMON.NO'),
+        accept: () => this.persist(),
+      });
       return;
     }
-
-    // Rebuilt from scratch every save, purely as a function of current state -
-    // no incremental bookkeeping, so unchecking one capability never drops a
-    // grant still required by another currently-enabled one (e.g.
-    // catalog.services.view stays granted as long as either "Raspored:
-    // vlastiti termini" or "Usluge: pregled" is still on).
-    const managed = new Set<string>();
-    for (const capability of ALL_CAPABILITIES) {
-      if (this.enabledCapabilities().has(capability.primaryGrant)) {
-        managed.add(capability.primaryGrant);
-        capability.impliedGrants.forEach((grant) => managed.add(grant));
-      }
-    }
-    const grants = Array.from(new Set([...managed, ...this.unmanagedSelected()]));
-
-    const request: GrantGroupUpsertRequest = {
-      name: this.form.getRawValue().name,
-      grants,
-    };
-
-    const id = this.editingId();
-    const request$ = id ? this.grantGroupsService.update(id, request) : this.grantGroupsService.create(request);
-
-    this.saving.set(true);
-    request$.pipe(finalize(() => this.saving.set(false))).subscribe({
-      next: () => {
-        this.notifications.showSuccess(
-          this.translate.instant(id ? 'PERMISSIONS.GRANT_GROUPS.UPDATED' : 'PERMISSIONS.GRANT_GROUPS.CREATED'),
-        );
-        this.navigateBack();
+    this.persist();
+  }
+  private persist(): void {
+    const request = this.writeRequest(); const id = this.editingId(); this.saving.set(true);
+    (id ? this.grantGroupsService.updateCapabilityBased(id, request) : this.grantGroupsService.createCapabilityBased(request)).pipe(finalize(() => this.saving.set(false))).subscribe({
+      next: (group) => {
+        const savedId = id ?? group.id;
+        this.notifications.showSuccess(this.translate.instant(id ? 'PERMISSIONS.GRANT_GROUPS.UPDATED' : 'PERMISSIONS.GRANT_GROUPS.CREATED'));
+        if (!id) { this.editingId.set(savedId); this.router.navigate(['/app/permissions/grant-groups', savedId], { replaceUrl: true }); }
+        this.reloadAuthoringState(savedId);
       },
+      // The global error interceptor already shows a translated toast for
+      // this failure (see error.interceptor.ts) - nothing page-specific to
+      // add here, so this only needs to exist to keep the editor open with
+      // the unsaved input intact (the default RxJS behavior on an
+      // unhandled `error` from subscribe would otherwise be to just not call
+      // `next`, which already happens - this callback exists so `finalize`
+      // runs and `saving` resets without an unhandled-error console warning).
       error: () => {},
     });
   }
-
-  onCancel(): void {
-    this.navigateBack();
+  private reloadAuthoringState(id: string): void {
+    this.grantGroupsService.getAuthoringState(id).subscribe({ next: (state) => this.applyAuthoritativeState(state), error: () => {} });
   }
-
-  private navigateBack(): void {
-    this.router.navigate(['/app/permissions'], { queryParams: { tab: 'grant-groups' } });
+  private writeRequest(): GrantGroupCapabilityWriteRequest {
+    return {
+      name: this.form.getRawValue().name,
+      capabilitySelections: this.capabilities().flatMap((capability) => {
+        const selectedScope = this.scopeFor(capability.key);
+        return selectedScope === 'None' ? [] : [{ capabilityKey: capability.key, capabilityVersion: capability.version, selectedScope }];
+      }),
+      manualGrantKeys: [...this.manualAdvancedSelected()].filter((key) => !this.derivedGrantKeys().has(key)),
+    };
   }
+  private legacyDiff(): object {
+    const raw = new Set(this.legacyRawGrants()); const derived = this.derivedGrantKeys(); const manual = this.manualAdvancedSelected();
+    return { raw: raw.size, explained: [...raw].filter((key) => derived.has(key)).length, manual: manual.size, removed: [...raw].filter((key) => !derived.has(key) && !manual.has(key)).length };
+  }
+  private materializedSelectedCapabilityKeys(): Set<string> {
+    const keys = new Set<string>();
+    for (const capability of this.capabilities()) materializeCapability(capability.scopeModel, this.scopeFor(capability.key), capability.grants).forEach((key) => keys.add(key));
+    return keys;
+  }
+  private snapshot(): string { return JSON.stringify({ name: this.form.getRawValue().name, scopes: [...this.selectedScopes()].sort(), manual: [...this.manualAdvancedSelected()].sort() }); }
+  private resetBaseline(): void { this.baseline = this.snapshot(); this.dirty.set(false); }
+  private refreshDirty(): void { this.dirty.set(this.snapshot() !== this.baseline); }
+  onCancel(): void { this.navigateBack(); }
+  private navigateBack(): void { this.router.navigate(['/app/permissions'], { queryParams: { tab: 'grant-groups' } }); }
 }

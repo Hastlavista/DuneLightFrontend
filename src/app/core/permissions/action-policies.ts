@@ -24,10 +24,11 @@ import { PermissionPolicy } from './permission-policy.model';
  * `supportingAllOf`, where present, documents the extra read grants the
  * action's UI workflow (lookups/dropdowns) needs to work end-to-end - see
  * PermissionPolicy's doc for why this is informational only, never a hard
- * gate on `can()`. Values here are either copied from grant-capabilities.ts's
- * already-vetted `impliedGrants` (same underlying dependency, just mirrored
- * for the runtime policy instead of the permission-editor UI), or newly
- * documented from reading the actual component (see each entry's comment).
+ * gate on `can()`. Values here were either vetted against the component that
+ * actually needs them (see each entry's comment) or, historically, mirrored
+ * from the app's since-removed frontend-owned capability catalog (see
+ * capability.model.ts - capabilities are now backend metadata, fetched live,
+ * not a static frontend list).
  *
  * UX convention for consumers (see CurrentEmployeeService.can()): hide
  * list/menu-level actions entirely when false (*ngIf); disable in-place
@@ -61,9 +62,8 @@ export const ACTION_POLICIES = {
   'employees.role.manage': { anyOf: ['employees.role.manage'] },
   'employees.engagement-types.manage': { anyOf: ['employees.engagement-types.manage'] },
 
-  /** supportingAllOf copied from grant-capabilities.ts's already-vetted
-   * appointments.write.own/.all `impliedGrants` (same real dependency: "Novi
-   * termin"'s service/company dropdowns - see NewAppointmentDialogComponent /
+  /** supportingAllOf: appointments.write.own/.all's real dependency - "Novi
+   * termin"'s service/company dropdowns (see NewAppointmentDialogComponent /
    * today.component.ts's dialogServices/dialogCompanies doc comments). */
   'appointments.manage': {
     anyOf: ['appointments.write.own', 'appointments.write.all'],
@@ -73,10 +73,9 @@ export const ACTION_POLICIES = {
 
   'schedule-breaks.manage': { anyOf: ['schedule.breaks.write.own', 'schedule.breaks.write.all'] },
 
-  /** supportingAllOf copied from grant-capabilities.ts's groups.manage
-   * `impliedGrants` (the trainer picker itself needs no grant - see
-   * GroupsService/EmployeesService.getDirectory - only the service/company
-   * pickers do). */
+  /** supportingAllOf: groups.manage's real dependency (the trainer picker
+   * itself needs no grant - see GroupsService/EmployeesService.getDirectory -
+   * only the service/company pickers do). */
   'groups.manage': { anyOf: ['groups.manage'], supportingAllOf: ['catalog.services.view', 'catalog.companies.view'] },
   /** Deliberately no supportingAllOf: appointments.view (needed for the
    * Phase-4 correction/waitlist sub-features) is NOT required for this
@@ -99,8 +98,7 @@ export const ACTION_POLICIES = {
 
   'organization.branding.manage': { anyOf: ['organization.branding.manage'] },
 
-  /** supportingAllOf copied from grant-capabilities.ts's checkout.manage
-   * `impliedGrants` - a Checkout's items reference Bookings/Packages/
+  /** supportingAllOf: a Checkout's items reference Bookings/Packages/
    * Products, so its add-item workflow needs all four reads. */
   'checkout.manage': {
     anyOf: ['checkout.manage'],

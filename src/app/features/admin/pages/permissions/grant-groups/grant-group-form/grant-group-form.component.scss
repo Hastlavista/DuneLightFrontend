@@ -37,4 +37,21 @@
 :host ::ng-deep .grant-group-form-page .dl-form__actions { display: flex; align-items: center; justify-content: space-between; gap: .7rem; margin: 0; padding: 1rem 1.1rem; border: 0; background: var(--surface-card); }
 :host ::ng-deep .grant-group-form-page .dl-form__actions > div { display: flex; gap: .55rem; }
 :host ::ng-deep .grant-group-form-page .dl-form__actions .p-button { min-height: 2.6rem; border-radius: 9px; padding-inline: 1rem; }
+.grant-group-form-page__template-badge { display: inline-flex; align-self: flex-start; align-items: center; gap: .4rem; padding: .3rem .7rem; border-radius: 999px; background: var(--mint-tint); color: var(--teal-dark); font-size: .72rem; font-weight: 600; }
+.grant-group-form-page__template-badge--custom { background: var(--surface-soft-2); color: var(--ink-secondary); }
+.grant-group-form-page__catalog-error { display: flex; flex-direction: column; gap: .6rem; align-items: flex-start; color: var(--red); font-size: .82rem; }
+.grant-group-form-page__preview-notice { display: flex; align-items: flex-start; gap: .5rem; padding: .65rem .8rem; border: 1px solid var(--mint-border); border-radius: 9px; background: var(--mint-tint); color: var(--teal-dark); font-size: .74rem; line-height: 1.4; }
+.grant-group-form-page__capability-groups { display: grid; gap: .55rem; }
+.grant-group-form-page__capability-list { display: flex; flex-direction: column; gap: .4rem; padding: .7rem; }
+.grant-group-form-page__capability-row { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem; padding: .6rem .65rem; border: 1px solid var(--rose-border); border-radius: 8px; }
+.grant-group-form-page__capability-text { display: flex; min-width: 14rem; flex: 1; flex-direction: column; gap: .15rem; }
+.grant-group-form-page__capability-label { display: flex; align-items: center; gap: .45rem; color: var(--ink-secondary); font-size: .82rem; font-weight: 600; }
+.grant-group-form-page__capability-description { color: var(--ink-muted); font-size: .72rem; line-height: 1.35; }
+.grant-group-form-page__capability-unmatched { color: var(--rose-text); font-size: .68rem; font-style: italic; }
+.grant-group-form-page__role-summary-panel { padding: 1rem; border: 1px solid var(--rose-border); border-radius: 10px; background: var(--surface-warm); }
+.grant-group-form-page__role-summary-panel h3 { margin: 0 0 .6rem; color: var(--ink-secondary); font-family: var(--font-body); font-size: .7rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.grant-group-form-page__grant-list-wrapper { display: flex; flex-direction: column; gap: .7rem; padding: .7rem; }
+.grant-group-form-page__provenance-block { display: flex; flex-direction: column; gap: .3rem; }
+.grant-group-form-page__derived-row { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: .5rem; padding: .45rem .6rem; border-radius: 7px; background: var(--surface-soft-2); }
+.grant-group-form-page__derived-source { color: var(--ink-muted); font-size: .68rem; white-space: nowrap; }
 @media (max-width: 760px) { .grant-group-form-page__summary { grid-template-columns: auto minmax(0, 1fr); } .grant-group-form-page__back { grid-column: 1 / -1; justify-self: end; } .grant-group-form-page__grant-list { grid-template-columns: 1fr; } .grant-group-form-page__section-heading, :host ::ng-deep .grant-group-form-page .dl-form__actions { align-items: stretch; flex-direction: column; } :host ::ng-deep .grant-group-form-page .dl-form__actions > div { justify-content: flex-end; } }

@@ -272,8 +272,26 @@
       </section>
     }
 
+    @if (isEditMode() && canManageEmployeeRole()) {
+      <section class="employee-form-page__section">
+        <h3>{{ 'EMPLOYEES.SECTION_ROLE_ASSIGNMENT' | translate }}</h3>
+        <div class="dl-form__field">
+          <label for="employee-user-role">{{ 'EMPLOYEES.FIELD_ROLE' | translate }}</label>
+          <p-select
+            id="employee-user-role"
+            fluid
+            formControlName="userRole"
+            [options]="userRoleSelectOptions()"
+            optionLabel="label"
+            optionValue="value"
+          />
+          <span class="dl-form__hint">{{ 'EMPLOYEES.LEGACY_ROLE_HINT' | translate }}</span>
+        </div>
+      </section>
+    }
+
     <div class="dl-form__actions">
-      <span class="employee-form-page__footer-hint">Za spremanje trebaju biti popunjena obavezna polja.</span>
+      <span class="employee-form-page__footer-hint">{{ (validationAttempted() ? 'EMPLOYEES.INVALID_FORM_HINT' : 'EMPLOYEES.SAVE_HINT') | translate }}</span>
       <div class="employee-form-page__footer-buttons">
         <p-button type="button" severity="secondary" [outlined]="true" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" />
         <p-button

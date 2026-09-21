@@ -13,6 +13,7 @@ import {
   EmployeeWithLoginResponse,
 } from '../models/employee.model';
 import { PagedResult } from '../models/paged-result.model';
+import { UserRole } from '../models/role';
 import { PagedCrudService } from './paged-crud.service';
 
 /** Same rationale as PagedCrudService's own LOOKUP_PAGE_SIZE=200 convention -
@@ -52,6 +53,18 @@ export class EmployeesService extends PagedCrudService<EmployeeDto, EmployeeUpse
    * EmployeeDirectoryDto. Trainer-facing screens (my-week, today, my-shifts,
    * my-clients) must use this instead of getPage() for any "list of trainers"
    * need. */
+  /** PATCH /api/employees/{id}/role - RequireGrant(employees.role.manage), NOT
+   * Owner-only. Distinct from GrantGroup assignment (which IS Owner-only, see
+   * GrantGroupsService) - this changes the coarse UserRole (Admin/Member/
+   * Reception) that gates the legacy 'Admin' role claim fallback (see
+   * CurrentEmployeeService.isOwner's own doc), independent of any
+   * GrantGroup/capability. Gated in the UI by ACTION_POLICIES['employees.role.manage']
+   * (see action-policies.ts), not isOwner() - see Part P of the FAZA 1 role
+   * editor report for why this distinction matters. */
+  updateRole(id: string, role: UserRole): Observable<EmployeeDto> {
+    return this.http.patch<EmployeeDto>(`${this.resourceUrl}/${id}/role`, { role });
+  }
+
   getDirectory(isActive?: boolean, options?: { suppressErrorToast?: boolean }): Observable<EmployeeDirectoryDto[]> {
     let params = new HttpParams().set('page', 1).set('pageSize', DIRECTORY_PAGE_SIZE);
     if (isActive !== undefined) {

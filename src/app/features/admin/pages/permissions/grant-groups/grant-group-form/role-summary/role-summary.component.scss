@@ -1,0 +1,7 @@
+.role-summary { display: flex; flex-direction: column; gap: 0.9rem; }
+.role-summary__empty { margin: 0; color: var(--ink-muted); font-size: 0.8rem; }
+.role-summary__category h4 { margin: 0 0 0.35rem; color: var(--ink-secondary); font-family: var(--font-body); font-size: 0.7rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase; }
+.role-summary__category ul { display: flex; flex-direction: column; gap: 0.2rem; margin: 0; padding: 0; list-style: none; }
+.role-summary__category li { color: var(--ink); font-size: 0.8rem; }
+.role-summary__label { color: var(--ink-secondary); font-weight: 600; }
+.role-summary__scope { color: var(--brand-primary, var(--teal)); font-weight: 600; }

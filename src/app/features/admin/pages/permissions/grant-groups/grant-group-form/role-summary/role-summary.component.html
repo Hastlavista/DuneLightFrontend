@@ -1,0 +1,19 @@
+<div class="role-summary">
+  @if (categories.length === 0) {
+    <p class="role-summary__empty">{{ 'PERMISSIONS.ROLE_SUMMARY.EMPTY' | translate }}</p>
+  } @else {
+    @for (category of categories; track category.categoryKey) {
+      <div class="role-summary__category">
+        <h4>{{ category.categoryLabelKey | translate }}</h4>
+        <ul>
+          @for (row of category.rows; track row.capabilityKey) {
+            <li>
+              <span class="role-summary__label">{{ row.labelKey | translate }}</span>:
+              <span class="role-summary__scope">{{ row.scopeLabelKey | translate }}</span>
+            </li>
+          }
+        </ul>
+      </div>
+    }
+  }
+</div>

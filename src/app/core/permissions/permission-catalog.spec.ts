@@ -1,6 +1,6 @@
-import { ALL_CAPABILITIES } from '../../features/admin/pages/permissions/grant-groups/grant-group-form/grant-capabilities';
 import { ACTION_POLICIES } from './action-policies';
 import { KNOWN_GRANT_KEYS } from './known-grants';
+import { KNOWN_RAW_GRANT_KEYS } from './known-raw-grants';
 import { PAGE_POLICIES } from './page-policies';
 import { PermissionPolicy } from './permission-policy.model';
 
@@ -11,11 +11,8 @@ import { PermissionPolicy } from './permission-policy.model';
  * dependency, no backend source reachable from this repo - see
  * known-grants.ts's own doc for the CI-phase follow-up this defers to).
  * What it DOES catch: a policy that expresses no requirement at all (would
- * silently deny/allow depending on a bug), a grant string that doesn't match
- * the `<feature>.<action>` naming convention (a stray typo), and drift
- * between this catalog and grant-capabilities.ts (the Owner-facing
- * permission editor's own, independently-maintained catalog) wherever the
- * two reference the same grant.
+ * silently deny/allow depending on a bug), and a grant string that doesn't
+ * match the `<feature>.<action>` naming convention (a stray typo).
  */
 const GRANT_KEY_PATTERN = /^[a-z][a-z-]*(\.[a-z][a-z-]*)+$/;
 
@@ -80,18 +77,16 @@ function levenshtein(a: string, b: string): number {
   return rows[a.length][b.length];
 }
 
-describe('ACTION_POLICIES/PAGE_POLICIES vs. grant-capabilities.ts drift', () => {
-  /** grant-capabilities.ts is an independently-maintained catalog of a
-   * SUBSET of the same real backend grants (see known-grants.ts's own doc -
-   * it doesn't cover products/stock/commissions/etc.). Where both catalogs
-   * happen to reference grants for the same feature, a one-character typo in
+describe('ACTION_POLICIES/PAGE_POLICIES vs. known-raw-grants.ts drift', () => {
+  /** known-raw-grants.ts is a flat, independently-maintained mirror of the
+   * real backend grant catalog (see its own doc). A one-character typo in
    * either place (e.g. "catalog.service.manage" vs. "catalog.services.manage")
    * would otherwise silently create two "different" grants that both look
    * plausible - this flags any near-miss (edit distance 1-2) that ISN'T
    * already an exact match. */
-  const knownGrants = [...new Set(ALL_CAPABILITIES.flatMap((c) => [c.primaryGrant, ...c.impliedGrants]))];
+  const knownGrants = [...KNOWN_RAW_GRANT_KEYS];
 
-  it('has no near-miss (likely-typo) grant strings against grant-capabilities.ts', () => {
+  it('has no near-miss (likely-typo) grant strings against known-raw-grants.ts', () => {
     const policyGrants = new Set([...Object.values(PAGE_POLICIES), ...Object.values(ACTION_POLICIES)].flatMap(allGrantsOf));
     for (const grant of policyGrants) {
       if (knownGrants.includes(grant)) {

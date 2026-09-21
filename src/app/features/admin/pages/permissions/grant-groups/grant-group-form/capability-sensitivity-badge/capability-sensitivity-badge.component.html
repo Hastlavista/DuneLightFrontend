@@ -1,0 +1,9 @@
+@if (sensitivity === 'Sensitive') {
+  <span class="capability-sensitivity-badge capability-sensitivity-badge--sensitive" [title]="labelKeyFor(sensitivity) | translate">
+    <i class="pi pi-exclamation-circle"></i>{{ labelKeyFor(sensitivity) | translate }}
+  </span>
+} @else if (sensitivity === 'HighRisk') {
+  <span class="capability-sensitivity-badge capability-sensitivity-badge--high-risk" [title]="labelKeyFor(sensitivity) | translate">
+    <i class="pi pi-exclamation-triangle"></i>{{ labelKeyFor(sensitivity) | translate }}
+  </span>
+}

@@ -5,13 +5,13 @@
         <span class="grant-group-form-page__summary-icon"><i class="pi pi-shield"></i></span>
         <div>
           <strong>{{ (isEditMode() ? 'PERMISSIONS.GRANT_GROUPS.EDIT_TITLE' : 'PERMISSIONS.GRANT_GROUPS.NEW_TITLE') | translate }}</strong>
-          <small>Grupirajte mogućnosti koje se zajedno dodjeljuju korisnicima.</small>
+          <small>{{ 'PERMISSIONS.GRANT_GROUPS.SUBTITLE' | translate }}</small>
         </div>
         <button type="button" class="grant-group-form-page__back" (click)="onCancel()"><i class="pi pi-angle-left"></i>{{ 'PERMISSIONS.GRANT_GROUPS.BACK_TO_LIST' | translate }}</button>
       </div>
 
       <section class="grant-group-form-page__section grant-group-form-page__section--name">
-        <h3>Osnovni podaci</h3>
+        <h3>{{ 'PERMISSIONS.GRANT_GROUPS.BASIC_DATA' | translate }}</h3>
         <div class="dl-form__field">
           <label for="grant-group-name">{{ 'PERMISSIONS.GRANT_GROUPS.FIELD_NAME' | translate }}</label>
           <input id="grant-group-name" type="text" pInputText fluid formControlName="name" maxlength="255" />
@@ -19,73 +19,133 @@
             <span class="dl-form__error">{{ 'PERMISSIONS.GRANT_GROUPS.ERRORS.NAME_REQUIRED' | translate }}</span>
           }
         </div>
+
+        @if (isEditMode() && authoringState()) {
+          @if (authoringState()!.templateSourceKey) {
+            <div class="grant-group-form-page__template-badge">
+              <i class="pi pi-verified"></i>
+              {{ 'PERMISSIONS.GRANT_GROUPS.TEMPLATE_SOURCE' | translate: { template: authoringState()!.templateSourceKey, version: authoringState()!.templateSourceVersion } }}
+              @if (authoringState()!.isCustomized) { <span>· {{ 'PERMISSIONS.GRANT_GROUPS.CUSTOMIZED' | translate }}</span> }
+            </div>
+          } @else if (isLegacy()) {
+            <div class="grant-group-form-page__template-badge grant-group-form-page__template-badge--custom">
+              <i class="pi pi-pencil"></i>
+              {{ 'PERMISSIONS.GRANT_GROUPS.LEGACY_BADGE' | translate }}
+            </div>
+          }
+        }
       </section>
 
-      <section class="grant-group-form-page__section grant-group-form-page__section--grants">
-        <div class="grant-group-form-page__section-heading">
-          <div><h3>{{ 'PERMISSIONS.GRANT_GROUPS.FIELD_GRANTS' | translate }}</h3><p>Odaberite što ova grupa smije raditi po stranici.</p></div>
-        </div>
+      @if (loading()) {
+        <section class="grant-group-form-page__section">
+          <p class="grant-group-form-page__loading">{{ 'PERMISSIONS.GRANT_GROUPS.LOADING' | translate }}</p>
+        </section>
+      } @else if (catalogError()) {
+        <section class="grant-group-form-page__section">
+          <div class="grant-group-form-page__catalog-error">
+            <p>{{ 'PERMISSIONS.GRANT_GROUPS.CATALOG_ERROR' | translate }}</p>
+            <p-button type="button" [label]="'COMMON.RETRY' | translate" severity="secondary" [outlined]="true" (onClick)="retryLoadCatalog()" />
+          </div>
+        </section>
+      } @else if (capabilities().length === 0) {
+        <section class="grant-group-form-page__section">
+          <p class="grant-group-form-page__loading">{{ 'PERMISSIONS.GRANT_GROUPS.CATALOG_EMPTY' | translate }}</p>
+        </section>
+      } @else {
+        <section class="grant-group-form-page__section grant-group-form-page__section--grants">
+          <div class="grant-group-form-page__section-heading">
+            <div><h3>{{ 'PERMISSIONS.GRANT_GROUPS.FIELD_GRANTS' | translate }}</h3><p>{{ 'PERMISSIONS.GRANT_GROUPS.FIELD_GRANTS_HINT' | translate }}</p></div>
+          </div>
 
-        @if (loading()) {
-          <p class="grant-group-form-page__loading">Učitavanje dozvola…</p>
-        } @else {
-          <div class="grant-group-form-page__modules">
-            @for (section of sections; track section.id) {
-              <details class="grant-group-form-page__module" [open]="sectionCheckedCount(section) > 0">
+          @if (isLegacy()) {
+          <div class="grant-group-form-page__preview-notice">
+            <i class="pi pi-info-circle"></i>
+            <span>{{ 'PERMISSIONS.GRANT_GROUPS.LEGACY_NOTICE' | translate }}</span>
+          </div>
+          }
+
+          <div class="grant-group-form-page__capability-groups">
+            @for (group of categoryGroups(); track group.categoryKey) {
+              <details class="grant-group-form-page__module" open>
                 <summary>
-                  <span class="grant-group-form-page__module-name">{{ section.labelKey | translate }}</span>
-                  <span class="grant-group-form-page__module-count">{{ sectionCheckedCount(section) }}/{{ section.capabilities.length }}</span>
+                  <span class="grant-group-form-page__module-name">{{ categoryLabel(group.categoryKey) }}</span>
+                  <span class="grant-group-form-page__module-count">{{ group.capabilities.length }}</span>
                 </summary>
-                <div class="grant-group-form-page__grant-list">
-                  @for (capability of section.capabilities; track capability.primaryGrant) {
-                    <label
-                      class="grant-group-form-page__grant-row"
-                      [class.grant-group-form-page__grant-row--checked]="isCapabilityEnabled(capability.primaryGrant)"
-                    >
-                      <input
-                        type="checkbox"
-                        [checked]="isCapabilityEnabled(capability.primaryGrant)"
-                        (change)="onToggleCapability(capability.primaryGrant, $any($event.target).checked)"
+                <div class="grant-group-form-page__capability-list">
+                  @for (capability of group.capabilities; track capability.key) {
+                    <div class="grant-group-form-page__capability-row">
+                      <div class="grant-group-form-page__capability-text">
+                        <span class="grant-group-form-page__capability-label">
+                          {{ labelFor(capability.key) }}
+                          <app-capability-sensitivity-badge [sensitivity]="capability.sensitivity" />
+                        </span>
+                        <span class="grant-group-form-page__capability-description">{{ descriptionFor(capability.key) }}</span>
+                        @if (isCapabilityUnmatched(capability.key)) {
+                          <span class="grant-group-form-page__capability-unmatched">{{ 'PERMISSIONS.GRANT_GROUPS.UNMATCHED_HINT' | translate }}</span>
+                        }
+                      </div>
+                      <app-capability-scope-control
+                        [scopeModel]="capability.scopeModel"
+                        [selectedScope]="scopeFor(capability.key)"
+                        (selectedScopeChange)="onScopeChange(capability.key, $event)"
                       />
-                      <span class="grant-group-form-page__grant-text">
-                        <span class="grant-group-form-page__grant-key">{{ capability.labelKey | translate }}</span>
-                        <span class="grant-group-form-page__grant-description">{{ capability.descriptionKey | translate }}</span>
-                      </span>
-                    </label>
+                    </div>
                   }
                 </div>
               </details>
             }
 
-            <details class="grant-group-form-page__module" [open]="unmanagedSelected().size > 0">
+            <div class="grant-group-form-page__role-summary-panel">
+              <h3>{{ 'PERMISSIONS.ROLE_SUMMARY.TITLE' | translate }}</h3>
+              <app-role-summary [selections]="previewSelections" />
+            </div>
+
+            <details class="grant-group-form-page__module">
               <summary>
                 <span class="grant-group-form-page__module-name">{{ 'PERMISSIONS.SECTIONS.ADVANCED' | translate }}</span>
-                <span class="grant-group-form-page__module-count">{{ unmanagedSelected().size }}</span>
+                <span class="grant-group-form-page__module-count">{{ manualAdvancedSelected().size }}</span>
               </summary>
-              <div class="grant-group-form-page__grant-list">
-                @for (group of unmanagedGroups(); track group.module) {
-                  <div class="grant-group-form-page__module-name">{{ 'PERMISSIONS.MODULES.' + group.module | translate }} ({{ unmanagedCheckedCount(group) }}/{{ group.grants.length }})</div>
-                  @for (grant of group.grants; track grant.key) {
-                    <label class="grant-group-form-page__grant-row" [class.grant-group-form-page__grant-row--checked]="isUnmanagedChecked(grant.key)">
-                      <input type="checkbox" [checked]="isUnmanagedChecked(grant.key)" (change)="onToggleUnmanaged(grant.key, $any($event.target).checked)" />
-                      <span class="grant-group-form-page__grant-text">
-                        <span class="grant-group-form-page__grant-key">{{ grant.key }}</span>
-                        <span class="grant-group-form-page__grant-description">{{ grant.description }}</span>
-                      </span>
-                    </label>
-                  }
+              <div class="grant-group-form-page__grant-list-wrapper">
+                @if (derivedGrantKeys().size > 0) {
+                  <div class="grant-group-form-page__provenance-block">
+                    <div class="grant-group-form-page__module-name">{{ 'PERMISSIONS.GRANT_GROUPS.DERIVED_FROM_CAPABILITY' | translate }}</div>
+                    @for (key of derivedGrantKeys(); track key) {
+                      <div class="grant-group-form-page__derived-row">
+                        <span class="grant-group-form-page__grant-key" [title]="rawGrantDescription(key)">{{ key }}</span>
+                        <span class="grant-group-form-page__derived-source">{{ 'PERMISSIONS.GRANT_GROUPS.DERIVED_READ_ONLY' | translate }}</span>
+                      </div>
+                    }
+                  </div>
                 }
+
+                <div class="grant-group-form-page__provenance-block">
+                  <div class="grant-group-form-page__module-name">{{ 'PERMISSIONS.GRANT_GROUPS.MANUAL_ADVANCED' | translate }}</div>
+                  <div class="grant-group-form-page__grant-list">
+                    @for (group of manualPickableGroups(); track group.module) {
+                      <div class="grant-group-form-page__module-name">{{ 'PERMISSIONS.MODULES.' + group.module | translate }} ({{ manualCheckedCount(group) }}/{{ group.grants.length }})</div>
+                      @for (grant of group.grants; track grant.key) {
+                        <label class="grant-group-form-page__grant-row" [class.grant-group-form-page__grant-row--checked]="isManualChecked(grant.key)">
+                          <input type="checkbox" [checked]="isManualChecked(grant.key)" (change)="onToggleManual(grant.key, $any($event.target).checked)" />
+                          <span class="grant-group-form-page__grant-text">
+                            <span class="grant-group-form-page__grant-key">{{ grant.key }}</span>
+                            <span class="grant-group-form-page__grant-description">{{ grant.description }}</span>
+                          </span>
+                        </label>
+                      }
+                    }
+                  </div>
+                </div>
               </div>
             </details>
           </div>
-        }
-      </section>
+        </section>
+      }
 
       <div class="dl-form__actions">
-        <span class="grant-group-form-page__footer-hint">@if (form.controls.name.invalid) { Za spremanje je potreban naziv grupe. }</span>
+        <span class="grant-group-form-page__footer-hint">@if (form.controls.name.invalid) { {{ 'PERMISSIONS.GRANT_GROUPS.NAME_REQUIRED_HINT' | translate }} }</span>
         <div>
           <p-button type="button" severity="secondary" [outlined]="true" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" />
-          <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" />
+          <p-button type="submit" [label]="'COMMON.SAVE' | translate" [loading]="saving()" [disabled]="saving() || !dirty()" />
         </div>
       </div>
     </form>
