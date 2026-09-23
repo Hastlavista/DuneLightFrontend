@@ -1,0 +1,39 @@
+<div class="conflict-resolution-row">
+  <div class="conflict-resolution-row__header">
+    <span class="conflict-resolution-row__capability">{{ capabilityLabel() }}</span>
+  </div>
+
+  <div class="conflict-resolution-row__scopes">
+    <span>{{ 'PERMISSIONS.GRANT_GROUPS.UPGRADE.CONFLICT_TEMPLATE_OLD' | translate: { version: oldTemplateVersion() } }}: {{ scopeLabel(conflict().baseScope) }}</span>
+    <span>{{ 'PERMISSIONS.GRANT_GROUPS.UPGRADE.CONFLICT_CURRENT' | translate }}: {{ scopeLabel(conflict().currentScope) }}</span>
+    <span>{{ 'PERMISSIONS.GRANT_GROUPS.UPGRADE.CONFLICT_TEMPLATE_NEW' | translate: { version: newTemplateVersion() } }}: {{ scopeLabel(conflict().targetScope) }}</span>
+  </div>
+
+  <div class="conflict-resolution-row__options">
+    <label class="conflict-resolution-row__option">
+      <p-radiobutton
+        [name]="'conflict-' + conflict().capabilityKey"
+        value="PreserveCurrent"
+        [ngModel]="selectedResolution()"
+        (ngModelChange)="onChoose($event)"
+      />
+      <span>{{ 'PERMISSIONS.GRANT_GROUPS.UPGRADE.CONFLICT_KEEP_CURRENT' | translate }}</span>
+      @if (conflict().defaultResolution === 'PreserveCurrent') {
+        <span class="conflict-resolution-row__recommended">{{ 'PERMISSIONS.GRANT_GROUPS.UPGRADE.CONFLICT_RECOMMENDED_BADGE' | translate }}</span>
+      }
+    </label>
+
+    <label class="conflict-resolution-row__option">
+      <p-radiobutton
+        [name]="'conflict-' + conflict().capabilityKey"
+        value="UseTemplate"
+        [ngModel]="selectedResolution()"
+        (ngModelChange)="onChoose($event)"
+      />
+      <span>{{ 'PERMISSIONS.GRANT_GROUPS.UPGRADE.CONFLICT_USE_TEMPLATE' | translate }}</span>
+      @if (conflict().defaultResolution === 'UseTemplate') {
+        <span class="conflict-resolution-row__recommended">{{ 'PERMISSIONS.GRANT_GROUPS.UPGRADE.CONFLICT_RECOMMENDED_BADGE' | translate }}</span>
+      }
+    </label>
+  </div>
+</div>

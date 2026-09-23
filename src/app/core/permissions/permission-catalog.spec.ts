@@ -23,9 +23,9 @@ function allGrantsOf(policy: PermissionPolicy): readonly string[] {
 describe('PAGE_POLICIES / ACTION_POLICIES structure', () => {
   const allPolicies: Record<string, PermissionPolicy> = { ...PAGE_POLICIES, ...ACTION_POLICIES };
 
-  it('every entry expresses at least one requirement (anyOf, allOf, or ownerOnly)', () => {
+  it('every entry expresses at least one requirement (anyOf or allOf)', () => {
     for (const [key, policy] of Object.entries(allPolicies)) {
-      const expressesRequirement = !!policy.anyOf || !!policy.allOf || !!policy.ownerOnly;
+      const expressesRequirement = !!policy.anyOf || !!policy.allOf;
       if (!expressesRequirement) {
         throw new Error(`policy "${key}" expresses no requirement at all`);
       }
@@ -48,14 +48,6 @@ describe('PAGE_POLICIES / ACTION_POLICIES structure', () => {
         if (!KNOWN_GRANT_KEYS.has(grant)) {
           throw new Error(`policy "${key}" references unknown grant "${grant}"`);
         }
-      }
-    }
-  });
-
-  it('an ownerOnly policy carries no grant requirements (they would be unreachable dead weight)', () => {
-    for (const [key, policy] of Object.entries(allPolicies)) {
-      if (policy.ownerOnly && (policy.anyOf || policy.allOf)) {
-        throw new Error(`ownerOnly policy "${key}" also sets anyOf/allOf`);
       }
     }
   });

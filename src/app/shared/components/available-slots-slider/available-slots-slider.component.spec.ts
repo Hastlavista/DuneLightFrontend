@@ -3,6 +3,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslateLoader, provideTranslateService } from '@ngx-translate/core';
 import { of } from 'rxjs';
+import { toDateOnly } from '../../../core/utils/date.util';
+import { addDays, startOfDay } from '../schedule-grid/schedule-date.util';
 import { AvailableSlotsSliderComponent } from './available-slots-slider.component';
 
 class FakeTranslateLoader implements TranslateLoader {
@@ -71,5 +73,45 @@ describe('AvailableSlotsSliderComponent', () => {
 
     expect(fixture.nativeElement.textContent).toContain('13:00');
     expect(fixture.nativeElement.textContent).not.toContain('12:00');
+  });
+
+  it('sends exactly one request using initialDate when initialDate differs from today', () => {
+    // beforeEach already sets initialDate to 2026-09-18, distinct from whatever
+    // "today" is when the suite runs - this is the exact scenario that used to
+    // fire a wasted request for today before firing the correct one.
+    fixture.detectChanges();
+
+    const request = httpMock.expectOne((req) => req.url.endsWith('/api/appointments/available-slots'));
+    expect(request.request.params.get('date')).toBe('2026-09-18');
+
+    request.flush([]);
+  });
+
+  it('sends exactly one request for today when initialDate equals today', () => {
+    const today = startOfDay(new Date());
+    fixture.componentRef.setInput('initialDate', today);
+    fixture.detectChanges();
+
+    const request = httpMock.expectOne((req) => req.url.endsWith('/api/appointments/available-slots'));
+    expect(request.request.params.get('date')).toBe(toDateOnly(today));
+
+    request.flush([]);
+  });
+
+  it('sends exactly one new request for the new date after deliberate next-day navigation', () => {
+    fixture.detectChanges();
+    const initialRequest = httpMock.expectOne((req) => req.url.endsWith('/api/appointments/available-slots'));
+    initialRequest.flush([]);
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance;
+    const expectedNextDay = toDateOnly(addDays(new Date(2026, 8, 18), 1));
+    component.goNextDay();
+    fixture.detectChanges();
+
+    const nextDayRequest = httpMock.expectOne((req) => req.url.endsWith('/api/appointments/available-slots'));
+    expect(nextDayRequest.request.params.get('date')).toBe(expectedNextDay);
+
+    nextDayRequest.flush([]);
   });
 });

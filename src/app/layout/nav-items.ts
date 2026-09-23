@@ -4,9 +4,6 @@ export interface NavItem {
   labelKey: string;
   path: string;
   icon: string;
-  /** When true, only shown to the organization's Owner (see ownerGuard, which
-   * enforces this server-side too - hiding it here is purely a UX nicety). */
-  ownerOnly?: boolean;
   /** Resolved through CurrentEmployeeService.canPage() - the same PAGE_POLICIES
    * lookup admin.routes.ts's grantGuard(pageKey) uses, so a page's
    * nav-visibility and its actual navigation gate can never drift apart (see
@@ -28,8 +25,8 @@ export interface NavGroup {
 }
 
 /** One flat sidebar for every employee - each item shows or hides purely on
- * its own pageKey/ownerOnly (see SidebarComponent), not on any admin/trainer
- * section anymore. */
+ * its own pageKey (see SidebarComponent), not on any admin/trainer section
+ * anymore. */
 export const NAV_GROUPS: NavGroup[] = [
   {
     items: [
@@ -132,7 +129,7 @@ export const NAV_GROUPS: NavGroup[] = [
         icon: 'pi-palette',
         pageKey: 'branding',
       },
-      { labelKey: 'NAV.ADMIN.PERMISSIONS', path: 'permissions', icon: 'pi-shield', ownerOnly: true },
+      { labelKey: 'NAV.ADMIN.PERMISSIONS', path: 'permissions', icon: 'pi-shield', pageKey: 'permissions' },
     ],
   },
 ];

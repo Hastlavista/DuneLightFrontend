@@ -237,14 +237,36 @@ export class EmployeeFormComponent {
     this.activeRoles().map((role) => ({ id: role.id, name: role.name })),
   );
 
-  /** PATCH /api/employees/{id}/role is RequireGrant(employees.role.manage),
-   * NOT Owner-only (unlike GrantGroup/business-Role assignment above) - a
-   * non-Owner Admin holding this grant may change an employee's coarse
-   * UserRole even though GrantGroup/Role definition stays Owner-only. Uses
-   * the existing ACTION_POLICY (see action-policies.ts) rather than
-   * isOwner(), so this section's visibility can never drift from what the
-   * backend endpoint actually allows (Part P of the FAZA 1 role editor). */
+  /** PATCH /api/employees/{id}/role is RequireGrant(employees.role.manage) -
+   * a separate grant from GrantGroup/business-Role assignment below. Uses the
+   * existing ACTION_POLICY (see action-policies.ts) so this section's
+   * visibility can never drift from what the backend endpoint actually
+   * allows (Part P of the FAZA 1 role editor). */
   readonly canManageEmployeeRole = computed(() => this.currentEmployeeService.can('employees.role.manage'));
+
+  /** Grant-only Tenant Authorization Refactor - GET .../grant-groups (used to
+   * populate this picker) needs permissions.view OR permissions.manage
+   * (GrantGroupsController.GetAll), a WEAKER requirement than actually saving
+   * an assignment below - being on the Employees page (employees.view/manage)
+   * does NOT imply either, so this is checked independently. */
+  readonly canViewGrantGroups = computed(() => this.currentEmployeeService.hasAnyGrant(['permissions.view', 'permissions.manage']));
+  /** Saving a GrantGroup assignment is permissions.assignments.manage (or
+   * permissions.manage), NOT Owner-only any more - mirrors
+   * GrantGroupsController's assignments/* endpoints specifically (stricter
+   * than canViewGrantGroups above - view-only can see the picker but Save
+   * won't attempt the PUT, see onSave()). */
+  readonly canManageGrantGroupAssignments = computed(() => this.currentEmployeeService.can('permissions.assignments.manage'));
+  /** GET .../permissions/roles (list + per-employee assignments) needs
+   * employees.view OR employees.manage (RolesController), NOT automatically
+   * implied by being on this page - employees.role.manage (Podaci > Uloga,
+   * below) is a different grant and does not itself grant employees.view/
+   * manage, so this is checked independently, same as canViewGrantGroups. */
+  readonly canViewRoles = computed(() => this.currentEmployeeService.hasAnyGrant(['employees.view', 'employees.manage']));
+  /** Saving a Role assignment is employees.manage specifically (not just
+   * .view) - a separate grant from GrantGroup assignment above (see
+   * RolesController's doc for why Role, a display label, isn't a
+   * permissions.* concept). */
+  readonly canManageRoleAssignments = computed(() => this.currentEmployeeService.can('employees.manage'));
 
   readonly userRoleSelectOptions = computed(() => {
     this.translationsReady();
@@ -252,17 +274,8 @@ export class EmployeeFormComponent {
   });
 
   /** The UserRole loaded from the server, to diff against on save - only
-   * calls updateRole() when the Owner/Admin actually changed it. */
+   * calls updateRole() when the value actually changed. */
   private readonly loadedUserRole = signal<UserRole | null>(null);
-
-  /** Owner editing their own Employee record - GrantGroups are meaningless for
-   * the Owner (see Grants.cs: IsOwner bypasses every check), so the field is
-   * hidden entirely rather than shown as an always-invalid required multiselect. */
-  readonly isSelfOwnerEdit = computed(() => {
-    const employee = this.currentEmployeeService.employee();
-    const id = this.editingId();
-    return !!employee?.isOwner && !!id && employee.employeeId === id;
-  });
 
   readonly form = this.fb.nonNullable.group(
     {
@@ -306,13 +319,15 @@ export class EmployeeFormComponent {
     this.loadActiveCompanies();
     this.loadActiveServices();
     this.loadActiveEngagementTypes();
-    // GrantGroupsController/RolesController are BOTH [RequireOwner] end to end
-    // (list included, not just the assignment endpoints) - a non-Owner viewer
-    // (even one holding employees.manage) gets a 403 on GetAll, so don't even
-    // attempt these fetches for them (see the matching skip in applyEmployee()
+    // Grant-only Tenant Authorization Refactor - GrantGroups (permissions.view/
+    // manage) and Roles (employees.view/manage) are independently gated now,
+    // not bundled behind one Owner-only check - a viewer might see one list
+    // but not the other (see the matching per-list skip in applyEmployee()
     // and onSave()'s update branch).
-    if (this.currentEmployeeService.isOwner()) {
+    if (this.canViewGrantGroups()) {
       this.loadActiveGrantGroups();
+    }
+    if (this.canViewRoles()) {
       this.loadActiveRoles();
     }
 
@@ -323,16 +338,16 @@ export class EmployeeFormComponent {
       this.form.controls.password.updateValueAndValidity();
     }
 
-    // GrantGroups are required for every employee except the Owner editing
-    // their own record (see isSelfOwnerEdit) - reactive rather than set once,
-    // since isSelfOwnerEdit can only be known once CurrentEmployeeService's
-    // async /me load resolves. A non-Owner viewer never sees/populates this
-    // field at all (see the isOwner() guard above), so it must not be
-    // required for them either - otherwise the form is permanently invalid
-    // and Save silently does nothing.
+    // GrantGroups are required for every employee - reactive rather than set
+    // once, since canManageGrantGroupAssignments can only be known once
+    // CurrentEmployeeService's async /me load resolves. A viewer who can't
+    // actually save an assignment (see canManageGrantGroupAssignments' own
+    // doc - view-only or no permissions.* grant at all) must not have it
+    // required either - otherwise the form is permanently invalid and Save
+    // silently does nothing.
     effect(() => {
       const control = this.form.controls.grantGroupIds;
-      if (this.isSelfOwnerEdit() || !this.currentEmployeeService.isOwner()) {
+      if (!this.canManageGrantGroupAssignments()) {
         control.clearValidators();
       } else {
         control.setValidators(requiredGrantGroupsValidator);
@@ -376,20 +391,22 @@ export class EmployeeFormComponent {
         .subscribe({
           next: () => {
             const raw = this.form.getRawValue();
-            // GrantGroup/business-Role endpoints are [RequireOwner] server-side
-            // (see the matching skip in the constructor/applyEmployee()) -
-            // calling them for a non-Owner viewer would 403 and swallow an
-            // otherwise-successful employee update in the generic
-            // `error: () => {}` below, leaving Save looking like it silently
-            // did nothing. UserRole (Podaci > Uloga) is a SEPARATE endpoint
-            // gated by employees.role.manage, not Owner-only - see
-            // canManageEmployeeRole's own doc - only called when it actually
-            // changed, to avoid a pointless LastActiveAdmin re-check on every save.
+            // Grant-only Tenant Authorization Refactor - GrantGroup assignment
+            // (permissions.assignments.manage) and business-Role assignment
+            // (employees.manage) are independently gated now, not bundled
+            // behind one Owner-only check (see the matching skip in the
+            // constructor/applyEmployee()) - calling either for a viewer
+            // without its grant would 403 and swallow an otherwise-successful
+            // employee update in the generic `error: () => {}` below, leaving
+            // Save looking like it silently did nothing. UserRole (Podaci >
+            // Uloga) is a SEPARATE endpoint gated by employees.role.manage -
+            // see canManageEmployeeRole's own doc - only called when it
+            // actually changed, to avoid a pointless lockout re-check on every save.
             const calls: Observable<unknown>[] = [];
-            if (userId && this.currentEmployeeService.isOwner()) {
-              if (!this.isSelfOwnerEdit()) {
-                calls.push(this.grantGroupsService.setAssignments(userId, { grantGroupIds: raw.grantGroupIds }));
-              }
+            if (userId && this.canManageGrantGroupAssignments()) {
+              calls.push(this.grantGroupsService.setAssignments(userId, { grantGroupIds: raw.grantGroupIds }));
+            }
+            if (userId && this.canManageRoleAssignments()) {
               calls.push(this.rolesService.setAssignments(userId, { roleIds: raw.roleIds }));
             }
             if (this.canManageEmployeeRole() && raw.userRole && raw.userRole !== this.loadedUserRole()) {
@@ -532,19 +549,35 @@ export class EmployeeFormComponent {
     };
   }
 
+  /** GET /api/catalog/companies requires catalog.companies.view - employees.manage
+   * alone (a custom GrantGroup) does not imply it. Skip the call entirely rather
+   * than firing a request the current grants can't pass; companyIds/primaryCompanyId
+   * simply stay unselectable for that edge case (same pattern as
+   * TodayComponent.loadActiveCompanies / MyWeekComponent.loadActiveCompanies). */
   private loadActiveCompanies(): void {
+    if (!this.currentEmployeeService.hasGrant('catalog.companies.view')) {
+      return;
+    }
     this.companiesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
       .subscribe((result) => this.activeCompanies.set(result.items));
   }
 
+  /** Same rationale as loadActiveCompanies() - catalog.services.view. */
   private loadActiveServices(): void {
+    if (!this.currentEmployeeService.hasGrant('catalog.services.view')) {
+      return;
+    }
     this.servicesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
       .subscribe((result) => this.activeServices.set(result.items));
   }
 
+  /** Same rationale as loadActiveCompanies() - employees.engagement-types.view. */
   private loadActiveEngagementTypes(): void {
+    if (!this.currentEmployeeService.hasGrant('employees.engagement-types.view')) {
+      return;
+    }
     this.engagementTypesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
       .subscribe((result) => this.activeEngagementTypes.set(result.items));
@@ -609,19 +642,19 @@ export class EmployeeFormComponent {
       { emitEvent: false },
     );
 
-    // Same [RequireOwner] reasoning as the constructor's loadActiveGrantGroups/
-    // loadActiveRoles skip - a non-Owner viewer can't read these either, so
-    // don't attempt the fetch (would 403 and leave `loading` stuck without
-    // the finalize below).
-    if (this.currentEmployeeService.isOwner()) {
-      forkJoin([this.grantGroupsService.getAssignments(employee.userId), this.rolesService.getAssignments(employee.userId)])
-        .pipe(finalize(() => this.loading.set(false)))
-        .subscribe(([grantGroupIds, roleIds]) => {
-          this.form.patchValue({ grantGroupIds, roleIds }, { emitEvent: false });
-        });
-    } else {
-      this.loading.set(false);
-    }
+    // Same reasoning as the constructor's loadActiveGrantGroups/loadActiveRoles
+    // skip - GrantGroup assignments need permissions.view/manage
+    // (GrantGroupsController.GetAssignments) and Role assignments need
+    // employees.view/manage (RolesController.GetAssignments), independently -
+    // a viewer might have one but not the other, so each fetch is attempted
+    // (or skipped, to avoid a 403 leaving `loading` stuck) on its own grant.
+    const grantGroupIds$ = this.canViewGrantGroups() ? this.grantGroupsService.getAssignments(employee.userId) : of([]);
+    const roleIds$ = this.canViewRoles() ? this.rolesService.getAssignments(employee.userId) : of([]);
+    forkJoin([grantGroupIds$, roleIds$])
+      .pipe(finalize(() => this.loading.set(false)))
+      .subscribe(([grantGroupIds, roleIds]) => {
+        this.form.patchValue({ grantGroupIds, roleIds }, { emitEvent: false });
+      });
   }
 
   private navigateBack(): void {
@@ -630,7 +663,8 @@ export class EmployeeFormComponent {
 }
 
 /** Array-level: at least one GrantGroup must be selected - skipped entirely
- * for the Owner editing their own record (see isSelfOwnerEdit). */
+ * for a viewer who can't manage assignments at all (see
+ * canManageGrantGroupAssignments's own doc). */
 function requiredGrantGroupsValidator(control: AbstractControl): ValidationErrors | null {
   const ids = (control.value as string[]) ?? [];
   return ids.length > 0 ? null : { required: true };

@@ -5,7 +5,7 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { TranslateLoader, provideTranslateService } from '@ngx-translate/core';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { of } from 'rxjs';
-import { CapabilityDefinitionDto, GrantGroupAuthoringStateDto } from '../../../../../../core/models/capability.model';
+import { CapabilityDefinitionDto, GrantGroupAuthoringStateDto, GrantGroupTemplateUpgradeStatusDto } from '../../../../../../core/models/capability.model';
 import { GrantDto, GrantGroupDto } from '../../../../../../core/models/permissions.model';
 import { errorInterceptor } from '../../../../../../core/interceptors/error.interceptor';
 import { NotificationService } from '../../../../../../core/services/notification.service';
@@ -81,7 +81,10 @@ function routeStub(id: string) {
   return { snapshot: { paramMap: convertToParamMap({ id }) } };
 }
 
-async function createFixture(id: string): Promise<{ fixture: ComponentFixture<GrantGroupFormComponent>; httpMock: HttpTestingController }> {
+async function createFixture(
+  id: string,
+  authoringState: GrantGroupAuthoringStateDto = AUTHORING_STATE,
+): Promise<{ fixture: ComponentFixture<GrantGroupFormComponent>; httpMock: HttpTestingController }> {
   await TestBed.configureTestingModule({
     imports: [GrantGroupFormComponent],
     providers: [
@@ -101,7 +104,7 @@ async function createFixture(id: string): Promise<{ fixture: ComponentFixture<Gr
   httpMock.expectOne((req) => req.url.endsWith('/api/permissions/capabilities')).flush([CAPABILITY]);
   httpMock.expectOne((req) => req.url.endsWith('/api/grants')).flush(RAW_CATALOG);
   if (id !== 'new') {
-    httpMock.expectOne((req) => req.url.endsWith(`/api/permissions/grant-groups/${id}/authoring-state`)).flush(AUTHORING_STATE);
+    httpMock.expectOne((req) => req.url.endsWith(`/api/permissions/grant-groups/${id}/authoring-state`)).flush(authoringState);
   }
   fixture.detectChanges();
   return { fixture, httpMock };
@@ -223,5 +226,67 @@ describe('GrantGroupFormComponent - save failure handling', () => {
 
     expect(component.dirty()).toBe(false);
     expect(component.form.getRawValue().name).toBe('Recepcija Renamed');
+  });
+});
+
+const TEMPLATE_BACKED_STATE: GrantGroupAuthoringStateDto = {
+  ...AUTHORING_STATE,
+  templateSourceKey: 'Recepcija',
+  templateSourceVersion: 1,
+};
+
+const UPGRADE_STATUS: GrantGroupTemplateUpgradeStatusDto = {
+  grantGroupId: 'group-1',
+  templateKey: 'Recepcija',
+  currentTemplateVersion: 1,
+  latestTemplateVersion: 2,
+  hasUpgrade: true,
+  isCustomized: false,
+};
+
+function bannerElement(fixture: ComponentFixture<GrantGroupFormComponent>): Element | null {
+  return (fixture.nativeElement as HTMLElement).querySelector('.grant-group-form-page__upgrade-banner');
+}
+
+describe('GrantGroupFormComponent - template upgrade banner', () => {
+  afterEach(() => TestBed.inject(HttpTestingController).verify());
+
+  it('skips the upgrade-status call entirely and hides the banner for a custom/no-provenance role', async () => {
+    const { fixture, httpMock } = await createFixture('group-1', AUTHORING_STATE);
+    fixture.detectChanges();
+
+    httpMock.expectNone((req) => req.url.endsWith('/api/permissions/grant-groups/group-1/template-upgrade-status'));
+    expect(bannerElement(fixture)).toBeNull();
+  });
+
+  it('fetches upgrade status and shows the banner when the role has template provenance and hasUpgrade=true', async () => {
+    const { fixture, httpMock } = await createFixture('group-1', TEMPLATE_BACKED_STATE);
+    httpMock.expectOne((req) => req.url.endsWith('/api/permissions/grant-groups/group-1/template-upgrade-status')).flush(UPGRADE_STATUS);
+    fixture.detectChanges();
+
+    expect(bannerElement(fixture)).not.toBeNull();
+  });
+
+  it('hides the banner when the role has template provenance but hasUpgrade=false', async () => {
+    const { fixture, httpMock } = await createFixture('group-1', TEMPLATE_BACKED_STATE);
+    httpMock.expectOne((req) => req.url.endsWith('/api/permissions/grant-groups/group-1/template-upgrade-status')).flush({ ...UPGRADE_STATUS, hasUpgrade: false });
+    fixture.detectChanges();
+
+    expect(bannerElement(fixture)).toBeNull();
+  });
+
+  it('onUpgradeApplied() reloads both authoring-state and upgrade-status', async () => {
+    const { fixture, httpMock } = await createFixture('group-1', TEMPLATE_BACKED_STATE);
+    httpMock.expectOne((req) => req.url.endsWith('/api/permissions/grant-groups/group-1/template-upgrade-status')).flush(UPGRADE_STATUS);
+    fixture.detectChanges();
+
+    const component = fixture.componentInstance;
+    component.onUpgradeApplied();
+
+    httpMock.expectOne((req) => req.url.endsWith('/api/permissions/grant-groups/group-1/authoring-state')).flush(TEMPLATE_BACKED_STATE);
+    httpMock.expectOne((req) => req.url.endsWith('/api/permissions/grant-groups/group-1/template-upgrade-status')).flush({ ...UPGRADE_STATUS, hasUpgrade: false });
+    fixture.detectChanges();
+
+    expect(bannerElement(fixture)).toBeNull();
   });
 });

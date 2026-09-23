@@ -1,6 +1,6 @@
 <section class="permission-list-page">
   <div class="permission-list-page__header">
-    <app-list-toolbar [newLabelKey]="'PERMISSIONS.GRANT_GROUPS.NEW'" [search]="search()" [showInactiveToggle]="false" (searchChange)="search.set($event)" (create)="openCreate()" />
+    <app-list-toolbar [newLabelKey]="'PERMISSIONS.GRANT_GROUPS.NEW'" [search]="search()" [showInactiveToggle]="false" [canCreate]="canManage()" (searchChange)="search.set($event)" (create)="openCreate()" />
   </div>
 
   @if (loading()) {
@@ -15,10 +15,12 @@
           <span class="permission-list-page__avatar dl-avatar dl-avatar--icon"><i class="pi pi-shield"></i></span>
           <div class="permission-list-page__identity"><h3>{{ group.name }}</h3><p>Skup tehničkih dozvola za korisnički račun.</p></div>
           <div class="permission-list-page__facts"><span><b>{{ group.grants.length }}</b> dozvola</span><span><b>{{ group.assignedUserCount }}</b> dodijeljenih korisnika</span></div>
-          <div class="permission-list-page__actions">
-            <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.EDIT' | translate" [title]="'COMMON.EDIT' | translate" (onClick)="openEdit(group)" />
-            <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.DELETE' | translate" [title]="'COMMON.DELETE' | translate" (onClick)="confirmDelete(group)" />
-          </div>
+          @if (canManage()) {
+            <div class="permission-list-page__actions">
+              <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.EDIT' | translate" [title]="'COMMON.EDIT' | translate" (onClick)="openEdit(group)" />
+              <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.DELETE' | translate" [title]="'COMMON.DELETE' | translate" (onClick)="confirmDelete(group)" />
+            </div>
+          }
         </article>
       }
     </div>

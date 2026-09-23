@@ -5,14 +5,17 @@ import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { RoleDto } from '../../../../../core/models/permissions.model';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { PermissionRolesService } from '../../../../../core/services/permission-roles.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { RoleFormDialogComponent } from './role-form-dialog.component';
 import { ListToolbarComponent } from '../../../../../shared/components/list-toolbar/list-toolbar.component';
 
-/** Roles (Owner-only, business-facing tags e.g. "Trener") - a plain šifrarnik,
- * simplest CRUD pattern in the app: flat list (not paged), no isActive, modal
- * form. Client-side search filter, same rationale as GrantGroupsComponent. */
+/** Roles (business-facing tags e.g. "Trener", gated on employees.view/manage -
+ * see RolesController's doc, NOT permissions.* despite living under the same
+ * "Dozvole" page as GrantGroups) - a plain šifrarnik, simplest CRUD pattern in
+ * the app: flat list (not paged), no isActive, modal form. Client-side search
+ * filter, same rationale as GrantGroupsComponent. */
 @Component({
   selector: 'app-admin-roles',
   imports: [Button, FormsModule, TranslatePipe, ListToolbarComponent, RoleFormDialogComponent],
@@ -24,6 +27,9 @@ export class RolesComponent {
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
+  private readonly currentEmployeeService = inject(CurrentEmployeeService);
+
+  readonly canManage = computed(() => this.currentEmployeeService.can('employees.manage'));
 
   readonly allItems = signal<RoleDto[]>([]);
   readonly loading = signal(false);

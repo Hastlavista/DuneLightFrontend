@@ -148,7 +148,7 @@ describe('reconstructGrantProvenance', () => {
     expect(viewProv.source).toBe('capability');
     expect(viewProv.capabilityKey).toBe('x.manage');
     expect(viewProv.selectedScope).toBe('Manage');
-    // Derived grants are never in the Owner-editable manual pool (Part K/T11).
+    // Derived grants are never in the manually-editable grant pool (Part K/T11).
     expect(recon.manualGrantKeys.has('x.view')).toBe(false);
     expect(recon.manualGrantKeys.has('x.manage')).toBe(false);
   });

@@ -44,9 +44,10 @@ export class ShellComponent {
     private readonly brandingService: BrandingService,
   ) {
     // Apply the org's branding (colors, logo, favicon) across the whole app
-    // after login. Uses the no-auth public endpoint so every role gets the
-    // look applied, not just the Owner (the owner-only /api/organization/
-    // branding endpoint is for the settings page's form).
+    // after login. Uses the no-auth public endpoint so every employee gets
+    // the look applied, not just viewers holding organization.branding.manage
+    // (the gated /api/organization/branding endpoint is for the settings
+    // page's form).
     const slug = this.authService.organizationSlug();
     if (slug) {
       this.brandingService.getPublicBranding(slug).subscribe({
@@ -54,9 +55,9 @@ export class ShellComponent {
         error: () => {},
       });
     }
-    // ensureLoaded(), not load() - a guard on this navigation (grantGuard/
-    // ownerGuard) may have already triggered and awaited the fetch before
-    // this component ever got constructed; avoid a redundant second call.
+    // ensureLoaded(), not load() - a grantGuard on this navigation may have
+    // already triggered and awaited the fetch before this component ever got
+    // constructed; avoid a redundant second call.
     this.currentEmployeeService.ensureLoaded().subscribe((employee) => {
       // The company chooser needs the employee's grants and assigned companies.
       // Loading it only after /employees/me resolves lets it show the complete

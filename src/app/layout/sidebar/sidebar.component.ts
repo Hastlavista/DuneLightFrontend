@@ -18,15 +18,9 @@ export class SidebarComponent {
   readonly navigated = output<void>();
 
   readonly navGroups = computed<NavGroup[]>(() => {
-    const isOwner = this.currentEmployeeService.isOwner();
     return NAV_GROUPS.map((group) => ({
       ...group,
-      items: group.items.filter((item) => {
-        if (item.ownerOnly && !isOwner) {
-          return false;
-        }
-        return !item.pageKey || this.currentEmployeeService.canPage(item.pageKey);
-      }),
+      items: group.items.filter((item) => !item.pageKey || this.currentEmployeeService.canPage(item.pageKey)),
     })).filter((group) => group.items.length > 0);
   });
   readonly basePath = '/app';

@@ -1,6 +1,6 @@
 <section class="permission-list-page">
   <div class="permission-list-page__header">
-    <app-list-toolbar [newLabelKey]="'PERMISSIONS.ROLES.NEW'" [search]="search()" [showInactiveToggle]="false" (searchChange)="search.set($event)" (create)="openCreate()" />
+    <app-list-toolbar [newLabelKey]="'PERMISSIONS.ROLES.NEW'" [search]="search()" [showInactiveToggle]="false" [canCreate]="canManage()" (searchChange)="search.set($event)" (create)="openCreate()" />
   </div>
 
   @if (loading()) {
@@ -14,10 +14,12 @@
           <span class="permission-list-page__accent"></span>
           <span class="permission-list-page__avatar dl-avatar dl-avatar--icon"><i class="pi pi-user-tag"></i></span>
           <div class="permission-list-page__identity"><h3>{{ role.name }}</h3><p>Poslovna uloga koja se može dodijeliti zaposleniku.</p></div>
-          <div class="permission-list-page__actions">
-            <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.EDIT' | translate" [title]="'COMMON.EDIT' | translate" (onClick)="openEdit(role)" />
-            <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.DELETE' | translate" [title]="'COMMON.DELETE' | translate" (onClick)="confirmDelete(role)" />
-          </div>
+          @if (canManage()) {
+            <div class="permission-list-page__actions">
+              <p-button icon="pi pi-pencil" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.EDIT' | translate" [title]="'COMMON.EDIT' | translate" (onClick)="openEdit(role)" />
+              <p-button icon="pi pi-trash" severity="danger" [text]="true" [rounded]="true" [ariaLabel]="'COMMON.DELETE' | translate" [title]="'COMMON.DELETE' | translate" (onClick)="confirmDelete(role)" />
+            </div>
+          }
         </article>
       }
     </div>

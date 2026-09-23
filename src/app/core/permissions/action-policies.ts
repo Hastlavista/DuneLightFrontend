@@ -51,13 +51,16 @@ export const ACTION_POLICIES = {
   'clients.tags.manage': { anyOf: ['clients.tags.manage'] },
   'clients.packages.manage': { anyOf: ['clients.packages.manage'] },
 
-  /** supportingAllOf documents a real gap found during Phase 2 inventory -
-   * employee-form.component.ts fetches the company/service pickers
-   * unconditionally (no grant guard), unlike the analogous
-   * today.component.ts/my-week.component.ts pattern. A GrantGroup holding
-   * only employees.manage (no catalog.companies.view/catalog.services.view)
-   * would 403 on those lookups and silently see empty pickers - reported as
-   * a default-role/GrantGroup gap, not fixed here (see Phase 2 report). */
+  /** supportingAllOf documents employee-form.component.ts's real dependency -
+   * the company/service (and engagement-type) pickers are only fetched when
+   * the viewer holds the matching .view grant, same pattern as
+   * today.component.ts/my-week.component.ts's loadActiveCompanies/loadActiveServices.
+   * A GrantGroup holding only employees.manage (no catalog.companies.view/
+   * catalog.services.view) sees empty, unselectable pickers instead of a
+   * hidden 403 - this is a genuine capability-authoring gap (those reads
+   * aren't materialized as MandatorySupporting grants for the "employees
+   * manage" capability), left as a product decision rather than silently
+   * broadened here. See the Authorization Consistency Cleanup report. */
   'employees.manage': { anyOf: ['employees.manage'], supportingAllOf: ['catalog.companies.view', 'catalog.services.view'] },
   'employees.role.manage': { anyOf: ['employees.role.manage'] },
   'employees.engagement-types.manage': { anyOf: ['employees.engagement-types.manage'] },
@@ -108,6 +111,16 @@ export const ACTION_POLICIES = {
   'products.manage': { anyOf: ['products.manage'] },
   'stock.manage': { anyOf: ['stock.manage'] },
   'commissions.manage': { anyOf: ['commissions.manage'] },
+
+  /** Grant-only Tenant Authorization Refactor - role/capability definition editing (create/edit/delete
+   * GrantGroups, capability-based authoring, template-upgrade review/apply) - mirrors the backend's
+   * RequireGrant(PermissionsManage) on GrantGroupsController's mutating actions. GrantGroup NAME has zero
+   * bearing here - any group holding this raw grant qualifies. */
+  'permissions.manage': { anyOf: ['permissions.manage'] },
+  /** Assigning GrantGroups to users - mirrors RequireGrant(PermissionsManage, PermissionsAssignmentsManage) on
+   * GrantGroupsController's assignments/* endpoints. Deliberately separate from 'permissions.manage' so a
+   * GrantGroup can be scoped to "assign roles" without also granting "redefine what roles mean". */
+  'permissions.assignments.manage': { anyOf: ['permissions.manage', 'permissions.assignments.manage'] },
 } as const satisfies Record<string, PermissionPolicy>;
 
 export type ActionKey = keyof typeof ACTION_POLICIES;

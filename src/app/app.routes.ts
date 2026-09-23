@@ -18,7 +18,7 @@ export const routes: Routes = [
     // One shell for every authenticated employee - no more separate
     // admin/trainer sections. Page and sidebar-item visibility comes purely
     // from grants (see nav-items.ts's requiredGrants and each route's
-    // grantGuard/ownerGuard below), not from which "area" the URL is under.
+    // grantGuard below), not from which "area" the URL is under.
     path: 'app',
     canActivate: [authGuard],
     loadComponent: () => import('./layout/shell/shell.component').then((m) => m.ShellComponent),

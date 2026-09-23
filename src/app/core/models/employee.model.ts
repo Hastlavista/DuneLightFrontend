@@ -12,13 +12,13 @@ export interface CurrentEmployee {
   firstName: string;
   lastName: string;
   role: UserRole;
-  isOwner: boolean;
   /** Effective, aggregated union of grant keys from every GrantGroup this user
    * is assigned - same source the backend's RequireGrant check uses
    * (GrantGroupHandler.ResolveEffective), just exposed for UI-level checks
-   * (see hasGrant/hasAnyGrant in current-employee.service.ts). Empty for the
-   * Owner - they bypass the grant system entirely (see isOwner), so always
-   * check isOwner first rather than expecting it to appear here too. */
+   * (see hasGrant/hasAnyGrant in current-employee.service.ts). The
+   * organization's founder gets their real grants here too, through the
+   * Admin starter GrantGroup assigned at registration - there is no Owner
+   * bypass anywhere in the system (Residual IsOwner Removal). */
   grants: string[];
   colorHex: string | null;
   companies: EmployeeCompany[];
@@ -190,13 +190,15 @@ export type EmployeeUpsertRequest = Omit<
 
 /** Body for POST /api/employees (no `-login` suffix) - frontend #15's "dovrši
  * svoj profil" flow, the ONLY UI caller of this endpoint. Unlike
- * createWithLogin(), `userId` is the already-logged-in Owner's own id (from
+ * createWithLogin(), `userId` is the already-logged-in founder's own id (from
  * AuthService.currentUser, never entered in the form) rather than a new
  * login being created - so there's no password/mustChangeCredentialsOnFirstLogin/pin,
- * and no grantGroupIds/roleIds either (the Owner bypasses the grant system
- * entirely, see CurrentEmployeeService.isOwner's doc - this endpoint
- * deliberately never touches GrantGroups). `email` is contact-only here, same
- * as everywhere else in EmployeeDto - never the account's login email. */
+ * and no grantGroupIds/roleIds either - this endpoint deliberately never
+ * touches GrantGroups (self-service profile completion, not a permissions
+ * editor); the founder already got their real grants at registration through
+ * the Admin starter GrantGroup, no bypass involved. `email` is contact-only
+ * here, same as everywhere else in EmployeeDto - never the account's login
+ * email. */
 export type CompleteOwnEmployeeRequest = Omit<
   EmployeeUpsertRequest,
   'email'

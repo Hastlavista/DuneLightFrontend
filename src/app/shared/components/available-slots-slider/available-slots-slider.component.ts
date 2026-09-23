@@ -49,9 +49,10 @@ export class AvailableSlotsSliderComponent {
   readonly companyId = input<string | null>(null);
   /** The day to show - mirrors the caller's own date field (e.g. the "Datum i
    * vrijeme" field on NewAppointmentDialog, itself seeded from the schedule
-   * grid's clicked cell). Only used to seed/re-sync `selectedDate` (see the
-   * constructor effect below) - the slider's own prev/next-day nav then
-   * browses independently of it without fighting this input. */
+   * grid's clicked cell). `selectedDate` below derives from this directly, so
+   * the slider always renders/fetches the caller's date from its very first
+   * render - the slider's own prev/next-day nav then browses independently of
+   * it (via `manualDateOverride`) without fighting this input. */
   readonly initialDate = input<Date | null>(null);
   /** Bumped by the hosting dialog whenever it is reopened or a scheduling
    * mutation makes an already-rendered result potentially stale. The dialog
@@ -67,7 +68,17 @@ export class AvailableSlotsSliderComponent {
 
   readonly slotSelected = output<AvailableSlotSelection>();
 
-  readonly selectedDate = signal(startOfDay(new Date()));
+  /** Set only by explicit prev/next-day navigation (see goPrevDay/goNextDay) -
+   * null means "no manual override, follow the caller's `initialDate`". Kept
+   * separate from `selectedDate` itself (a derived `computed` below) so the
+   * fetch effect never has to see a temporary/wrong date: there is no default
+   * value to seed and later correct, so there is nothing for a second effect
+   * to fix up mid-flush. Cleared whenever `initialDate` changes (see
+   * constructor) so a fresh caller-provided date always wins over a stale
+   * manual navigation from a previous dialog state. */
+  private readonly manualDateOverride = signal<Date | null>(null);
+
+  readonly selectedDate = computed(() => this.manualDateOverride() ?? startOfDay(this.initialDate() ?? new Date()));
   readonly loading = signal(false);
   readonly expanded = signal(true);
 
@@ -90,6 +101,21 @@ export class AvailableSlotsSliderComponent {
   });
 
   constructor() {
+    // Drop any earlier manual prev/next-day navigation whenever the caller
+    // supplies a new `initialDate` (the user editing the "Datum i vrijeme"
+    // field, or the dialog being reused with a new date) - registered BEFORE
+    // the fetch effect below so it always settles `manualDateOverride` first
+    // within a flush, meaning `selectedDate` never resolves to a stale
+    // override on the same tick `initialDate` changes. Reads
+    // `manualDateOverride` untracked so it only reacts to `initialDate`
+    // changing, never to the slider's own prev/next-day nav.
+    effect(() => {
+      this.initialDate();
+      if (untracked(this.manualDateOverride) !== null) {
+        this.manualDateOverride.set(null);
+      }
+    });
+
     effect(() => {
       const serviceId = this.serviceId();
       const companyId = this.companyId();
@@ -110,21 +136,6 @@ export class AvailableSlotsSliderComponent {
       this.fetchSlots(serviceId, companyId, employeeId, date);
     });
 
-    // Re-sync the displayed day whenever the caller's own date changes (dialog
-    // open with a pre-filled date, or the user editing the "Datum i vrijeme"
-    // field). `selectedDate` is read untracked so this doesn't fire back on
-    // the slider's own prev/next-day nav, which only touches `selectedDate`.
-    effect(() => {
-      const initial = this.initialDate();
-      if (!initial) {
-        return;
-      }
-      const day = startOfDay(initial);
-      if (!isSameDay(day, untracked(this.selectedDate))) {
-        this.selectedDate.set(day);
-      }
-    });
-
     // If the caller's locked/picked trainer changes to someone other than the
     // one behind an already-made selection, that selection no longer applies
     // - drop it and re-expand so the slider re-offers slots for the new
@@ -140,11 +151,11 @@ export class AvailableSlotsSliderComponent {
   }
 
   goPrevDay(): void {
-    this.selectedDate.update((date) => addDays(date, -1));
+    this.manualDateOverride.set(addDays(this.selectedDate(), -1));
   }
 
   goNextDay(): void {
-    this.selectedDate.update((date) => addDays(date, 1));
+    this.manualDateOverride.set(addDays(this.selectedDate(), 1));
   }
 
   expand(): void {

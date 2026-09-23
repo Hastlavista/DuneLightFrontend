@@ -234,41 +234,34 @@
       </section>
     }
 
-    @if (currentEmployeeService.isOwner()) {
+    @if (canViewGrantGroups() || canViewRoles()) {
       <section class="employee-form-page__section">
         <h3>{{ 'EMPLOYEES.SECTION_PERMISSIONS' | translate }}</h3>
 
-        @if (!isSelfOwnerEdit()) {
+        @if (canViewGrantGroups()) {
           <div class="dl-form__field">
             <label for="employee-grant-groups">{{ 'EMPLOYEES.FIELD_GRANT_GROUPS' | translate }}</label>
             <div class="employee-form-page__choices">
               @for (group of grantGroupOptions(); track group.id) {
-                <button type="button" [class.employee-form-page__choice--active]="isSelected(form.controls.grantGroupIds.value, group.id)" (click)="toggleGrantGroup(group.id)">{{ group.name }}</button>
+                <button type="button" [class.employee-form-page__choice--active]="isSelected(form.controls.grantGroupIds.value, group.id)" (click)="toggleGrantGroup(group.id)" [disabled]="!canManageGrantGroupAssignments()">{{ group.name }}</button>
               }
             </div>
             @if (form.controls.grantGroupIds.invalid && form.controls.grantGroupIds.touched) {
               <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.GRANT_GROUPS_REQUIRED' | translate }}</span>
             }
           </div>
-        } @else {
-          <div class="dl-form__field">
-            <span class="dl-form__hint">{{ 'EMPLOYEES.GRANT_GROUPS_NOT_APPLICABLE_OWNER' | translate }}</span>
-          </div>
         }
 
-        <div class="dl-form__field">
-          <label for="employee-roles">{{ 'EMPLOYEES.FIELD_ROLES' | translate }}</label>
-          <div class="employee-form-page__choices">
-            @for (role of roleOptions(); track role.id) {
-              <button type="button" [class.employee-form-page__choice--active]="isSelected(form.controls.roleIds.value, role.id)" (click)="toggleRole(role.id)">{{ role.name }}</button>
-            }
+        @if (canViewRoles()) {
+          <div class="dl-form__field">
+            <label for="employee-roles">{{ 'EMPLOYEES.FIELD_ROLES' | translate }}</label>
+            <div class="employee-form-page__choices">
+              @for (role of roleOptions(); track role.id) {
+                <button type="button" [class.employee-form-page__choice--active]="isSelected(form.controls.roleIds.value, role.id)" (click)="toggleRole(role.id)" [disabled]="!canManageRoleAssignments()">{{ role.name }}</button>
+              }
+            </div>
           </div>
-        </div>
-      </section>
-    } @else {
-      <section class="employee-form-page__section">
-        <h3>{{ 'EMPLOYEES.SECTION_PERMISSIONS' | translate }}</h3>
-        <span class="dl-form__hint">{{ 'EMPLOYEES.PERMISSIONS_OWNER_ONLY' | translate }}</span>
+        }
       </section>
     }
 

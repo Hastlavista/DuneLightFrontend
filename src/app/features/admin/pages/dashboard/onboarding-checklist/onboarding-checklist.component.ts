@@ -24,7 +24,10 @@ interface LinkStep {
 
 interface ProfileStep {
   kind: 'profile';
-  id: keyof OnboardingStatusDto;
+  /** No backend OnboardingStatusDto flag backs this one (Residual IsOwner
+   * Removal) - "done" comes straight from CurrentEmployeeService.hasProfile(),
+   * the viewer-specific signal the old backend flag was standing in for. */
+  id: 'hasOwnProfile';
   titleKey: string;
   descriptionKey: string;
   actionKey: string;
@@ -38,13 +41,15 @@ type ChecklistStep = LinkStep | ProfileStep;
  * dashboard that guides a freshly-registered organization (no companies,
  * engagement types, services, ...) through setup in the right order. Fetches
  * GET /api/onboarding-status once and hides itself entirely once every flag
- * is true - unlike CompleteEmployeeProfileCtaComponent, this is not
- * isOwner-gated by itself (any admin-area visitor benefits from the guide),
- * but the "Vaš profil" step's action is, since only the Owner can complete
- * their own profile via this flow (see CompleteEmployeeProfileCtaComponent's
- * own doc for why). The "Ovlasti" (hasGrantGroup) step is entirely omitted
- * for non-Owners the same way, since /app/permissions is ownerGuard-only -
- * see hasGrantGroup's own doc.
+ * is true - this widget itself is not gated by anything (any admin-area
+ * visitor benefits from the guide), but the "Vaš profil" step's action only
+ * shows for a viewer with no Employee profile yet (see
+ * CurrentEmployeeService.hasProfile's own doc - in practice only ever the
+ * pre-profile founder, right after Register). The "Ovlasti" (hasGrantGroup)
+ * step is gated on permissions.manage (Grant-only Tenant Authorization
+ * Refactor - GrantGroup creation is purely grant-based) - see
+ * hasGrantGroup's own doc. Residual IsOwner Removal - no Owner concept
+ * anywhere in this component any more.
  */
 @Component({
   selector: 'app-onboarding-checklist',
@@ -60,21 +65,25 @@ export class OnboardingChecklistComponent {
 
   private readonly status = signal<OnboardingStatusDto | null>(null);
 
-  readonly isOwner = this.currentEmployeeService.isOwner;
+  /** Grant-only Tenant Authorization Refactor - whether this viewer can reach
+   * GrantGroup administration at all (permissions.manage), not an Owner
+   * check. A brand-new organization's founder gets this through the Admin
+   * starter GrantGroup assigned at registration (see AuthService.Register). */
+  readonly canManagePermissions = computed(() => this.currentEmployeeService.can('permissions.manage'));
 
   /** No backend onboarding-status flag exists for this (unlike every other
-   * step) - GrantGroups are an Owner-only resource fetched straight from
-   * GrantGroupsService instead. Since employee creation no longer hands out
-   * any default grants (a brand-new org starts with zero GrantGroups), the
-   * "Zaposlenici" step below is a dead end until at least one exists to pick
-   * from - this step exists to surface that before the Owner gets there.
-   * Starts true so the step doesn't flash as "not done" before the Owner-only
-   * fetch below resolves (or never resolves, for a non-Owner). */
+   * step) - GrantGroups are fetched straight from GrantGroupsService instead,
+   * for viewers who can manage permissions. Since employee creation no longer
+   * hands out any default grants (a brand-new org starts with just its Admin
+   * starter GrantGroup), the "Zaposlenici" step below is a dead end until a
+   * second GrantGroup exists to pick from - this step exists to surface that.
+   * Starts true so the step doesn't flash as "not done" before the fetch
+   * below resolves (or never resolves, for a viewer without permissions.manage). */
   readonly hasGrantGroup = signal(true);
   private grantGroupsChecked = false;
 
   /** Shown in a callout above the checklist - this is the only place a
-   * freshly-registered Owner can see the slug they'll need on every future
+   * freshly-registered founder can see the slug they'll need on every future
    * login (register() goes straight into the app, no confirmation screen).
    * Will eventually also be emailed to them; for now this is the only copy. */
   readonly organizationSlug = this.authService.organizationSlug;
@@ -117,16 +126,16 @@ export class OnboardingChecklistComponent {
       },
       {
         kind: 'profile',
-        id: 'hasOwnerProfile',
+        id: 'hasOwnProfile',
         titleKey: 'DASHBOARD.ONBOARDING.OWNER_PROFILE_TITLE',
         descriptionKey: 'DASHBOARD.ONBOARDING.OWNER_PROFILE_DESC',
         actionKey: 'DASHBOARD.ONBOARDING.OWNER_PROFILE_ACTION',
-        done: status.hasOwnerProfile,
+        done: this.currentEmployeeService.hasProfile(),
       },
-      // Owner-only, and no OnboardingStatusDto flag backs it - see
-      // hasGrantGroup's own doc. Placed right before "Zaposlenici" since
-      // that's the step it unblocks.
-      ...(this.isOwner()
+      // Gated on permissions.manage, and no OnboardingStatusDto flag backs it
+      // - see hasGrantGroup's own doc. Placed right before "Zaposlenici"
+      // since that's the step it unblocks.
+      ...(this.canManagePermissions()
         ? [
             {
               kind: 'link' as const,
@@ -176,12 +185,13 @@ export class OnboardingChecklistComponent {
   constructor() {
     this.refreshStatus();
 
-    // isOwner() only resolves once CurrentEmployeeService's async /me load
-    // finishes, so this can't just run once at construction - wait for it,
-    // and skip entirely for a non-Owner (GET .../grant-groups is Owner-only,
-    // see GrantGroupsService's own doc).
+    // can() only resolves meaningfully once CurrentEmployeeService's async
+    // /me load finishes, so this can't just run once at construction - wait
+    // for it, and skip entirely for a viewer without permissions.manage (GET
+    // .../grant-groups requires permissions.view/manage, see
+    // GrantGroupsService's own doc).
     effect(() => {
-      if (this.isOwner() && !this.grantGroupsChecked) {
+      if (this.canManagePermissions() && !this.grantGroupsChecked) {
         this.grantGroupsChecked = true;
         this.grantGroupsService.getAll().subscribe((groups) => this.hasGrantGroup.set(groups.length > 0));
       }

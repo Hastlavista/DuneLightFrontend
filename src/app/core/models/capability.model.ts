@@ -38,7 +38,7 @@ export interface CapabilityDefinitionGrantDto {
   role: CapabilityGrantRole;
 }
 
-/** GET /api/permissions/capabilities and GET /api/permissions/capabilities/{key} (Owner-only). */
+/** GET /api/permissions/capabilities and GET /api/permissions/capabilities/{key} (permissions.view/permissions.manage). */
 export interface CapabilityDefinitionDto {
   id: string;
   key: string;
@@ -65,7 +65,7 @@ export interface DefaultRoleTemplateGrantDto {
   reason: DefaultRoleTemplateGrantReason;
 }
 
-/** GET /api/permissions/role-templates and GET /api/permissions/role-templates/{key} (Owner-only). */
+/** GET /api/permissions/role-templates and GET /api/permissions/role-templates/{key} (permissions.view/permissions.manage). */
 export interface DefaultRoleTemplateDto {
   id: string;
   key: string;
@@ -93,7 +93,7 @@ export interface GrantGroupTemplateGrantDto {
   appliedAt: string;
 }
 
-/** GET /api/permissions/grant-groups/{id}/template-match (Owner-only).
+/** GET /api/permissions/grant-groups/{id}/template-match (permissions.view/permissions.manage).
  * `hasSnapshotMetadata: false` means the group has no capability provenance
  * at all - either genuinely custom, or predates the FAZA 1 migration (see
  * grant-group-form.component.ts's drifted-group handling, Part L). */
@@ -129,4 +129,89 @@ export interface GrantGroupCapabilityWriteRequest {
     selectedScope: CapabilitySelectedScope;
   }>;
   manualGrantKeys: string[];
+}
+
+/**
+ * DefaultRoleTemplate v2 upgrade workflow (see the "DefaultRoleTemplate v2 —
+ * Diff / Review / Apply Upgrade Phase" plan, section 5) - mirrors the backend
+ * DTOs under Core/DTOs/Capabilities/GrantGroupTemplateUpgradeDtos.cs 1:1.
+ * `hasUpgrade` is independent of `isCustomized` - drift never suppresses
+ * discovery of a newer template version.
+ */
+export interface GrantGroupTemplateUpgradeStatusDto {
+  grantGroupId: string;
+  templateKey: string;
+  currentTemplateVersion: number;
+  latestTemplateVersion: number;
+  hasUpgrade: boolean;
+  isCustomized: boolean;
+}
+
+export interface CapabilityDiffEntryDto {
+  capabilityKey: string;
+  /** Null when the capability doesn't exist on that side (added/removed entries) — backend does not track
+   * per-capability version numbers for this diff in this phase (no CapabilityDefinition version changes yet). */
+  currentScope: CapabilitySelectedScope | null;
+  targetScope: CapabilitySelectedScope | null;
+}
+
+export type RawGrantSource = 'Capability' | 'TemplateCompatibility' | 'ManualAdvanced';
+
+export interface RawGrantChangeDto {
+  grantKey: string;
+  source: RawGrantSource;
+}
+
+export type ConflictResolution = 'PreserveCurrent' | 'UseTemplate';
+
+export interface ConflictDto {
+  capabilityKey: string;
+  baseScope: CapabilitySelectedScope;
+  currentScope: CapabilitySelectedScope;
+  targetScope: CapabilitySelectedScope;
+  defaultResolution: ConflictResolution;
+}
+
+/** GET .../{id}/template-upgrade-diff?targetVersion= - read-only, never
+ * mutates. `stateToken` must be echoed back unchanged on Preview/Apply so the
+ * backend can detect concurrent drift (Part K). */
+export interface GrantGroupTemplateDiffDto {
+  currentTemplate: { key: string; version: number };
+  targetTemplate: { key: string; version: number };
+  addedCapabilities: CapabilityDiffEntryDto[];
+  removedCapabilities: CapabilityDiffEntryDto[];
+  changedCapabilities: CapabilityDiffEntryDto[];
+  rawGrantsAdded: RawGrantChangeDto[];
+  rawGrantsRemoved: RawGrantChangeDto[];
+  rawGrantsUnchanged: RawGrantChangeDto[];
+  conflicts: ConflictDto[];
+  stateToken: string;
+}
+
+/** Body for POST .../template-upgrade/preview and .../template-upgrade/apply.
+ * `resolutions` only needs entries for capabilities actually present in
+ * `GrantGroupTemplateDiffDto.conflicts` - the backend rejects an incomplete
+ * set with GRANT_GROUP_UPGRADE_CONFLICT_RESOLUTION_REQUIRED, independent of
+ * any frontend gating (defense in depth, Part strict-gating decision). */
+export interface GrantGroupTemplateUpgradePlanRequest {
+  targetTemplateVersion: number;
+  resolutions: Array<{ capabilityKey: string; resolution: ConflictResolution }>;
+  stateToken: string;
+}
+
+/** Response of POST .../template-upgrade/preview - a dry-run of Apply with no
+ * DB writes. The dialog only ever renders this server-computed shape; it
+ * never recomputes raw grants itself (capability-materialization stays
+ * backend-only, see capability-materialization.ts's own doc). */
+export interface GrantGroupTemplateUpgradePlanDto {
+  /** Backend's GrantGroupCapabilitySelectionDto — note: unlike
+   * DefaultRoleTemplateCapabilityDto, it has no capabilityDefinitionId. */
+  resultingCapabilitySelections: Array<{ capabilityKey: string; capabilityVersion: number; selectedScope: CapabilitySelectedScope }>;
+  preservedManualGrantKeys: string[];
+  resultingTemplateCompatibilityGrants: string[];
+  rawGrantsAdded: RawGrantChangeDto[];
+  rawGrantsRemoved: RawGrantChangeDto[];
+  /** Just the capability keys of resolved conflicts, not full ConflictDto objects. */
+  conflictsResolved: string[];
+  stateToken: string;
 }

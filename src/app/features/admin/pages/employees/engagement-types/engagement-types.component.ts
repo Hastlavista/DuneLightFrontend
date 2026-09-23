@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ConfirmationService } from 'primeng/api';
@@ -41,8 +41,19 @@ export class EngagementTypesComponent {
   readonly dialogVisible = signal(false);
   readonly editingType = signal<EngagementTypeDto | null>(null);
 
+  /** GET /api/employees/engagement-types requires employees.engagement-types.view.
+   * This tab is mounted eagerly alongside the "Zaposlenici" tab (both
+   * p-tabpanel contents render regardless of which is active - see
+   * EmployeesComponent), and the parent page is reachable via
+   * employees.view/employees.manage, neither of which implies this grant.
+   * Skip the call entirely rather than firing a request that 403s the moment
+   * the Employees page loads, for any viewer lacking this specific grant. */
+  readonly canViewList = computed(() => this.currentEmployeeService.hasGrant('employees.engagement-types.view'));
+
   constructor() {
-    this.fetch(0, this.rows());
+    if (this.canViewList()) {
+      this.fetch(0, this.rows());
+    }
     if (this.route.snapshot.queryParamMap.get('create') === 'engagement-type') {
       this.openCreate();
     }

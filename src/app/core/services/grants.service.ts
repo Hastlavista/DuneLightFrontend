@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { GrantDto } from '../models/permissions.model';
 
-/** GET /api/grants - the static grant catalog (Owner-only), used to build the
+/** GET /api/grants - the static grant catalog (permissions.view/permissions.manage), used to build the
  * grouped-by-module checkbox list on the GrantGroup form. Not a
  * PagedCrudService: a single read-only endpoint, no paging/CRUD at all. */
 @Injectable({ providedIn: 'root' })

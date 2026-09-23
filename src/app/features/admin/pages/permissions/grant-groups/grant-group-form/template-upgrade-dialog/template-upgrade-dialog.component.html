@@ -1,0 +1,137 @@
+<p-dialog
+  [(visible)]="visible"
+  [modal]="true"
+  [style]="{ width: '42rem', maxWidth: 'calc(100vw - 2rem)' }"
+  styleClass="template-upgrade-dialog"
+>
+  <ng-template #header>
+    <div class="template-upgrade-dialog__header">
+      <span class="template-upgrade-dialog__mark"><i class="pi pi-arrow-up-right"></i></span>
+      <div>
+        <h2>{{ 'PERMISSIONS.GRANT_GROUPS.UPGRADE.DIALOG_TITLE' | translate }}</h2>
+      </div>
+    </div>
+  </ng-template>
+
+  @if (loading()) {
+    <p class="template-upgrade-dialog__loading">{{ 'PERMISSIONS.GRANT_GROUPS.LOADING' | translate }}</p>
+  } @else if (loadError()) {
+    <div class="template-upgrade-dialog__error">
+      <p>{{ 'PERMISSIONS.GRANT_GROUPS.CATALOG_ERROR' | translate }}</p>
+      <p-button type="button" [label]="'COMMON.RETRY' | translate" severity="secondary" [outlined]="true" (onClick)="onRefresh()" />
+    </div>
+  } @else if (diff(); as diff) {
+    <div class="template-upgrade-dialog__body">
+      @if (isNoOpDiff()) {
+        <p class="template-upgrade-dialog__no-op">{{ 'PERMISSIONS.GRANT_GROUPS.UPGRADE.NO_PERMISSION_CHANGES' | translate }}</p>
+      } @else {
+        @if (diff.addedCapabilities.length > 0) {
+          <section class="template-upgrade-dialog__section">
+            <h3>{{ 'PERMISSIONS.GRANT_GROUPS.UPGRADE.SECTION_ADDED' | translate }}</h3>
+            <ul>
+              @for (entry of diff.addedCapabilities; track entry.capabilityKey) {
+                <li>{{ capabilityLabel(entry.capabilityKey) }}</li>
+              }
+            </ul>
+          </section>
+        }
+
+        @if (changedMinusConflicts().length > 0) {
+          <section class="template-upgrade-dialog__section">
+            <h3>{{ 'PERMISSIONS.GRANT_GROUPS.UPGRADE.SECTION_CHANGED' | translate }}</h3>
+            <ul>
+              @for (entry of changedMinusConflicts(); track entry.capabilityKey) {
+                <li>{{ capabilityLabel(entry.capabilityKey) }}</li>
+              }
+            </ul>
+          </section>
+        }
+
+        @if (diff.removedCapabilities.length > 0) {
+          <section class="template-upgrade-dialog__section">
+            <h3>{{ 'PERMISSIONS.GRANT_GROUPS.UPGRADE.SECTION_REMOVED' | translate }}</h3>
+            <ul>
+              @for (entry of diff.removedCapabilities; track entry.capabilityKey) {
+                <li>{{ capabilityLabel(entry.capabilityKey) }}</li>
+              }
+            </ul>
+          </section>
+        }
+
+        @if (diff.conflicts.length > 0) {
+          <section class="template-upgrade-dialog__section">
+            <h3>{{ 'PERMISSIONS.GRANT_GROUPS.UPGRADE.SECTION_CUSTOMIZATIONS' | translate }}</h3>
+            <div class="template-upgrade-dialog__conflicts">
+              @for (conflict of diff.conflicts; track conflict.capabilityKey) {
+                <app-conflict-resolution-row
+                  [conflict]="conflict"
+                  [selectedResolution]="resolutionFor(conflict.capabilityKey)"
+                  [oldTemplateVersion]="diff.currentTemplate.version"
+                  [newTemplateVersion]="diff.targetTemplate.version"
+                  (resolutionChange)="onResolutionChange(conflict.capabilityKey, $event)"
+                />
+              }
+            </div>
+            <p-button
+              type="button"
+              severity="secondary"
+              [outlined]="true"
+              [label]="'PERMISSIONS.GRANT_GROUPS.UPGRADE.PRESERVE_ALL_ACTION' | translate"
+              (onClick)="onPreserveAll()"
+            />
+          </section>
+        }
+
+        <section class="template-upgrade-dialog__section">
+          <h3>{{ 'PERMISSIONS.GRANT_GROUPS.UPGRADE.SECTION_MANUAL_GRANTS' | translate }}</h3>
+          <p class="template-upgrade-dialog__hint">{{ 'PERMISSIONS.GRANT_GROUPS.MANUAL_ADVANCED' | translate }}</p>
+        </section>
+      }
+
+      <p-panel [toggleable]="true" [collapsed]="true" [header]="'PERMISSIONS.GRANT_GROUPS.UPGRADE.TECHNICAL_DETAILS_TOGGLE' | translate">
+        <div class="template-upgrade-dialog__technical">
+          <p>{{ 'PERMISSIONS.GRANT_GROUPS.UPGRADE.SECTION_ADDED' | translate }} ({{ diff.rawGrantsAdded.length }})</p>
+          <ul>
+            @for (grant of diff.rawGrantsAdded; track grant.grantKey) {
+              <li>{{ grant.grantKey }} ({{ grant.source }})</li>
+            }
+          </ul>
+          <p>{{ 'PERMISSIONS.GRANT_GROUPS.UPGRADE.SECTION_REMOVED' | translate }} ({{ diff.rawGrantsRemoved.length }})</p>
+          <ul>
+            @for (grant of diff.rawGrantsRemoved; track grant.grantKey) {
+              <li>{{ grant.grantKey }} ({{ grant.source }})</li>
+            }
+          </ul>
+          <p>{{ 'PERMISSIONS.GRANT_GROUPS.UPGRADE.TECHNICAL_UNCHANGED' | translate }} ({{ diff.rawGrantsUnchanged.length }})</p>
+          <ul>
+            @for (grant of diff.rawGrantsUnchanged; track grant.grantKey) {
+              <li>{{ grant.grantKey }} ({{ grant.source }})</li>
+            }
+          </ul>
+        </div>
+      </p-panel>
+
+      @if (staleState()) {
+        <div class="template-upgrade-dialog__stale">
+          <span>{{ 'PERMISSIONS.GRANT_GROUPS.UPGRADE.STATE_CHANGED_MESSAGE' | translate }}</span>
+          <p-button type="button" severity="secondary" [outlined]="true" [label]="'PERMISSIONS.GRANT_GROUPS.UPGRADE.REFRESH_ACTION' | translate" (onClick)="onRefresh()" />
+        </div>
+      }
+
+      @if (conflictResolutionRequiredError()) {
+        <span class="dl-form__error">{{ 'errors.GRANT_GROUP_UPGRADE_CONFLICT_RESOLUTION_REQUIRED' | translate }}</span>
+      }
+
+      <div class="template-upgrade-dialog__actions">
+        <p-button type="button" severity="secondary" [outlined]="true" [label]="'COMMON.CANCEL' | translate" (onClick)="onCancel()" />
+        <p-button
+          type="button"
+          [label]="applying() ? ('PERMISSIONS.GRANT_GROUPS.UPGRADE.APPLYING' | translate) : ('PERMISSIONS.GRANT_GROUPS.UPGRADE.APPLY_BUTTON' | translate)"
+          [loading]="applying()"
+          [disabled]="!allConflictsResolved() || applying()"
+          (onClick)="onApply()"
+        />
+      </div>
+    </div>
+  }
+</p-dialog>

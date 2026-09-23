@@ -27,6 +27,12 @@
               {{ 'PERMISSIONS.GRANT_GROUPS.TEMPLATE_SOURCE' | translate: { template: authoringState()!.templateSourceKey, version: authoringState()!.templateSourceVersion } }}
               @if (authoringState()!.isCustomized) { <span>· {{ 'PERMISSIONS.GRANT_GROUPS.CUSTOMIZED' | translate }}</span> }
             </div>
+            @if (upgradeStatus()?.hasUpgrade) {
+              <div class="grant-group-form-page__template-badge grant-group-form-page__upgrade-banner" style="justify-content: space-between">
+                <span>{{ 'PERMISSIONS.GRANT_GROUPS.UPGRADE.BANNER_BODY' | translate: { template: upgradeStatus()!.templateKey, targetVersion: upgradeStatus()!.latestTemplateVersion, currentVersion: upgradeStatus()!.currentTemplateVersion } }}</span>
+                <button type="button" style="all: unset; font-weight: 700; cursor: pointer" (click)="openUpgradeReview()">{{ 'PERMISSIONS.GRANT_GROUPS.UPGRADE.REVIEW_ACTION' | translate }}</button>
+              </div>
+            }
           } @else if (isLegacy()) {
             <div class="grant-group-form-page__template-badge grant-group-form-page__template-badge--custom">
               <i class="pi pi-pencil"></i>
@@ -150,4 +156,15 @@
       </div>
     </form>
   </div>
+
+  @if (editingId(); as id) {
+    @if (upgradeStatus(); as status) {
+      <app-template-upgrade-dialog
+        [(visible)]="upgradeDialogVisible"
+        [grantGroupId]="id"
+        [targetVersion]="status.latestTemplateVersion"
+        (applied)="onUpgradeApplied()"
+      />
+    }
+  }
 </div>

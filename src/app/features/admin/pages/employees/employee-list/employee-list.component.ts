@@ -84,10 +84,21 @@ export class EmployeeListComponent {
     ];
   });
 
+  /** GET /api/employees requires employees.view - employees.manage alone (a
+   * custom GrantGroup) does not imply it, per EmployeesController.GetPaged.
+   * Skip the call entirely rather than firing a request the current grants
+   * can't pass: without this, a manage-only viewer got a 403 that the
+   * template's items().length===0 branch silently rendered as "no employees
+   * found", indistinguishable from a genuinely empty org (see
+   * EMPLOYEES.NO_LIST_PERMISSION for the distinct message instead). */
+  readonly canViewList = computed(() => this.currentEmployeeService.hasGrant('employees.view'));
+
   constructor() {
-    this.loadActiveCompanies();
-    this.loadActiveEngagementTypes();
-    this.fetch(0, this.rows());
+    if (this.canViewList()) {
+      this.loadActiveCompanies();
+      this.loadActiveEngagementTypes();
+      this.fetch(0, this.rows());
+    }
   }
 
   onSearchChange(term: string): void {
@@ -199,23 +210,13 @@ export class EmployeeListComponent {
     return `${employee.firstName.charAt(0)}${employee.lastName.charAt(0)}`.toUpperCase();
   }
 
-  /** Only ever true for the org's Owner viewing their own row (see
-   * CurrentEmployeeService.isOwner) - EmployeeDto doesn't carry IsOwner for
-   * every row, so this can't identify the Owner in anyone else's rows/when
-   * viewed by a non-Owner. */
-  isOwnerRow(employee: EmployeeDto): boolean {
-    return this.currentEmployeeService.isOwner() && employee.id === this.currentEmployeeService.employee()?.employeeId;
-  }
-
-  /** "Uloga" column: Owner badge for the one row that can be identified as
-   * such (see isOwnerRow), else Role (business tag) names if any, else
-   * GrantGroup names, else a dash. Priority matches how meaningful each is to
-   * a viewer scanning the list - Role is a deliberately-chosen business label,
+  /** "Uloga" column: Role (business tag) names if any, else GrantGroup names,
+   * else a dash. Residual IsOwner Removal - no special-cased Owner badge any
+   * more; the organization's founder is just another row, shown the same way
+   * as everyone else. Priority matches how meaningful each is to a viewer
+   * scanning the list - Role is a deliberately-chosen business label,
    * GrantGroup names are more technical/permission-shaped. */
   roleColumnLabel(employee: EmployeeDto): string {
-    if (this.isOwnerRow(employee)) {
-      return this.translate.instant('EMPLOYEES.OWNER_BADGE');
-    }
     if (employee.roleNames.length > 0) {
       return employee.roleNames.join(', ');
     }

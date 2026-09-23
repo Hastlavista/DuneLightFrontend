@@ -1,0 +1,27 @@
+:host ::ng-deep .template-upgrade-dialog { overflow: hidden; border: 1px solid var(--rose-border); border-radius: 16px; background: var(--surface-card); box-shadow: 0 24px 50px -28px rgba(46, 50, 60, .35); }
+:host ::ng-deep .template-upgrade-dialog .p-dialog-header { padding: 1.2rem 1.35rem .9rem; border-bottom: 1px solid var(--rose-border); }
+:host ::ng-deep .template-upgrade-dialog .p-dialog-content { padding: 1rem 1.35rem 1.3rem; background: var(--surface-card); overflow: visible; }
+:host ::ng-deep .template-upgrade-dialog .p-dialog-close-button { width: 2rem; height: 2rem; border: 1px solid var(--rose-border); border-radius: 9px; color: var(--ink-muted); }
+
+.template-upgrade-dialog__header { display: flex; align-items: center; gap: .75rem; }
+.template-upgrade-dialog__mark { display: flex; width: 2.35rem; height: 2.35rem; align-items: center; justify-content: center; border: 1px solid var(--rose-border); border-radius: 10px; background: var(--surface-soft); color: var(--brand-primary); }
+.template-upgrade-dialog__header h2 { margin: 0; font-size: 1.15rem; }
+
+.template-upgrade-dialog__body { display: flex; flex-direction: column; gap: 1.1rem; max-height: 65vh; overflow-y: auto; }
+.template-upgrade-dialog__loading, .template-upgrade-dialog__no-op { color: var(--ink-muted); }
+.template-upgrade-dialog__error { display: flex; flex-direction: column; gap: .5rem; align-items: flex-start; }
+
+.template-upgrade-dialog__section { display: flex; flex-direction: column; gap: .4rem; }
+.template-upgrade-dialog__section h3 { margin: 0; font-size: .95rem; }
+.template-upgrade-dialog__section ul { margin: 0; padding-left: 1.2rem; }
+.template-upgrade-dialog__hint { margin: 0; color: var(--ink-muted); font-size: .85rem; }
+
+.template-upgrade-dialog__conflicts { display: flex; flex-direction: column; gap: .6rem; }
+
+.template-upgrade-dialog__technical { display: flex; flex-direction: column; gap: .3rem; font-size: .82rem; }
+.template-upgrade-dialog__technical p { margin: .3rem 0 0; font-weight: 600; }
+.template-upgrade-dialog__technical ul { margin: 0; padding-left: 1.2rem; }
+
+.template-upgrade-dialog__stale { display: flex; align-items: center; justify-content: space-between; gap: .75rem; padding: .6rem .8rem; border: 1px solid var(--rose-border); border-radius: 10px; background: var(--surface-soft); }
+
+.template-upgrade-dialog__actions { display: flex; justify-content: flex-end; gap: .5rem; margin-top: .2rem; }

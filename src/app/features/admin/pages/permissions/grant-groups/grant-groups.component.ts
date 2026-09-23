@@ -6,15 +6,20 @@ import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { finalize } from 'rxjs';
 import { GrantGroupDto } from '../../../../../core/models/permissions.model';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { GrantGroupsService } from '../../../../../core/services/grant-groups.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { ListToolbarComponent } from '../../../../../shared/components/list-toolbar/list-toolbar.component';
 
-/** GrantGroups (Owner-only) - GET isn't paginated (a flat array, same as
- * Grupe), and there's no isActive/activate/deactivate concept here at all -
- * unlike every catalog šifrarnik, a GrantGroup is either present (and usable)
- * or deleted (blocked while any user still references it). Client-side
- * search filter, same rationale as GroupsComponent. */
+/** GrantGroups - page reachable with permissions.view OR permissions.manage
+ * (see PAGE_POLICIES.permissions), but mutation (create/edit/delete) needs
+ * permissions.manage specifically (Grant-only Tenant Authorization Refactor -
+ * no more Owner-only route, no GrantGroup-name check, see canManage below).
+ * GET isn't paginated (a flat array, same as Grupe), and there's no
+ * isActive/activate/deactivate concept here at all - unlike every catalog
+ * šifrarnik, a GrantGroup is either present (and usable) or deleted (blocked
+ * while any user still references it). Client-side search filter, same
+ * rationale as GroupsComponent. */
 @Component({
   selector: 'app-admin-grant-groups',
   imports: [Button, FormsModule, TranslatePipe, ListToolbarComponent],
@@ -27,6 +32,9 @@ export class GrantGroupsComponent {
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
+  private readonly currentEmployeeService = inject(CurrentEmployeeService);
+
+  readonly canManage = computed(() => this.currentEmployeeService.can('permissions.manage'));
 
   readonly allItems = signal<GrantGroupDto[]>([]);
   readonly loading = signal(false);

@@ -54,7 +54,7 @@
     "DUPLICATE_MEMBER_NUMBER": "Taj broj člana je već zauzet.",
     "EMAIL_ALREADY_IN_USE": "Taj email se već koristi.",
     "USER_ALREADY_LINKED": "Ovaj korisnički račun je već povezan s drugim zaposlenikom.",
-    "LAST_ACTIVE_ADMIN": "Nije dopušteno — ovo je posljednji aktivni administrator.",
+    "LAST_PERMISSION_ADMIN_REQUIRED": "Nije dopušteno — organizacija mora imati barem jednog aktivnog korisnika s ovlastima za upravljanje dozvolama.",
     "LAST_ACTIVE_COMPANY": "Nije dopušteno — ovo je posljednja aktivna poslovnica.",
     "LAST_ACTIVE_SLOT": "Nije dopušteno — ovo je posljednji aktivni termin grupe.",
     "ALREADY_MEMBER": "Klijent je već član ove grupe.",
@@ -126,6 +126,8 @@
     "DUPLICATE_CAPABILITY_SELECTION": "Ista sposobnost ne može biti odabrana više puta.",
     "GRANT_KEY_UNKNOWN": "Odabrana ručna ovlast više ne postoji.",
     "GRANT_ALREADY_CAPABILITY_DERIVED": "Ručna ovlast već je izvedena iz odabrane sposobnosti.",
+    "GRANT_GROUP_UPGRADE_STATE_CHANGED": "Stanje ove grupe se u međuvremenu promijenilo. Osvježite pregled promjena i pokušajte ponovno.",
+    "GRANT_GROUP_UPGRADE_CONFLICT_RESOLUTION_REQUIRED": "Sve prilagodbe moraju biti razriješene prije primjene nadogradnje.",
 
     "UNKNOWN": "Došlo je do greške. Pokušajte ponovno."
   },
@@ -851,6 +853,7 @@
     "COL_COMPANIES": "Poslovnice",
     "COL_COLOR": "Boja",
     "EMPTY": "Nema pronađenih zaposlenika.",
+    "NO_LIST_PERMISSION": "Nemate dozvolu za pregled popisa zaposlenika.",
     "FILTER_COMPANY_ALL": "Sve poslovnice",
     "FILTER_ENGAGEMENT_TYPE_ALL": "Sve vrste zaposlenja",
     "FILTER_ROLE_ALL": "Sve uloge",
@@ -897,9 +900,6 @@
     "FIELD_GRANT_GROUPS_PLACEHOLDER": "Odaberite grant grupe",
     "FIELD_ROLES": "Poslovne oznake",
     "FIELD_ROLES_PLACEHOLDER": "Odaberite poslovne oznake (opcionalno)",
-    "GRANT_GROUPS_NOT_APPLICABLE_OWNER": "Vlasnik organizacije uvijek ima puni pristup i ne treba grant grupu.",
-    "PERMISSIONS_OWNER_ONLY": "Dodjelu grant grupa i poslovnih oznaka upravlja isključivo vlasnik organizacije.",
-    "OWNER_BADGE": "Vlasnik",
     "ERRORS": {
       "FIRST_NAME_REQUIRED": "Ime je obavezno.",
       "LAST_NAME_REQUIRED": "Prezime je obavezno.",
@@ -929,6 +929,7 @@
       "COL_NAME": "Naziv",
       "COL_SORT_ORDER": "Redoslijed prikaza",
       "EMPTY": "Nema pronađenih vrsta zaposlenja.",
+      "NO_LIST_PERMISSION": "Nemate dozvolu za pregled vrsta zaposlenja.",
       "FIELD_NAME": "Naziv",
       "FIELD_SORT_ORDER": "Redoslijed prikaza",
       "ERRORS": {
@@ -1495,7 +1496,32 @@
       "CREATED": "Grant grupa je uspješno kreirana.",
       "UPDATED": "Grant grupa je uspješno ažurirana.",
       "DELETED": "Grant grupa je izbrisana.",
-      "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati grant grupu \"{{name}}\"? Brisanje nije moguće ako je grupa još uvijek dodijeljena nekom korisniku."
+      "CONFIRM_DELETE": "Jeste li sigurni da želite izbrisati grant grupu \"{{name}}\"? Brisanje nije moguće ako je grupa još uvijek dodijeljena nekom korisniku.",
+      "UPGRADE": {
+        "BANNER_BODY": "Dostupna je nova verzija predloška {{template}} (v{{currentVersion}} → v{{targetVersion}}).",
+        "REVIEW_ACTION": "Pregledaj promjene",
+        "DIALOG_TITLE": "Pregled nadogradnje predloška",
+        "SECTION_ADDED": "Dodat će se",
+        "SECTION_CHANGED": "Promijenit će se",
+        "SECTION_REMOVED": "Uklonit će se",
+        "SECTION_CUSTOMIZATIONS": "Vaše prilagodbe",
+        "SECTION_MANUAL_GRANTS": "Ručne napredne dozvole",
+        "NO_PERMISSION_CHANGES": "Ova verzija ne mijenja dozvole.",
+        "TECHNICAL_DETAILS_TOGGLE": "Tehnički detalji",
+        "TECHNICAL_UNCHANGED": "Nepromijenjeno",
+        "CONFLICT_TEMPLATE_OLD": "Predložak v{{version}}",
+        "CONFLICT_CURRENT": "Vaša trenutna postavka",
+        "CONFLICT_TEMPLATE_NEW": "Predložak v{{version}}",
+        "CONFLICT_KEEP_CURRENT": "Zadrži moju postavku",
+        "CONFLICT_USE_TEMPLATE": "Primijeni postavku iz predloška",
+        "CONFLICT_RECOMMENDED_BADGE": "Preporučeno",
+        "PRESERVE_ALL_ACTION": "Zadrži sve moje postavke",
+        "APPLY_BUTTON": "Primijeni nadogradnju",
+        "APPLYING": "Primjenjujem…",
+        "APPLIED_SUCCESS": "Nadogradnja predloška je primijenjena.",
+        "STATE_CHANGED_MESSAGE": "Stanje ove grupe se u međuvremenu promijenilo. Osvježite pregled promjena prije nastavka.",
+        "REFRESH_ACTION": "Osvježi"
+      }
     },
     "ROLES": {
       "TAB_LABEL": "Poslovne oznake",

@@ -43,13 +43,15 @@ function primaryCompanyValidator(group: AbstractControl): ValidationErrors | nul
 }
 
 /**
- * "Dovrši svoj profil" modal (frontend #15) - lets an Owner who has a User +
- * Organization but no Employee record yet (GET /api/employees/me 404s, see
- * CurrentEmployeeService's doc) create their own Employee via
- * POST /api/employees (not the with-login endpoint - there's no new login
- * here, the Owner already has one). Deliberately a smaller field set than
- * EmployeeFormComponent (admin's full create/edit form): no login section, no
- * GrantGroups/Roles (the Owner bypasses the grant system entirely), no
+ * "Dovrši svoj profil" modal (frontend #15) - lets the organization's founder,
+ * who has a User + Organization but no Employee record yet (GET
+ * /api/employees/me 404s, see CurrentEmployeeService's doc), create their own
+ * Employee via POST /api/employees (not the with-login endpoint - there's no
+ * new login here, they already have one). Deliberately a smaller field set
+ * than EmployeeFormComponent (admin's full create/edit form): no login
+ * section, no GrantGroups/Roles (this is self-service profile completion, not
+ * a permissions editor - they already hold their real grants through the
+ * Admin starter GrantGroup assigned at registration), no
  * dateOfBirth/address/oib/note/compensationNote/employmentEndDate - those
  * aren't needed to unblock the trainer views this profile exists to enable,
  * and can be filled in later via the normal Zaposlenici edit form.

@@ -26,24 +26,13 @@ export class CurrentEmployeeService {
 
   readonly employee = this.employeeState.asReadonly();
   readonly loaded = this.loadedState.asReadonly();
-  /** false = Owner/Admin logged in without an Employee record yet (rare, e.g. right after Register). */
+  /** false = an authenticated user with no Employee record yet - in practice
+   * only ever the organization's founder, right after Register and before
+   * completing their own profile (see CompleteEmployeeProfileCtaComponent,
+   * the sole consumer that treats this as "show the CTA"). Residual IsOwner
+   * Removal - there is no Owner flag any more; this is the real underlying
+   * business condition the old isOwner()-based check was standing in for. */
   readonly hasProfile = computed(() => this.employeeState() !== null);
-
-  /** Authoritative once an Employee profile exists (EmployeeMeDto.isOwner). With
-   * no profile at all, fall back to the legacy 'Admin' role claim - after the
-   * grant-system migration every with-login-created employee is hardcoded to
-   * UserRole.Member server-side (see EmployeeService.CreateWithLogin), so
-   * 'Admin' is only ever set for the account Register creates (the Owner) -
-   * making it a reliable stand-in until a profile-less Owner creates their own
-   * Employee record. */
-  readonly isOwner = computed(() => {
-    const employee = this.employeeState();
-    // The account that creates an organization is an Admin/Owner even if it
-    // later receives an Employee profile whose legacy isOwner flag is false.
-    // Treat either authoritative source as sufficient, otherwise the sidebar
-    // hides every grant-protected administration page for that account.
-    return (employee?.isOwner ?? false) || (this.loadedState() && this.auth.currentRole() === 'Admin');
-  });
 
   load(): Observable<CurrentEmployee | null> {
     return this.http
@@ -77,10 +66,9 @@ export class CurrentEmployeeService {
 
   /** Returns already-loaded state synchronously (as an Observable) if a load
    * already completed, otherwise triggers one - use this instead of load()
-   * anywhere the caller doesn't want to force a redundant re-fetch (guards
-   * that may run before ShellComponent's constructor gets a chance to call
-   * load() itself - see owner.guard.ts's own doc comment for why that
-   * ordering matters here). */
+   * anywhere the caller doesn't want to force a redundant re-fetch (route
+   * guards such as grantGuard may run before ShellComponent's constructor
+   * gets a chance to call load() itself). */
   ensureLoaded(): Observable<CurrentEmployee | null> {
     if (this.loadedState()) {
       return of(this.employeeState());
@@ -93,19 +81,16 @@ export class CurrentEmployeeService {
     this.loadedState.set(false);
   }
 
-  /** Same OR logic as the backend's [RequireGrant]/GrantContext.HasAny - the
-   * Owner always passes regardless of the key(s) asked for. Mirrors what the
-   * matching endpoint would actually allow, so it's safe to use for "should I
-   * show this button/menu item" decisions - the backend still enforces the
-   * real check on the request itself either way. */
+  /** Same OR logic as the backend's [RequireGrant]/GrantContext.HasAny -
+   * Grant-only Tenant Authorization Refactor, no Owner bypass here any more
+   * (see PermissionPolicy's doc). Mirrors what the matching endpoint would
+   * actually allow, so it's safe to use for "should I show this button/menu
+   * item" decisions - the backend still enforces the real check either way. */
   hasGrant(key: string): boolean {
-    return this.isOwner() || (this.employeeState()?.grants.includes(key) ?? false);
+    return this.employeeState()?.grants.includes(key) ?? false;
   }
 
   hasAnyGrant(keys: readonly string[]): boolean {
-    if (this.isOwner()) {
-      return true;
-    }
     const grants = this.employeeState()?.grants;
     return grants ? keys.some((key) => grants.includes(key)) : false;
   }
@@ -129,13 +114,12 @@ export class CurrentEmployeeService {
     return this.evaluate(PAGE_POLICIES[page]);
   }
 
-  /** Central policy evaluator - the one place Owner bypass is decided for
-   * every page/action policy in the app (see evaluatePermissionPolicy's own
-   * doc for the full anyOf/allOf/ownerOnly semantics). can()/canPage() are
-   * thin catalog lookups over this; a guard or component with a genuine
-   * one-off policy (not worth adding to either catalog) may also call this
-   * directly. */
+  /** Central policy evaluator (see evaluatePermissionPolicy's own doc for the
+   * full anyOf/allOf semantics - no Owner bypass, Grant-only Tenant
+   * Authorization Refactor). can()/canPage() are thin catalog lookups over
+   * this; a guard or component with a genuine one-off policy (not worth
+   * adding to either catalog) may also call this directly. */
   evaluate(policy: PermissionPolicy): boolean {
-    return evaluatePermissionPolicy(policy, { isOwner: this.isOwner(), grants: this.employeeState()?.grants ?? [] });
+    return evaluatePermissionPolicy(policy, { grants: this.employeeState()?.grants ?? [] });
   }
 }

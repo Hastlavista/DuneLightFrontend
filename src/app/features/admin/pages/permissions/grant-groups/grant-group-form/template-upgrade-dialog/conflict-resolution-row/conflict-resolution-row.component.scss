@@ -1,0 +1,43 @@
+.conflict-resolution-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--p-content-border-color);
+  border-radius: var(--p-content-border-radius);
+
+  &__header {
+    font-weight: 600;
+  }
+
+  &__scopes {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    font-size: 0.85rem;
+    color: var(--p-text-muted-color);
+  }
+
+  &__options {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 0.25rem;
+  }
+
+  &__option {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    cursor: pointer;
+  }
+
+  &__recommended {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--p-primary-color);
+    border: 1px solid var(--p-primary-color);
+    border-radius: 999px;
+    padding: 0.05rem 0.5rem;
+  }
+}

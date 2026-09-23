@@ -60,7 +60,6 @@ function currentEmployee(overrides: Partial<CurrentEmployee> = {}): CurrentEmplo
     firstName: 'Ana',
     lastName: 'Vlasnik',
     role: 'Admin',
-    isOwner: false,
     grants: [],
     colorHex: null,
     companies: [],
@@ -95,12 +94,17 @@ function routeStub(id: string) {
 
 /** Flushes the lookups every mode fires (companies/services/engagement-types),
  * plus /api/employees/me for CurrentEmployeeService and, in edit mode, the
- * employee GET itself. Deliberately keeps `employee.isOwner` false in the
- * validation tests (8-10) and the legacy-wording test (6) - GrantGroup/Role
- * definition is Owner-only (see GrantGroupsController), so a non-Owner viewer
- * never fires those list/assignment requests at all (see the matching skip in
- * the component's constructor/applyEmployee), keeping this fixture honest
- * about what a real employees.role.manage-only viewer actually sees. */
+ * employee GET itself. Residual IsOwner Removal - there is no Owner concept
+ * left to keep honest here; GrantGroup/Role list and assignment requests are
+ * each gated behind their own real grant (permissions.view/manage for
+ * GrantGroups, employees.view/manage for Roles - see canViewGrantGroups/
+ * canViewRoles's own doc on the component), so this fixture only expects the
+ * ones the given employee's grants actually unlock.
+ *
+ * The three catalog lookup calls are each gated behind their own .view grant
+ * (see loadActiveCompanies/loadActiveServices/loadActiveEngagementTypes) -
+ * this fixture only expects the ones the given employee's grants actually unlock,
+ * mirroring what the component itself will (or won't) fire. */
 async function createFixture(id: string, employee: CurrentEmployee): Promise<{ fixture: ComponentFixture<EmployeeFormComponent>; httpMock: HttpTestingController }> {
   await TestBed.configureTestingModule({
     imports: [EmployeeFormComponent],
@@ -120,12 +124,42 @@ async function createFixture(id: string, employee: CurrentEmployee): Promise<{ f
 
   const fixture = TestBed.createComponent(EmployeeFormComponent);
 
-  httpMock.expectOne((req) => req.url.includes('/api/catalog/companies')).flush({ items: [COMPANY], totalCount: 1, page: 1, pageSize: 200 });
-  httpMock.expectOne((req) => req.url.includes('/api/catalog/services')).flush({ items: [], totalCount: 0, page: 1, pageSize: 200 });
-  httpMock.expectOne((req) => req.url.includes('/api/employees/engagement-types')).flush({ items: [ENGAGEMENT_TYPE], totalCount: 1, page: 1, pageSize: 200 });
+  const grants = new Set(employee.grants);
+  if (grants.has('catalog.companies.view')) {
+    httpMock.expectOne((req) => req.url.includes('/api/catalog/companies')).flush({ items: [COMPANY], totalCount: 1, page: 1, pageSize: 200 });
+  }
+  if (grants.has('catalog.services.view')) {
+    httpMock.expectOne((req) => req.url.includes('/api/catalog/services')).flush({ items: [], totalCount: 0, page: 1, pageSize: 200 });
+  }
+  if (grants.has('employees.engagement-types.view')) {
+    httpMock.expectOne((req) => req.url.includes('/api/employees/engagement-types')).flush({ items: [ENGAGEMENT_TYPE], totalCount: 1, page: 1, pageSize: 200 });
+  }
+
+  // Grant-only Tenant Authorization Refactor - GrantGroups (permissions.view/
+  // manage) and Roles (employees.view/manage) catalog lookups are each gated
+  // behind their own grant now, independently of Owner status (see
+  // canViewGrantGroups/canViewRoles's own doc on the component).
+  const canViewGrantGroups = grants.has('permissions.view') || grants.has('permissions.manage');
+  const canViewRoles = grants.has('employees.view') || grants.has('employees.manage');
+  if (canViewGrantGroups) {
+    httpMock
+      .expectOne((req) => req.url.endsWith('/api/permissions/grant-groups') && req.method === 'GET')
+      .flush([{ id: 'grant-group-1', name: 'Trener', grants: [], assignedUserCount: 1, createdAt: null, updatedAt: null }]);
+  }
+  if (canViewRoles) {
+    httpMock
+      .expectOne((req) => req.url.endsWith('/api/permissions/roles') && req.method === 'GET')
+      .flush([{ id: 'role-1', name: 'Trener', createdAt: null }]);
+  }
 
   if (id !== 'new') {
     httpMock.expectOne((req) => req.url.endsWith(`/api/employees/${id}`) && req.method === 'GET').flush(MEMBER_EMPLOYEE);
+    if (canViewGrantGroups) {
+      httpMock.expectOne((req) => req.url.endsWith(`/api/permissions/grant-groups/assignments/${MEMBER_EMPLOYEE.userId}`)).flush([]);
+    }
+    if (canViewRoles) {
+      httpMock.expectOne((req) => req.url.endsWith(`/api/permissions/roles/assignments/${MEMBER_EMPLOYEE.userId}`)).flush([]);
+    }
   }
 
   fixture.detectChanges();
@@ -151,9 +185,9 @@ describe('EmployeeFormComponent - legacy UserRole wording', () => {
   afterEach(() => TestBed.inject(HttpTestingController).verify());
 
   it('UserRole.Member displays as "Član (legacy)", not the GrantGroup name "Trener"', async () => {
-    // A non-Owner holding employees.role.manage - the exact real-world viewer
-    // of this field (see canManageEmployeeRole's own doc: gated by that
-    // action-policy grant, not isOwner()).
+    // A viewer holding employees.role.manage - the exact real-world viewer of
+    // this field (see canManageEmployeeRole's own doc: gated by that
+    // action-policy grant).
     const { fixture } = await createFixture('employee-1', currentEmployee({ grants: ['employees.role.manage'] }));
     const component = fixture.componentInstance;
 
@@ -170,8 +204,14 @@ describe('EmployeeFormComponent - legacy UserRole wording', () => {
     expect(roleField.textContent).not.toContain('Trener');
   });
 
-  it('the legacy account-role field is labelled and hinted distinctly from the permission-role (GrantGroup) section', async () => {
-    const { fixture } = await createFixture('employee-1', currentEmployee({ grants: ['employees.role.manage'] }));
+  it('the legacy account-role field is labelled and hinted distinctly from the permission-role (Dozvole) section', async () => {
+    // employees.role.manage (legacy account-role) + employees.view (enough to
+    // see, but not manage, the Roles half of the Dozvole section) - Grant-only
+    // Tenant Authorization Refactor: these are three genuinely independent
+    // grants (employees.role.manage / employees.view+.manage / permissions.*),
+    // not one Owner-only bundle - see canViewRoles/canManageRoleAssignments's
+    // own doc on the component.
+    const { fixture } = await createFixture('employee-1', currentEmployee({ grants: ['employees.role.manage', 'employees.view'] }));
     const text = fixture.nativeElement.textContent as string;
 
     // Two different section headings for two different concepts - never
@@ -180,9 +220,15 @@ describe('EmployeeFormComponent - legacy UserRole wording', () => {
     expect(text).toContain('Dozvole');
     // Explicit hint spelling out that the legacy role and the permission role are not the same thing.
     expect(text).toContain('nije isto što i uloga dozvola');
-    // A non-Owner (even one who can change the legacy role) never sees the
-    // GrantGroup picker itself - that stays Owner-only end to end.
-    expect(text).toContain('isključivo vlasnik organizacije');
+  });
+
+  it('a viewer with employees.view but not employees.manage sees the Roles picker but cannot toggle it', async () => {
+    const { fixture } = await createFixture('employee-1', currentEmployee({ grants: ['employees.view'] }));
+    const rolesField = fixture.nativeElement.querySelector('label[for="employee-roles"]')?.closest('.dl-form__field');
+    const roleButton = rolesField?.querySelector('button');
+
+    expect(roleButton).toBeTruthy();
+    expect(roleButton.disabled).toBe(true);
   });
 });
 
@@ -237,5 +283,41 @@ describe('EmployeeFormComponent - invalid submit feedback', () => {
     fixture.detectChanges();
 
     expect(fixture.nativeElement.querySelector('.employee-form-page__footer-hint').textContent).not.toContain(TRANSLATIONS.EMPLOYEES.INVALID_FORM_HINT);
+  });
+});
+
+describe('EmployeeFormComponent - supporting-read gap (employees.manage without catalog view grants)', () => {
+  afterEach(() => TestBed.inject(HttpTestingController).verify());
+
+  it('never fires the companies/services/engagement-types lookups when the viewer lacks their .view grants, and leaves the pickers empty rather than 403ing', async () => {
+    // A custom minimal GrantGroup: employees.manage only, none of
+    // catalog.companies.view / catalog.services.view / employees.engagement-types.view.
+    // Before the fix, loadActiveCompanies()/loadActiveServices()/
+    // loadActiveEngagementTypes() fired unconditionally and 403'd server-side
+    // (suppressErrorToast swallowed the error) - httpMock.verify() below would
+    // fail if any of those three requests were still sent.
+    const { fixture, httpMock } = await createFixture('new', currentEmployee({ grants: ['employees.manage'] }));
+    const component = fixture.componentInstance;
+
+    expect(component.companyOptions()).toEqual([]);
+    expect(component.serviceOptions()).toEqual([]);
+    expect(component.engagementTypeOptions()).toEqual([]);
+
+    httpMock.expectNone((req) => req.url.includes('/api/catalog/companies'));
+    httpMock.expectNone((req) => req.url.includes('/api/catalog/services'));
+    httpMock.expectNone((req) => req.url.includes('/api/employees/engagement-types'));
+  });
+
+  it('fires each lookup once its matching .view grant is present', async () => {
+    const { httpMock } = await createFixture(
+      'new',
+      currentEmployee({
+        grants: ['employees.manage', 'catalog.companies.view', 'catalog.services.view', 'employees.engagement-types.view'],
+      }),
+    );
+
+    // createFixture already asserted+flushed all three via its grant-gated
+    // expectOne calls; verify() confirms nothing extra/unexpected was sent.
+    httpMock.verify();
   });
 });

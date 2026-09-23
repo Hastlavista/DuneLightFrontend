@@ -12,8 +12,9 @@ const SWITCHER_PAGE_SIZE = 200;
 
 /**
  * Global company selection. Either "All companies" (null) or one specific company.
- * The Owner can choose from the full active-company list (including "All companies").
- * Employees are always scoped to the companies assigned to their own profile.
+ * A viewer holding catalog.companies.view can choose from the full
+ * active-company list (including "All companies"). Everyone else is always
+ * scoped to the companies assigned to their own profile.
  */
 @Injectable({ providedIn: 'root' })
 export class CompanyContextService {
@@ -25,9 +26,7 @@ export class CompanyContextService {
 
   readonly companies = this.companiesState.asReadonly();
   readonly selectedCompanyId = this.selectedIdState.asReadonly();
-  readonly canSelectAllCompanies = computed(
-    () => this.currentEmployeeService.isOwner() || this.currentEmployeeService.hasGrant('catalog.companies.view'),
-  );
+  readonly canSelectAllCompanies = computed(() => this.currentEmployeeService.hasGrant('catalog.companies.view'));
   readonly selectedCompany = computed<StudioCompany | null>(() => {
     const id = this.selectedIdState();
     return id ? (this.companiesState().find((company) => company.id === id) ?? null) : null;

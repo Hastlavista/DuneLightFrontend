@@ -39,13 +39,12 @@ export const PAGE_POLICIES = {
   dashboard: { anyOf: ['dashboard.view'] },
   commissions: { anyOf: ['commissions.view', 'commissions.manage'] },
   notifications: { anyOf: ['notifications.view'] },
-  /** Owner-only frontend surface, no grant can substitute - mirrors the
-   * backend's [RequireOwner] on GrantGroupsController/RolesController.
-   * ownerGuard evaluates this through the same canPage()/evaluate() path as
-   * every grant-gated page, instead of checking isOwner() directly, so owner
-   * bypass stays decided in exactly one place (see
-   * evaluatePermissionPolicy's doc). */
-  permissions: { ownerOnly: true },
+  /** Grant-only Tenant Authorization Refactor - no more Owner bypass, no
+   * GrantGroup-name check. Any user whose effective raw grants include
+   * permissions.view OR permissions.manage can reach this page - mirrors the
+   * backend's RequireGrant(PermissionsView, PermissionsManage) on
+   * GrantGroupsController/CapabilitiesController/GrantsController. */
+  permissions: { anyOf: ['permissions.view', 'permissions.manage'] },
 } as const satisfies Record<string, PermissionPolicy>;
 
 export type PageKey = keyof typeof PAGE_POLICIES;

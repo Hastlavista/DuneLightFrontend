@@ -5,7 +5,7 @@ import { environment } from '../../../environments/environment';
 import { AssignUserRolesRequest, RoleDto, RoleUpsertRequest } from '../models/permissions.model';
 
 /**
- * Business-facing Role tags (Owner-only, api/permissions/roles) - NOT to be
+ * Business-facing Role tags (employees.view/employees.manage, api/permissions/roles) - NOT to be
  * confused with core/models/role.ts's legacy UserRole (Admin/Member/Reception),
  * which drives authorization; these are purely descriptive (e.g. "Trener") and
  * never checked by a guard. Named PermissionRolesService (file

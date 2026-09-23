@@ -6,7 +6,7 @@ import { ConfirmationService } from 'primeng/api';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { catchError, finalize, forkJoin, of } from 'rxjs';
-import { CapabilityDefinitionDto, CapabilitySelectedScope, GrantGroupAuthoringStateDto, GrantGroupCapabilityWriteRequest } from '../../../../../../core/models/capability.model';
+import { CapabilityDefinitionDto, CapabilitySelectedScope, GrantGroupAuthoringStateDto, GrantGroupCapabilityWriteRequest, GrantGroupTemplateUpgradeStatusDto } from '../../../../../../core/models/capability.model';
 import { GrantDto } from '../../../../../../core/models/permissions.model';
 import { CapabilityReconstruction, CapabilitySelectionResult, materializeCapability, reconstructGrantProvenance } from '../../../../../../core/permissions/capability-materialization';
 import { capabilityDescriptionKey, capabilityLabelKey, categoryLabelKey, CapabilityCategoryGroup, groupByCategory, resolveOrFallback } from '../../../../../../core/permissions/capability-presentation';
@@ -17,14 +17,15 @@ import { NotificationService } from '../../../../../../core/services/notificatio
 import { CapabilityScopeControlComponent } from './capability-scope-control/capability-scope-control.component';
 import { CapabilitySensitivityBadgeComponent } from './capability-sensitivity-badge/capability-sensitivity-badge.component';
 import { RoleSummaryComponent } from './role-summary/role-summary.component';
+import { TemplateUpgradeDialogComponent } from './template-upgrade-dialog/template-upgrade-dialog.component';
 
 const NEW_ID = 'new';
 interface ModuleGroup { module: string; grants: GrantDto[]; }
 
-/** Owner-only editor. The backend, never Angular, materializes raw grants. */
+/** Role editor, gated on permissions.manage. The backend, never Angular, materializes raw grants. */
 @Component({
   selector: 'app-admin-grant-group-form',
-  imports: [ReactiveFormsModule, FormsModule, InputText, Button, TranslatePipe, CapabilityScopeControlComponent, CapabilitySensitivityBadgeComponent, RoleSummaryComponent],
+  imports: [ReactiveFormsModule, FormsModule, InputText, Button, TranslatePipe, CapabilityScopeControlComponent, CapabilitySensitivityBadgeComponent, RoleSummaryComponent, TemplateUpgradeDialogComponent],
   templateUrl: './grant-group-form.component.html',
   styleUrl: './grant-group-form.component.scss',
 })
@@ -48,6 +49,8 @@ export class GrantGroupFormComponent {
   readonly capabilities = signal<CapabilityDefinitionDto[]>([]);
   readonly rawCatalog = signal<GrantDto[]>([]);
   readonly authoringState = signal<GrantGroupAuthoringStateDto | null>(null);
+  readonly upgradeStatus = signal<GrantGroupTemplateUpgradeStatusDto | null>(null);
+  readonly upgradeDialogVisible = signal(false);
   private readonly legacyRawGrants = signal<string[]>([]);
   private readonly loadedCapabilityDerived = signal<Set<string>>(new Set());
   private baseline = '';
@@ -97,8 +100,35 @@ export class GrantGroupFormComponent {
       rawCatalog: this.grantsService.getAll(),
       state: id ? this.grantGroupsService.getAuthoringState(id) : of(null),
     }).pipe(finalize(() => this.loading.set(false))).subscribe({
-      next: ({ capabilities, rawCatalog, state }) => { this.capabilities.set(capabilities); this.rawCatalog.set(rawCatalog); this.applyAuthoritativeState(state); },
+      next: ({ capabilities, rawCatalog, state }) => {
+        this.capabilities.set(capabilities);
+        this.rawCatalog.set(rawCatalog);
+        this.applyAuthoritativeState(state);
+        this.fetchUpgradeStatusIfNeeded(state);
+      },
       error: () => this.navigateBack(),
+    });
+  }
+  /** Only called when the loaded authoring state has non-null
+   * `templateSourceKey` - a custom/no-provenance role never shows an upgrade
+   * banner, so this call is skipped entirely rather than fetched and hidden
+   * (Part N). */
+  private fetchUpgradeStatusIfNeeded(state: GrantGroupAuthoringStateDto | null): void {
+    const id = this.editingId();
+    if (!id || !state?.templateSourceKey) { this.upgradeStatus.set(null); return; }
+    this.grantGroupsService.getTemplateUpgradeStatus(id).subscribe({
+      next: (status) => this.upgradeStatus.set(status),
+      error: () => this.upgradeStatus.set(null),
+    });
+  }
+  openUpgradeReview(): void { this.upgradeDialogVisible.set(true); }
+  onUpgradeApplied(): void {
+    const id = this.editingId();
+    if (!id) return;
+    this.reloadAuthoringState(id);
+    this.grantGroupsService.getTemplateUpgradeStatus(id).subscribe({
+      next: (status) => this.upgradeStatus.set(status),
+      error: () => this.upgradeStatus.set(null),
     });
   }
   private applyAuthoritativeState(state: GrantGroupAuthoringStateDto | null): void {

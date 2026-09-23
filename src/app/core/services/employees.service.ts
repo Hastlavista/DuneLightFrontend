@@ -53,14 +53,14 @@ export class EmployeesService extends PagedCrudService<EmployeeDto, EmployeeUpse
    * EmployeeDirectoryDto. Trainer-facing screens (my-week, today, my-shifts,
    * my-clients) must use this instead of getPage() for any "list of trainers"
    * need. */
-  /** PATCH /api/employees/{id}/role - RequireGrant(employees.role.manage), NOT
-   * Owner-only. Distinct from GrantGroup assignment (which IS Owner-only, see
-   * GrantGroupsService) - this changes the coarse UserRole (Admin/Member/
-   * Reception) that gates the legacy 'Admin' role claim fallback (see
-   * CurrentEmployeeService.isOwner's own doc), independent of any
-   * GrantGroup/capability. Gated in the UI by ACTION_POLICIES['employees.role.manage']
-   * (see action-policies.ts), not isOwner() - see Part P of the FAZA 1 role
-   * editor report for why this distinction matters. */
+  /** PATCH /api/employees/{id}/role - RequireGrant(employees.role.manage), a
+   * separate grant from GrantGroup assignment (permissions.assignments.manage/
+   * permissions.manage, see GrantGroupsService). This changes only the coarse
+   * legacy UserRole (Admin/Member/Reception) that gates the pre-profile
+   * founder's session-continuity fallback (see CurrentEmployeeService.load's
+   * own doc), independent of any GrantGroup/capability. Gated in the UI by
+   * ACTION_POLICIES['employees.role.manage'] (see action-policies.ts) - see
+   * Part P of the FAZA 1 role editor report for why this distinction matters. */
   updateRole(id: string, role: UserRole): Observable<EmployeeDto> {
     return this.http.patch<EmployeeDto>(`${this.resourceUrl}/${id}/role`, { role });
   }

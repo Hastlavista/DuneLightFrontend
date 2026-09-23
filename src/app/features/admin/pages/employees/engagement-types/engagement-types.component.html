@@ -6,7 +6,9 @@
     }
   </header>
 
-  @if (loading()) {
+  @if (!canViewList()) {
+    <p class="engagement-types-page__empty">{{ 'EMPLOYEES.ENGAGEMENT_TYPES.NO_LIST_PERMISSION' | translate }}</p>
+  } @else if (loading()) {
     <p class="engagement-types-page__empty">Učitavanje…</p>
   } @else if (items().length === 0) {
     <p class="engagement-types-page__empty">{{ 'EMPLOYEES.ENGAGEMENT_TYPES.EMPTY' | translate }}</p>

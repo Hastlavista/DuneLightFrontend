@@ -47,11 +47,9 @@
                 </a>
               }
               @case ('profile') {
-                @if (isOwner()) {
-                  <button type="button" class="onboarding-checklist__action" (click)="onOwnerProfileClick()">
-                    {{ step.actionKey | translate }}
-                  </button>
-                }
+                <button type="button" class="onboarding-checklist__action" (click)="onOwnerProfileClick()">
+                  {{ step.actionKey | translate }}
+                </button>
               }
             }
           }

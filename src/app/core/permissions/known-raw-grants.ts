@@ -74,6 +74,11 @@ export const KNOWN_RAW_GRANT_KEYS: ReadonlySet<string> = new Set([
   'organization.branding.manage',
   'organization.settings.manage',
 
+  // Grant-only Tenant Authorization Refactor - replace the old [RequireOwner] surface.
+  'permissions.view',
+  'permissions.manage',
+  'permissions.assignments.manage',
+
   'checkout.view',
   'checkout.manage',
 

@@ -6,7 +6,10 @@ export interface OnboardingStatusDto {
   hasCompany: boolean;
   hasEngagementType: boolean;
   hasService: boolean;
-  hasOwnerProfile: boolean;
+  /** Whether the organization has an Employee record belonging to someone
+   * other than the current caller (Residual IsOwner Removal - the caller's
+   * own profile is known locally via CurrentEmployeeService.hasProfile(),
+   * so it no longer needs a backend flag of its own). */
   hasOtherEmployee: boolean;
   hasClient: boolean;
 }

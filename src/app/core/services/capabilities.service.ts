@@ -5,7 +5,7 @@ import { environment } from '../../../environments/environment';
 import { CapabilityDefinitionDto, DefaultRoleTemplateDto } from '../models/capability.model';
 
 /**
- * FAZA 1 Part R - GET /api/permissions/capabilities (Owner-only), the single
+ * FAZA 1 Part R - GET /api/permissions/capabilities (permissions.view/permissions.manage), the single
  * authoritative source of capability metadata for the role editor. Read-only
  * in this phase - see CapabilitiesController's own doc (no mutation endpoints
  * yet, capability/template editing is platform-only).
