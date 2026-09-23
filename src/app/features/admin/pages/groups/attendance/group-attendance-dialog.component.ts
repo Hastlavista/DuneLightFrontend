@@ -239,6 +239,8 @@ export class GroupAttendanceDialogComponent {
         this.resetState();
         this.refetch(appointment.id);
       } else {
+        this.refetchToken++;
+        this.loading.set(false);
         this.dialogShown.set(false);
       }
     });
@@ -420,8 +422,13 @@ export class GroupAttendanceDialogComponent {
       });
   }
 
+  // Latest-request-wins: suggestions for an older search term must not replace newer ones.
+  private waitlistSearchToken = 0;
+  private guestSearchToken = 0;
+
   onWaitlistSearch(event: AutoCompleteCompleteEvent): void {
     const term = event.query.trim();
+    const token = ++this.waitlistSearchToken;
     if (!term) {
       this.waitlistResults.set([]);
       return;
@@ -437,8 +444,11 @@ export class GroupAttendanceDialogComponent {
     this.waitlistSearching.set(true);
     this.clientsService
       .getPage({ page: 1, pageSize: GUEST_SEARCH_PAGE_SIZE, search: term, isActive: true }, { suppressErrorToast: true })
-      .pipe(finalize(() => this.waitlistSearching.set(false)))
+      .pipe(finalize(() => token === this.waitlistSearchToken && this.waitlistSearching.set(false)))
       .subscribe((result) => {
+        if (token !== this.waitlistSearchToken) {
+          return;
+        }
         this.waitlistResults.set(
           result.items
             .filter((client) => !excluded.has(client.id))
@@ -546,6 +556,7 @@ export class GroupAttendanceDialogComponent {
 
   onGuestSearch(event: AutoCompleteCompleteEvent): void {
     const term = event.query.trim();
+    const token = ++this.guestSearchToken;
     if (!term) {
       this.guestResults.set([]);
       return;
@@ -560,8 +571,11 @@ export class GroupAttendanceDialogComponent {
     this.guestSearching.set(true);
     this.clientsService
       .getPage({ page: 1, pageSize: GUEST_SEARCH_PAGE_SIZE, search: term, isActive: true }, { suppressErrorToast: true })
-      .pipe(finalize(() => this.guestSearching.set(false)))
+      .pipe(finalize(() => token === this.guestSearchToken && this.guestSearching.set(false)))
       .subscribe((result) => {
+        if (token !== this.guestSearchToken) {
+          return;
+        }
         this.guestResults.set(
           result.items
             .filter((client) => !excluded.has(client.id))
@@ -617,7 +631,12 @@ export class GroupAttendanceDialogComponent {
       });
   }
 
+  // Closing and reopening for another occurrence must never show (and record
+  // check-ins against) the previous occurrence's attendance list.
+  private refetchToken = 0;
+
   private refetch(appointmentId: string): void {
+    const token = ++this.refetchToken;
     this.loading.set(true);
     const canSeeBookings = this.hasAppointmentsView();
     const bookings$ = canSeeBookings ? this.appointmentsService.getBookings(appointmentId) : of<BookingDto[]>([]);
@@ -635,8 +654,17 @@ export class GroupAttendanceDialogComponent {
       waitlist: waitlist$,
       appointment: appointment$,
     })
-      .pipe(finalize(() => this.loading.set(false)))
+      .pipe(
+        finalize(() => {
+          if (token === this.refetchToken) {
+            this.loading.set(false);
+          }
+        }),
+      )
       .subscribe(({ attendance, bookings, waitlist, appointment }) => {
+        if (token !== this.refetchToken) {
+          return;
+        }
         this.expectedEntries.set(attendance.expected);
         this.recordedEntries.set(attendance.recorded);
         this.bookingsByClient.set(new Map(bookings.map((booking) => [booking.clientId, booking])));

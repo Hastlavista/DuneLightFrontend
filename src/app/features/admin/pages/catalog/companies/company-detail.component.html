@@ -110,20 +110,22 @@
         </p-tabpanel>
 
         @if (canViewWorkingHours()) {
-          <p-tabpanel value="workingHours">
-            <app-working-hours-template-editor [owner]="{ type: 'company', companyId: company.id }" />
+          <p-tabpanel value="workingHours" [lazy]="true">
+            <ng-template #content>
+              <app-working-hours-template-editor [owner]="{ type: 'company', companyId: company.id }" />
+            </ng-template>
           </p-tabpanel>
         }
 
         @if (canViewHolidays()) {
-          <p-tabpanel value="holidays">
-            <app-company-holidays-tab [companyId]="company.id" />
+          <p-tabpanel value="holidays" [lazy]="true">
+            <ng-template #content><app-company-holidays-tab [companyId]="company.id" /></ng-template>
           </p-tabpanel>
         }
 
         @if (canViewRooms()) {
-          <p-tabpanel value="rooms">
-            <app-rooms-tab [companyId]="company.id" />
+          <p-tabpanel value="rooms" [lazy]="true">
+            <ng-template #content><app-rooms-tab [companyId]="company.id" /></ng-template>
           </p-tabpanel>
         }
       </p-tabpanels>

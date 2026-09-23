@@ -1,7 +1,7 @@
 <div class="shifts-page">
   <app-complete-employee-profile-cta />
 
-  <p-tabs [value]="initialTab" styleClass="shifts-page__tabs">
+  <p-tabs [value]="initialTab" [lazy]="true" styleClass="shifts-page__tabs">
     <p-tablist>
       <p-tab value="types">
         <span>{{ 'ROSTER.TYPES.TAB_LABEL' | translate }}</span>
@@ -17,25 +17,28 @@
     </p-tablist>
     <p-tabpanels>
       <p-tabpanel value="types">
-        <app-admin-roster-types />
+        <ng-template #content><app-admin-roster-types /></ng-template>
       </p-tabpanel>
       <p-tabpanel value="team">
-        <app-roster-team-monthly
-          [currentEmployeeId]="currentEmployeeId()"
-          [isAdmin]="true"
-          [activeCompanies]="activeCompanies()"
-          (cellClick)="onTeamCellClick($event)"
-        />
+        <ng-template #content>
+          <app-roster-team-monthly
+            [currentEmployeeId]="currentEmployeeId()"
+            [activeCompanies]="activeCompanies()"
+            (cellClick)="onTeamCellClick($event)"
+          />
+        </ng-template>
       </p-tabpanel>
       @if (hasEmployeeProfile()) {
         <p-tabpanel value="personal">
-          <app-roster-personal
-            [allowEmployeePicker]="true"
-            [currentEmployeeId]="currentEmployeeId()"
-            [employees]="activeEmployees()"
-            (add)="onPersonalAdd($event)"
-            (edit)="onPersonalEdit($event)"
-          />
+          <ng-template #content>
+            <app-roster-personal
+              [allowEmployeePicker]="true"
+              [currentEmployeeId]="currentEmployeeId()"
+              [employees]="activeEmployees()"
+              (add)="onPersonalAdd($event)"
+              (edit)="onPersonalEdit($event)"
+            />
+          </ng-template>
         </p-tabpanel>
       }
     </p-tabpanels>
@@ -48,7 +51,6 @@
   [initial]="dialogInitial()"
   [employees]="activeEmployees()"
   [rosterTypes]="activeRosterTypes()"
-  [isAdminRole]="true"
   [currentEmployeeId]="currentEmployeeId()"
   (saved)="onDialogSaved()"
 />

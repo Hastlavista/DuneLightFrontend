@@ -30,12 +30,15 @@ export interface CompanyUpsertRequest {
   sortOrder: number;
 }
 
-/** Minimal shape the global company switcher (topbar) needs. */
+/** Company shape held by CompanyContextService: the topbar switcher plus
+ * company dropdowns/color accents on the pages. `colorHex` is null for
+ * companies known only from the viewer's own assignments. */
 export interface StudioCompany {
   id: string;
   name: string;
+  colorHex: string | null;
 }
 
 export function toStudioCompany(dto: CompanyDto): StudioCompany {
-  return { id: dto.id, name: dto.name };
+  return { id: dto.id, name: dto.name, colorHex: dto.colorHex };
 }

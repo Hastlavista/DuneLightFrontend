@@ -119,9 +119,17 @@ export class CompanyFormDialogComponent {
     sortOrder: [0],
   });
 
+  /** Bumped on every open. A save that completes after the dialog was closed and
+   * reopened belongs to the earlier open: it may refresh the parent, but must not
+   * close or re-target the current one (e.g. turn a fresh "new" into the wizard
+   * of the company the earlier save created). */
+  private openGeneration = 0;
+
   constructor() {
     effect(() => {
       if (this.visible()) {
+        this.openGeneration++;
+        this.saving.set(false);
         this.activeTab.set('data');
         this.createdCompanyId.set(null);
         this.justCreatedInWizard.set(false);
@@ -147,18 +155,25 @@ export class CompanyFormDialogComponent {
       sortOrder: raw.sortOrder,
     };
 
-    const current = this.company();
-    const request$ = current
-      ? this.companiesService.update(current.id, request)
+    // Not company(): after the wizard creates a company, company() is still
+    // null, and going back to "Podaci" and saving must update, not re-create.
+    const existingId = this.currentCompanyId();
+    const request$ = existingId
+      ? this.companiesService.update(existingId, request)
       : this.companiesService.create(request);
 
+    const generation = this.openGeneration;
     this.saving.set(true);
-    request$.pipe(finalize(() => this.saving.set(false))).subscribe({
+    request$.pipe(finalize(() => generation === this.openGeneration && this.saving.set(false))).subscribe({
       next: (result) => {
         this.notifications.showSuccess(
-          this.translate.instant(current ? 'CATALOG.COMPANIES.UPDATED' : 'CATALOG.COMPANIES.CREATED'),
+          this.translate.instant(existingId ? 'CATALOG.COMPANIES.UPDATED' : 'CATALOG.COMPANIES.CREATED'),
         );
-        if (current) {
+        if (generation !== this.openGeneration) {
+          this.saved.emit();
+          return;
+        }
+        if (existingId) {
           this.visible.set(false);
         } else if (this.canViewWorkingHours()) {
           // New company, "Radno vrijeme" tab available - stay open and walk

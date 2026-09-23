@@ -82,18 +82,26 @@ export class TemplateUpgradeDialogComponent {
     this.loadError.set(false);
   }
 
+  // Close + quick reopen starts a second load; the first must not land later and
+  // wipe conflict resolutions the user already picked on the second.
+  private loadToken = 0;
+
   private loadDiff(): void {
+    const token = ++this.loadToken;
     this.loading.set(true);
     this.loadError.set(false);
     this.grantGroupsService
       .getTemplateUpgradeDiff(this.grantGroupId(), this.targetVersion())
-      .pipe(finalize(() => this.loading.set(false)))
+      .pipe(finalize(() => token === this.loadToken && this.loading.set(false)))
       .subscribe({
         next: (diff) => {
+          if (token !== this.loadToken) {
+            return;
+          }
           this.diff.set(diff);
           this.resolutions.set(new Map());
         },
-        error: () => this.loadError.set(true),
+        error: () => token === this.loadToken && this.loadError.set(true),
       });
   }
 

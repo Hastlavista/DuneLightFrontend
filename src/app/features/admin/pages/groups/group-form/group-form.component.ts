@@ -26,12 +26,11 @@ import {
   GroupUpdateRequest,
   dayOfWeekTranslationKey,
 } from '../../../../../core/models/group.model';
-import { CompanyDto } from '../../../../../core/models/company.model';
 import { RoomDto } from '../../../../../core/models/room.model';
 import { ServiceDto, ServiceExecutionMode } from '../../../../../core/models/service.model';
 import { EmployeesService } from '../../../../../core/services/employees.service';
 import { GroupsService } from '../../../../../core/services/groups.service';
-import { CompaniesService } from '../../../../../core/services/companies.service';
+import { CompanyContextService } from '../../../../../core/services/company-context.service';
 import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { RoomsService } from '../../../../../core/services/rooms.service';
@@ -89,7 +88,7 @@ export class GroupFormComponent {
   private readonly fb = inject(FormBuilder);
   private readonly groupsService = inject(GroupsService);
   private readonly servicesService = inject(ServicesService);
-  private readonly companiesService = inject(CompaniesService);
+  private readonly companyContext = inject(CompanyContextService);
   private readonly employeesService = inject(EmployeesService);
   private readonly roomsService = inject(RoomsService);
   protected readonly currentEmployeeService = inject(CurrentEmployeeService);
@@ -106,7 +105,8 @@ export class GroupFormComponent {
   readonly loadedGroup = signal<GroupDetailDto | null>(null);
 
   readonly activeServices = signal<ServiceDto[]>([]);
-  readonly activeCompanies = signal<CompanyDto[]>([]);
+  /** Full active list with catalog.companies.view, otherwise the viewer's assigned companies. */
+  readonly activeCompanies = this.companyContext.companies;
   readonly activeTrainers = signal<EmployeeDirectoryDto[]>([]);
   readonly activeRooms = signal<RoomDto[]>([]);
 
@@ -168,15 +168,18 @@ export class GroupFormComponent {
     this.editingId.set(id);
 
     this.loadActiveServices();
-    this.loadActiveCompanies();
+    if (!this.companyContext.companies().length) {
+      this.companyContext.loadCompanies();
+    }
     this.loadActiveTrainers();
 
-    // Rooms belong to one company - reload whenever the picked company
-    // changes (same trigger as NewAppointmentDialogComponent.refreshRooms).
-    // No initial call needed: create mode starts with no company picked
-    // (loadActiveRooms would just no-op), edit mode's applyGroup() resets
-    // companyId to the loaded group's companyId, which fires this itself.
-    this.form.controls.companyId.valueChanges.subscribe(() => this.loadActiveRooms());
+    // Rooms belong to one company - reload whenever the user picks another
+    // company, and drop a default room that belonged to the previous one.
+    // applyGroup() resets with emitEvent:false, so it loads rooms itself.
+    this.form.controls.companyId.valueChanges.subscribe(() => {
+      this.form.controls.defaultRoomId.setValue(null);
+      this.loadActiveRooms();
+    });
 
     if (id) {
       // Slots aren't part of the edit-mode form at all (see
@@ -321,12 +324,6 @@ export class GroupFormComponent {
       .subscribe((result) => this.activeServices.set(result.items));
   }
 
-  private loadActiveCompanies(): void {
-    this.companiesService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeCompanies.set(result.items));
-  }
-
   /** GET /api/employees/directory, not getPage()/`/api/employees` - the
    * trainer picker only needs id/firstName/lastName, not the full EmployeeDto
    * (salary/OIB/contact data included) that getPage() returns; the lighter
@@ -337,7 +334,10 @@ export class GroupFormComponent {
       .subscribe((result) => this.activeTrainers.set(result));
   }
 
+  private roomsRequestToken = 0;
+
   private loadActiveRooms(): void {
+    const token = ++this.roomsRequestToken;
     const companyId = this.form.controls.companyId.value;
     if (!companyId) {
       this.activeRooms.set([]);
@@ -345,7 +345,11 @@ export class GroupFormComponent {
     }
     this.roomsService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true, extraParams: { companyId } })
-      .subscribe((result) => this.activeRooms.set(result.items));
+      .subscribe((result) => {
+        if (token === this.roomsRequestToken) {
+          this.activeRooms.set(result.items);
+        }
+      });
   }
 
   private loadGroup(id: string, options?: { quiet?: boolean }): void {
@@ -381,6 +385,7 @@ export class GroupFormComponent {
       },
       { emitEvent: false },
     );
+    this.loadActiveRooms();
   }
 
   private navigateBack(): void {

@@ -6,7 +6,9 @@ import { TranslateLoader, provideTranslateService } from '@ngx-translate/core';
 import { of } from 'rxjs';
 import { ConfirmationService, MessageService } from 'primeng/api';
 import { By } from '@angular/platform-browser';
+import { CurrentEmployee } from '../../../../core/models/employee.model';
 import { RosterEntryDto, RosterTypeDto, TeamMonthlyDto } from '../../../../core/models/roster.model';
+import { CurrentEmployeeService } from '../../../../core/services/current-employee.service';
 import { RosterEntriesService } from '../../../../core/services/roster-entries.service';
 import { RosterEntryFormDialogComponent, RosterEntryFormInitial } from './roster-entry-form-dialog.component';
 import { TeamMonthlyCellClickEvent, TeamMonthlyComponent } from './team-monthly/team-monthly.component';
@@ -38,7 +40,6 @@ const ROSTER_TYPE: RosterTypeDto = {
   imports: [TeamMonthlyComponent, RosterEntryFormDialogComponent],
   template: `
     <app-roster-team-monthly
-      [isAdmin]="true"
       [currentEmployeeId]="null"
       [activeCompanies]="[]"
       (cellClick)="onTeamCellClick($event)"
@@ -49,7 +50,6 @@ const ROSTER_TYPE: RosterTypeDto = {
       [initial]="dialogInitial()"
       [employees]="[]"
       [rosterTypes]="rosterTypes"
-      [isAdminRole]="true"
       [currentEmployeeId]="null"
       (saved)="onSaved()"
     />
@@ -86,66 +86,136 @@ class HostComponent {
   onSaved(): void {}
 }
 
+function me(role: CurrentEmployee['role'], grants: string[], employeeId = 'me-1'): CurrentEmployee {
+  return { hasProfile: true, employeeId, firstName: 'Ana', lastName: 'Test', role, grants, colorHex: null, companies: [], hasPinSet: false };
+}
+
+const emptyDays = () =>
+  Array.from({ length: 31 }, (_, i) => ({ day: i + 1, source: 'None' as const, plannedIntervals: [], entries: [] }));
+
+/** Renders the host for `viewer` - its grants decide roster write scope, never
+ * the legacy role - with emp-1 (entry on day 24, planned day 25) and emp-2. */
+async function setUp(viewer: CurrentEmployee): Promise<{ fixture: ComponentFixture<HostComponent>; httpMock: HttpTestingController }> {
+  await TestBed.configureTestingModule({
+    imports: [HostComponent],
+    providers: [
+      provideHttpClient(),
+      provideHttpClientTesting(),
+      ConfirmationService,
+      MessageService,
+      provideTranslateService({ loader: { provide: TranslateLoader, useClass: FakeTranslateLoader } }),
+    ],
+  }).compileComponents();
+
+  const httpMock = TestBed.inject(HttpTestingController);
+  TestBed.inject(CurrentEmployeeService).load().subscribe();
+  httpMock.expectOne((r) => r.url.endsWith('/api/employees/me')).flush(viewer);
+
+  const fixture = TestBed.createComponent(HostComponent);
+  fixture.detectChanges();
+
+  const teamMonthlyReq = httpMock.expectOne((r) => r.url.includes('/api/roster/team-monthly'));
+  const dto: TeamMonthlyDto = {
+    year: 2026,
+    month: 8,
+    employees: [
+      {
+        employeeId: 'emp-1',
+        employeeName: 'Anea Carić',
+        workHoursByType: [],
+        totalWorkHours: 8,
+        absenceDaysByType: [],
+        days: Array.from({ length: 31 }, (_, i) => ({
+          day: i + 1,
+          source: 'None' as const,
+          plannedIntervals: [],
+          entries:
+            i + 1 === 24
+              ? [
+                  {
+                    rosterEntryId: 'entry-1',
+                    rosterTypeId: 'type-1',
+                    rosterTypeName: 'Rad',
+                    rosterTypeColorHex: '#336699',
+                    isAbsence: false,
+                    hours: 8,
+                    timeRange: '13:00-21:00',
+                  },
+                ]
+              : [],
+        })),
+      },
+      { employeeId: 'emp-2', employeeName: 'Bruno Babić', workHoursByType: [], totalWorkHours: 0, absenceDaysByType: [], days: emptyDays() },
+    ],
+  };
+  // Day 24 must report source Actual per the RosterDaySource contract.
+  dto.employees[0].days[23].source = 'Actual';
+  // Day 25 - a WorkingHoursTemplate projection with no real entry yet.
+  dto.employees[0].days[24].source = 'Planned';
+  dto.employees[0].days[24].plannedIntervals = [{ start: '09:00:00', end: '17:00:00' }];
+  teamMonthlyReq.flush(dto);
+  fixture.detectChanges();
+  return { fixture, httpMock };
+}
+
+const dialogOf = (fixture: ComponentFixture<HostComponent>) =>
+  fixture.debugElement.query(By.directive(RosterEntryFormDialogComponent)).componentInstance as RosterEntryFormDialogComponent;
+const teamMonthlyOf = (fixture: ComponentFixture<HostComponent>) =>
+  fixture.debugElement.query(By.directive(TeamMonthlyComponent)).componentInstance as TeamMonthlyComponent;
+const EMP2_DAY1 = 31;
+
+describe('Roster write scope (grant-only, mirrors RosterEntryService.ValidateOwnership)', () => {
+  afterEach(() => TestBed.inject(HttpTestingController).verify());
+
+  it('legacy role Admin WITHOUT a roster write grant gains no write behavior', async () => {
+    const { fixture } = await setUp(me('Admin', ['roster.entries.view'], 'emp-1'));
+
+    expect(teamMonthlyOf(fixture).isRowEditable('emp-1')).toBe(false);
+    expect(teamMonthlyOf(fixture).isRowEditable('emp-2')).toBe(false);
+    expect(dialogOf(fixture).hasFullRosterScope()).toBe(false);
+
+    fixture.debugElement.queryAll(By.css('.team-monthly__day-cell'))[0].nativeElement.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.dialogVisible()).toBe(false);
+  });
+
+  it('whatever grant group carries roster.entries.write.all (legacy role Member here) may write every row and pick the employee', async () => {
+    const { fixture } = await setUp(me('Member', ['roster.entries.view', 'roster.entries.write.all'], 'emp-1'));
+
+    expect(teamMonthlyOf(fixture).isRowEditable('emp-2')).toBe(true);
+    expect(dialogOf(fixture).hasFullRosterScope()).toBe(true);
+
+    fixture.debugElement.queryAll(By.css('.team-monthly__day-cell'))[EMP2_DAY1].nativeElement.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.dialogVisible()).toBe(true);
+    expect(dialogOf(fixture).employeeLocked()).toBe(false);
+    expect(dialogOf(fixture).form.controls.employeeId.value).toBe('emp-2');
+  });
+
+  it('roster.entries.write.own (even with legacy role Admin) may write only its own row, and the dialog is locked to self', async () => {
+    const { fixture } = await setUp(me('Admin', ['roster.entries.view', 'roster.entries.write.own'], 'emp-1'));
+
+    expect(teamMonthlyOf(fixture).isRowEditable('emp-1')).toBe(true);
+    expect(teamMonthlyOf(fixture).isRowEditable('emp-2')).toBe(false);
+
+    const cells = fixture.debugElement.queryAll(By.css('.team-monthly__day-cell'));
+    cells[EMP2_DAY1].nativeElement.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.dialogVisible()).toBe(false);
+
+    cells[0].nativeElement.click();
+    fixture.detectChanges();
+    expect(fixture.componentInstance.dialogVisible()).toBe(true);
+    expect(dialogOf(fixture).employeeLocked()).toBe(true);
+  });
+});
+
 describe('TeamMonthly -> RosterEntryFormDialog click-to-edit wiring', () => {
   let fixture: ComponentFixture<HostComponent>;
   let httpMock: HttpTestingController;
 
   beforeEach(async () => {
-    await TestBed.configureTestingModule({
-      imports: [HostComponent],
-      providers: [
-        provideHttpClient(),
-        provideHttpClientTesting(),
-        ConfirmationService,
-        MessageService,
-        provideTranslateService({ loader: { provide: TranslateLoader, useClass: FakeTranslateLoader } }),
-      ],
-    }).compileComponents();
-
-    fixture = TestBed.createComponent(HostComponent);
-    httpMock = TestBed.inject(HttpTestingController);
-    fixture.detectChanges();
-
-    const teamMonthlyReq = httpMock.expectOne((r) => r.url.includes('/api/roster/team-monthly'));
-    const dto: TeamMonthlyDto = {
-      year: 2026,
-      month: 8,
-      employees: [
-        {
-          employeeId: 'emp-1',
-          employeeName: 'Anea Carić',
-          workHoursByType: [],
-          totalWorkHours: 8,
-          absenceDaysByType: [],
-          days: Array.from({ length: 31 }, (_, i) => ({
-            day: i + 1,
-            source: 'None' as const,
-            plannedIntervals: [],
-            entries:
-              i + 1 === 24
-                ? [
-                    {
-                      rosterEntryId: 'entry-1',
-                      rosterTypeId: 'type-1',
-                      rosterTypeName: 'Rad',
-                      rosterTypeColorHex: '#336699',
-                      isAbsence: false,
-                      hours: 8,
-                      timeRange: '13:00-21:00',
-                    },
-                  ]
-                : [],
-          })),
-        },
-      ],
-    };
-    // Day 24 must report source Actual per the RosterDaySource contract.
-    dto.employees[0].days[23].source = 'Actual';
-    // Day 25 - a WorkingHoursTemplate projection with no real entry yet.
-    dto.employees[0].days[24].source = 'Planned';
-    dto.employees[0].days[24].plannedIntervals = [{ start: '09:00:00', end: '17:00:00' }];
-    teamMonthlyReq.flush(dto);
-    fixture.detectChanges();
+    ({ fixture, httpMock } = await setUp(me('Member', ['roster.entries.view', 'roster.entries.write.all'])));
   });
 
   afterEach(() => {

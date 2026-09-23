@@ -154,11 +154,19 @@ export class CompanyHolidaysTabComponent {
     });
   }
 
+  // Latest-request-wins: switching year quickly must not show the previous year's list.
+  private fetchToken = 0;
+
   private fetch(companyId: string, year: number): void {
+    const token = ++this.fetchToken;
     this.loading.set(true);
     this.service
       .getForYear(companyId, year)
-      .pipe(finalize(() => this.loading.set(false)))
-      .subscribe((items) => this.items.set(items));
+      .pipe(finalize(() => token === this.fetchToken && this.loading.set(false)))
+      .subscribe((items) => {
+        if (token === this.fetchToken) {
+          this.items.set(items);
+        }
+      });
   }
 }

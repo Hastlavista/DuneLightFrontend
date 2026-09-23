@@ -110,9 +110,11 @@ async function createFixture(
   return { fixture, httpMock };
 }
 
-/** Dirties the form the same way a real Owner edit would - renames the group
+/** Dirties the form the same way a real user edit would - renames the group
  * and flips one capability's scope - so "unsaved selections remain unchanged
  * after a failed save" has two independent things to check, not just the name. */
+const ME = { hasProfile: true, employeeId: 'me-1', firstName: 'Ana', lastName: 'Test', role: 'Member', grants: ['permissions.manage'], colorHex: null, companies: [], hasPinSet: false };
+
 function makeDirty(component: GrantGroupFormComponent, name: string): void {
   component.form.controls.name.setValue(name);
   component.onScopeChange(CAPABILITY.key, 'Manage');
@@ -222,6 +224,8 @@ describe('GrantGroupFormComponent - save failure handling', () => {
 
     const refetch = httpMock.expectOne((req) => req.url.endsWith('/api/permissions/grant-groups/group-1/authoring-state'));
     refetch.flush({ ...AUTHORING_STATE, grantGroup: { ...EXISTING_GROUP, name: 'Recepcija Renamed' } });
+    // The editor may belong to this group - its own effective grants are re-read.
+    httpMock.expectOne((req) => req.url.endsWith('/api/employees/me')).flush(ME);
     fixture.detectChanges();
 
     expect(component.dirty()).toBe(false);
@@ -284,6 +288,7 @@ describe('GrantGroupFormComponent - template upgrade banner', () => {
     component.onUpgradeApplied();
 
     httpMock.expectOne((req) => req.url.endsWith('/api/permissions/grant-groups/group-1/authoring-state')).flush(TEMPLATE_BACKED_STATE);
+    httpMock.expectOne((req) => req.url.endsWith('/api/employees/me')).flush(ME);
     httpMock.expectOne((req) => req.url.endsWith('/api/permissions/grant-groups/group-1/template-upgrade-status')).flush({ ...UPGRADE_STATUS, hasUpgrade: false });
     fixture.detectChanges();
 

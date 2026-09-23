@@ -113,42 +113,48 @@
       </p-tabpanel>
 
       @if (canViewWorkingHours()) {
-        <p-tabpanel value="workingHours">
-          <div class="company-dialog__panel company-dialog__panel--scroll">
-            @if (currentCompanyId(); as id) {
-              <app-working-hours-template-editor
-                [owner]="{ type: 'company', companyId: id }"
-                [saveLabelKey]="workingHoursSaveLabelKey()"
-                (saved)="onWorkingHoursSaved()"
-              />
-            } @else {
-              <p class="dl-form__hint">{{ 'CATALOG.COMPANIES.WIZARD_LOCKED_HINT' | translate }}</p>
-            }
-          </div>
+        <p-tabpanel value="workingHours" [lazy]="true">
+          <ng-template #content>
+            <div class="company-dialog__panel company-dialog__panel--scroll">
+              @if (currentCompanyId(); as id) {
+                <app-working-hours-template-editor
+                  [owner]="{ type: 'company', companyId: id }"
+                  [saveLabelKey]="workingHoursSaveLabelKey()"
+                  (saved)="onWorkingHoursSaved()"
+                />
+              } @else {
+                <p class="dl-form__hint">{{ 'CATALOG.COMPANIES.WIZARD_LOCKED_HINT' | translate }}</p>
+              }
+            </div>
+          </ng-template>
         </p-tabpanel>
       }
 
       @if (canViewHolidays()) {
-        <p-tabpanel value="holidays">
-          <div class="company-dialog__panel company-dialog__panel--scroll">
-            @if (currentCompanyId(); as id) {
-              <app-company-holidays-tab [companyId]="id" />
-            } @else {
-              <p class="dl-form__hint">{{ 'CATALOG.COMPANIES.WIZARD_LOCKED_HINT' | translate }}</p>
-            }
-          </div>
+        <p-tabpanel value="holidays" [lazy]="true">
+          <ng-template #content>
+            <div class="company-dialog__panel company-dialog__panel--scroll">
+              @if (currentCompanyId(); as id) {
+                <app-company-holidays-tab [companyId]="id" />
+              } @else {
+                <p class="dl-form__hint">{{ 'CATALOG.COMPANIES.WIZARD_LOCKED_HINT' | translate }}</p>
+              }
+            </div>
+          </ng-template>
         </p-tabpanel>
       }
 
       @if (canViewRooms()) {
-        <p-tabpanel value="rooms">
-          <div class="company-dialog__panel company-dialog__panel--scroll">
-            @if (currentCompanyId(); as id) {
-              <app-rooms-tab [companyId]="id" />
-            } @else {
-              <p class="dl-form__hint">{{ 'CATALOG.COMPANIES.WIZARD_LOCKED_HINT' | translate }}</p>
-            }
-          </div>
+        <p-tabpanel value="rooms" [lazy]="true">
+          <ng-template #content>
+            <div class="company-dialog__panel company-dialog__panel--scroll">
+              @if (currentCompanyId(); as id) {
+                <app-rooms-tab [companyId]="id" />
+              } @else {
+                <p class="dl-form__hint">{{ 'CATALOG.COMPANIES.WIZARD_LOCKED_HINT' | translate }}</p>
+              }
+            </div>
+          </ng-template>
         </p-tabpanel>
       }
     </p-tabpanels>

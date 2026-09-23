@@ -1,6 +1,7 @@
 import { afterNextRender, Component, computed, ElementRef, inject, input, signal, viewChild } from '@angular/core';
 import { ReactiveFormsModule, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
 import { InputText } from 'primeng/inputtext';
 import { finalize, switchMap } from 'rxjs';
@@ -13,7 +14,7 @@ const PIN_PATTERN = /^\d{4,6}$/;
 
 @Component({
   selector: 'app-pin-lock-overlay',
-  imports: [ReactiveFormsModule, InputText, Button],
+  imports: [ReactiveFormsModule, InputText, Button, TranslatePipe],
   templateUrl: './pin-lock-overlay.component.html',
   styleUrl: './pin-lock-overlay.component.scss',
 })

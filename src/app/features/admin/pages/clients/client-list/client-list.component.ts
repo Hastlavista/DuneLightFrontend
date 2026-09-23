@@ -12,11 +12,10 @@ import { finalize } from 'rxjs';
 import { ClientTagDto } from '../../../../../core/models/client-tag.model';
 import { ClientDto } from '../../../../../core/models/client.model';
 import { EmployeeDirectoryDto } from '../../../../../core/models/employee.model';
-import { CompanyDto } from '../../../../../core/models/company.model';
 import { ClientTagsService } from '../../../../../core/services/client-tags.service';
 import { ClientsService } from '../../../../../core/services/clients.service';
 import { EmployeesService } from '../../../../../core/services/employees.service';
-import { CompaniesService } from '../../../../../core/services/companies.service';
+import { CompanyContextService } from '../../../../../core/services/company-context.service';
 import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { translationReadySignal } from '../../../../../core/utils/translation-signal.util';
@@ -59,7 +58,7 @@ export class ClientListComponent {
   private readonly clientsService = inject(ClientsService);
   private readonly clientTagsService = inject(ClientTagsService);
   private readonly employeesService = inject(EmployeesService);
-  private readonly companiesService = inject(CompaniesService);
+  private readonly companyContext = inject(CompanyContextService);
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
@@ -82,6 +81,9 @@ export class ClientListComponent {
   readonly items = signal<ClientDto[]>([]);
   readonly totalCount = signal(0);
   readonly loading = signal(false);
+  readonly failed = signal(false);
+  // Latest-request-wins guard for page/search/filter changes.
+  private fetchToken = 0;
   readonly rows = signal(DEFAULT_PAGE_SIZE);
   readonly search = signal('');
   readonly showInactive = signal(false);
@@ -92,7 +94,7 @@ export class ClientListComponent {
 
   readonly activeTags = signal<ClientTagDto[]>([]);
   readonly activeEmployees = signal<EmployeeDirectoryDto[]>([]);
-  readonly activeCompanies = signal<CompanyDto[]>([]);
+  readonly activeCompanies = this.companyContext.companies;
 
   private readonly translationsReady = translationReadySignal(this.translate);
 
@@ -285,7 +287,9 @@ export class ClientListComponent {
   }
 
   private fetch(first: number, rows: number): void {
+    const token = ++this.fetchToken;
     this.loading.set(true);
+    this.failed.set(false);
     const page = Math.floor(first / rows) + 1;
     this.clientsService
       .getPage(
@@ -304,10 +308,40 @@ export class ClientListComponent {
           },
         },
       )
-      .pipe(finalize(() => this.loading.set(false)))
-      .subscribe((result) => {
-        this.items.set(result.items);
-        this.totalCount.set(result.totalCount);
+      .pipe(
+        finalize(() => {
+          if (token === this.fetchToken) {
+            this.loading.set(false);
+          }
+        }),
+      )
+      .subscribe({
+        next: (result) => {
+          if (token !== this.fetchToken) {
+            return;
+          }
+          // The last row of the last page was deleted/deactivated: show the
+          // last page that still has rows instead of an empty page.
+          const lastFirst = result.totalCount > 0 ? Math.floor((result.totalCount - 1) / rows) * rows : 0;
+          if (result.items.length === 0 && lastFirst < first) {
+            if (this.table) {
+              this.table.first = lastFirst;
+            }
+            this.fetch(lastFirst, rows);
+            return;
+          }
+          this.items.set(result.items);
+          this.totalCount.set(result.totalCount);
+        },
+        // Never show a failed load as "no results", nor keep the previous filter's rows.
+        error: () => {
+          if (token !== this.fetchToken) {
+            return;
+          }
+          this.items.set([]);
+          this.totalCount.set(0);
+          this.failed.set(true);
+        },
       });
   }
 
@@ -328,8 +362,8 @@ export class ClientListComponent {
   }
 
   private loadActiveCompanies(): void {
-    this.companiesService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeCompanies.set(result.items));
+    if (!this.companyContext.companies().length) {
+      this.companyContext.loadCompanies();
+    }
   }
 }

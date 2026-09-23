@@ -13,7 +13,7 @@ import { EmployeeDirectoryDto } from '../../../../../core/models/employee.model'
 import { ClientTagsService } from '../../../../../core/services/client-tags.service';
 import { ClientsService } from '../../../../../core/services/clients.service';
 import { EmployeesService } from '../../../../../core/services/employees.service';
-import { CompaniesService } from '../../../../../core/services/companies.service';
+import { CompanyContextService } from '../../../../../core/services/company-context.service';
 import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { toStartOfDayIso } from '../../../../../core/utils/date.util';
@@ -74,7 +74,7 @@ function gdprConsentDateValidator(group: AbstractControl): ValidationErrors | nu
 export class ClientFormComponent {
   private readonly fb = inject(FormBuilder);
   private readonly clientsService = inject(ClientsService);
-  private readonly companiesService = inject(CompaniesService);
+  private readonly companyContext = inject(CompanyContextService);
   private readonly employeesService = inject(EmployeesService);
   protected readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly clientTagsService = inject(ClientTagsService);
@@ -97,7 +97,10 @@ export class ClientFormComponent {
   readonly isAnonymized = computed(() => this.loadedClient()?.isAnonymized ?? false);
   readonly noShowCount = computed(() => this.loadedClient()?.noShowCount ?? 0);
 
-  readonly activeCompanies = signal<ClientRefOption[]>([]);
+  /** Full active list with catalog.companies.view, otherwise the viewer's assigned companies. */
+  readonly activeCompanies = computed<ClientRefOption[]>(() =>
+    this.companyContext.companies().map((company) => ({ id: company.id, name: company.name })),
+  );
   readonly activeEmployees = signal<EmployeeDirectoryDto[]>([]);
   readonly activeTags = signal<ClientTagDto[]>([]);
 
@@ -183,7 +186,9 @@ export class ClientFormComponent {
     const id = idParam && idParam !== NEW_ID ? idParam : null;
     this.editingId.set(id);
 
-    this.loadActiveCompanies();
+    if (!this.companyContext.companies().length) {
+      this.companyContext.loadCompanies();
+    }
     this.loadActiveEmployees();
     this.loadActiveTags();
 
@@ -257,36 +262,13 @@ export class ClientFormComponent {
   }
 
   private prefillMemberNumber(): void {
-    this.clientsService.getNextMemberNumber().subscribe((next) => this.form.controls.memberNumber.setValue(next));
-  }
-
-  /** GET /api/catalog/companies requires catalog.companies.view/manage, which
-   * not every role that can reach this page holds (e.g. Reception via
-   * clients.manage) - same 403 concern as loadActiveEmployees() below, and
-   * the same fallback CompanyContextService.loadCompanies() uses: fall back
-   * to the employee's own assigned companies instead of leaving the "Matična
-   * poslovnica" picker empty. */
-  private loadActiveCompanies(): void {
-    if (!this.currentEmployeeService.hasAnyGrant(['catalog.companies.view', 'catalog.companies.manage'])) {
-      this.activeCompanies.set(this.assignedCompanies());
-      return;
-    }
-
-    this.companiesService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe({
-        next: (result) => this.activeCompanies.set(result.items.map((company) => ({ id: company.id, name: company.name }))),
-        error: () => this.activeCompanies.set(this.assignedCompanies()),
-      });
-  }
-
-  private assignedCompanies(): ClientRefOption[] {
-    return (
-      this.currentEmployeeService.employee()?.companies.map((company) => ({
-        id: company.companyId,
-        name: company.companyName,
-      })) ?? []
-    );
+    this.clientsService.getNextMemberNumber().subscribe((next) => {
+      // Only a suggestion: never overwrite a number the user already typed.
+      const control = this.form.controls.memberNumber;
+      if (!control.dirty) {
+        control.setValue(next);
+      }
+    });
   }
 
   /** GET /api/employees/directory, not getPage()/`/api/employees` - only feeds

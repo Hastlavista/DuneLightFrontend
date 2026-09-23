@@ -1,10 +1,12 @@
 import { Component, computed, inject, input, output, signal } from '@angular/core';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
+import { rosterWriteScope } from '../roster-write-scope';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
 import { Select } from 'primeng/select';
 import { finalize } from 'rxjs';
-import { CompanyDto } from '../../../../../core/models/company.model';
+import { StudioCompany } from '../../../../../core/models/company.model';
 import {
   RosterDayEntryDto,
   RosterDaySource,
@@ -12,6 +14,7 @@ import {
   TeamMonthlyEmployeeDto,
 } from '../../../../../core/models/roster.model';
 import { RosterEntriesService } from '../../../../../core/services/roster-entries.service';
+import { translationReadySignal } from '../../../../../core/utils/translation-signal.util';
 import {
   YearMonth,
   addMonths,
@@ -69,10 +72,11 @@ export interface TeamMonthlyCellClickEvent {
 export class TeamMonthlyComponent {
   private readonly rosterEntriesService = inject(RosterEntriesService);
   private readonly translate = inject(TranslateService);
+  private readonly translationsReady = translationReadySignal(this.translate);
+  private readonly writeScope = rosterWriteScope(inject(CurrentEmployeeService));
 
   readonly currentEmployeeId = input<string | null>(null);
-  readonly isAdmin = input.required<boolean>();
-  readonly activeCompanies = input<CompanyDto[]>([]);
+  readonly activeCompanies = input<StudioCompany[]>([]);
 
   readonly cellClick = output<TeamMonthlyCellClickEvent>();
 
@@ -80,6 +84,9 @@ export class TeamMonthlyComponent {
   readonly companyId = signal<string | null>(null);
   readonly employees = signal<TeamMonthlyEmployeeDto[]>([]);
   readonly loading = signal(false);
+  readonly failed = signal(false);
+  // Latest-request-wins guard for month/company changes.
+  private fetchToken = 0;
 
   readonly monthLabel = computed(() => monthYearLabel(this.yearMonth()));
   readonly isThisMonth = computed(() => isCurrentMonth(this.yearMonth()));
@@ -88,10 +95,13 @@ export class TeamMonthlyComponent {
     Array.from({ length: daysInMonth(this.yearMonth().year, this.yearMonth().month) }, (_, i) => i + 1),
   );
 
-  readonly companyOptions = computed<CompanyOption[]>(() => [
-    { label: this.translate.instant('ROSTER.TEAM_MONTHLY.ALL_COMPANIES'), value: null },
-    ...this.activeCompanies().map((company) => ({ label: company.name, value: company.id })),
-  ]);
+  readonly companyOptions = computed<CompanyOption[]>(() => {
+    this.translationsReady();
+    return [
+      { label: this.translate.instant('ROSTER.TEAM_MONTHLY.ALL_COMPANIES'), value: null },
+      ...this.activeCompanies().map((company) => ({ label: company.name, value: company.id })),
+    ];
+  });
 
   constructor() {
     this.fetch();
@@ -122,7 +132,7 @@ export class TeamMonthlyComponent {
   }
 
   isRowEditable(employeeId: string): boolean {
-    return this.isAdmin() || employeeId === this.currentEmployeeId();
+    return this.writeScope.canWriteEntriesFor(employeeId);
   }
 
   dayEntries(employee: TeamMonthlyEmployeeDto, day: number): RosterDayEntryDto[] {
@@ -203,10 +213,30 @@ export class TeamMonthlyComponent {
   }
 
   private fetch(): void {
+    const token = ++this.fetchToken;
     this.loading.set(true);
+    this.failed.set(false);
     this.rosterEntriesService
       .teamMonthly({ year: this.yearMonth().year, month: this.yearMonth().month, companyId: this.companyId() })
-      .pipe(finalize(() => this.loading.set(false)))
-      .subscribe((result) => this.employees.set(result.employees));
+      .pipe(
+        finalize(() => {
+          if (token === this.fetchToken) {
+            this.loading.set(false);
+          }
+        }),
+      )
+      .subscribe({
+        next: (result) => {
+          if (token === this.fetchToken) {
+            this.employees.set(result.employees);
+          }
+        },
+        error: () => {
+          if (token === this.fetchToken) {
+            this.employees.set([]);
+            this.failed.set(true);
+          }
+        },
+      });
   }
 }

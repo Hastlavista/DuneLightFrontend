@@ -9,6 +9,7 @@ import {
   AppointmentDto,
   AppointmentMoveRequest,
   AppointmentScheduleQuery,
+  AppointmentServiceOptionDto,
   AvailableSlotsResponseDto,
   BookingCancelRequest,
   BookingCreateRequest,
@@ -106,15 +107,19 @@ export class AppointmentsService {
    * appointment ("Zakaži"). 409 APPOINTMENT_OVERLAP (trainer or client already
    * booked) is a hard block now, not a warning - left to the default error
    * toast, the caller just needs to not close its form on error. */
-  create(request: AppointmentCreateRequest): Observable<AppointmentDto> {
-    return this.http.post<AppointmentDto>(`${this.resourceUrl}/schedule`, request);
+  create(request: AppointmentCreateRequest, options?: { suppressErrorToast?: boolean }): Observable<AppointmentDto> {
+    return this.http.post<AppointmentDto>(`${this.resourceUrl}/schedule`, request, {
+      context: new HttpContext().set(SUPPRESS_ERROR_TOAST, options?.suppressErrorToast ?? false),
+    });
   }
 
   /** POST /api/appointments/complete - creates an already-billed, Completed
    * appointment in one step ("Upiši odrađeno" on the new-appointment form, no
    * prior Scheduled row involved). */
-  complete(request: AppointmentCompleteRequest): Observable<AppointmentDto> {
-    return this.http.post<AppointmentDto>(`${this.resourceUrl}/complete`, request);
+  complete(request: AppointmentCompleteRequest, options?: { suppressErrorToast?: boolean }): Observable<AppointmentDto> {
+    return this.http.post<AppointmentDto>(`${this.resourceUrl}/complete`, request, {
+      context: new HttpContext().set(SUPPRESS_ERROR_TOAST, options?.suppressErrorToast ?? false),
+    });
   }
 
   /** PATCH /api/appointments/{id}/complete - bills a previously-Scheduled
@@ -168,6 +173,17 @@ export class AppointmentsService {
     return this.http.get<AvailableSlotsResponseDto>(`${this.resourceUrl}/available-slots`, {
       params,
       context: new HttpContext().set(SUPPRESS_ERROR_TOAST, true),
+    });
+  }
+
+  /** GET /api/appointments/services?companyId= - services bookable at that company, for the
+   * "Novi termin"/break required serviceId dropdown. Gated behind appointments.write.own/all
+   * on the backend, not catalog.services.view - use this instead of ServicesService.getPage()
+   * anywhere that dropdown is fed, so a trainer without catalog access can still book. */
+  getServices(companyId: string, options?: { suppressErrorToast?: boolean }): Observable<AppointmentServiceOptionDto[]> {
+    return this.http.get<AppointmentServiceOptionDto[]>(`${this.resourceUrl}/services`, {
+      params: new HttpParams().set('companyId', companyId),
+      context: new HttpContext().set(SUPPRESS_ERROR_TOAST, options?.suppressErrorToast ?? false),
     });
   }
 

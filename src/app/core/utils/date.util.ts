@@ -26,9 +26,12 @@ function toLocalIso(
   seconds: number,
   milliseconds: number,
 ): string {
+  // The offset must be the one in force at the target local time, not at
+  // `date`'s own time - on a DST-change day those differ by an hour.
+  const target = new Date(date.getFullYear(), date.getMonth(), date.getDate(), hours, minutes, seconds, milliseconds);
   return (
-    `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}` +
-    `T${pad(hours)}:${pad(minutes)}:${pad(seconds)}.${pad(milliseconds, 3)}${localOffset(date)}`
+    `${target.getFullYear()}-${pad(target.getMonth() + 1)}-${pad(target.getDate())}` +
+    `T${pad(target.getHours())}:${pad(target.getMinutes())}:${pad(target.getSeconds())}.${pad(target.getMilliseconds(), 3)}${localOffset(target)}`
   );
 }
 

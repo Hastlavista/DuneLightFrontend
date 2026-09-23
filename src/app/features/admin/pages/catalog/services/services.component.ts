@@ -12,6 +12,7 @@ import { ActiveServicesStore } from '../../../../../core/services/active-service
 import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { ServicesService } from '../../../../../core/services/services.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
+import { translationReadySignal } from '../../../../../core/utils/translation-signal.util';
 import { ColorSwatchComponent } from '../../../../../shared/components/color-swatch/color-swatch.component';
 import { ListToolbarComponent } from '../../../../../shared/components/list-toolbar/list-toolbar.component';
 import { StatusTagComponent } from '../../../../../shared/components/status-tag/status-tag.component';
@@ -49,12 +50,16 @@ export class CatalogServicesComponent {
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
+  private readonly translationsReady = translationReadySignal(this.translate);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
 
   readonly items = signal<ServiceDto[]>([]);
   readonly totalCount = signal(0);
   readonly loading = signal(false);
+  readonly failed = signal(false);
+  // Latest-request-wins guard for page/search/filter changes.
+  private fetchToken = 0;
   readonly rows = signal(DEFAULT_PAGE_SIZE);
   readonly first = signal(0);
   readonly search = signal('');
@@ -63,10 +68,13 @@ export class CatalogServicesComponent {
 
   readonly executionModeTranslationKey = executionModeTranslationKey;
 
-  readonly executionModeFilterOptions = computed<ExecutionModeFilterOption[]>(() => [
-    { label: this.translate.instant('CATALOG.SERVICES.FILTER_EXECUTION_MODE_ALL'), value: null },
-    ...EXECUTION_MODES.map((mode) => ({ label: this.translate.instant(executionModeTranslationKey(mode)), value: mode })),
-  ]);
+  readonly executionModeFilterOptions = computed<ExecutionModeFilterOption[]>(() => {
+    this.translationsReady();
+    return [
+      { label: this.translate.instant('CATALOG.SERVICES.FILTER_EXECUTION_MODE_ALL'), value: null },
+      ...EXECUTION_MODES.map((mode) => ({ label: this.translate.instant(executionModeTranslationKey(mode)), value: mode })),
+    ];
+  });
 
   readonly dialogVisible = signal(false);
   readonly editingService = signal<ServiceDto | null>(null);
@@ -183,7 +191,9 @@ export class CatalogServicesComponent {
   }
 
   private fetch(first: number, rows: number): void {
+    const token = ++this.fetchToken;
     this.loading.set(true);
+    this.failed.set(false);
     const page = Math.floor(first / rows) + 1;
     this.servicesService
       .getPage(
@@ -195,10 +205,38 @@ export class CatalogServicesComponent {
         },
         { extraParams: { executionMode: this.executionModeFilter() } },
       )
-      .pipe(finalize(() => this.loading.set(false)))
-      .subscribe((result) => {
-        this.items.set(result.items);
-        this.totalCount.set(result.totalCount);
+      .pipe(
+        finalize(() => {
+          if (token === this.fetchToken) {
+            this.loading.set(false);
+          }
+        }),
+      )
+      .subscribe({
+        next: (result) => {
+          if (token !== this.fetchToken) {
+            return;
+          }
+          // The last row of the last page was deleted/deactivated: show the
+          // last page that still has rows instead of an empty page.
+          const lastFirst = result.totalCount > 0 ? Math.floor((result.totalCount - 1) / rows) * rows : 0;
+          if (result.items.length === 0 && lastFirst < first) {
+            this.first.set(lastFirst);
+            this.fetch(lastFirst, rows);
+            return;
+          }
+          this.items.set(result.items);
+          this.totalCount.set(result.totalCount);
+        },
+        // Never show a failed load as "no results", nor keep the previous filter's rows.
+        error: () => {
+          if (token !== this.fetchToken) {
+            return;
+          }
+          this.items.set([]);
+          this.totalCount.set(0);
+          this.failed.set(true);
+        },
       });
   }
 

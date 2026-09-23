@@ -14,6 +14,7 @@ import { CapabilitiesService } from '../../../../../../core/services/capabilitie
 import { GrantGroupsService } from '../../../../../../core/services/grant-groups.service';
 import { GrantsService } from '../../../../../../core/services/grants.service';
 import { NotificationService } from '../../../../../../core/services/notification.service';
+import { CurrentEmployeeService } from '../../../../../../core/services/current-employee.service';
 import { CapabilityScopeControlComponent } from './capability-scope-control/capability-scope-control.component';
 import { CapabilitySensitivityBadgeComponent } from './capability-sensitivity-badge/capability-sensitivity-badge.component';
 import { RoleSummaryComponent } from './role-summary/role-summary.component';
@@ -39,6 +40,7 @@ export class GrantGroupFormComponent {
   private readonly translate = inject(TranslateService);
   private readonly router = inject(Router);
   private readonly route = inject(ActivatedRoute);
+  private readonly currentEmployeeService = inject(CurrentEmployeeService);
 
   readonly editingId = signal<string | null>(null);
   readonly isEditMode = computed(() => this.editingId() !== null);
@@ -126,6 +128,7 @@ export class GrantGroupFormComponent {
     const id = this.editingId();
     if (!id) return;
     this.reloadAuthoringState(id);
+    this.refreshOwnGrants();
     this.grantGroupsService.getTemplateUpgradeStatus(id).subscribe({
       next: (status) => this.upgradeStatus.set(status),
       error: () => this.upgradeStatus.set(null),
@@ -193,6 +196,7 @@ export class GrantGroupFormComponent {
         this.notifications.showSuccess(this.translate.instant(id ? 'PERMISSIONS.GRANT_GROUPS.UPDATED' : 'PERMISSIONS.GRANT_GROUPS.CREATED'));
         if (!id) { this.editingId.set(savedId); this.router.navigate(['/app/permissions/grant-groups', savedId], { replaceUrl: true }); }
         this.reloadAuthoringState(savedId);
+        this.refreshOwnGrants();
       },
       // The global error interceptor already shows a translated toast for
       // this failure (see error.interceptor.ts) - nothing page-specific to
@@ -203,6 +207,11 @@ export class GrantGroupFormComponent {
       // runs and `saving` resets without an unhandled-error console warning).
       error: () => {},
     });
+  }
+  /** The viewer may belong to the group just changed - re-read their own
+   * effective grants so menus/actions don't stay stale until a reload. */
+  private refreshOwnGrants(): void {
+    this.currentEmployeeService.load().subscribe();
   }
   private reloadAuthoringState(id: string): void {
     this.grantGroupsService.getAuthoringState(id).subscribe({ next: (state) => this.applyAuthoritativeState(state), error: () => {} });

@@ -56,6 +56,10 @@ export class StockPageComponent {
   readonly items = signal<ProductDto[]>([]);
   readonly totalCount = signal(0);
   readonly loading = signal(false);
+  readonly failed = signal(false);
+
+  // Latest-request-wins guard for company/page/search changes.
+  private requestToken = 0;
   readonly rows = signal(DEFAULT_PAGE_SIZE);
   readonly first = signal(0);
   readonly search = signal('');
@@ -222,34 +226,68 @@ export class StockPageComponent {
     if (!companyId) {
       return;
     }
+    const token = ++this.requestToken;
     this.loading.set(true);
+    this.failed.set(false);
     forkJoin({
       products: this.fetchProductsPage(first, rows),
       stock: this.stockService.getByCompany(companyId, { suppressErrorToast: true }),
     })
-      .pipe(finalize(() => this.loading.set(false)))
-      .subscribe(({ products, stock }) => {
-        this.items.set(products.items);
-        this.totalCount.set(products.totalCount);
-        this.stockByProductId.set(
-          stock.reduce<Record<string, ProductStockDto>>((acc, row) => {
-            acc[row.productId] = row;
-            return acc;
-          }, {}),
-        );
+      .pipe(finalize(() => this.settle(token)))
+      .subscribe({
+        next: ({ products, stock }) => {
+          if (token !== this.requestToken) {
+            return;
+          }
+          this.items.set(products.items);
+          this.totalCount.set(products.totalCount);
+          this.stockByProductId.set(
+            stock.reduce<Record<string, ProductStockDto>>((acc, row) => {
+              acc[row.productId] = row;
+              return acc;
+            }, {}),
+          );
+        },
+        error: () => this.fail(token),
       });
   }
 
   /** Products-only refetch (pagination) - the Company-scoped stock map stays
    * valid since it doesn't change with the product page/search/filter. */
   private fetchProducts(first: number, rows: number): void {
+    const token = ++this.requestToken;
     this.loading.set(true);
+    this.failed.set(false);
     this.fetchProductsPage(first, rows)
-      .pipe(finalize(() => this.loading.set(false)))
-      .subscribe((result) => {
-        this.items.set(result.items);
-        this.totalCount.set(result.totalCount);
+      .pipe(finalize(() => this.settle(token)))
+      .subscribe({
+        next: (result) => {
+          if (token !== this.requestToken) {
+            return;
+          }
+          this.items.set(result.items);
+          this.totalCount.set(result.totalCount);
+        },
+        error: () => this.fail(token),
       });
+  }
+
+  private settle(token: number): void {
+    if (token === this.requestToken) {
+      this.loading.set(false);
+    }
+  }
+
+  // Both requests suppress the interceptor toast, so the page itself must
+  // show the failure instead of an empty or stale list.
+  private fail(token: number): void {
+    if (token !== this.requestToken) {
+      return;
+    }
+    this.items.set([]);
+    this.totalCount.set(0);
+    this.stockByProductId.set({});
+    this.failed.set(true);
   }
 
   private fetchProductsPage(first: number, rows: number) {

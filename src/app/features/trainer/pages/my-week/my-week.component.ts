@@ -1,18 +1,16 @@
-import { Component, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
 import { AppointmentScheduleCellDto } from '../../../../core/models/appointment.model';
 import { EmployeeDirectoryDto } from '../../../../core/models/employee.model';
 import { GroupAppointmentCellDto, GroupDto } from '../../../../core/models/group.model';
-import { CompanyDto } from '../../../../core/models/company.model';
 import { ScheduleBreakCellDto } from '../../../../core/models/schedule-break.model';
-import { ServiceDto } from '../../../../core/models/service.model';
+import { AppointmentServiceOptionDto } from '../../../../core/models/appointment.model';
 import { CurrentEmployeeService } from '../../../../core/services/current-employee.service';
 import { EmployeesService } from '../../../../core/services/employees.service';
 import { GroupsService } from '../../../../core/services/groups.service';
 import { CompanyContextService } from '../../../../core/services/company-context.service';
-import { CompaniesService } from '../../../../core/services/companies.service';
-import { ServicesService } from '../../../../core/services/services.service';
+import { AppointmentsService } from '../../../../core/services/appointments.service';
 import { AppointmentDetailDialogComponent } from '../../../../shared/components/appointment-detail-dialog/appointment-detail-dialog.component';
 import { NewAppointmentDialogComponent, NewAppointmentInitial } from '../../../../shared/components/new-appointment-dialog/new-appointment-dialog.component';
 import { toGroupAppointmentCell } from '../../../../shared/components/schedule-grid/schedule-cell-view.util';
@@ -53,8 +51,7 @@ export class MyWeekComponent {
   private readonly employeesService = inject(EmployeesService);
   private readonly groupsService = inject(GroupsService);
   private readonly companyContext = inject(CompanyContextService);
-  private readonly companiesService = inject(CompaniesService);
-  private readonly servicesService = inject(ServicesService);
+  private readonly appointmentsService = inject(AppointmentsService);
 
   readonly weekGrid = viewChild<ScheduleWeekGridComponent>('weekGrid');
 
@@ -77,15 +74,14 @@ export class MyWeekComponent {
   readonly canCreateBreaks = computed(() => this.currentEmployeeService.can('schedule-breaks.manage'));
 
   readonly activeEmployees = signal<EmployeeDirectoryDto[]>([]);
-  readonly activeServices = signal<ServiceDto[]>([]);
-  readonly activeCompanies = signal<CompanyDto[]>([]);
+  readonly activeServices = signal<AppointmentServiceOptionDto[]>([]);
+  readonly activeCompanies = this.companyContext.companies;
 
-  /** Companies for the required companyId dropdowns in "Novi termin", the
-   * move form in AppointmentDetailDialogComponent, and ScheduleBreakFormDialogComponent
-   * - fetched unconditionally, same rationale as loadActiveServices() above.
-   * activeCompanies() above still backs only the week grid's per-company
-   * color banner and stays gated by catalog.companies.view. */
-  readonly dialogCompanies = signal<CompanyDto[]>([]);
+  /** Companies for the grid's color banner and the required companyId
+   * dropdowns in "Novi termin", the detail dialog's move form and the break
+   * form: the full active list with catalog.companies.view, otherwise the
+   * viewer's own assigned companies (GET /api/catalog/companies would 403). */
+  readonly dialogCompanies = this.companyContext.companies;
 
   readonly detailVisible = signal(false);
   readonly detailAppointmentId = signal<string | null>(null);
@@ -105,9 +101,13 @@ export class MyWeekComponent {
 
   constructor() {
     this.loadActiveEmployees();
-    this.loadActiveServices();
-    this.loadActiveCompanies();
-    this.loadDialogCompanies();
+    effect(() => {
+      const companyId = this.companyContext.selectedCompanyId();
+      this.loadActiveServices(companyId);
+    });
+    if (!this.companyContext.companies().length) {
+      this.companyContext.loadCompanies();
+    }
   }
 
   onAppointmentClicked(appointment: AppointmentScheduleCellDto): void {
@@ -192,27 +192,14 @@ export class MyWeekComponent {
    * screens this must never be skipped for catalog.services.view: booking a
    * termin isn't "browsing the catalog", and a custom GrantGroup lacking that
    * grant would otherwise leave the dropdown silently empty. */
-  private loadActiveServices(): void {
-    this.servicesService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeServices.set(result.items));
-  }
-
-  /** Same rationale as loadActiveServices() - catalog.companies.view. */
-  private loadActiveCompanies(): void {
-    if (!this.currentEmployeeService.hasGrant('catalog.companies.view')) {
+  private loadActiveServices(companyId: string | null): void {
+    if (!companyId) {
+      this.activeServices.set([]);
       return;
     }
-    this.companiesService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeCompanies.set(result.items));
+    this.appointmentsService
+      .getServices(companyId, { suppressErrorToast: true })
+      .subscribe({ next: (services) => this.activeServices.set(services), error: () => this.activeServices.set([]) });
   }
 
-  /** Feeds the required companyId dropdowns above - always called, regardless
-   * of catalog.companies.view (see dialogCompanies' doc). */
-  private loadDialogCompanies(): void {
-    this.companiesService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.dialogCompanies.set(result.items));
-  }
 }

@@ -1,4 +1,4 @@
-import { Component, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
@@ -6,13 +6,13 @@ import { Select } from 'primeng/select';
 import { APPOINTMENT_STATUSES, AppointmentScheduleCellDto, AppointmentStatus, appointmentStatusTranslationKey } from '../../../../core/models/appointment.model';
 import { EmployeeColumnEntry, EmployeeDirectoryDto } from '../../../../core/models/employee.model';
 import { GroupAppointmentCellDto, GroupDto } from '../../../../core/models/group.model';
-import { CompanyDto } from '../../../../core/models/company.model';
 import { ScheduleBreakCellDto } from '../../../../core/models/schedule-break.model';
 import { EXECUTION_MODES, ServiceDto, ServiceExecutionMode, executionModeTranslationKey } from '../../../../core/models/service.model';
+import { AppointmentServiceOptionDto } from '../../../../core/models/appointment.model';
+import { AppointmentsService } from '../../../../core/services/appointments.service';
 import { EmployeesService } from '../../../../core/services/employees.service';
 import { GroupsService } from '../../../../core/services/groups.service';
 import { CompanyContextService } from '../../../../core/services/company-context.service';
-import { CompaniesService } from '../../../../core/services/companies.service';
 import { CurrentEmployeeService } from '../../../../core/services/current-employee.service';
 import { ServicesService } from '../../../../core/services/services.service';
 import { translationReadySignal } from '../../../../core/utils/translation-signal.util';
@@ -63,8 +63,8 @@ export class TodayComponent {
   private readonly employeesService = inject(EmployeesService);
   private readonly groupsService = inject(GroupsService);
   private readonly companyContext = inject(CompanyContextService);
-  private readonly companiesService = inject(CompaniesService);
   private readonly servicesService = inject(ServicesService);
+  private readonly appointmentsService = inject(AppointmentsService);
   private readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly translate = inject(TranslateService);
 
@@ -76,22 +76,21 @@ export class TodayComponent {
 
   readonly activeEmployees = signal<EmployeeDirectoryDto[]>([]);
   readonly activeServices = signal<ServiceDto[]>([]);
-  readonly activeCompanies = signal<CompanyDto[]>([]);
+  readonly activeCompanies = this.companyContext.companies;
 
-  /** Services for "Novi termin"'s own serviceId dropdown (Validators.required)
-   * - fetched unconditionally, unlike activeServices() below which backs only
-   * the optional service FILTER and is intentionally skipped when the viewer
-   * lacks catalog.services.view. Booking a termin isn't "browsing the
-   * catalog", so it must not go empty just because a custom GrantGroup
-   * doesn't happen to include that grant. */
-  readonly dialogServices = signal<ServiceDto[]>([]);
+  /** Services for "Novi termin"'s own required serviceId dropdown - via
+   * GET /api/appointments/services (appointments.write.own/all), NOT
+   * ServicesService/catalog.services.view: booking a termin isn't "browsing
+   * the catalog", so it must not go empty just because a custom GrantGroup
+   * doesn't happen to include that grant. Scoped to the topbar-selected
+   * company, same as the dialog's own default companyId. */
+  readonly dialogServices = signal<AppointmentServiceOptionDto[]>([]);
 
-  /** Companies for the required companyId dropdowns in "Novi termin", the
-   * move form in AppointmentDetailDialogComponent, and ScheduleBreakFormDialogComponent
-   * - fetched unconditionally, same rationale as dialogServices above.
-   * activeCompanies() below still backs only the day grid's per-company color
-   * banner and stays gated by catalog.companies.view. */
-  readonly dialogCompanies = signal<CompanyDto[]>([]);
+  /** Companies for the grid's color banner and the required companyId
+   * dropdowns in "Novi termin", the detail dialog's move form and the break
+   * form: the full active list with catalog.companies.view, otherwise the
+   * viewer's own assigned companies (GET /api/catalog/companies would 403). */
+  readonly dialogCompanies = this.companyContext.companies;
 
   readonly detailVisible = signal(false);
   readonly detailAppointmentId = signal<string | null>(null);
@@ -169,10 +168,22 @@ export class TodayComponent {
 
   constructor() {
     this.loadActiveEmployees();
-    this.loadActiveServices();
-    this.loadActiveCompanies();
-    this.loadDialogServices();
-    this.loadDialogCompanies();
+    // A hard refresh straight into this (deliberately ungated) trainer route
+    // constructs this component before CurrentEmployeeService's /me resolves -
+    // a one-time hasGrant() check in the constructor would see "not loaded yet"
+    // (false) and never retry. React to the employee actually loading instead.
+    effect(() => {
+      if (this.currentEmployeeService.hasGrant('catalog.services.view')) {
+        this.loadActiveServices();
+      }
+    });
+    if (!this.companyContext.companies().length) {
+      this.companyContext.loadCompanies();
+    }
+    effect(() => {
+      const companyId = this.companyContext.selectedCompanyId();
+      this.loadDialogServices(companyId);
+    });
   }
 
   onAppointmentClicked(appointment: AppointmentScheduleCellDto): void {
@@ -259,27 +270,14 @@ export class TodayComponent {
 
   /** Feeds only "Novi termin"'s required serviceId dropdown - always called,
    * regardless of catalog.services.view (see dialogServices' doc). */
-  private loadDialogServices(): void {
-    this.servicesService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.dialogServices.set(result.items));
-  }
-
-  /** Same rationale as loadActiveServices() - catalog.companies.view. */
-  private loadActiveCompanies(): void {
-    if (!this.currentEmployeeService.hasGrant('catalog.companies.view')) {
+  private loadDialogServices(companyId: string | null): void {
+    if (!companyId) {
+      this.dialogServices.set([]);
       return;
     }
-    this.companiesService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeCompanies.set(result.items));
+    this.appointmentsService
+      .getServices(companyId, { suppressErrorToast: true })
+      .subscribe({ next: (services) => this.dialogServices.set(services), error: () => this.dialogServices.set([]) });
   }
 
-  /** Feeds the required companyId dropdowns above - always called, regardless
-   * of catalog.companies.view (see dialogCompanies' doc). */
-  private loadDialogCompanies(): void {
-    this.companiesService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.dialogCompanies.set(result.items));
-  }
 }

@@ -33,6 +33,7 @@ export class RolesComponent {
 
   readonly allItems = signal<RoleDto[]>([]);
   readonly loading = signal(false);
+  readonly failed = signal(false);
   readonly search = signal('');
 
   readonly dialogVisible = signal(false);
@@ -86,9 +87,17 @@ export class RolesComponent {
 
   private fetch(): void {
     this.loading.set(true);
+    this.failed.set(false);
     this.rolesService
       .getAll()
       .pipe(finalize(() => this.loading.set(false)))
-      .subscribe((result) => this.allItems.set(result));
+      .subscribe({
+        next: (result) => this.allItems.set(result),
+        // A 403/5xx must not render as "none exist".
+        error: () => {
+          this.allItems.set([]);
+          this.failed.set(true);
+        },
+      });
   }
 }

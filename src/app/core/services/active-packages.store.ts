@@ -20,12 +20,20 @@ export class ActivePackagesStore {
     this.refresh();
   }
 
+  // Two quick mutations trigger two refreshes; only the latest may win.
+  private refreshToken = 0;
+
   refresh(): void {
+    const token = ++this.refreshToken;
     this.packagesService
       .getPage(
         { page: 1, pageSize: ACTIVE_PACKAGE_FETCH_PAGE_SIZE, isActive: true },
         { suppressErrorToast: true },
       )
-      .subscribe((result) => this.packages.set(result.items));
+      .subscribe((result) => {
+        if (token === this.refreshToken) {
+          this.packages.set(result.items);
+        }
+      });
   }
 }

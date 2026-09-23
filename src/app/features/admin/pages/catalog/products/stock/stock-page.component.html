@@ -11,7 +11,9 @@
   @if (!selectedCompanyId()) {
     <p class="stock-page__empty">{{ 'STOCK.SELECT_COMPANY_HINT' | translate }}</p>
   } @else if (loading()) {
-    <p class="stock-page__empty">Učitavanje...</p>
+    <p class="stock-page__empty">{{ 'COMMON.LOADING' | translate }}</p>
+  } @else if (failed()) {
+    <p class="stock-page__empty">{{ 'COMMON.LOAD_FAILED' | translate }}</p>
   } @else if (items().length === 0) {
     <p class="stock-page__empty">{{ 'STOCK.EMPTY' | translate }}</p>
   } @else {

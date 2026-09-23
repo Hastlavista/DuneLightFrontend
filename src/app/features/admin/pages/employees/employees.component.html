@@ -1,15 +1,15 @@
 <section class="employees-page">
-<p-tabs [value]="initialTab" styleClass="employees-page__tabs">
+<p-tabs [value]="initialTab" [lazy]="true" styleClass="employees-page__tabs">
   <p-tablist>
     <p-tab value="employees">{{ 'EMPLOYEES.TAB_LABEL' | translate }}</p-tab>
     <p-tab value="engagement-types">{{ 'EMPLOYEES.ENGAGEMENT_TYPES.TAB_LABEL' | translate }}</p-tab>
   </p-tablist>
   <p-tabpanels>
     <p-tabpanel value="employees">
-      <app-admin-employee-list />
+      <ng-template #content><app-admin-employee-list /></ng-template>
     </p-tabpanel>
     <p-tabpanel value="engagement-types">
-      <app-admin-engagement-types />
+      <ng-template #content><app-admin-engagement-types /></ng-template>
     </p-tabpanel>
   </p-tabpanels>
 </p-tabs>

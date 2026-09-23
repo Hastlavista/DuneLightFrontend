@@ -74,7 +74,7 @@
         </ng-template>
         <ng-template pTemplate="emptymessage">
           <tr>
-            <td colspan="6">{{ 'CHECKOUT.ENTRY.EMPTY' | translate }}</td>
+            <td colspan="6">{{ (checkoutsFailed() ? 'COMMON.LOAD_FAILED' : 'CHECKOUT.ENTRY.EMPTY') | translate }}</td>
           </tr>
         </ng-template>
       </p-table>

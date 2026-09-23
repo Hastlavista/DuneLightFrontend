@@ -46,6 +46,7 @@ export class GroupsComponent {
 
   readonly allItems = signal<GroupDto[]>([]);
   readonly loading = signal(false);
+  readonly failed = signal(false);
   readonly search = signal('');
   readonly showInactive = signal(false);
   readonly companyFilter = signal<string | null>(null);
@@ -253,9 +254,17 @@ export class GroupsComponent {
 
   private fetch(): void {
     this.loading.set(true);
+    this.failed.set(false);
     this.groupsService
       .getAll()
       .pipe(finalize(() => this.loading.set(false)))
-      .subscribe((result) => this.allItems.set(result));
+      .subscribe({
+        next: (result) => this.allItems.set(result),
+        // A 403/5xx must not render as "none exist".
+        error: () => {
+          this.allItems.set([]);
+          this.failed.set(true);
+        },
+      });
   }
 }

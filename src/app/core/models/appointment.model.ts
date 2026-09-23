@@ -495,6 +495,19 @@ export interface EmployeeAvailableSlotsDto {
  * fields stay fully usable alongside it either way. */
 export type AvailableSlotsResponseDto = EmployeeAvailableSlotsDto[];
 
+/** GET /api/appointments/services?companyId= - services bookable at a company, for the
+ * "Novi termin"/break required serviceId dropdown. Deliberately lighter than ServiceDto
+ * (no audit fields/isActive/sortOrder): gated behind appointments.write.own/all, not
+ * catalog.services.view, so booking a termin never depends on catalog administration access. */
+export interface AppointmentServiceOptionDto {
+  id: string;
+  name: string;
+  executionMode: 'Individual' | 'Group';
+  colorHex: string | null;
+  defaultDurationMinutes: number;
+  defaultPrice: number;
+}
+
 /** One colliding date inside a 409 RECURRING_CONFLICT error's
  * `details.conflicts` array - see AppError.details (typed loosely as
  * Record<string, string[]> there since most error codes carry field-validation

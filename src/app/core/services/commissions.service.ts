@@ -1,6 +1,7 @@
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { environment } from '../../../environments/environment';
+import { PlusSafeUrlCodec } from '../http/plus-safe-url-codec';
 import { CommissionEntriesResult, CommissionEntryDto, CommissionRuleDto, CommissionRuleRequest, CommissionSummaryResultDto } from '../models/commission.model';
 
 @Injectable({ providedIn: 'root' })
@@ -14,5 +15,5 @@ export class CommissionsService {
   deactivateRule(id: string) { return this.http.patch<CommissionRuleDto>(`${this.baseUrl}/rules/${id}/deactivate`, null); }
   getEntries(query: Record<string, string | number | undefined>) { return this.http.get<CommissionEntriesResult>(`${this.baseUrl}/entries`, { params: this.params(query) }); }
   getSummary(query: Record<string, string | undefined>) { return this.http.get<CommissionSummaryResultDto>(`${this.baseUrl}/summary`, { params: this.params(query) }); }
-  private params(query: Record<string, string | number | boolean | undefined>): HttpParams { return Object.entries(query).reduce((p, [key, value]) => value === undefined || value === '' ? p : p.set(key, value), new HttpParams()); }
+  private params(query: Record<string, string | number | boolean | undefined>): HttpParams { return Object.entries(query).reduce((p, [key, value]) => value === undefined || value === '' ? p : p.set(key, value), new HttpParams({ encoder: new PlusSafeUrlCodec() })); }
 }

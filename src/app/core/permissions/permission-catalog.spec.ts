@@ -23,6 +23,12 @@ function allGrantsOf(policy: PermissionPolicy): readonly string[] {
 describe('PAGE_POLICIES / ACTION_POLICIES structure', () => {
   const allPolicies: Record<string, PermissionPolicy> = { ...PAGE_POLICIES, ...ACTION_POLICIES };
 
+  // The checks below assert by throwing inside loops - they would pass vacuously on empty catalogs.
+  it('both catalogs are non-empty', () => {
+    expect(Object.keys(PAGE_POLICIES).length).toBeGreaterThan(0);
+    expect(Object.keys(ACTION_POLICIES).length).toBeGreaterThan(0);
+  });
+
   it('every entry expresses at least one requirement (anyOf or allOf)', () => {
     for (const [key, policy] of Object.entries(allPolicies)) {
       const expressesRequirement = !!policy.anyOf || !!policy.allOf;

@@ -34,6 +34,7 @@ class FakeTranslateLoader implements TranslateLoader {
 
 function currentEmployee(overrides: Partial<CurrentEmployee> = {}): CurrentEmployee {
   return {
+    hasProfile: true,
     employeeId: 'me-1',
     firstName: 'Marko',
     lastName: 'Testni',

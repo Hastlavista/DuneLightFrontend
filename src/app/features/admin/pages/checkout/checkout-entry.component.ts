@@ -53,6 +53,11 @@ export class CheckoutEntryComponent {
 
   readonly checkouts = signal<CheckoutDto[]>([]);
   readonly loadingCheckouts = signal(false);
+  readonly checkoutsFailed = signal(false);
+
+  // Latest-request-wins: picking client B (or clearing) must not show A's checkouts.
+  private checkoutsToken = 0;
+  private clientSearchToken = 0;
 
   readonly selectedCompanyId = signal<string | null>(null);
   readonly creating = signal(false);
@@ -77,6 +82,7 @@ export class CheckoutEntryComponent {
 
   onClientSearch(event: AutoCompleteCompleteEvent): void {
     const term = event.query.trim();
+    const token = ++this.clientSearchToken;
     if (!term) {
       this.clientResults.set([]);
       return;
@@ -84,6 +90,9 @@ export class CheckoutEntryComponent {
     this.clientsService
       .getPage({ page: 1, pageSize: CLIENT_SEARCH_PAGE_SIZE, search: term, isActive: true }, { suppressErrorToast: true })
       .subscribe((result) => {
+        if (token !== this.clientSearchToken) {
+          return;
+        }
         this.clientResults.set(
           result.items.map((client: ClientDto) => ({
             clientId: client.id,
@@ -99,6 +108,9 @@ export class CheckoutEntryComponent {
    * /api/checkouts?clientId=undefined and surfaced a false validation error. */
   onSelectedClientChange(client: ClientSearchOption | string | null): void {
     if (!client || typeof client === 'string') {
+      this.checkoutsToken++;
+      this.loadingCheckouts.set(false);
+      this.checkoutsFailed.set(false);
       this.selectedClient.set(null);
       this.checkouts.set([]);
       return;
@@ -137,10 +149,30 @@ export class CheckoutEntryComponent {
   }
 
   private fetchCheckouts(clientId: string): void {
+    const token = ++this.checkoutsToken;
     this.loadingCheckouts.set(true);
+    this.checkoutsFailed.set(false);
+    this.checkouts.set([]);
     this.checkoutsService
       .getByClient(clientId)
-      .pipe(finalize(() => this.loadingCheckouts.set(false)))
-      .subscribe((checkouts) => this.checkouts.set(checkouts));
+      .pipe(
+        finalize(() => {
+          if (token === this.checkoutsToken) {
+            this.loadingCheckouts.set(false);
+          }
+        }),
+      )
+      .subscribe({
+        next: (checkouts) => {
+          if (token === this.checkoutsToken) {
+            this.checkouts.set(checkouts);
+          }
+        },
+        error: () => {
+          if (token === this.checkoutsToken) {
+            this.checkoutsFailed.set(true);
+          }
+        },
+      });
   }
 }

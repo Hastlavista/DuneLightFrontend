@@ -9,6 +9,7 @@ import { of } from 'rxjs';
 import { CompanyDto } from '../../../../../core/models/company.model';
 import { CurrentEmployee, EmployeeDto } from '../../../../../core/models/employee.model';
 import { EngagementTypeDto } from '../../../../../core/models/engagement-type.model';
+import { NotificationService } from '../../../../../core/services/notification.service';
 import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { EmployeeFormComponent } from './employee-form.component';
 
@@ -56,10 +57,12 @@ class FakeTranslateLoader implements TranslateLoader {
 
 function currentEmployee(overrides: Partial<CurrentEmployee> = {}): CurrentEmployee {
   return {
+    hasProfile: true,
     employeeId: 'me-1',
     firstName: 'Ana',
-    lastName: 'Vlasnik',
-    role: 'Admin',
+    lastName: 'Testna',
+    // Legacy account role only - nothing here may depend on it; access comes from grants.
+    role: 'Member',
     grants: [],
     colorHex: null,
     companies: [],
@@ -105,7 +108,7 @@ function routeStub(id: string) {
  * (see loadActiveCompanies/loadActiveServices/loadActiveEngagementTypes) -
  * this fixture only expects the ones the given employee's grants actually unlock,
  * mirroring what the component itself will (or won't) fire. */
-async function createFixture(id: string, employee: CurrentEmployee): Promise<{ fixture: ComponentFixture<EmployeeFormComponent>; httpMock: HttpTestingController }> {
+async function createFixture(id: string, employee: CurrentEmployee, options: { failRoleAssignments?: boolean; failGrantGroupAssignments?: boolean } = {}): Promise<{ fixture: ComponentFixture<EmployeeFormComponent>; httpMock: HttpTestingController }> {
   await TestBed.configureTestingModule({
     imports: [EmployeeFormComponent],
     providers: [
@@ -155,10 +158,20 @@ async function createFixture(id: string, employee: CurrentEmployee): Promise<{ f
   if (id !== 'new') {
     httpMock.expectOne((req) => req.url.endsWith(`/api/employees/${id}`) && req.method === 'GET').flush(MEMBER_EMPLOYEE);
     if (canViewGrantGroups) {
-      httpMock.expectOne((req) => req.url.endsWith(`/api/permissions/grant-groups/assignments/${MEMBER_EMPLOYEE.userId}`)).flush([]);
+      const grantGroupAssignments = httpMock.expectOne((req) => req.url.endsWith(`/api/permissions/grant-groups/assignments/${MEMBER_EMPLOYEE.userId}`));
+      if (options.failGrantGroupAssignments) {
+        grantGroupAssignments.flush(null, { status: 500, statusText: 'Server Error' });
+      } else {
+        grantGroupAssignments.flush(['grant-group-1']);
+      }
     }
     if (canViewRoles) {
-      httpMock.expectOne((req) => req.url.endsWith(`/api/permissions/roles/assignments/${MEMBER_EMPLOYEE.userId}`)).flush([]);
+      const roleAssignments = httpMock.expectOne((req) => req.url.endsWith(`/api/permissions/roles/assignments/${MEMBER_EMPLOYEE.userId}`));
+      if (options.failRoleAssignments) {
+        roleAssignments.flush(null, { status: 500, statusText: 'Server Error' });
+      } else {
+        roleAssignments.flush([]);
+      }
     }
   }
 
@@ -319,5 +332,59 @@ describe('EmployeeFormComponent - supporting-read gap (employees.manage without 
     // createFixture already asserted+flushed all three via its grant-gated
     // expectOne calls; verify() confirms nothing extra/unexpected was sent.
     httpMock.verify();
+  });
+});
+
+describe('EmployeeFormComponent - assignment sets that never loaded', () => {
+  afterEach(() => TestBed.inject(HttpTestingController).verify());
+
+  const grants = ['employees.view', 'employees.manage', 'catalog.companies.view', 'employees.engagement-types.view'];
+
+  it('does not replace Role assignments with [] when loading them failed', async () => {
+    const { fixture, httpMock } = await createFixture('employee-1', currentEmployee({ grants }), { failRoleAssignments: true });
+
+    fixture.componentInstance.onSave();
+    httpMock.expectOne((req) => req.url.endsWith('/api/employees/employee-1') && req.method === 'PUT').flush(MEMBER_EMPLOYEE);
+
+    httpMock.expectNone((req) => req.url.includes('/api/permissions/roles/assignments/') && req.method === 'PUT');
+  });
+
+  it('still replaces Role assignments when they loaded normally', async () => {
+    const { fixture, httpMock } = await createFixture('employee-1', currentEmployee({ grants }));
+
+    fixture.componentInstance.onSave();
+    httpMock.expectOne((req) => req.url.endsWith('/api/employees/employee-1') && req.method === 'PUT').flush(MEMBER_EMPLOYEE);
+
+    httpMock.expectOne((req) => req.url.endsWith(`/api/permissions/roles/assignments/${MEMBER_EMPLOYEE.userId}`) && req.method === 'PUT').flush(null);
+  });
+});
+
+describe('EmployeeFormComponent - GrantGroup assignments failed to load', () => {
+  afterEach(() => TestBed.inject(HttpTestingController).verify());
+
+  const grants = ['employees.manage', 'employees.view', 'permissions.view', 'permissions.assignments.manage', 'catalog.companies.view', 'employees.engagement-types.view'];
+
+  it('explains why save is unavailable, sends nothing, and a successful retry unblocks it', async () => {
+    const { fixture, httpMock } = await createFixture('employee-1', currentEmployee({ grants }), { failGrantGroupAssignments: true });
+    const component = fixture.componentInstance;
+    const notifications = TestBed.inject(NotificationService);
+    const errorSpy = vi.spyOn(notifications, 'showError');
+
+    expect(component.grantGroupAssignmentsFailed()).toBe(true);
+    component.onSave();
+    httpMock.expectNone((req) => req.method === 'PUT');
+    expect(errorSpy).toHaveBeenCalledTimes(1);
+
+    component.retryGrantGroupAssignments();
+    httpMock.expectOne((req) => req.url.endsWith(`/api/permissions/grant-groups/assignments/${MEMBER_EMPLOYEE.userId}`)).flush(['grant-group-1']);
+    expect(component.grantGroupAssignmentsFailed()).toBe(false);
+    expect(component.form.controls.grantGroupIds.value).toEqual(['grant-group-1']);
+
+    component.onSave();
+    httpMock.expectOne((req) => req.url.endsWith('/api/employees/employee-1') && req.method === 'PUT').flush(MEMBER_EMPLOYEE);
+    const replace = httpMock.expectOne((req) => req.url.endsWith(`/api/permissions/grant-groups/assignments/${MEMBER_EMPLOYEE.userId}`) && req.method === 'PUT');
+    expect(replace.request.body).toEqual({ grantGroupIds: ['grant-group-1'] });
+    replace.flush(null);
+    httpMock.match((req) => req.url.includes('/api/permissions/roles/assignments/') && req.method === 'PUT').forEach((r) => r.flush(null));
   });
 });

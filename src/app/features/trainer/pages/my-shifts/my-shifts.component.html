@@ -1,6 +1,6 @@
 <app-complete-employee-profile-cta />
 
-<p-tabs [value]="initialTab">
+<p-tabs [value]="initialTab" [lazy]="true">
   <p-tablist>
     <p-tab value="team">{{ 'ROSTER.TEAM_MONTHLY.TAB_LABEL' | translate }}</p-tab>
     @if (hasEmployeeProfile()) {
@@ -9,22 +9,25 @@
   </p-tablist>
   <p-tabpanels>
     <p-tabpanel value="team">
-      <app-roster-team-monthly
-        [currentEmployeeId]="currentEmployeeId()"
-        [isAdmin]="isAdmin()"
-        [activeCompanies]="activeCompanies()"
-        (cellClick)="onTeamCellClick($event)"
-      />
+      <ng-template #content>
+        <app-roster-team-monthly
+          [currentEmployeeId]="currentEmployeeId()"
+          [activeCompanies]="activeCompanies()"
+          (cellClick)="onTeamCellClick($event)"
+        />
+      </ng-template>
     </p-tabpanel>
     @if (hasEmployeeProfile()) {
       <p-tabpanel value="personal">
-        <app-roster-personal
-          [allowEmployeePicker]="false"
-          [currentEmployeeId]="currentEmployeeId()"
-          [employees]="activeEmployees()"
-          (add)="onPersonalAdd($event)"
-          (edit)="onPersonalEdit($event)"
-        />
+        <ng-template #content>
+          <app-roster-personal
+            [allowEmployeePicker]="false"
+            [currentEmployeeId]="currentEmployeeId()"
+            [employees]="activeEmployees()"
+            (add)="onPersonalAdd($event)"
+            (edit)="onPersonalEdit($event)"
+          />
+        </ng-template>
       </p-tabpanel>
     }
   </p-tabpanels>
@@ -36,7 +39,6 @@
   [initial]="dialogInitial()"
   [employees]="activeEmployees()"
   [rosterTypes]="activeRosterTypes()"
-  [isAdminRole]="isAdmin()"
   [currentEmployeeId]="currentEmployeeId()"
   (saved)="onDialogSaved()"
 />

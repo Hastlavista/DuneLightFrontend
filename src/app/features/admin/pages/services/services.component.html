@@ -1,4 +1,4 @@
-<p-tabs [value]="initialTab">
+<p-tabs [value]="initialTab" [lazy]="true">
   <p-tablist>
     <p-tab value="services">{{ 'CATALOG.SERVICES_TAB_LABEL' | translate }}</p-tab>
     <p-tab value="packages">{{ 'CATALOG.PACKAGES_TAB_LABEL' | translate }}</p-tab>
@@ -6,13 +6,13 @@
   </p-tablist>
   <p-tabpanels>
     <p-tabpanel value="services">
-      <app-admin-catalog-services />
+      <ng-template #content><app-admin-catalog-services /></ng-template>
     </p-tabpanel>
     <p-tabpanel value="packages">
-      <app-admin-packages />
+      <ng-template #content><app-admin-packages /></ng-template>
     </p-tabpanel>
     <p-tabpanel value="pricing">
-      <app-admin-pricing />
+      <ng-template #content><app-admin-pricing /></ng-template>
     </p-tabpanel>
   </p-tabpanels>
 </p-tabs>

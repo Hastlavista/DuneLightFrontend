@@ -7,7 +7,7 @@
   </header>
 
   @if (loading()) {
-    <div class="client-tags-page__empty">Učitavanje...</div>
+    <div class="client-tags-page__empty">{{ 'COMMON.LOADING' | translate }}</div>
   } @else if (items().length) {
     <div class="client-tags-page__grid">
       @for (tag of items(); track tag.id) {

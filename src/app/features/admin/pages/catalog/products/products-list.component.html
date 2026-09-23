@@ -57,7 +57,7 @@
     </ng-template>
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td colspan="5" class="products-page__empty">{{ 'CATALOG.PRODUCTS.EMPTY' | translate }}</td>
+        <td colspan="5" class="products-page__empty">{{ (failed() ? 'COMMON.LOAD_FAILED' : 'CATALOG.PRODUCTS.EMPTY') | translate }}</td>
       </tr>
     </ng-template>
   </p-table>

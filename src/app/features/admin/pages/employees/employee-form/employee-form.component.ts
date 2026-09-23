@@ -9,7 +9,7 @@ import { InputText } from 'primeng/inputtext';
 import { Password } from 'primeng/password';
 import { Select } from 'primeng/select';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
-import { Observable, finalize, forkJoin, of } from 'rxjs';
+import { Observable, catchError, finalize, forkJoin, of } from 'rxjs';
 import {
   EmployeeDto,
   EmployeeCompany,
@@ -373,6 +373,11 @@ export class EmployeeFormComponent {
   }
 
   onSave(): void {
+    // Fail closed: without the real assignments, saving could only overwrite them.
+    if (this.grantGroupAssignmentsFailed() && this.canManageGrantGroupAssignments()) {
+      this.notifications.showError(this.translate.instant('EMPLOYEES.ERRORS.GRANT_GROUP_ASSIGNMENTS_LOAD_FAILED'));
+      return;
+    }
     if (this.form.invalid) {
       this.form.markAllAsTouched();
       this.validationAttempted.set(true);
@@ -403,10 +408,13 @@ export class EmployeeFormComponent {
             // see canManageEmployeeRole's own doc - only called when it
             // actually changed, to avoid a pointless lockout re-check on every save.
             const calls: Observable<unknown>[] = [];
-            if (userId && this.canManageGrantGroupAssignments()) {
+            // Only replace a set this form actually loaded - otherwise its
+            // control still holds the [] placeholder and would wipe the
+            // employee's real assignments.
+            if (userId && this.canManageGrantGroupAssignments() && this.loadedAssignments.grantGroups) {
               calls.push(this.grantGroupsService.setAssignments(userId, { grantGroupIds: raw.grantGroupIds }));
             }
-            if (userId && this.canManageRoleAssignments()) {
+            if (userId && this.canManageRoleAssignments() && this.loadedAssignments.roles) {
               calls.push(this.rolesService.setAssignments(userId, { roleIds: raw.roleIds }));
             }
             if (this.canManageEmployeeRole() && raw.userRole && raw.userRole !== this.loadedUserRole()) {
@@ -416,6 +424,10 @@ export class EmployeeFormComponent {
             assignments$.pipe(finalize(() => this.saving.set(false))).subscribe({
               next: () => {
                 this.notifications.showSuccess(this.translate.instant('EMPLOYEES.UPDATED'));
+                // Editing yourself can change your own grant groups/companies.
+                if (id === this.currentEmployeeService.employee()?.employeeId) {
+                  this.currentEmployeeService.load().subscribe();
+                }
                 this.navigateBack();
               },
               error: () => {},
@@ -432,6 +444,8 @@ export class EmployeeFormComponent {
             // GrantGroup/Role assignment on a later "Podaci" re-save needs
             // this (see the `if (id)` branch above) - only known from here on.
             this.loadedUserId.set(response.userId);
+            // The create request carried both sets, so the form now mirrors the server.
+            this.loadedAssignments = { grantGroups: true, roles: true };
             this.editingId.set(response.employeeId);
             this.justCreatedInWizard.set(true);
             // The password/login section only makes sense pre-creation (see
@@ -648,14 +662,40 @@ export class EmployeeFormComponent {
     // employees.view/manage (RolesController.GetAssignments), independently -
     // a viewer might have one but not the other, so each fetch is attempted
     // (or skipped, to avoid a 403 leaving `loading` stuck) on its own grant.
-    const grantGroupIds$ = this.canViewGrantGroups() ? this.grantGroupsService.getAssignments(employee.userId) : of([]);
-    const roleIds$ = this.canViewRoles() ? this.rolesService.getAssignments(employee.userId) : of([]);
-    forkJoin([grantGroupIds$, roleIds$])
+    this.loadedAssignments = { grantGroups: false, roles: false };
+    const load = <T>(allowed: boolean, source: () => Observable<T[]>) =>
+      allowed ? source().pipe(catchError(() => of(null))) : of(null);
+    forkJoin([
+      load(this.canViewGrantGroups(), () => this.grantGroupsService.getAssignments(employee.userId)),
+      load(this.canViewRoles(), () => this.rolesService.getAssignments(employee.userId)),
+    ])
       .pipe(finalize(() => this.loading.set(false)))
       .subscribe(([grantGroupIds, roleIds]) => {
-        this.form.patchValue({ grantGroupIds, roleIds }, { emitEvent: false });
+        this.loadedAssignments = { grantGroups: grantGroupIds !== null, roles: roleIds !== null };
+        this.grantGroupAssignmentsFailed.set(this.canViewGrantGroups() && grantGroupIds === null);
+        this.form.patchValue({ grantGroupIds: grantGroupIds ?? [], roleIds: roleIds ?? [] }, { emitEvent: false });
       });
   }
+
+  retryGrantGroupAssignments(): void {
+    const userId = this.loadedUserId();
+    if (!userId) {
+      return;
+    }
+    this.grantGroupsService.getAssignments(userId).subscribe({
+      next: (grantGroupIds) => {
+        this.loadedAssignments = { ...this.loadedAssignments, grantGroups: true };
+        this.grantGroupAssignmentsFailed.set(false);
+        this.form.controls.grantGroupIds.setValue(grantGroupIds, { emitEvent: false });
+      },
+      error: () => this.grantGroupAssignmentsFailed.set(true),
+    });
+  }
+
+  /** Which assignment sets applyEmployee() really fetched (see the save branch). */
+  private loadedAssignments = { grantGroups: false, roles: false };
+  /** The employee's GrantGroup assignments could not be read - saving stays blocked until a retry succeeds. */
+  readonly grantGroupAssignmentsFailed = signal(false);
 
   private navigateBack(): void {
     this.router.navigate(['/app/employees'], { queryParams: { tab: 'employees' } });

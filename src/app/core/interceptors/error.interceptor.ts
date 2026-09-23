@@ -44,6 +44,7 @@ export const errorInterceptor: HttpInterceptorFn = (req, next) => {
       const isSessionExpired = appError.status === 401 && !isAuthRoute;
 
       if (isSessionExpired) {
+        appError.sessionExpired = true;
         auth.logout();
         // Always the generic "session expired" copy, not appError's own
         // message/code - the backend's specific 401 reason (expired token,
@@ -75,5 +76,12 @@ function toAppError(err: HttpErrorResponse): AppError {
     };
   }
 
-  return { status: err.status, code: 'UNKNOWN', message: err.message ?? '' };
+  // Grant denials (ForbidResult) and unmatched routes come back with no body.
+  const code = STATUS_FALLBACK_CODES[err.status] ?? 'UNKNOWN';
+  return { status: err.status, code, message: err.message ?? '' };
 }
+
+const STATUS_FALLBACK_CODES: Record<number, string> = {
+  403: 'FORBIDDEN',
+  404: 'NOT_FOUND',
+};

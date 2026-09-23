@@ -11,7 +11,7 @@
     </ng-template>
 
     <ng-template pTemplate="body" let-group>
-      <tr class="my-groups-page__row" (click)="openGroup(group)">
+      <tr class="my-groups-page__row" tabindex="0" (click)="openGroup(group)" (keydown.enter)="openGroup(group)">
         <td>{{ group.name }}</td>
         <td>{{ group.serviceName }}</td>
         <td>{{ group.companyName }}</td>

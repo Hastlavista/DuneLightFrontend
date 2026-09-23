@@ -10,6 +10,10 @@ export interface AppError {
   code: string;
   message: string;
   details?: Record<string, string[]>;
+  /** Set by the error interceptor on a session-expiry 401: it has already logged
+   * out and shown the single "session expired" message, so callers that report
+   * errors themselves (showAppError) must stay silent. */
+  sessionExpired?: boolean;
 }
 
 /**

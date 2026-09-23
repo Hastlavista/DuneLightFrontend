@@ -4,7 +4,9 @@
   </div>
 
   @if (loading()) {
-    <p class="permission-list-page__empty">Učitavanje uloga…</p>
+    <p class="permission-list-page__empty">{{ 'PERMISSIONS.ROLES.LOADING' | translate }}</p>
+  } @else if (failed()) {
+    <p class="permission-list-page__empty">{{ 'COMMON.LOAD_FAILED' | translate }}</p>
   } @else if (items().length === 0) {
     <p class="permission-list-page__empty">{{ 'PERMISSIONS.ROLES.EMPTY' | translate }}</p>
   } @else {

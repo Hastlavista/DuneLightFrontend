@@ -22,6 +22,7 @@
     "STATUS_INACTIVE": "Neaktivno",
     "SELECT_PACKAGE_PLACEHOLDER": "Odaberite paket",
     "RETRY": "Pokušaj ponovno",
+    "LOAD_FAILED": "Podatke nije moguće učitati. Pokušajte ponovno.",
     "MONTHS": {
       "JANUARY": "Siječanj",
       "FEBRUARY": "Veljača",
@@ -35,6 +36,13 @@
       "OCTOBER": "Listopad",
       "NOVEMBER": "Studeni",
       "DECEMBER": "Prosinac"
+    },
+    "REFRESH": "Osvježi",
+    "LOADING": "Učitavanje…",
+    "PAGER": {
+      "PREVIOUS": "Prethodna",
+      "NEXT": "Sljedeća",
+      "SUMMARY": "{{page}} · {{total}} zapisa"
     }
   },
   "errors": {
@@ -180,8 +188,7 @@
       "TODAY_ALL": "Danas — svi",
       "MY_CLIENTS": "Moji klijenti",
       "MY_GROUPS": "Moje grupe",
-      "MY_SHIFTS": "Roster",
-      "MY_PROFILE": "Moj profil"
+      "MY_SHIFTS": "Roster"
     }
   },
   "LAYOUT": {
@@ -194,7 +201,6 @@
       "ALL_COMPANIES": "Sve poslovnice",
       "OPEN_MENU": "Otvori izbornik",
       "VIEW_ADMIN": "Admin",
-      "COMPANY_LABEL": "Poslovnica",
       "COMPANY_SWITCHER": "Odabir poslovnice"
     }
   },
@@ -208,10 +214,6 @@
       "NEW": "Nova poslovnica",
       "NEW_TITLE": "Nova poslovnica",
       "EDIT_TITLE": "Uredi poslovnicu",
-      "COL_NAME": "Naziv",
-      "COL_ADDRESS": "Adresa",
-      "COL_PHONE": "Telefon",
-      "COL_COLOR": "Boja",
       "EMPTY": "Nema pronađenih poslovnica.",
       "FIELD_NAME": "Naziv",
       "FIELD_ADDRESS": "Adresa",
@@ -220,8 +222,6 @@
       "FIELD_COUNTRY": "Država",
       "FIELD_NOTE": "Napomena",
       "FIELD_SORT_ORDER": "Redoslijed prikaza",
-      "WEEK_SUMMARY": "Radno vrijeme",
-      "ROOMS_SUMMARY_PLACEHOLDER": "Prostorije",
       "FOOTER_COUNT": "{{shown}} od {{total}} poslovnica",
       "MODAL_SUBTITLE": "Unesite osnovne podatke poslovnice.",
       "COUNTRY_HINT": "Određuje koji se državni praznici mogu generirati.",
@@ -300,6 +300,7 @@
       "COL_PRICE": "Cijena",
       "DURATION_MINUTES": "{{minutes}} min",
       "EMPTY": "Nema pronađenih usluga.",
+      "LOADING": "Učitavanje usluga…",
       "FILTER_EXECUTION_MODE_ALL": "Sve",
       "FIELD_NAME": "Naziv",
       "FIELD_EXECUTION_MODE": "Način izvođenja",
@@ -343,6 +344,8 @@
       "COL_VALID_TO": "Vrijedi do",
       "COL_SOURCE": "Izvor",
       "EMPTY": "Nema pronađenih stavki cjenika.",
+      "LIST_LOADING": "Učitavanje cjenika…",
+      "EFFECTIVE_LOADING": "Učitavanje važećih cijena…",
       "ALL_COMPANIES": "Sve poslovnice",
       "UNLIMITED": "Neograničeno",
       "FILTER_SUBJECT_TYPE_ALL": "Sve",
@@ -400,6 +403,7 @@
       "COL_SERVICE_COUNT": "Broj usluga",
       "COL_PRICE": "Zadana cijena",
       "EMPTY": "Nema pronađenih paketa.",
+      "LOADING": "Učitavanje paketa…",
       "ENTRIES_UNLIMITED": "Neograničeno",
       "ENTRIES_PER_SERVICE": "Po usluzi",
       "VALIDITY_DAY_COUNT_SUMMARY": "{{days}} dana",
@@ -713,6 +717,7 @@
     "COL_HOME_COMPANY": "Matična poslovnica",
     "COL_TAGS": "Oznake",
     "EMPTY": "Nema pronađenih klijenata.",
+    "HISTORY_LOADING": "Učitavanje povijesti…",
     "FILTER_TAG_ALL": "Sve oznake",
     "FILTER_TRAINER_ALL": "Svi treneri",
     "FILTER_COMPANY_ALL": "Sve poslovnice",
@@ -853,6 +858,7 @@
     "COL_COMPANIES": "Poslovnice",
     "COL_COLOR": "Boja",
     "EMPTY": "Nema pronađenih zaposlenika.",
+    "LIST_LOADING": "Učitavanje zaposlenika…",
     "NO_LIST_PERMISSION": "Nemate dozvolu za pregled popisa zaposlenika.",
     "FILTER_COMPANY_ALL": "Sve poslovnice",
     "FILTER_ENGAGEMENT_TYPE_ALL": "Sve vrste zaposlenja",
@@ -911,7 +917,8 @@
       "COMPANIES_REQUIRED": "Odaberite barem jednu poslovnicu.",
       "PRIMARY_COMPANY_REQUIRED": "Primarna poslovnica mora biti među odabranim poslovnicama.",
       "PASSWORD_REQUIRED": "Lozinka je obavezna (najmanje 8 znakova).",
-      "GRANT_GROUPS_REQUIRED": "Odaberite barem jednu grant grupu."
+      "GRANT_GROUPS_REQUIRED": "Odaberite barem jednu grant grupu.",
+      "GRANT_GROUP_ASSIGNMENTS_LOAD_FAILED": "Dodijeljene grant grupe nije moguće učitati, pa spremanje nije dostupno (inače bi se prebrisale). Pokušajte ponovno."
     },
     "CREATED": "Zaposlenik je uspješno kreiran.",
     "UPDATED": "Zaposlenik je uspješno ažuriran.",
@@ -995,32 +1002,33 @@
     }
   },
   "DASHBOARD": {
-    "ONBOARDING": {
-      "TITLE": "Checklist za početak",
-      "INTRO": "Postavite svoju organizaciju u nekoliko koraka - preporučeni redoslijed je označen, ali svaki korak možete otvoriti kad god želite.",
-      "ORG_ID_LABEL": "ID vaše organizacije",
-      "ORG_ID_DESC": "Ovaj identifikator upisujete prilikom svake prijave - zapišite ga. Uskoro ćemo ga slati i na e-mail.",
-      "COMPANY_TITLE": "Poslovnice",
-      "COMPANY_DESC": "Dodajte barem jednu poslovnicu.",
-      "COMPANY_ACTION": "Dodaj poslovnicu",
-      "ENGAGEMENT_TYPE_TITLE": "Vrste zaposlenja",
-      "ENGAGEMENT_TYPE_DESC": "Definirajte vrstu zaposlenja.",
-      "ENGAGEMENT_TYPE_ACTION": "Dodaj vrstu zaposlenja",
-      "SERVICE_TITLE": "Usluge",
-      "SERVICE_DESC": "Dodajte barem jednu uslugu.",
-      "SERVICE_ACTION": "Dodaj uslugu",
-      "OWNER_PROFILE_TITLE": "Vaš profil",
-      "OWNER_PROFILE_DESC": "Dovršite svoj profil zaposlenika.",
-      "OWNER_PROFILE_ACTION": "Dovrši profil",
-      "GRANT_GROUP_TITLE": "Ovlasti",
-      "GRANT_GROUP_DESC": "Kreirajte barem jednu grupu ovlasti - svaki zaposlenik mora imati dodijeljenu barem jednu kako bi mogao raditi bilo što u sustavu.",
-      "GRANT_GROUP_ACTION": "Kreiraj grupu ovlasti",
-      "OTHER_EMPLOYEE_TITLE": "Zaposlenici",
-      "OTHER_EMPLOYEE_DESC": "Dodajte svoj tim.",
-      "OTHER_EMPLOYEE_ACTION": "Dodaj zaposlenika",
-      "CLIENT_TITLE": "Klijenti",
-      "CLIENT_DESC": "Dodajte prvog klijenta.",
-      "CLIENT_ACTION": "Dodaj klijenta"
+    "OPS": {
+      "TITLE": "Operativna nadzorna ploča",
+      "SUBTITLE": "Stanje poslovnice za odabrani dan.",
+      "COMPANY_PLACEHOLDER": "Poslovnica",
+      "DATE_LABEL": "Datum",
+      "LOAD_FAILED": "Nije moguće učitati nadzornu ploču. Prikaz nije ažuran.",
+      "TODAY_REVENUE": "Naplata danas",
+      "OUTSTANDING": "Otvorena dugovanja termina",
+      "UNPAID_BOOKINGS": "{{count}} nenaplaćenih rezervacija",
+      "OPEN_CHECKOUTS": "Otvorene blagajne",
+      "SCHEDULE": "Raspored",
+      "NO_EMPLOYEE": "Bez zaposlenika",
+      "GROUP_SUMMARY": "{{group}}: {{confirmed}} potvrđeno, {{waiting}} na čekanju",
+      "SCHEDULE_EMPTY": "Nema termina za odabrani dan.",
+      "STAFF": "Osoblje",
+      "STAFF_ABSENT": "Odsutan",
+      "STAFF_WORKING": "Radi",
+      "STAFF_NOT_WORKING": "Ne radi",
+      "BREAKS": "Pauze: {{count}}",
+      "STAFF_EMPTY": "Nema planiranog osoblja.",
+      "ALERTS": "Operativna upozorenja",
+      "ALERT_WAITING": "Čekanje: {{count}}",
+      "ALERT_NO_SHOW": "No-show: {{count}}",
+      "ALERT_CANCELLED": "Otkazane rezervacije: {{count}}",
+      "ALERT_OUT_OF_STOCK": "Bez zalihe: {{count}}",
+      "OUT_OF_STOCK_PRODUCTS": "Nema zalihe:",
+      "SELECT_COMPANY": "Odaberite poslovnicu za prikaz nadzorne ploče."
     }
   },
   "GROUPS": {
@@ -1036,6 +1044,7 @@
     "COL_SLOTS": "Termini",
     "COL_CAPACITY": "Popunjenost",
     "EMPTY": "Nema pronađenih grupa.",
+    "LOADING": "Učitavanje grupa…",
     "NO_TRAINER": "—",
     "GENERATE_APPOINTMENTS": "Generiraj termine",
     "ACTIVATED": "Grupa je aktivirana.",
@@ -1442,6 +1451,12 @@
             "DESCRIPTION": "Uređivanje vizualnog identiteta organizacije (logotip, boje, izgled)."
           }
         },
+        "permissions": {
+          "manage": {
+            "LABEL": "Upravljanje dozvolama",
+            "DESCRIPTION": "Upravljanje GrantGroup-ama, dodjelama i predlošcima uloga."
+          }
+        },
         "settings": {
           "manage": {
             "LABEL": "Postavke organizacije",
@@ -1461,6 +1476,7 @@
       "COL_GRANT_COUNT": "Broj grantova",
       "COL_ASSIGNED_COUNT": "Broj korisnika",
       "EMPTY": "Nema pronađenih grant grupa.",
+      "LIST_LOADING": "Učitavanje grupa dozvola…",
       "BASIC_DATA": "Osnovni podaci",
       "FIELD_NAME": "Naziv",
       "FIELD_GRANTS": "Sposobnosti",
@@ -1474,16 +1490,8 @@
       "LEGACY_BADGE": "Legacy uloga",
       "LEGACY_NOTICE": "Prilagođena/legacy uloga. Spremanje kroz novi editor pretvorit će ovu ulogu u capability-managed ulogu.",
       "CONVERT_CONFIRM": "Pretvoriti legacy ulogu? Trenutno ima {{raw}} sirovih ovlasti; {{explained}} će objasniti odabrane sposobnosti, {{manual}} ostaje ručno dodano, a {{removed}} ovlasti će biti uklonjeno.",
-      "LEGACY_BADGE": "Legacy uloga",
-      "LEGACY_NOTICE": "Prilagođena/legacy uloga. Spremanje kroz novi editor pretvorit će ovu ulogu u capability-managed ulogu.",
-      "CONVERT_CONFIRM": "Pretvoriti legacy ulogu? Trenutno ima {{raw}} sirovih ovlasti; {{explained}} će objasniti odabrane sposobnosti, {{manual}} ostaje ručno dodano, a {{removed}} ovlasti će biti uklonjeno.",
-      "LEGACY_BADGE": "Legacy uloga",
-      "LEGACY_NOTICE": "Prilagođena/legacy uloga. Spremanje kroz novi editor pretvorit će ovu ulogu u capability-managed ulogu.",
-      "CONVERT_CONFIRM": "Pretvoriti legacy ulogu? Trenutno ima {{raw}} sirovih ovlasti; {{explained}} će objasniti odabrane sposobnosti, {{manual}} ostaje ručno dodano, a {{removed}} ovlasti će biti uklonjeno.",
       "UNMATCHED_HINT": "Postojeće ovlasti ne odgovaraju točno niti jednom opsegu - sačuvane su u odjeljku \"Napredno\".",
       "DERIVED_FROM_CAPABILITY": "Izvedeno iz sposobnosti (samo za pregled)",
-      "DERIVED_READ_ONLY": "Izvedeno — samo za pregled",
-      "DERIVED_READ_ONLY": "Izvedeno — samo za pregled",
       "DERIVED_READ_ONLY": "Izvedeno — samo za pregled",
       "DERIVED_SOURCE": "Izvor: {{label}}",
       "DERIVED_FROM_TEMPLATE": "Izvedeno iz predloška (samo za pregled)",
@@ -1530,6 +1538,7 @@
       "EDIT_TITLE": "Uredi poslovnu oznaku",
       "COL_NAME": "Naziv",
       "EMPTY": "Nema pronađenih poslovnih oznaka.",
+      "LOADING": "Učitavanje uloga…",
       "FIELD_NAME": "Naziv",
       "ERRORS": {
         "NAME_REQUIRED": "Naziv je obavezan."
@@ -1816,6 +1825,8 @@
       "COL_EMPLOYEE": "Zaposlenik",
       "COL_SUMMARY": "Ukupno",
       "ALL_COMPANIES": "Sve poslovnice",
+      "PREV_MONTH": "Prethodni mjesec",
+      "NEXT_MONTH": "Sljedeći mjesec",
       "ABSENCES_TOOLTIP_HEADER": "Odsutnosti:",
       "EMPTY": "Nema aktivnih zaposlenika."
     },
@@ -1908,6 +1919,9 @@
         "EMAIL_INVALID": "Unesite ispravan email.",
         "PASSWORD_REQUIRED": "Lozinka je obavezna."
       }
+    },
+    "PIN_LOCK": {
+      "INVALID_PIN": "PIN nije ispravan. Pokušajte ponovno."
     },
     "PIN_LOGIN": {
       "TITLE": "Odaberite korisnika",
@@ -2009,6 +2023,71 @@
       "PASSWORDS_DO_NOT_MATCH": "Lozinke se ne podudaraju.",
       "PIN_REQUIRED": "Novi PIN je obavezan.",
       "PIN_FORMAT": "PIN mora imati 4 do 6 znamenki."
+    }
+  },
+  "COMMISSIONS": {
+    "SUBTITLE": "Praćenje zarađenih provizija; nije obračun plaće.",
+    "NEW_RULE_TITLE": "Novo pravilo",
+    "RULES_TITLE": "Pravila",
+    "HISTORY_TITLE": "Povijest zarade",
+    "FIELD_EMPLOYEE": "Zaposlenik",
+    "FIELD_SUBJECT_TYPE": "Vrsta predmeta",
+    "FIELD_SUBJECT": "Predmet",
+    "FIELD_CALCULATION": "Izračun",
+    "FIELD_VALUE": "Vrijednost",
+    "FILTER_EMPLOYEE_ALL": "Svi zaposlenici",
+    "FILTER_FROM": "Od",
+    "FILTER_TO": "Do",
+    "COL_EMPLOYEE": "Zaposlenik",
+    "COL_SUBJECT": "Predmet",
+    "COL_CALCULATION": "Izračun",
+    "COL_VALUE": "Vrijednost",
+    "COL_BASE": "Osnovica",
+    "COL_RULE": "Pravilo",
+    "COL_COMMISSION": "Provizija",
+    "COL_EARNED_AT": "Zarađeno",
+    "COL_SOURCE": "Izvor",
+    "RULES_EMPTY": "Nema pravila provizije.",
+    "ENTRIES_EMPTY": "Nema provizija u odabranom razdoblju.",
+    "RULE_CREATED": "Pravilo provizije je spremljeno.",
+    "RULE_ACTIVATED": "Pravilo provizije je aktivirano.",
+    "RULE_DEACTIVATED": "Pravilo provizije je deaktivirano.",
+    "INVALID_RULE": "Odaberite zaposlenika i predmet te unesite ispravnu vrijednost (postotak najviše 100).",
+    "SUBJECT_TYPE": {
+      "Service": "Usluga",
+      "Product": "Proizvod",
+      "Package": "Paket"
+    },
+    "CALC_TYPE": {
+      "Percentage": "Postotak",
+      "Fixed": "Fiksni iznos"
+    },
+    "ENTRY_STATUS": {
+      "Earned": "Zarađena",
+      "Reversed": "Poništena"
+    },
+    "SOURCE": {
+      "APPOINTMENT": "Termin {{id}}",
+      "CHECKOUT": "Blagajna {{id}}",
+      "BOOKING": "Rezervacija {{id}}"
+    }
+  },
+  "NOTIFICATIONS": {
+    "SUBTITLE": "Interna povijest logičkih obavijesti, ne potvrda e-mail/SMS isporuke.",
+    "CLIENT_PLACEHOLDER": "Pretražite klijenta",
+    "COL_TYPE": "Vrsta",
+    "COL_OCCURRED_AT": "Nastalo",
+    "COL_SOURCE": "Izvor",
+    "EMPTY": "Nema obavijesti za odabranog klijenta.",
+    "SELECT_CLIENT_HINT": "Za pregled povijesti odaberite klijenta.",
+    "STATUS": {
+      "Pending": "Na čekanju",
+      "Cancelled": "Otkazano"
+    },
+    "TYPE": {
+      "BookingCancelled": "Otkazana rezervacija",
+      "BookingNoShow": "Nedolazak",
+      "WaitlistPromoted": "Promaknut s liste čekanja"
     }
   }
 }

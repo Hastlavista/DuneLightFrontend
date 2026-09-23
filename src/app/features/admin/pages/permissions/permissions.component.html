@@ -1,4 +1,4 @@
-<p-tabs [value]="initialTab">
+<p-tabs [value]="initialTab" [lazy]="true">
   <p-tablist>
     <p-tab value="grant-groups">{{ 'PERMISSIONS.GRANT_GROUPS.TAB_LABEL' | translate }}</p-tab>
     @if (canSeeRolesTab()) {
@@ -7,11 +7,11 @@
   </p-tablist>
   <p-tabpanels>
     <p-tabpanel value="grant-groups">
-      <app-admin-grant-groups />
+      <ng-template #content><app-admin-grant-groups /></ng-template>
     </p-tabpanel>
     @if (canSeeRolesTab()) {
       <p-tabpanel value="roles">
-        <app-admin-roles />
+        <ng-template #content><app-admin-roles /></ng-template>
       </p-tabpanel>
     }
   </p-tabpanels>

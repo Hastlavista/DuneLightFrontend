@@ -7,11 +7,10 @@ import { Dialog } from 'primeng/dialog';
 import { InputNumber } from 'primeng/inputnumber';
 import { finalize } from 'rxjs';
 import { ClientPackagePurchaseRequest } from '../../../../../core/models/client-package.model';
-import { CompanyDto } from '../../../../../core/models/company.model';
 import { ClientDto } from '../../../../../core/models/client.model';
 import { PackageDto } from '../../../../../core/models/package.model';
 import { ClientPackagesService } from '../../../../../core/services/client-packages.service';
-import { CompaniesService } from '../../../../../core/services/companies.service';
+import { CompanyContextService } from '../../../../../core/services/company-context.service';
 import { NotificationService } from '../../../../../core/services/notification.service';
 import { PackagesService } from '../../../../../core/services/packages.service';
 import { PriceListService } from '../../../../../core/services/price-list.service';
@@ -35,7 +34,7 @@ export class IssuePackageDialogComponent {
   private readonly fb = inject(FormBuilder);
   private readonly clientPackagesService = inject(ClientPackagesService);
   private readonly packagesService = inject(PackagesService);
-  private readonly companiesService = inject(CompaniesService);
+  private readonly companyContext = inject(CompanyContextService);
   private readonly priceListService = inject(PriceListService);
   private readonly notifications = inject(NotificationService);
   private readonly translate = inject(TranslateService);
@@ -49,7 +48,8 @@ export class IssuePackageDialogComponent {
   readonly dialogShown = signal(false);
 
   readonly activePackages = signal<PackageDto[]>([]);
-  readonly activeCompanies = signal<CompanyDto[]>([]);
+  /** Full active list with catalog.companies.view, otherwise the viewer's assigned companies. */
+  readonly activeCompanies = this.companyContext.companies;
   readonly selectedPackage = signal<PackageDto | null>(null);
 
   readonly form = this.fb.nonNullable.group({
@@ -64,7 +64,9 @@ export class IssuePackageDialogComponent {
       if (this.visible()) {
         this.resetForm();
         this.loadActivePackages();
-        this.loadActiveCompanies();
+        if (!this.companyContext.companies().length) {
+          this.companyContext.loadCompanies();
+        }
       } else {
         this.dialogShown.set(false);
       }
@@ -162,7 +164,11 @@ export class IssuePackageDialogComponent {
     return this.form.controls.packageId.value ? 'Sve spremno za izdavanje paketa.' : 'Za izdavanje još treba: paket.';
   }
 
+  // Latest-request-wins: package/company/date changes re-resolve the price.
+  private priceToken = 0;
+
   private refreshSuggestedPrice(): void {
+    const token = ++this.priceToken;
     const packageId = this.form.controls.packageId.value;
     const companyId = this.form.controls.companyId.value;
     const date = this.form.controls.purchaseDate.value ?? new Date();
@@ -178,7 +184,11 @@ export class IssuePackageDialogComponent {
     this.priceListService
       .resolve({ subjectType: 'Package', subjectId: packageItem.id, companyId: companyId, date: toStartOfDayIso(date) })
       .subscribe({
-        next: (result) => this.form.controls.paidPrice.setValue(result.price, { emitEvent: false }),
+        next: (result) => {
+          if (token === this.priceToken) {
+            this.form.controls.paidPrice.setValue(result.price, { emitEvent: false });
+          }
+        },
         error: () => {},
       });
   }
@@ -197,11 +207,5 @@ export class IssuePackageDialogComponent {
     this.packagesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
       .subscribe((result) => this.activePackages.set(result.items));
-  }
-
-  private loadActiveCompanies(): void {
-    this.companiesService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeCompanies.set(result.items));
   }
 }

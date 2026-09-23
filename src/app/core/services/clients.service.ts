@@ -27,9 +27,12 @@ export class ClientsService extends PagedCrudService<ClientDto, ClientUpsertRequ
 
   /** GET /api/clients/birthdays?from=&to= - a flat array, not a PagedResult.
    * `from`/`to` are required DateTimeOffset strings (see core/utils/date.util.ts). */
-  getBirthdays(from: string, to: string): Observable<BirthdayDto[]> {
+  getBirthdays(from: string, to: string, options?: { suppressErrorToast?: boolean }): Observable<BirthdayDto[]> {
     const params = new HttpParams({ encoder: new PlusSafeUrlCodec() }).set('from', from).set('to', to);
-    return this.http.get<BirthdayDto[]>(`${this.resourceUrl}/birthdays`, { params });
+    return this.http.get<BirthdayDto[]>(`${this.resourceUrl}/birthdays`, {
+      params,
+      context: new HttpContext().set(SUPPRESS_ERROR_TOAST, options?.suppressErrorToast ?? false),
+    });
   }
 
   getHistorySummary(id: string): Observable<ClientHistorySummaryDto> {

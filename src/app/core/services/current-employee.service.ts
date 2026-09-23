@@ -1,25 +1,16 @@
-import { HttpClient, HttpContext, HttpErrorResponse } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Router } from '@angular/router';
-import { TranslateService } from '@ngx-translate/core';
-import { Observable, catchError, of, tap } from 'rxjs';
+import { Observable, catchError, finalize, of, shareReplay, tap } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { AuthService } from '../auth/auth.service';
 import { SUPPRESS_ERROR_TOAST } from '../http/http-context.tokens';
 import { CurrentEmployee } from '../models/employee.model';
-import { resolveErrorMessage } from '../utils/error-translation.util';
 import { ACTION_POLICIES, ActionKey } from '../permissions/action-policies';
 import { PAGE_POLICIES, PageKey } from '../permissions/page-policies';
 import { evaluatePermissionPolicy, PermissionPolicy } from '../permissions/permission-policy.model';
-import { NotificationService } from './notification.service';
 
 @Injectable({ providedIn: 'root' })
 export class CurrentEmployeeService {
   private readonly http = inject(HttpClient);
-  private readonly auth = inject(AuthService);
-  private readonly router = inject(Router);
-  private readonly notification = inject(NotificationService);
-  private readonly translate = inject(TranslateService);
 
   private readonly employeeState = signal<CurrentEmployee | null>(null);
   private readonly loadedState = signal(false);
@@ -29,13 +20,24 @@ export class CurrentEmployeeService {
   /** false = an authenticated user with no Employee record yet - in practice
    * only ever the organization's founder, right after Register and before
    * completing their own profile (see CompleteEmployeeProfileCtaComponent,
-   * the sole consumer that treats this as "show the CTA"). Residual IsOwner
-   * Removal - there is no Owner flag any more; this is the real underlying
-   * business condition the old isOwner()-based check was standing in for. */
-  readonly hasProfile = computed(() => this.employeeState() !== null);
+   * the sole consumer that treats this as "show the CTA"). Authorization
+   * belongs to the User regardless (see CurrentEmployee.grants' own doc) -
+   * there is no Owner flag anywhere (Residual IsOwner Removal). */
+  readonly hasProfile = computed(() => this.employeeState()?.hasProfile ?? false);
+
+  // grantGuard (on a child route's own guard chain) and ShellComponent's
+  // constructor can both call ensureLoaded() for the SAME navigation before
+  // either's request resolves - loadedState() is still false for both at that
+  // point, so without this, each would fire its own GET /api/employees/me.
+  // Share the one in-flight request instead (same pattern as
+  // CompanyContextService.loadCompanies()'s loadInFlight guard).
+  private inFlight: Observable<CurrentEmployee | null> | null = null;
 
   load(): Observable<CurrentEmployee | null> {
-    return this.http
+    if (this.inFlight) {
+      return this.inFlight;
+    }
+    const request$ = this.http
       .get<CurrentEmployee>(`${environment.apiUrl}/api/employees/me`, {
         context: new HttpContext().set(SUPPRESS_ERROR_TOAST, true),
       })
@@ -44,24 +46,22 @@ export class CurrentEmployeeService {
           this.employeeState.set(employee);
           this.loadedState.set(true);
         }),
-        // A 404 has two very different causes: (a) Admin/Owner who never got an
-        // Employee record (fine, quietly stay logged in without a trainer
-        // profile), or (b) Member/Reception whose Employee record was deleted
-        // out from under an already-logged-in session (their token is still
-        // "valid" but the account behind it is gone) - only (a) is expected for
-        // Admin, so anything else ends the session instead of leaving the user
-        // stuck looking at permanently empty trainer screens.
-        catchError((err: unknown) => {
-          if (err instanceof HttpErrorResponse && err.status === 404 && this.auth.currentRole() !== 'Admin') {
-            this.auth.logout();
-            this.notification.showError(resolveErrorMessage(this.translate, 'UNAUTHORIZED'));
-            this.router.navigate(['/login']);
-          }
-          this.employeeState.set(null);
-          this.loadedState.set(true);
-          return of(null);
+        // GET /api/employees/me now always succeeds (200, HasProfile=false) for any
+        // valid authenticated User, even one with no Employee profile yet (always the
+        // organization's founder right after Register - see EmployeeService.GetMe and
+        // CurrentEmployee's own doc). A deactivated/nonexistent User is already
+        // rejected at the JWT layer (Startup.cs's OnTokenValidated), before this
+        // request is even authenticated - so a failure reaching here is a genuine
+        // transient error, never "no profile". Stay unloaded so the next
+        // ensureLoaded() retries; never guess at logging the user out from here.
+        catchError(() => of(null)),
+        finalize(() => {
+          this.inFlight = null;
         }),
+        shareReplay(1),
       );
+    this.inFlight = request$;
+    return request$;
   }
 
   /** Returns already-loaded state synchronously (as an Observable) if a load

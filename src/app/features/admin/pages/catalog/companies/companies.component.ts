@@ -137,7 +137,7 @@ export class CompaniesComponent {
 
   onSaved(): void {
     this.fetch(this.table?.first ?? 0, this.rows());
-    this.companyContextService.loadCompanies();
+    this.companyContextService.refreshCompanies();
   }
 
   activate(company: CompanyDto): void {
@@ -145,7 +145,7 @@ export class CompaniesComponent {
       next: () => {
         this.notifications.showSuccess(this.translate.instant('CATALOG.COMPANIES.ACTIVATED'));
         this.fetch(this.table?.first ?? 0, this.rows());
-        this.companyContextService.loadCompanies();
+        this.companyContextService.refreshCompanies();
       },
       error: () => {},
     });
@@ -163,7 +163,7 @@ export class CompaniesComponent {
           next: () => {
             this.notifications.showSuccess(this.translate.instant('CATALOG.COMPANIES.DEACTIVATED'));
             this.fetch(this.table?.first ?? 0, this.rows());
-            this.companyContextService.loadCompanies();
+            this.companyContextService.refreshCompanies();
           },
           error: () => {},
         });
@@ -184,7 +184,7 @@ export class CompaniesComponent {
           next: () => {
             this.notifications.showSuccess(this.translate.instant('CATALOG.COMPANIES.DELETED'));
             this.fetch(this.table?.first ?? 0, this.rows());
-            this.companyContextService.loadCompanies();
+            this.companyContextService.refreshCompanies();
           },
           error: () => {},
         });

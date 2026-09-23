@@ -246,7 +246,10 @@
                 <button type="button" [class.employee-form-page__choice--active]="isSelected(form.controls.grantGroupIds.value, group.id)" (click)="toggleGrantGroup(group.id)" [disabled]="!canManageGrantGroupAssignments()">{{ group.name }}</button>
               }
             </div>
-            @if (form.controls.grantGroupIds.invalid && form.controls.grantGroupIds.touched) {
+            @if (grantGroupAssignmentsFailed()) {
+              <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.GRANT_GROUP_ASSIGNMENTS_LOAD_FAILED' | translate }}</span>
+              <p-button type="button" [label]="'COMMON.RETRY' | translate" severity="secondary" [outlined]="true" (onClick)="retryGrantGroupAssignments()" />
+            } @else if (form.controls.grantGroupIds.invalid && form.controls.grantGroupIds.touched) {
               <span class="dl-form__error">{{ 'EMPLOYEES.ERRORS.GRANT_GROUPS_REQUIRED' | translate }}</span>
             }
           </div>
@@ -299,32 +302,38 @@
       </p-tabpanel>
 
       @if (canViewWorkingHours()) {
-        <p-tabpanel value="workingHours">
-          @if (editingId(); as id) {
-            <app-working-hours-template-editor
-              [owner]="{ type: 'employee', employeeId: id }"
-              [saveLabelKey]="workingHoursSaveLabelKey()"
-              (saved)="onWorkingHoursSaved()"
-            />
-          } @else {
-            <p class="dl-form__hint">{{ 'EMPLOYEES.WIZARD_LOCKED_HINT' | translate }}</p>
-          }
+        <p-tabpanel value="workingHours" [lazy]="true">
+          <ng-template #content>
+            @if (editingId(); as id) {
+              <app-working-hours-template-editor
+                [owner]="{ type: 'employee', employeeId: id }"
+                [saveLabelKey]="workingHoursSaveLabelKey()"
+                (saved)="onWorkingHoursSaved()"
+              />
+            } @else {
+              <p class="dl-form__hint">{{ 'EMPLOYEES.WIZARD_LOCKED_HINT' | translate }}</p>
+            }
+          </ng-template>
         </p-tabpanel>
       }
 
       @if (canViewLeaveFund()) {
-        <p-tabpanel value="leaveFund">
-          <app-employee-leave-fund-tab [employeeId]="editingId()" [saveLabelKey]="leaveFundSaveLabelKey()" (saved)="onLeaveFundSaved()" />
+        <p-tabpanel value="leaveFund" [lazy]="true">
+          <ng-template #content>
+            <app-employee-leave-fund-tab [employeeId]="editingId()" [saveLabelKey]="leaveFundSaveLabelKey()" (saved)="onLeaveFundSaved()" />
+          </ng-template>
         </p-tabpanel>
       }
 
       @if (canViewHistory()) {
-        <p-tabpanel value="history">
-          @if (editingId(); as id) {
-            <app-employee-history-tab [employeeId]="id" />
-          } @else {
-            <p class="dl-form__hint">{{ 'EMPLOYEES.WIZARD_LOCKED_HINT' | translate }}</p>
-          }
+        <p-tabpanel value="history" [lazy]="true">
+          <ng-template #content>
+            @if (editingId(); as id) {
+              <app-employee-history-tab [employeeId]="id" />
+            } @else {
+              <p class="dl-form__hint">{{ 'EMPLOYEES.WIZARD_LOCKED_HINT' | translate }}</p>
+            }
+          </ng-template>
         </p-tabpanel>
       }
     </p-tabpanels>

@@ -6,14 +6,12 @@ import { Select } from 'primeng/select';
 import { APPOINTMENT_STATUSES, AppointmentScheduleCellDto, AppointmentStatus, appointmentStatusTranslationKey } from '../../../../core/models/appointment.model';
 import { EmployeeColumnEntry, EmployeeDto } from '../../../../core/models/employee.model';
 import { GroupAppointmentCellDto, GroupDto } from '../../../../core/models/group.model';
-import { CompanyDto } from '../../../../core/models/company.model';
 import { RoomDto } from '../../../../core/models/room.model';
 import { EXECUTION_MODES, ServiceDto, ServiceExecutionMode, executionModeTranslationKey } from '../../../../core/models/service.model';
 import { ScheduleBreakCellDto } from '../../../../core/models/schedule-break.model';
 import { EmployeesService } from '../../../../core/services/employees.service';
 import { GroupsService } from '../../../../core/services/groups.service';
 import { CompanyContextService } from '../../../../core/services/company-context.service';
-import { CompaniesService } from '../../../../core/services/companies.service';
 import { CurrentEmployeeService } from '../../../../core/services/current-employee.service';
 import { RoomsService } from '../../../../core/services/rooms.service';
 import { ServicesService } from '../../../../core/services/services.service';
@@ -80,7 +78,6 @@ export class ScheduleComponent {
   private readonly employeesService = inject(EmployeesService);
   private readonly groupsService = inject(GroupsService);
   private readonly companyContext = inject(CompanyContextService);
-  private readonly companiesService = inject(CompaniesService);
   private readonly roomsService = inject(RoomsService);
   private readonly servicesService = inject(ServicesService);
   private readonly currentEmployeeService = inject(CurrentEmployeeService);
@@ -99,7 +96,7 @@ export class ScheduleComponent {
 
   readonly activeEmployees = signal<EmployeeDto[]>([]);
   readonly activeServices = signal<ServiceDto[]>([]);
-  readonly activeCompanies = signal<CompanyDto[]>([]);
+  readonly activeCompanies = this.companyContext.companies;
   readonly activeRooms = signal<RoomDto[]>([]);
 
   readonly detailVisible = signal(false);
@@ -194,7 +191,9 @@ export class ScheduleComponent {
   constructor() {
     this.loadActiveEmployees();
     this.loadActiveServices();
-    this.loadActiveCompanies();
+    if (!this.companyContext.companies().length) {
+      this.companyContext.loadCompanies();
+    }
 
     // Rooms are company-scoped, unlike the other three lookups above (loaded
     // once) - reload whenever the global company switcher changes, and clear
@@ -301,19 +300,20 @@ export class ScheduleComponent {
       .subscribe((result) => this.activeServices.set(result.items));
   }
 
-  private loadActiveCompanies(): void {
-    this.companiesService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeCompanies.set(result.items));
-  }
+  private roomsRequestToken = 0;
 
   private loadActiveRooms(companyId: string | null): void {
+    const token = ++this.roomsRequestToken;
     if (!companyId) {
       this.activeRooms.set([]);
       return;
     }
     this.roomsService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true, extraParams: { companyId } })
-      .subscribe((result) => this.activeRooms.set(result.items));
+      .subscribe((result) => {
+        if (token === this.roomsRequestToken) {
+          this.activeRooms.set(result.items);
+        }
+      });
   }
 }

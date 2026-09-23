@@ -6,6 +6,7 @@ import { AuthService } from '../../core/auth/auth.service';
 import { InactivityService } from '../../core/auth/inactivity.service';
 import { CompanyContextService } from '../../core/services/company-context.service';
 import { CurrentEmployeeService } from '../../core/services/current-employee.service';
+import { translationReadySignal } from '../../core/utils/translation-signal.util';
 
 interface CompanyOption {
   label: string;
@@ -25,6 +26,7 @@ export class TopbarComponent {
   private readonly inactivityService = inject(InactivityService);
   private readonly router = inject(Router);
   private readonly translate = inject(TranslateService);
+  private readonly translationsReady = translationReadySignal(this.translate);
 
   readonly titleKey = input<string | null>(null);
   readonly menuToggle = output<void>();
@@ -36,7 +38,7 @@ export class TopbarComponent {
 
   readonly displayName = computed(() => {
     const employee = this.employee();
-    if (employee) {
+    if (employee?.hasProfile) {
       return `${employee.firstName} ${employee.lastName}`.trim();
     }
     return this.user()?.email ?? '';
@@ -46,8 +48,10 @@ export class TopbarComponent {
 
   readonly initials = computed(() => {
     const employee = this.employee();
-    if (employee) {
-      return `${employee.firstName.charAt(0)}${employee.lastName.charAt(0)}`.toUpperCase();
+    if (employee?.hasProfile) {
+      // hasProfile true guarantees firstName/lastName are populated (see
+      // CurrentEmployee's own doc) - TS can't infer that from a boolean flag.
+      return `${employee.firstName!.charAt(0)}${employee.lastName!.charAt(0)}`.toUpperCase();
     }
     const email = this.user()?.email ?? '';
     return email.slice(0, 2).toUpperCase();
@@ -55,12 +59,15 @@ export class TopbarComponent {
 
   readonly avatarColor = computed(() => this.employee()?.colorHex || 'var(--brand-primary)');
 
-  readonly companyOptions = computed<CompanyOption[]>(() => [
-    ...(this.companyContextService.canSelectAllCompanies()
-      ? [{ label: this.translate.instant('LAYOUT.TOPBAR.ALL_COMPANIES'), value: null }]
-      : []),
-    ...this.companyContextService.companies().map((company) => ({ label: company.name, value: company.id })),
-  ]);
+  readonly companyOptions = computed<CompanyOption[]>(() => {
+    this.translationsReady();
+    return [
+      ...(this.companyContextService.canSelectAllCompanies()
+        ? [{ label: this.translate.instant('LAYOUT.TOPBAR.ALL_COMPANIES'), value: null }]
+        : []),
+      ...this.companyContextService.companies().map((company) => ({ label: company.name, value: company.id })),
+    ];
+  });
 
   readonly hasCompanyOptions = computed(() => this.companyOptions().length > 0);
 

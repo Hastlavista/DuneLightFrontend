@@ -56,6 +56,7 @@
                   severity="danger"
                   icon="pi pi-trash"
                   [loading]="removingItemId() === item.id"
+                  [ariaLabel]="'COMMON.DELETE' | translate"
                   (onClick)="confirmRemoveItem(item)"
                 />
               }
@@ -169,5 +170,12 @@
       [payment]="voidPaymentTarget()"
       (saved)="onPaymentVoided($event)"
     />
+  </div>
+} @else if (failed()) {
+  <div class="checkout-detail">
+    <button type="button" class="checkout-detail__back" (click)="goBack()">
+      <i class="pi pi-arrow-left"></i>{{ 'CHECKOUT.DETAIL.BACK' | translate }}
+    </button>
+    <p>{{ 'COMMON.LOAD_FAILED' | translate }}</p>
   </div>
 }

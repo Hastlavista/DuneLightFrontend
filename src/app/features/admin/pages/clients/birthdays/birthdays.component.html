@@ -9,7 +9,7 @@
   </div>
 
   @if (loading()) {
-    <div class="birthdays-page__empty">Učitavanje...</div>
+    <div class="birthdays-page__empty">{{ 'COMMON.LOADING' | translate }}</div>
   } @else if (items().length) {
     <div class="birthdays-page__list">
       @for (item of items(); track item.id) {

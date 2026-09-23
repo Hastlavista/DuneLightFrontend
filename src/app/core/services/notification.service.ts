@@ -47,6 +47,9 @@ export class NotificationService {
   }
 
   showAppError(error: AppError): void {
+    if (error.sessionExpired) {
+      return;
+    }
     this.showError(resolveErrorMessage(this.translate, error.code));
   }
 

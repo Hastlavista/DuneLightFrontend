@@ -29,7 +29,7 @@
       </div>
       <label class="pin-lock__pin-label" for="lock-pin">Upiši PIN za {{ user.firstName }}</label>
     }
-    @if (failed()) { <p class="pin-lock__error">PIN nije ispravan. Pokušajte ponovno.</p> }
+    @if (failed()) { <p class="pin-lock__error">{{ 'AUTH.PIN_LOCK.INVALID_PIN' | translate }}</p> }
     <p class="pin-lock__hint">Podaci ostaju otvoreni u pozadini — promjena se ne prekida.</p>
     <footer class="pin-lock__footer">
       <button type="button" (click)="useOtherAccount()">Prijavi se drugim računom</button>

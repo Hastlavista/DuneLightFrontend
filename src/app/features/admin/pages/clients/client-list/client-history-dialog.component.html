@@ -10,7 +10,7 @@
     <button type="button" [class.client-history-dialog__tab--active]="activeTab() === 'packages'" (click)="selectTab('packages')">Paketi i dolasci <span>{{ packages().length + groups().length }}</span></button>
   </div>
 
-  @if (loading()) { <div class="client-history-dialog__loading">Učitavanje povijesti...</div> }
+  @if (loading()) { <div class="client-history-dialog__loading">{{ 'CLIENTS.HISTORY_LOADING' | translate }}</div> }
   @if (!loading() && summary(); as data) {
     @if (activeTab() !== 'packages') {
       <section class="client-history-dialog__summary"><span class="client-history-dialog__summary-icon"><i class="pi pi-chart-bar"></i></span><div><strong>{{ data.completedVisitsCount }} odrađenih treninga · {{ data.cancelledCount + data.noShowCount }} izostanka</strong><small>Klijent od {{ formatDate(data.clientSince) }} · zadnji {{ formatDate(data.lastVisitAt) }} · sljedeći {{ formatDate(data.nextVisitAt) }}</small></div><b>{{ completedHours().toFixed(1) }} h</b></section>

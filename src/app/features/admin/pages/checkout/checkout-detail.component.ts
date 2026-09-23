@@ -60,6 +60,7 @@ export class CheckoutDetailComponent {
 
   readonly checkout = signal<CheckoutDto | null>(null);
   readonly loading = signal(false);
+  readonly failed = signal(false);
   readonly completing = signal(false);
   readonly cancelling = signal(false);
   readonly removingItemId = signal<string | null>(null);
@@ -211,6 +212,16 @@ export class CheckoutDetailComponent {
     this.checkoutsService
       .getById(id)
       .pipe(finalize(() => this.loading.set(false)))
-      .subscribe((checkout) => this.checkout.set(checkout));
+      .subscribe({
+        next: (checkout) => {
+          this.failed.set(false);
+          this.checkout.set(checkout);
+        },
+        error: () => {
+          if (!this.checkout()) {
+            this.failed.set(true);
+          }
+        },
+      });
   }
 }

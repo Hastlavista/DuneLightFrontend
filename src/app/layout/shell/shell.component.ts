@@ -1,6 +1,7 @@
 import { Component, DestroyRef, inject, signal } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, NavigationEnd, Router, RouterOutlet } from '@angular/router';
+import { ConfirmDialog } from 'primeng/confirmdialog';
 import { filter, map, startWith } from 'rxjs';
 import { AuthService } from '../../core/auth/auth.service';
 import { InactivityService } from '../../core/auth/inactivity.service';
@@ -15,7 +16,7 @@ import { SetPinCtaComponent } from '../../shared/components/set-pin/set-pin-cta.
 
 @Component({
   selector: 'app-shell',
-  imports: [RouterOutlet, SidebarComponent, TopbarComponent, PinLockOverlayComponent, SetPinCtaComponent],
+  imports: [RouterOutlet, ConfirmDialog, SidebarComponent, TopbarComponent, PinLockOverlayComponent, SetPinCtaComponent],
   templateUrl: './shell.component.html',
   styleUrl: './shell.component.scss',
 })
@@ -65,7 +66,7 @@ export class ShellComponent {
       this.companyContextService.loadCompanies();
 
       const user = this.authService.currentUser();
-      if (employee && user) {
+      if (employee?.hasProfile && user) {
         // Keeps the device's "known users" chooser fresh on every session
         // start (full login or PIN login both land here) - see
         // KnownUsersService's doc comment. Only users with a PIN set belong
@@ -74,11 +75,14 @@ export class ShellComponent {
         // added before this check existed, or who had their PIN removed
         // since - forget() is a no-op if they're not in the list.
         if (employee.hasPinSet) {
+          // hasProfile true (checked above) guarantees firstName/lastName are
+          // populated (see CurrentEmployee's own doc) - TS can't infer that
+          // from a boolean flag.
           this.knownUsersService.remember({
             email: user.email,
             organizationSlug: user.organizationSlug,
-            firstName: employee.firstName,
-            lastName: employee.lastName,
+            firstName: employee.firstName!,
+            lastName: employee.lastName!,
             colorHex: employee.colorHex,
           });
         } else {

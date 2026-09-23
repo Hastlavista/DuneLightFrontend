@@ -39,7 +39,9 @@
   </div>
 
   @if (loading()) {
-    <p class="groups-page__empty">Učitavanje grupa…</p>
+    <p class="groups-page__empty">{{ 'GROUPS.LOADING' | translate }}</p>
+  } @else if (failed()) {
+    <p class="groups-page__empty">{{ 'COMMON.LOAD_FAILED' | translate }}</p>
   } @else if (items().length === 0) {
     <p class="groups-page__empty">{{ 'GROUPS.EMPTY' | translate }}</p>
   } @else {

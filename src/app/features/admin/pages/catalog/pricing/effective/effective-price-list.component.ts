@@ -109,23 +109,35 @@ export class EffectivePriceListComponent {
   onResolveSubjectTypeChange(type: PriceListSubjectType): void {
     this.resolveSubjectType.set(type);
     this.resolveSubjectId.set(null);
+    this.resolveToken++;
     this.resolveResult.set(null);
+    this.resolving.set(false);
   }
 
   onResolveSubjectChange(subjectId: string | null): void {
     this.resolveSubjectId.set(subjectId);
+    this.resolveToken++;
     this.resolveResult.set(null);
+    this.resolving.set(false);
   }
 
   onResolveCompanyChange(companyId: string | null): void {
     this.resolveCompanyId.set(companyId);
+    this.resolveToken++;
     this.resolveResult.set(null);
+    this.resolving.set(false);
   }
 
   onResolveDateChange(date: Date): void {
     this.resolveDate.set(date);
+    this.resolveToken++;
     this.resolveResult.set(null);
+    this.resolving.set(false);
   }
+
+  // Latest-request-wins: changing an input while a check is running discards its result.
+  private resolveToken = 0;
+  private effectiveToken = 0;
 
   onCheckPrice(): void {
     const subjectId = this.resolveSubjectId();
@@ -134,6 +146,7 @@ export class EffectivePriceListComponent {
       return;
     }
 
+    const token = ++this.resolveToken;
     this.resolving.set(true);
     this.priceListService
       .resolve({
@@ -142,10 +155,24 @@ export class EffectivePriceListComponent {
         companyId: companyId,
         date: toStartOfDayIso(this.resolveDate()),
       })
-      .pipe(finalize(() => this.resolving.set(false)))
+      .pipe(
+        finalize(() => {
+          if (token === this.resolveToken) {
+            this.resolving.set(false);
+          }
+        }),
+      )
       .subscribe({
-        next: (result) => this.resolveResult.set(result),
-        error: () => this.resolveResult.set(null),
+        next: (result) => {
+          if (token === this.resolveToken) {
+            this.resolveResult.set(result);
+          }
+        },
+        error: () => {
+          if (token === this.resolveToken) {
+            this.resolveResult.set(null);
+          }
+        },
       });
   }
 
@@ -165,17 +192,29 @@ export class EffectivePriceListComponent {
   }
 
   private fetchEffective(): void {
+    const token = ++this.effectiveToken;
     const companyId = this.effectiveCompanyId();
     if (!companyId) {
       this.effectiveRows.set([]);
+      this.effectiveLoading.set(false);
       return;
     }
 
     this.effectiveLoading.set(true);
     this.priceListService
       .getEffective(companyId, toStartOfDayIso(this.effectiveDate()))
-      .pipe(finalize(() => this.effectiveLoading.set(false)))
-      .subscribe((rows) => this.effectiveRows.set(rows));
+      .pipe(
+        finalize(() => {
+          if (token === this.effectiveToken) {
+            this.effectiveLoading.set(false);
+          }
+        }),
+      )
+      .subscribe((rows) => {
+        if (token === this.effectiveToken) {
+          this.effectiveRows.set(rows);
+        }
+      });
   }
 
   private loadLookups(): void {

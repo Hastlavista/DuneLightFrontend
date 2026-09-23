@@ -37,6 +37,7 @@ class FakeTranslateLoader implements TranslateLoader {
 
 function currentEmployee(overrides: Partial<CurrentEmployee> = {}): CurrentEmployee {
   return {
+    hasProfile: true,
     employeeId: 'me-1',
     firstName: 'Marko',
     lastName: 'Testni',
@@ -69,7 +70,9 @@ async function createFixture(employee: CurrentEmployee): Promise<{ fixture: Comp
   const fixture = TestBed.createComponent(EmployeeListComponent);
 
   if (employee.grants.includes('employees.view')) {
-    httpMock.expectOne((req) => req.url.includes('/api/catalog/companies')).flush({ items: [], totalCount: 0, page: 1, pageSize: 200 });
+    if (employee.grants.includes('catalog.companies.view')) {
+      httpMock.expectOne((req) => req.url.includes('/api/catalog/companies')).flush({ items: [], totalCount: 0, page: 1, pageSize: 200 });
+    }
     httpMock.expectOne((req) => req.url.includes('/api/employees/engagement-types')).flush({ items: [], totalCount: 0, page: 1, pageSize: 200 });
     httpMock.expectOne((req) => req.url.includes('/api/employees') && !req.url.includes('engagement-types')).flush({ items: [], totalCount: 0, page: 1, pageSize: 20 });
   }
@@ -95,5 +98,28 @@ describe('EmployeeListComponent - employees.view supporting-read gap', () => {
 
     expect(fixture.componentInstance.canViewList()).toBe(true);
     httpMock.verify();
+  });
+});
+
+describe('EmployeeListComponent - company filter options', () => {
+  afterEach(() => TestBed.inject(HttpTestingController).verify());
+
+  it('without catalog.companies.view, uses the assigned companies from CompanyContextService and never calls GET /api/catalog/companies', async () => {
+    const { fixture, httpMock } = await createFixture(
+      currentEmployee({
+        grants: ['employees.view'],
+        companies: [{ companyId: 'c-1', companyName: 'Centar', isPrimary: true }],
+      }),
+    );
+
+    httpMock.expectNone((req) => req.url.includes('/api/catalog/companies'));
+    expect(fixture.componentInstance.activeCompanies().map((c) => c.id)).toEqual(['c-1']);
+  });
+
+  it('with catalog.companies.view, fetches the company list once through CompanyContextService', async () => {
+    const { fixture, httpMock } = await createFixture(currentEmployee({ grants: ['employees.view', 'catalog.companies.view'] }));
+
+    httpMock.expectNone((req) => req.url.includes('/api/catalog/companies'));
+    expect(fixture.componentInstance.activeCompanies()).toEqual([]);
   });
 });

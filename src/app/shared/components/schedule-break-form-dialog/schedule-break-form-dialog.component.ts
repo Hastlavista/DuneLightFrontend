@@ -18,7 +18,7 @@ import {
   recurringConflictReasonTranslationKey,
 } from '../../../core/models/appointment.model';
 import { EmployeeSummary } from '../../../core/models/employee.model';
-import { CompanyDto } from '../../../core/models/company.model';
+import { StudioCompany } from '../../../core/models/company.model';
 import {
   RecurringScheduleBreakCreateRequest,
   ScheduleBreakCreateRequest,
@@ -64,8 +64,8 @@ interface EmployeeSearchOption {
  *
  * Deliberately much smaller than NewAppointmentDialogComponent: no
  * client/service picking, no payment/billing, no availability hint - a break
- * has none of those. Trainer is locked to the logged-in employee for role
- * Member, same rule as the termin form.
+ * has none of those. Trainer is locked to the logged-in employee unless the
+ * viewer holds schedule.breaks.write.all, same own/all rule as the backend.
  *
  * `409 APPOINTMENT_OVERLAP` is left to the default error toast, form stays
  * open - same treatment as AppointmentsService.create(). `409
@@ -99,7 +99,7 @@ export class ScheduleBreakFormDialogComponent {
 
   readonly visible = model(false);
   readonly employees = input<EmployeeSummary[]>([]);
-  readonly companies = input<CompanyDto[]>([]);
+  readonly companies = input<StudioCompany[]>([]);
   readonly initial = input<NewAppointmentInitial | null>(null);
 
   readonly created = output<void>();
@@ -118,7 +118,8 @@ export class ScheduleBreakFormDialogComponent {
 
   private readonly translationsReady = translationReadySignal(this.translate);
 
-  readonly isMemberRole = computed(() => this.currentEmployeeService.employee()?.role === 'Member');
+  /** Mirrors the backend's own/all scope: only schedule.breaks.write.all may add a break for another employee. */
+  readonly employeeLockedToSelf = computed(() => !this.currentEmployeeService.hasGrant('schedule.breaks.write.all'));
 
   readonly employeeOptions = computed<SelectOption[]>(() =>
     this.employees().map((employee) => ({
@@ -354,7 +355,7 @@ export class ScheduleBreakFormDialogComponent {
 
   private resetForm(): void {
     const init = this.initial();
-    const locked = this.isMemberRole();
+    const locked = this.employeeLockedToSelf();
     const selfId = this.currentEmployeeService.employee()?.employeeId ?? '';
 
     this.form.reset({

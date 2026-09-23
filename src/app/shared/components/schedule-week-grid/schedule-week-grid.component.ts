@@ -1,19 +1,21 @@
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
-import { finalize, forkJoin } from 'rxjs';
+import { Observable, catchError, finalize, forkJoin, of } from 'rxjs';
 import { AppointmentScheduleCellDto, AppointmentStatus } from '../../../core/models/appointment.model';
 import { BirthdayDto } from '../../../core/models/client.model';
 import { CompanyHolidayDto } from '../../../core/models/company-holiday.model';
 import { dayOfWeekShortTranslationKey } from '../../../core/models/group.model';
-import { CompanyDto } from '../../../core/models/company.model';
+import { StudioCompany } from '../../../core/models/company.model';
 import { ScheduleBreakCellDto } from '../../../core/models/schedule-break.model';
 import { ServiceExecutionMode } from '../../../core/models/service.model';
 import { AppointmentsService } from '../../../core/services/appointments.service';
 import { ClientsService } from '../../../core/services/clients.service';
 import { CompanyHolidaysService } from '../../../core/services/company-holidays.service';
 import { CompanyContextService } from '../../../core/services/company-context.service';
+import { CurrentEmployeeService } from '../../../core/services/current-employee.service';
 import { toEndOfDayIso, toStartOfDayIso } from '../../../core/utils/date.util';
+import { translationReadySignal } from '../../../core/utils/translation-signal.util';
 import { buildBirthdayLookup } from '../schedule-grid/schedule-birthday.util';
 import { toScheduleBreakGridCell, toScheduleGridCell } from '../schedule-grid/schedule-cell-view.util';
 import {
@@ -74,7 +76,11 @@ export class ScheduleWeekGridComponent {
   private readonly clientsService = inject(ClientsService);
   private readonly companyHolidaysService = inject(CompanyHolidaysService);
   private readonly companyContext = inject(CompanyContextService);
+  private readonly currentEmployeeService = inject(CurrentEmployeeService);
+  private scheduleRequestToken = 0;
+  private holidaysRequestToken = 0;
   private readonly translate = inject(TranslateService);
+  private readonly translationsReady = translationReadySignal(this.translate);
 
   readonly employeeId = input<string | null>(null);
   readonly statusFilter = input<AppointmentStatus | null>(null);
@@ -84,7 +90,7 @@ export class ScheduleWeekGridComponent {
   /** Fetched once by ScheduleComponent and shared with both grids - see
    * MyShiftsComponent for the same "fetch once, pass down via @Input" pattern
    * applied to Roster's team/personal tabs. */
-  readonly activeCompanies = input<CompanyDto[]>([]);
+  readonly activeCompanies = input<StudioCompany[]>([]);
 
   readonly emptySlotClick = output<WeekEmptySlotEvent>();
   readonly appointmentClicked = output<AppointmentScheduleCellDto>();
@@ -110,6 +116,7 @@ export class ScheduleWeekGridComponent {
   readonly rangeLabel = computed(() => weekRangeLabel(this.weekStart()));
 
   readonly columns = computed<ScheduleGridColumn[]>(() => {
+    this.translationsReady();
     const start = this.weekStart();
     const holidays = this.holidayLookup();
     return Array.from({ length: 7 }, (_, i) => {
@@ -232,6 +239,7 @@ export class ScheduleWeekGridComponent {
   }
 
   private fetch(employeeId: string, weekStart: Date, filters: ScheduleFilters): void {
+    const token = ++this.scheduleRequestToken;
     this.loading.set(true);
     const from = toStartOfDayIso(weekStart);
     const to = toEndOfDayIso(addDays(weekStart, 6));
@@ -246,26 +254,59 @@ export class ScheduleWeekGridComponent {
         serviceId: filters.service ?? undefined,
         roomId: filters.roomId ?? undefined,
       }),
-      birthdays: this.clientsService.getBirthdays(from, to),
+      birthdays: this.birthdays(from, to),
     })
-      .pipe(finalize(() => this.loading.set(false)))
-      .subscribe(({ feed, birthdays }) => {
-        this.rawCells.set(feed.appointments);
-        this.rawBreaks.set(feed.breaks);
-        this.rawBirthdays.set(birthdays);
+      .pipe(
+        finalize(() => {
+          if (token === this.scheduleRequestToken) {
+            this.loading.set(false);
+          }
+        }),
+      )
+      .subscribe({
+        next: ({ feed, birthdays }) => {
+          if (token !== this.scheduleRequestToken) {
+            return;
+          }
+          this.rawCells.set(feed.appointments);
+          this.rawBreaks.set(feed.breaks);
+          this.rawBirthdays.set(birthdays);
+        },
+        // The interceptor toast explains the failure; never leave the previous
+        // period's appointments under the newly selected date.
+        error: () => {
+          if (token !== this.scheduleRequestToken) {
+            return;
+          }
+          this.rawCells.set([]);
+          this.rawBreaks.set([]);
+          this.rawBirthdays.set([]);
+        },
       });
+  }
+
+  /** Birthdays are a decoration and need clients.view - without it (or on any
+   * failure) the schedule itself must still load. */
+  private birthdays(from: string, to: string): Observable<BirthdayDto[]> {
+    if (!this.currentEmployeeService.hasGrant('clients.view')) {
+      return of([]);
+    }
+    return this.clientsService.getBirthdays(from, to, { suppressErrorToast: true }).pipe(catchError(() => of<BirthdayDto[]>([])));
   }
 
   /** A week can span two calendar years (e.g. 29.12. - 4.1.) - fetch both
    * years in that rare case rather than assuming one. */
   private fetchHolidays(companyId: string | null, weekStart: Date): void {
+    const token = ++this.holidaysRequestToken;
     if (!companyId) {
       this.rawHolidays.set([]);
       return;
     }
     const years = new Set([weekStart.getFullYear(), addDays(weekStart, 6).getFullYear()]);
-    forkJoin(Array.from(years).map((year) => this.companyHolidaysService.getForYear(companyId, year))).subscribe(
-      (results) => this.rawHolidays.set(results.flat()),
-    );
+    forkJoin(Array.from(years).map((year) => this.companyHolidaysService.getForYear(companyId, year))).subscribe((results) => {
+      if (token === this.holidaysRequestToken) {
+        this.rawHolidays.set(results.flat());
+      }
+    });
   }
 }

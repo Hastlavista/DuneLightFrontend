@@ -4,7 +4,9 @@
   </div>
 
   @if (loading()) {
-    <p class="permission-list-page__empty">Učitavanje grupa dozvola…</p>
+    <p class="permission-list-page__empty">{{ 'PERMISSIONS.GRANT_GROUPS.LIST_LOADING' | translate }}</p>
+  } @else if (failed()) {
+    <p class="permission-list-page__empty">{{ 'COMMON.LOAD_FAILED' | translate }}</p>
   } @else if (items().length === 0) {
     <p class="permission-list-page__empty">{{ 'PERMISSIONS.GRANT_GROUPS.EMPTY' | translate }}</p>
   } @else {

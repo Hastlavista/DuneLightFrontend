@@ -39,7 +39,7 @@
 
     <p-button [label]="'ROSTER.PERSONAL.APPLY_RANGE' | translate" (onClick)="applyRange()" />
 
-    @if (effectiveEmployeeId()) {
+    @if (effectiveEmployeeId() && canWriteShownEmployee()) {
       <p-button icon="pi pi-plus" [label]="'ROSTER.PERSONAL.ADD' | translate" (onClick)="onAdd()" />
     }
   </div>
@@ -102,6 +102,7 @@
               <td>{{ entryTimeLabel(row.entry) }}</td>
               <td>{{ row.entry.note }}</td>
               <td class="personal-roster__actions">
+                @if (canWriteShownEmployee()) {
                 <p-button
                   icon="pi pi-pencil"
                   [text]="true"
@@ -119,6 +120,7 @@
                   [title]="'COMMON.DELETE' | translate"
                   (onClick)="confirmDelete(row.entry)"
                 />
+                }
               </td>
             </tr>
           } @else {
@@ -130,6 +132,7 @@
               <td>{{ plannedTimeLabel(row.day) }}</td>
               <td></td>
               <td class="personal-roster__actions">
+                @if (canWriteShownEmployee()) {
                 <p-button
                   icon="pi pi-plus"
                   [text]="true"
@@ -138,12 +141,13 @@
                   [title]="'ROSTER.PERSONAL.ADD' | translate"
                   (onClick)="onAddForPlannedDay(row.day)"
                 />
+                }
               </td>
             </tr>
           }
         } @empty {
           <tr>
-            <td colspan="5" class="personal-roster__empty">{{ 'ROSTER.PERSONAL.EMPTY' | translate }}</td>
+            <td colspan="5" class="personal-roster__empty">{{ (failed() ? 'COMMON.LOAD_FAILED' : 'ROSTER.PERSONAL.EMPTY') | translate }}</td>
           </tr>
         }
       </tbody>

@@ -7,7 +7,7 @@ import { Dialog } from 'primeng/dialog';
 import { InputNumber } from 'primeng/inputnumber';
 import { InputText } from 'primeng/inputtext';
 import { Select } from 'primeng/select';
-import { finalize } from 'rxjs';
+import { Observable, finalize, of } from 'rxjs';
 import { CompanyDto } from '../../../../../core/models/company.model';
 import {
   EXECUTION_MODES,
@@ -96,6 +96,12 @@ export class ServiceFormDialogComponent {
    * Service, which starts with zero assignments. */
   private readonly assignedCompanies = signal<CompanyDto[]>([]);
   readonly companiesLoading = signal(false);
+
+  // Only replace ServiceCompany assignments when this dialog actually loaded
+  // them for the current service - otherwise companyIds is still [] and a save
+  // would wipe the service's real assignments.
+  private assignmentsLoaded = false;
+  private assignmentsRequestToken = 0;
 
   /** Active Companies plus any currently-assigned-but-now-inactive one (kept
    * visible with a badge instead of silently dropped from the picker) - same
@@ -195,8 +201,10 @@ export class ServiceFormDialogComponent {
       // rollback, see ReplaceAssignedCompanies's doc), it just leaves
       // ServiceCompany assignments as they already were.
       next: (savedService) => {
-        this.servicesService
-          .replaceAssignedCompanies(savedService.id, companyIds)
+        const assignments$: Observable<unknown> = this.assignmentsLoaded
+          ? this.servicesService.replaceAssignedCompanies(savedService.id, companyIds)
+          : of(null);
+        assignments$
           .pipe(finalize(() => this.saving.set(false)))
           .subscribe({
             next: () => {
@@ -241,18 +249,26 @@ export class ServiceFormDialogComponent {
     });
 
     this.assignedCompanies.set([]);
+    const token = ++this.assignmentsRequestToken;
+    this.assignmentsLoaded = !service;
+    this.companiesLoading.set(!!service);
     if (service) {
-      this.companiesLoading.set(true);
-      this.servicesService
-        .getAssignedCompanies(service.id)
-        .pipe(finalize(() => this.companiesLoading.set(false)))
-        .subscribe({
-          next: (companies) => {
-            this.assignedCompanies.set(companies);
-            this.form.controls.companyIds.setValue(companies.map((company) => company.id));
-          },
-          error: () => this.assignedCompanies.set([]),
-        });
+      this.servicesService.getAssignedCompanies(service.id).subscribe({
+        next: (companies) => {
+          if (token !== this.assignmentsRequestToken) {
+            return;
+          }
+          this.assignedCompanies.set(companies);
+          this.form.controls.companyIds.setValue(companies.map((company) => company.id));
+          this.assignmentsLoaded = true;
+          this.companiesLoading.set(false);
+        },
+        error: () => {
+          if (token === this.assignmentsRequestToken) {
+            this.companiesLoading.set(false);
+          }
+        },
+      });
     }
   }
 }

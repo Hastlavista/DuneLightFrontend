@@ -20,7 +20,7 @@
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-appointment>
-            <tr class="group-appointments-section__row" (click)="openAttendance(appointment)">
+            <tr class="group-appointments-section__row" tabindex="0" (click)="openAttendance(appointment)" (keydown.enter)="openAttendance(appointment)">
               <td>{{ appointment.startsAt | hrDate }}</td>
               <td>{{ timeLabel(appointment) }}</td>
               <td>{{ appointment.companyName }}</td>
@@ -54,7 +54,7 @@
             </tr>
           </ng-template>
           <ng-template pTemplate="body" let-appointment>
-            <tr class="group-appointments-section__row" (click)="openAttendance(appointment)">
+            <tr class="group-appointments-section__row" tabindex="0" (click)="openAttendance(appointment)" (keydown.enter)="openAttendance(appointment)">
               <td>{{ appointment.startsAt | hrDate }}</td>
               <td>{{ timeLabel(appointment) }}</td>
               <td>{{ appointment.companyName }}</td>

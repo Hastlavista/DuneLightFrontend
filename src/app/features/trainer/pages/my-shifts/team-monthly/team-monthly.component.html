@@ -1,9 +1,9 @@
 <div class="team-monthly">
   <div class="team-monthly__toolbar">
     <div class="team-monthly__nav">
-      <p-button icon="pi pi-chevron-left" [text]="true" [rounded]="true" (onClick)="prevMonth()" />
+      <p-button icon="pi pi-chevron-left" [text]="true" [rounded]="true" [ariaLabel]="'ROSTER.TEAM_MONTHLY.PREV_MONTH' | translate" (onClick)="prevMonth()" />
       <span class="team-monthly__month-label">{{ monthLabel() }}</span>
-      <p-button icon="pi pi-chevron-right" [text]="true" [rounded]="true" (onClick)="nextMonth()" />
+      <p-button icon="pi pi-chevron-right" [text]="true" [rounded]="true" [ariaLabel]="'ROSTER.TEAM_MONTHLY.NEXT_MONTH' | translate" (onClick)="nextMonth()" />
       <p-button
         [label]="'SCHEDULE.TODAY' | translate"
         [text]="true"
@@ -102,7 +102,7 @@
         } @empty {
           <tr>
             <td [attr.colspan]="days().length + 2" class="team-monthly__empty">
-              {{ 'ROSTER.TEAM_MONTHLY.EMPTY' | translate }}
+              {{ (failed() ? 'COMMON.LOAD_FAILED' : 'ROSTER.TEAM_MONTHLY.EMPTY') | translate }}
             </td>
           </tr>
         }

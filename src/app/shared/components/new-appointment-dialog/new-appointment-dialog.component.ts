@@ -29,9 +29,9 @@ import {
 import { ClientDto } from '../../../core/models/client.model';
 import { ClientPackageDto } from '../../../core/models/client-package.model';
 import { EmployeeSummary } from '../../../core/models/employee.model';
-import { CompanyDto } from '../../../core/models/company.model';
+import { StudioCompany } from '../../../core/models/company.model';
 import { RoomDto } from '../../../core/models/room.model';
-import { ServiceDto } from '../../../core/models/service.model';
+import { AppointmentServiceOptionDto } from '../../../core/models/appointment.model';
 import { AvailabilityDto } from '../../../core/models/working-hours.model';
 import { AppointmentsService } from '../../../core/services/appointments.service';
 import { AvailabilityService } from '../../../core/services/availability.service';
@@ -115,9 +115,9 @@ export interface NewAppointmentInitial {
  * modal - see SettlementChoice), and a recurring series (POST /recurring,
  * never billed immediately - every instance is created Scheduled).
  *
- * Trainer field is locked to the logged-in employee for role Member - the
- * backend rejects a termin created for someone else (NOT_OWNER) but there's no
- * reason to let a trainer pick a wrong name and hit that error at all.
+ * Trainer field is locked to the logged-in employee unless the viewer holds
+ * appointments.write.all - with only .own the backend rejects a termin created
+ * for someone else (NOT_OWNER), so there's no reason to offer other names.
  *
  * `409 APPOINTMENT_OVERLAP` (schedule/complete) is left to the default error
  * toast - the form simply stays open (no visible.set(false) on error), the
@@ -158,10 +158,18 @@ export class NewAppointmentDialogComponent {
   private readonly translate = inject(TranslateService);
   private readonly confirmationService = inject(ConfirmationService);
 
+  // Latest-request-wins tokens: service/company/date/client changes re-fire
+  // these lookups, and an older response must never overwrite a newer one.
+  private priceToken = 0;
+  private roomsToken = 0;
+  private availabilityToken = 0;
+  private clientSearchToken = 0;
+  private readonly eligibleTokens = new Map<string, number>();
+
   readonly visible = model(false);
   readonly employees = input<EmployeeSummary[]>([]);
-  readonly companies = input<CompanyDto[]>([]);
-  readonly services = input<ServiceDto[]>([]);
+  readonly companies = input<StudioCompany[]>([]);
+  readonly services = input<AppointmentServiceOptionDto[]>([]);
   readonly initial = input<NewAppointmentInitial | null>(null);
 
   readonly created = output<void>();
@@ -211,7 +219,8 @@ export class NewAppointmentDialogComponent {
 
   private readonly translationsReady = translationReadySignal(this.translate);
 
-  readonly isMemberRole = computed(() => this.currentEmployeeService.employee()?.role === 'Member');
+  /** Mirrors the backend's own/all scope: only appointments.write.all may book for another employee. */
+  readonly employeeLockedToSelf = computed(() => !this.currentEmployeeService.hasGrant('appointments.write.all'));
 
   readonly employeeOptions = computed<SelectOption[]>(() =>
     this.employees().map((employee) => ({ label: `${employee.firstName} ${employee.lastName}`, value: employee.id })),
@@ -314,13 +323,13 @@ export class NewAppointmentDialogComponent {
   readonly slotsRefreshVersion = signal(0);
 
   /** Narrows the slider to a single employee row - either hard-locked for
-   * role Member (same rationale as isMemberRole's doc: no reason to let a
+   * a viewer without appointments.write.all (see employeeLockedToSelf: no reason to let a
    * trainer browse other trainers' slots), or, once the user has picked a
    * Trener in the form themselves, filtered to that choice so the slider
    * stops suggesting slots for anyone else. Empty/no trainer picked yet falls
    * back to showing every trainer, same as before. */
   readonly slotsLockedEmployeeId = computed(() =>
-    this.isMemberRole() ? (this.currentEmployeeService.employee()?.employeeId ?? null) : this.selectedEmployeeId() || null,
+    this.employeeLockedToSelf() ? (this.currentEmployeeService.employee()?.employeeId ?? null) : this.selectedEmployeeId() || null,
   );
 
   readonly selectedService = computed(() => this.individualServices().find((service) => service.id === this.selectedServiceId()) ?? null);
@@ -367,6 +376,8 @@ export class NewAppointmentDialogComponent {
     });
     this.form.controls.employeeId.valueChanges.subscribe(() => this.refreshAvailability());
     this.form.controls.companyId.valueChanges.subscribe(() => {
+      // A room belongs to one company - never submit the previous company's room.
+      this.form.controls.roomId.setValue(null);
       this.refreshSuggestedAmount();
       this.refreshAvailability();
       this.refreshRooms();
@@ -435,17 +446,28 @@ export class NewAppointmentDialogComponent {
 
   onClientSearch(event: AutoCompleteCompleteEvent): void {
     const term = event.query.trim();
+    const token = ++this.clientSearchToken;
     this.clientSearchTerm.set(term);
     if (!term) {
       this.clientResults.set([]);
+      this.clientSearching.set(false);
       return;
     }
     const excluded = new Set(this.selectedClients().map((client) => client.clientId));
     this.clientSearching.set(true);
     this.clientsService
       .getPage({ page: 1, pageSize: CLIENT_SEARCH_PAGE_SIZE, search: term, isActive: true }, { suppressErrorToast: true })
-      .pipe(finalize(() => this.clientSearching.set(false)))
+      .pipe(
+        finalize(() => {
+          if (token === this.clientSearchToken) {
+            this.clientSearching.set(false);
+          }
+        }),
+      )
       .subscribe((result) => {
+        if (token !== this.clientSearchToken) {
+          return;
+        }
         this.clientResults.set(
           result.items
             .filter((client: ClientDto) => !excluded.has(client.id))
@@ -607,7 +629,8 @@ export class NewAppointmentDialogComponent {
 
     this.saving.set(true);
     this.appointmentsService
-      .create(request)
+      // handleSchedulingError() shows the error itself.
+      .create(request, { suppressErrorToast: true })
       .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
         next: (result) => {
@@ -643,7 +666,7 @@ export class NewAppointmentDialogComponent {
 
     this.saving.set(true);
     this.appointmentsService
-      .complete(request)
+      .complete(request, { suppressErrorToast: true })
       .pipe(finalize(() => this.saving.set(false)))
       .subscribe({
         next: (result) => {
@@ -751,6 +774,8 @@ export class NewAppointmentDialogComponent {
 
   private refreshEligiblePackagesForClient(clientId: string): void {
     const serviceId = this.form.controls.serviceId.value;
+    const token = (this.eligibleTokens.get(clientId) ?? 0) + 1;
+    this.eligibleTokens.set(clientId, token);
     if (!serviceId) {
       return;
     }
@@ -763,20 +788,38 @@ export class NewAppointmentDialogComponent {
       return next;
     });
 
-    this.clientPackagesService.getEligible(clientId, serviceId, date).subscribe((eligible) => {
-      this.packageRowState.update((map) => {
-        const next = new Map(map);
-        next.set(clientId, { eligible, loading: false });
-        return next;
-      });
-      if (eligible.length <= 1) {
-        this.setSelectedPackage(clientId, eligible[0]?.id ?? null);
-      }
+    const isLatest = () => this.eligibleTokens.get(clientId) === token;
+    this.clientPackagesService.getEligible(clientId, serviceId, date).subscribe({
+      next: (eligible) => {
+        if (!isLatest()) {
+          return;
+        }
+        this.packageRowState.update((map) => {
+          const next = new Map(map);
+          next.set(clientId, { eligible, loading: false });
+          return next;
+        });
+        if (eligible.length <= 1) {
+          this.setSelectedPackage(clientId, eligible[0]?.id ?? null);
+        }
+      },
+      // Never leave the row spinning (and billing blocked) after a failure.
+      error: () => {
+        if (!isLatest()) {
+          return;
+        }
+        this.packageRowState.update((map) => {
+          const next = new Map(map);
+          next.set(clientId, { eligible: [], loading: false });
+          return next;
+        });
+      },
     });
   }
 
   private refreshRooms(): void {
     const companyId = this.form.controls.companyId.value;
+    const token = ++this.roomsToken;
     if (!companyId) {
       this.roomsForCompany.set([]);
       return;
@@ -784,8 +827,16 @@ export class NewAppointmentDialogComponent {
     this.roomsService
       .getPage({ page: 1, pageSize: ROOM_LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true, extraParams: { companyId: companyId } })
       .subscribe({
-        next: (result) => this.roomsForCompany.set(result.items),
-        error: () => this.roomsForCompany.set([]),
+        next: (result) => {
+          if (token === this.roomsToken) {
+            this.roomsForCompany.set(result.items);
+          }
+        },
+        error: () => {
+          if (token === this.roomsToken) {
+            this.roomsForCompany.set([]);
+          }
+        },
       });
   }
 
@@ -793,6 +844,7 @@ export class NewAppointmentDialogComponent {
     const employeeId = this.form.controls.employeeId.value;
     const companyId = this.form.controls.companyId.value;
     const startsAt = this.form.controls.startsAt.value;
+    const token = ++this.availabilityToken;
     if (!employeeId || !companyId || !startsAt) {
       this.availability.set(null);
       return;
@@ -800,8 +852,16 @@ export class NewAppointmentDialogComponent {
     this.availabilityService
       .get({ employeeId, companyId: companyId, date: toDateOnly(startsAt) }, { suppressErrorToast: true })
       .subscribe({
-        next: (result) => this.availability.set(result),
-        error: () => this.availability.set(null),
+        next: (result) => {
+          if (token === this.availabilityToken) {
+            this.availability.set(result);
+          }
+        },
+        error: () => {
+          if (token === this.availabilityToken) {
+            this.availability.set(null);
+          }
+        },
       });
   }
 
@@ -809,13 +869,18 @@ export class NewAppointmentDialogComponent {
     const serviceId = this.form.controls.serviceId.value;
     const companyId = this.form.controls.companyId.value;
     const startsAt = this.form.controls.startsAt.value ?? new Date();
+    const token = ++this.priceToken;
     if (!serviceId || !companyId) {
       return;
     }
     this.priceListService
       .resolve({ subjectType: 'Service', subjectId: serviceId, companyId: companyId, date: toLocalIsoFromDate(startsAt) })
       .subscribe({
-        next: (result) => this.form.controls.amount.setValue(result.price, { emitEvent: false }),
+        next: (result) => {
+          if (token === this.priceToken) {
+            this.form.controls.amount.setValue(result.price, { emitEvent: false });
+          }
+        },
         error: () => {},
       });
   }
@@ -832,7 +897,7 @@ export class NewAppointmentDialogComponent {
 
   private resetForm(): void {
     const init = this.initial();
-    const locked = this.isMemberRole();
+    const locked = this.employeeLockedToSelf();
     const selfId = this.currentEmployeeService.employee()?.employeeId ?? '';
 
     this.form.reset({

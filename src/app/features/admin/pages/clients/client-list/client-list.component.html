@@ -166,7 +166,7 @@
 
     <ng-template pTemplate="emptymessage">
       <tr>
-        <td class="client-list-page__empty">{{ 'CLIENTS.EMPTY' | translate }}</td>
+        <td class="client-list-page__empty">{{ (failed() ? 'COMMON.LOAD_FAILED' : 'CLIENTS.EMPTY') | translate }}</td>
       </tr>
     </ng-template>
   </p-table>

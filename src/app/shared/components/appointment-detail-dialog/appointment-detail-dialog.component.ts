@@ -26,7 +26,7 @@ import {
 } from '../../../core/models/appointment.model';
 import { ClientPackageDto } from '../../../core/models/client-package.model';
 import { EmployeeSummary } from '../../../core/models/employee.model';
-import { CompanyDto } from '../../../core/models/company.model';
+import { StudioCompany } from '../../../core/models/company.model';
 import { RoomDto } from '../../../core/models/room.model';
 import { AvailabilityDto } from '../../../core/models/working-hours.model';
 import { AppointmentsService } from '../../../core/services/appointments.service';
@@ -126,7 +126,7 @@ export class AppointmentDetailDialogComponent {
   readonly visible = model(false);
   readonly appointmentId = input<string | null>(null);
   readonly employees = input<EmployeeSummary[]>([]);
-  readonly companies = input<CompanyDto[]>([]);
+  readonly companies = input<StudioCompany[]>([]);
   readonly allowEmployeeChange = input(false);
 
   readonly saved = output<void>();
@@ -217,12 +217,24 @@ export class AppointmentDetailDialogComponent {
     roomId: this.fb.control<string | null>(null),
   });
 
+  // Latest-request-wins tokens (reopen for another appointment, company/date edits).
+  private fetchToken = 0;
+  private roomsToken = 0;
+  private availabilityToken = 0;
+  private readonly eligibleTokens = new Map<string, number>();
+  /** Company the current roomId belongs to - lets a real user company change
+   * drop the room without the fetch()'s own form.reset() wiping it. */
+  private roomCompanyId: string | null = null;
+
   constructor() {
     effect(() => {
       const id = this.appointmentId();
       if (this.visible() && id) {
         this.fetch(id);
       } else if (!this.visible()) {
+        this.fetchToken++;
+        this.loading.set(false);
+        this.roomCompanyId = null;
         this.appointment.set(null);
         this.form.reset({ startsAt: null, employeeId: '', companyId: '', roomId: null });
         this.roomsForCompany.set([]);
@@ -231,7 +243,11 @@ export class AppointmentDetailDialogComponent {
       }
     });
 
-    this.form.controls.companyId.valueChanges.subscribe(() => {
+    this.form.controls.companyId.valueChanges.subscribe((companyId) => {
+      if (companyId !== this.roomCompanyId) {
+        this.form.controls.roomId.setValue(null, { emitEvent: false });
+        this.roomCompanyId = companyId || null;
+      }
       this.refreshRooms();
       this.refreshAvailability();
     });
@@ -599,27 +615,47 @@ export class AppointmentDetailDialogComponent {
       return next;
     });
 
-    this.clientPackagesService.getEligible(clientId, appt.serviceId, appt.startsAt).subscribe((eligible) => {
-      this.billingPackageRows.update((map) => {
-        const next = new Map(map);
-        next.set(clientId, { eligible, loading: false });
-        return next;
-      });
-      if (eligible.length <= 1) {
-        const packageId = eligible[0]?.id ?? null;
-        if (packageId) {
-          this.billingSelectedPackages.update((map) => {
-            const next = new Map(map);
-            next.set(clientId, packageId);
-            return next;
-          });
+    const token = (this.eligibleTokens.get(clientId) ?? 0) + 1;
+    this.eligibleTokens.set(clientId, token);
+    const isLatest = () => this.eligibleTokens.get(clientId) === token && this.appointment()?.id === appt.id;
+    this.clientPackagesService.getEligible(clientId, appt.serviceId, appt.startsAt).subscribe({
+      next: (eligible) => {
+        if (!isLatest()) {
+          return;
         }
-      }
+        this.billingPackageRows.update((map) => {
+          const next = new Map(map);
+          next.set(clientId, { eligible, loading: false });
+          return next;
+        });
+        if (eligible.length <= 1) {
+          const packageId = eligible[0]?.id ?? null;
+          if (packageId) {
+            this.billingSelectedPackages.update((map) => {
+              const next = new Map(map);
+              next.set(clientId, packageId);
+              return next;
+            });
+          }
+        }
+      },
+      // Never leave the billing row spinning (and billing blocked) after a failure.
+      error: () => {
+        if (!isLatest()) {
+          return;
+        }
+        this.billingPackageRows.update((map) => {
+          const next = new Map(map);
+          next.set(clientId, { eligible: [], loading: false });
+          return next;
+        });
+      },
     });
   }
 
   private refreshRooms(): void {
     const companyId = this.form.controls.companyId.value;
+    const token = ++this.roomsToken;
     if (!companyId) {
       this.roomsForCompany.set([]);
       return;
@@ -627,8 +663,16 @@ export class AppointmentDetailDialogComponent {
     this.roomsService
       .getPage({ page: 1, pageSize: ROOM_LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true, extraParams: { companyId: companyId } })
       .subscribe({
-        next: (result) => this.roomsForCompany.set(result.items),
-        error: () => this.roomsForCompany.set([]),
+        next: (result) => {
+          if (token === this.roomsToken) {
+            this.roomsForCompany.set(result.items);
+          }
+        },
+        error: () => {
+          if (token === this.roomsToken) {
+            this.roomsForCompany.set([]);
+          }
+        },
       });
   }
 
@@ -638,6 +682,7 @@ export class AppointmentDetailDialogComponent {
     const employeeId = this.form.controls.employeeId.value;
     const companyId = this.form.controls.companyId.value;
     const startsAt = this.form.controls.startsAt.value;
+    const token = ++this.availabilityToken;
     if (!employeeId || !companyId || !startsAt) {
       this.availability.set(null);
       return;
@@ -645,20 +690,41 @@ export class AppointmentDetailDialogComponent {
     this.availabilityService
       .get({ employeeId, companyId, date: toDateOnly(startsAt) }, { suppressErrorToast: true })
       .subscribe({
-        next: (result) => this.availability.set(result),
-        error: () => this.availability.set(null),
+        next: (result) => {
+          if (token === this.availabilityToken) {
+            this.availability.set(result);
+          }
+        },
+        error: () => {
+          if (token === this.availabilityToken) {
+            this.availability.set(null);
+          }
+        },
       });
   }
 
   private fetch(id: string): void {
+    const token = ++this.fetchToken;
     this.loading.set(true);
     this.appointment.set(null);
     this.mode.set('view');
     this.appointmentsService
       .getById(id)
-      .pipe(finalize(() => this.loading.set(false)))
+      .pipe(
+        finalize(() => {
+          if (token === this.fetchToken) {
+            this.loading.set(false);
+          }
+        }),
+      )
       .subscribe((dto) => {
+        // Closed or reopened for another appointment meanwhile: every action in
+        // this dialog would otherwise target the stale appointment.
+        if (token !== this.fetchToken) {
+          return;
+        }
         this.appointment.set(dto);
+        this.roomCompanyId = dto.companyId;
         this.form.reset({
           startsAt: new Date(dto.startsAt),
           employeeId: dto.employeeId,

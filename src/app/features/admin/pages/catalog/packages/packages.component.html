@@ -4,7 +4,9 @@
   </div>
 
   @if (loading()) {
-    <p class="packages-page__empty">Učitavanje paketa…</p>
+    <p class="packages-page__empty">{{ 'CATALOG.PACKAGES.LOADING' | translate }}</p>
+  } @else if (failed()) {
+    <p class="packages-page__empty">{{ 'COMMON.LOAD_FAILED' | translate }}</p>
   } @else if (items().length === 0) {
     <p class="packages-page__empty">{{ 'CATALOG.PACKAGES.EMPTY' | translate }}</p>
   } @else {

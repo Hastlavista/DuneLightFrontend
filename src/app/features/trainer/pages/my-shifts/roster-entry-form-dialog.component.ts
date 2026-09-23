@@ -11,6 +11,7 @@ import { AppError } from '../../../../core/models/api-error.model';
 import { EmployeeSummary } from '../../../../core/models/employee.model';
 import { RosterEntryDto, RosterEntryUpsertRequest, RosterTypeDto } from '../../../../core/models/roster.model';
 import { CurrentEmployeeService } from '../../../../core/services/current-employee.service';
+import { rosterWriteScope } from './roster-write-scope';
 import { LeaveFundService } from '../../../../core/services/leave-fund.service';
 import { NotificationService } from '../../../../core/services/notification.service';
 import { RosterEntriesService } from '../../../../core/services/roster-entries.service';
@@ -72,6 +73,9 @@ export class RosterEntryFormDialogComponent {
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly currentEmployeeService = inject(CurrentEmployeeService);
+  /** Only roster.entries.write.all may create entries for another employee;
+   * everyone else gets the locked/static employee field (their own). */
+  readonly hasFullRosterScope = rosterWriteScope(this.currentEmployeeService).hasFullRosterScope;
   private readonly translate = inject(TranslateService);
 
   readonly visible = model(false);
@@ -79,10 +83,6 @@ export class RosterEntryFormDialogComponent {
   readonly initial = input<RosterEntryFormInitial | null>(null);
   readonly employees = input<EmployeeSummary[]>([]);
   readonly rosterTypes = input<RosterTypeDto[]>([]);
-  /** True only for the real 'Admin' role - every other role (Member,
-   * Reception) gets the locked/static employee field, see this component's
-   * doc comment. */
-  readonly isAdminRole = input.required<boolean>();
   readonly currentEmployeeId = input<string | null>(null);
 
   readonly saved = output<void>();
@@ -105,7 +105,7 @@ export class RosterEntryFormDialogComponent {
   readonly leaveFundRemainingDays = signal<number | null>(null);
 
   readonly isEditMode = computed(() => this.entry() !== null);
-  readonly employeeLocked = computed(() => !this.isAdminRole() || this.isEditMode());
+  readonly employeeLocked = computed(() => !this.hasFullRosterScope() || this.isEditMode());
 
   /** Display name for the locked/static employee field - the edited entry's
    * own name in edit mode (accurate even if that employee is no longer
@@ -158,7 +158,7 @@ export class RosterEntryFormDialogComponent {
       const entry = this.entry();
       const initial = this.initial();
       // untracked: resetForm() (transitively, via syncDateToValidator/
-      // refreshLeaveFundSummary) reads selectedTypeId/isAdminRole/etc. Without
+      // refreshLeaveFundSummary) reads selectedTypeId/hasFullRosterScope/etc. Without
       // untracked, this effect would also depend on those and re-fire - and
       // re-reset the whole form back to blank - every time the user picks a
       // type or employee, since resetForm's own selectedTypeId.set() call
@@ -345,7 +345,11 @@ export class RosterEntryFormDialogComponent {
     control.updateValueAndValidity({ emitEvent: false });
   }
 
+  // Latest-request-wins: a slower lookup for the previous employee/type must not show its balance.
+  private leaveFundToken = 0;
+
   private refreshLeaveFundSummary(): void {
+    const token = ++this.leaveFundToken;
     const type = this.selectedType();
     const employeeId = this.form.controls.employeeId.value;
     if (!type?.deductsFromLeaveFund || !employeeId) {
@@ -355,16 +359,21 @@ export class RosterEntryFormDialogComponent {
     this.leaveFundService.getFunds(employeeId, { suppressErrorToast: true }).subscribe({
       // An empty list also covers the "no fund configured yet" case (service
       // defaults a 404 to []) - hide the hint rather than claim 0 remaining.
-      next: (funds) =>
-        this.leaveFundRemainingDays.set(
-          funds.length === 0 ? null : funds.reduce((sum, fund) => sum + fund.remainingDays, 0),
-        ),
-      error: () => this.leaveFundRemainingDays.set(null),
+      next: (funds) => {
+        if (token === this.leaveFundToken) {
+          this.leaveFundRemainingDays.set(funds.length === 0 ? null : funds.reduce((sum, fund) => sum + fund.remainingDays, 0));
+        }
+      },
+      error: () => {
+        if (token === this.leaveFundToken) {
+          this.leaveFundRemainingDays.set(null);
+        }
+      },
     });
   }
 
   private resetForm(entry: RosterEntryDto | null, initial: RosterEntryFormInitial | null): void {
-    const locked = !this.isAdminRole() || entry !== null;
+    const locked = !this.hasFullRosterScope() || entry !== null;
     const selfId = this.currentEmployeeId() ?? '';
 
     if (entry) {
@@ -380,7 +389,7 @@ export class RosterEntryFormDialogComponent {
       this.selectedTypeId.set(entry.rosterTypeId);
     } else {
       this.form.reset({
-        employeeId: !this.isAdminRole() ? selfId : (initial?.employeeId ?? ''),
+        employeeId: !this.hasFullRosterScope() ? selfId : (initial?.employeeId ?? ''),
         rosterTypeId: '',
         dateFrom: initial?.date ?? new Date(),
         dateTo: null,

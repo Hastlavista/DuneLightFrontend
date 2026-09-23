@@ -32,7 +32,7 @@
     </div>
 
     @if (effectiveLoading()) {
-      <p class="price-list-page__effective-empty">Učitavanje važećih cijena…</p>
+      <p class="price-list-page__effective-empty">{{ 'CATALOG.PRICING.EFFECTIVE_LOADING' | translate }}</p>
     } @else if (!effectiveCompanyId()) {
       <p class="price-list-page__effective-empty">Odaberite poslovnicu za pregled cjenika.</p>
     } @else if (effectiveRows().length === 0) {
@@ -57,7 +57,9 @@
   <div class="price-list-page__items-heading"><div><h2>Stavke cjenika</h2><p>Ovdje uređujete zadane cijene, poslovnice i razdoblja važenja.</p></div></div>
 
   @if (loading()) {
-    <p class="price-list-page__empty">Učitavanje cjenika…</p>
+    <p class="price-list-page__empty">{{ 'CATALOG.PRICING.LIST_LOADING' | translate }}</p>
+  } @else if (failed()) {
+    <p class="price-list-page__empty">{{ 'COMMON.LOAD_FAILED' | translate }}</p>
   } @else if (items().length === 0) {
     <p class="price-list-page__empty">{{ 'CATALOG.PRICING.EMPTY' | translate }}</p>
   } @else {

@@ -37,7 +37,9 @@
   @if (!canViewList()) {
     <p class="employee-list-page__empty">{{ 'EMPLOYEES.NO_LIST_PERMISSION' | translate }}</p>
   } @else if (loading()) {
-    <p class="employee-list-page__empty">Učitavanje zaposlenika…</p>
+    <p class="employee-list-page__empty">{{ 'EMPLOYEES.LIST_LOADING' | translate }}</p>
+  } @else if (failed()) {
+    <p class="employee-list-page__empty">{{ 'COMMON.LOAD_FAILED' | translate }}</p>
   } @else if (items().length === 0) {
     <p class="employee-list-page__empty">{{ 'EMPLOYEES.EMPTY' | translate }}</p>
   } @else {

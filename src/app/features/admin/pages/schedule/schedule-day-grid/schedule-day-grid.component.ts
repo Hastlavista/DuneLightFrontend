@@ -3,18 +3,19 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
 import { DatePicker } from 'primeng/datepicker';
-import { finalize, forkJoin } from 'rxjs';
+import { Observable, catchError, finalize, forkJoin, of } from 'rxjs';
 import { AppointmentScheduleCellDto, AppointmentStatus } from '../../../../../core/models/appointment.model';
 import { BirthdayDto } from '../../../../../core/models/client.model';
 import { CompanyHolidayDto } from '../../../../../core/models/company-holiday.model';
 import { EmployeeColumnEntry } from '../../../../../core/models/employee.model';
-import { CompanyDto } from '../../../../../core/models/company.model';
+import { StudioCompany } from '../../../../../core/models/company.model';
 import { ScheduleBreakCellDto } from '../../../../../core/models/schedule-break.model';
 import { ServiceExecutionMode } from '../../../../../core/models/service.model';
 import { AppointmentsService } from '../../../../../core/services/appointments.service';
 import { ClientsService } from '../../../../../core/services/clients.service';
 import { CompanyHolidaysService } from '../../../../../core/services/company-holidays.service';
 import { CompanyContextService } from '../../../../../core/services/company-context.service';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
 import { toEndOfDayIso, toStartOfDayIso } from '../../../../../core/utils/date.util';
 import { buildBirthdayLookup } from '../../../../../shared/components/schedule-grid/schedule-birthday.util';
 import { toScheduleBreakGridCell, toScheduleGridCell } from '../../../../../shared/components/schedule-grid/schedule-cell-view.util';
@@ -73,6 +74,9 @@ export class ScheduleDayGridComponent {
   private readonly clientsService = inject(ClientsService);
   private readonly companyHolidaysService = inject(CompanyHolidaysService);
   private readonly companyContext = inject(CompanyContextService);
+  private readonly currentEmployeeService = inject(CurrentEmployeeService);
+  private scheduleRequestToken = 0;
+  private holidaysRequestToken = 0;
   private readonly translate = inject(TranslateService);
 
   readonly employees = input.required<EmployeeColumnEntry[]>();
@@ -83,7 +87,7 @@ export class ScheduleDayGridComponent {
   /** Fetched once by ScheduleComponent and shared with both grids - see
    * MyShiftsComponent for the same "fetch once, pass down via @Input" pattern
    * applied to Roster's team/personal tabs. */
-  readonly activeCompanies = input<CompanyDto[]>([]);
+  readonly activeCompanies = input<StudioCompany[]>([]);
 
   readonly emptySlotClick = output<DayEmptySlotEvent>();
   readonly appointmentClicked = output<AppointmentScheduleCellDto>();
@@ -222,6 +226,7 @@ export class ScheduleDayGridComponent {
   }
 
   private fetch(date: Date, filters: ScheduleFilters): void {
+    const token = ++this.scheduleRequestToken;
     this.loading.set(true);
     const from = toStartOfDayIso(date);
     const to = toEndOfDayIso(date);
@@ -235,14 +240,44 @@ export class ScheduleDayGridComponent {
         serviceId: filters.service ?? undefined,
         roomId: filters.roomId ?? undefined,
       }),
-      birthdays: this.clientsService.getBirthdays(from, to),
+      birthdays: this.birthdays(from, to),
     })
-      .pipe(finalize(() => this.loading.set(false)))
-      .subscribe(({ feed, birthdays }) => {
-        this.rawCells.set(feed.appointments);
-        this.rawBreaks.set(feed.breaks);
-        this.rawBirthdays.set(birthdays);
+      .pipe(
+        finalize(() => {
+          if (token === this.scheduleRequestToken) {
+            this.loading.set(false);
+          }
+        }),
+      )
+      .subscribe({
+        next: ({ feed, birthdays }) => {
+          if (token !== this.scheduleRequestToken) {
+            return;
+          }
+          this.rawCells.set(feed.appointments);
+          this.rawBreaks.set(feed.breaks);
+          this.rawBirthdays.set(birthdays);
+        },
+        // The interceptor toast explains the failure; never leave the previous
+        // period's appointments under the newly selected date.
+        error: () => {
+          if (token !== this.scheduleRequestToken) {
+            return;
+          }
+          this.rawCells.set([]);
+          this.rawBreaks.set([]);
+          this.rawBirthdays.set([]);
+        },
       });
+  }
+
+  /** Birthdays are a decoration and need clients.view - without it (or on any
+   * failure) the schedule itself must still load. */
+  private birthdays(from: string, to: string): Observable<BirthdayDto[]> {
+    if (!this.currentEmployeeService.hasGrant('clients.view')) {
+      return of([]);
+    }
+    return this.clientsService.getBirthdays(from, to, { suppressErrorToast: true }).pipe(catchError(() => of<BirthdayDto[]>([])));
   }
 
   private addDays(date: Date, days: number): Date {
@@ -252,10 +287,15 @@ export class ScheduleDayGridComponent {
   }
 
   private fetchHolidays(companyId: string | null, date: Date): void {
+    const token = ++this.holidaysRequestToken;
     if (!companyId) {
       this.rawHolidays.set([]);
       return;
     }
-    this.companyHolidaysService.getForYear(companyId, date.getFullYear()).subscribe((holidays) => this.rawHolidays.set(holidays));
+    this.companyHolidaysService.getForYear(companyId, date.getFullYear()).subscribe((holidays) => {
+      if (token === this.holidaysRequestToken) {
+        this.rawHolidays.set(holidays);
+      }
+    });
   }
 }

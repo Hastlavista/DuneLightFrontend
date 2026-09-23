@@ -7,23 +7,35 @@ export interface EmployeeCompany {
   isPrimary: boolean;
 }
 
+/** Authorization belongs to the User (see `grants`' own doc); the Employee
+ * profile fields below are an optional, separate business/workforce profile -
+ * `false` only ever for the organization's founder, right after Register and
+ * before they complete their own profile (see hasProfile()/hasGrant() in
+ * current-employee.service.ts and CompleteEmployeeProfileCtaComponent, the
+ * sole consumer that treats this as "show the CTA"). No Owner/founder bypass
+ * anywhere - `grants` is populated from the real Admin starter GrantGroup
+ * assignment either way (see AuthService.Register on the backend). */
 export interface CurrentEmployee {
-  employeeId: string;
-  firstName: string;
-  lastName: string;
+  hasProfile: boolean;
+  employeeId: string | null;
+  firstName: string | null;
+  lastName: string | null;
   role: UserRole;
   /** Effective, aggregated union of grant keys from every GrantGroup this user
    * is assigned - same source the backend's RequireGrant check uses
    * (GrantGroupHandler.ResolveEffective), just exposed for UI-level checks
-   * (see hasGrant/hasAnyGrant in current-employee.service.ts). The
-   * organization's founder gets their real grants here too, through the
-   * Admin starter GrantGroup assigned at registration - there is no Owner
-   * bypass anywhere in the system (Residual IsOwner Removal). */
+   * (see hasGrant/hasAnyGrant in current-employee.service.ts). Always
+   * populated once loaded, regardless of hasProfile - the organization's
+   * founder gets their real grants here too, through the Admin starter
+   * GrantGroup assigned at registration - there is no Owner bypass anywhere
+   * in the system (Residual IsOwner Removal). */
   grants: string[];
   colorHex: string | null;
   companies: EmployeeCompany[];
   /** Whether this user has a PIN set for fast device switching (PinLogin) -
-   * drives Profile's "Postavi PIN" vs "Promijeni PIN" section choice. */
+   * drives Profile's "Postavi PIN" vs "Promijeni PIN" section choice. A
+   * User-level property (PinHash lives on User), so populated even without
+   * an Employee profile. */
   hasPinSet: boolean;
 }
 

@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, viewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
@@ -22,4 +22,11 @@ export class ProductsComponent {
   private readonly route = inject(ActivatedRoute);
 
   readonly initialTab = this.route.snapshot.queryParamMap.get('tab') ?? DEFAULT_TAB;
+
+  private readonly stock = viewChild(StockPageComponent);
+
+  // Stock tab renders lazily; if it hasn't been opened yet it loads fresh data on first activation.
+  onProductsChanged(): void {
+    this.stock()?.refresh();
+  }
 }

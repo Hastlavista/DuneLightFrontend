@@ -2,11 +2,10 @@ import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { TranslatePipe } from '@ngx-translate/core';
 import { Tab, TabList, TabPanel, TabPanels, Tabs } from 'primeng/tabs';
 import { EmployeeDirectoryDto } from '../../../../core/models/employee.model';
-import { CompanyDto } from '../../../../core/models/company.model';
 import { RosterEntryDto, RosterTypeDto } from '../../../../core/models/roster.model';
 import { CurrentEmployeeService } from '../../../../core/services/current-employee.service';
 import { EmployeesService } from '../../../../core/services/employees.service';
-import { CompaniesService } from '../../../../core/services/companies.service';
+import { CompanyContextService } from '../../../../core/services/company-context.service';
 import { RosterEntriesService } from '../../../../core/services/roster-entries.service';
 import { RosterTypesService } from '../../../../core/services/roster-types.service';
 import { CompleteEmployeeProfileCtaComponent } from '../../../../shared/components/complete-employee-profile/complete-employee-profile-cta.component';
@@ -53,7 +52,7 @@ export class MyShiftsComponent {
   private readonly employeesService = inject(EmployeesService);
   private readonly rosterTypesService = inject(RosterTypesService);
   private readonly rosterEntriesService = inject(RosterEntriesService);
-  private readonly companiesService = inject(CompaniesService);
+  private readonly companyContext = inject(CompanyContextService);
   private readonly currentEmployeeService = inject(CurrentEmployeeService);
 
   readonly initialTab = DEFAULT_TAB;
@@ -63,9 +62,10 @@ export class MyShiftsComponent {
 
   readonly activeEmployees = signal<EmployeeDirectoryDto[]>([]);
   readonly activeRosterTypes = signal<RosterTypeDto[]>([]);
-  readonly activeCompanies = signal<CompanyDto[]>([]);
+  /** Team-monthly's company filter: the full active list with catalog.companies.view,
+   * otherwise the viewer's assigned companies (GET /api/catalog/companies would 403). */
+  readonly activeCompanies = this.companyContext.companies;
 
-  readonly isAdmin = computed(() => this.currentEmployeeService.employee()?.role === 'Admin');
   readonly currentEmployeeId = computed(() => this.currentEmployeeService.employee()?.employeeId ?? null);
   readonly hasEmployeeProfile = computed(() => this.currentEmployeeService.hasProfile());
 
@@ -76,7 +76,9 @@ export class MyShiftsComponent {
   constructor() {
     this.loadActiveEmployees();
     this.loadActiveRosterTypes();
-    this.loadActiveCompanies();
+    if (!this.companyContext.companies().length) {
+      this.companyContext.loadCompanies();
+    }
   }
 
   onTeamCellClick(event: TeamMonthlyCellClickEvent): void {
@@ -133,14 +135,5 @@ export class MyShiftsComponent {
     this.rosterTypesService
       .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
       .subscribe((result) => this.activeRosterTypes.set(result.items));
-  }
-
-  /** Same rationale as loadActiveRosterTypes() - feeds the entry-form
-   * dialog's required company dropdown, must never be skipped for
-   * catalog.companies.view. */
-  private loadActiveCompanies(): void {
-    this.companiesService
-      .getPage({ page: 1, pageSize: LOOKUP_PAGE_SIZE, isActive: true }, { suppressErrorToast: true })
-      .subscribe((result) => this.activeCompanies.set(result.items));
   }
 }

@@ -1,4 +1,6 @@
 import { Component, computed, effect, inject, input, output, signal } from '@angular/core';
+import { CurrentEmployeeService } from '../../../../../core/services/current-employee.service';
+import { rosterWriteScope } from '../roster-write-scope';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { ConfirmationService } from 'primeng/api';
@@ -69,6 +71,7 @@ export class PersonalRosterComponent {
   private readonly notifications = inject(NotificationService);
   private readonly confirmationService = inject(ConfirmationService);
   private readonly translate = inject(TranslateService);
+  private readonly writeScope = rosterWriteScope(inject(CurrentEmployeeService));
 
   readonly allowEmployeePicker = input(false);
   readonly currentEmployeeId = input<string | null>(null);
@@ -83,6 +86,9 @@ export class PersonalRosterComponent {
 
   readonly data = signal<PersonalRosterDto | null>(null);
   readonly loading = signal(false);
+  readonly failed = signal(false);
+  // Latest-request-wins guard for employee/range changes.
+  private fetchToken = 0;
 
   readonly employeeOptions = computed<EmployeeSelectOption[]>(() =>
     this.employees().map((employee) => ({ label: `${employee.firstName} ${employee.lastName}`, value: employee.id })),
@@ -108,6 +114,9 @@ export class PersonalRosterComponent {
   /** Locked to the viewer's own id unless this page allows picking someone
    * else - and even then, defaults to "self" until they actively pick, since
    * "Moj pregled" is the primary path even on the admin page. */
+  /** Add/edit/delete only where the backend would accept the write (own vs all scope). */
+  readonly canWriteShownEmployee = computed(() => this.writeScope.canWriteEntriesFor(this.effectiveEmployeeId()));
+
   readonly effectiveEmployeeId = computed(() =>
     this.allowEmployeePicker() ? (this.selectedEmployeeId() ?? this.currentEmployeeId()) : this.currentEmployeeId(),
   );
@@ -151,7 +160,7 @@ export class PersonalRosterComponent {
 
   onAdd(): void {
     const employeeId = this.effectiveEmployeeId();
-    if (!employeeId) {
+    if (!employeeId || !this.canWriteShownEmployee()) {
       return;
     }
     this.add.emit({ employeeId, date: new Date() });
@@ -208,17 +217,37 @@ export class PersonalRosterComponent {
 
   onAddForPlannedDay(day: RosterPlannedDayDto): void {
     const employeeId = this.effectiveEmployeeId();
-    if (!employeeId) {
+    if (!employeeId || !this.canWriteShownEmployee()) {
       return;
     }
     this.add.emit({ employeeId, date: new Date(day.date) });
   }
 
   private fetch(employeeId: string): void {
+    const token = ++this.fetchToken;
     this.loading.set(true);
+    this.failed.set(false);
     this.rosterEntriesService
       .personal({ employeeId, from: toStartOfDayIso(this.fromDate()), to: toEndOfDayIso(this.toDate()) })
-      .pipe(finalize(() => this.loading.set(false)))
-      .subscribe((result) => this.data.set(result));
+      .pipe(
+        finalize(() => {
+          if (token === this.fetchToken) {
+            this.loading.set(false);
+          }
+        }),
+      )
+      .subscribe({
+        next: (result) => {
+          if (token === this.fetchToken) {
+            this.data.set(result);
+          }
+        },
+        error: () => {
+          if (token === this.fetchToken) {
+            this.data.set(null);
+            this.failed.set(true);
+          }
+        },
+      });
   }
 }

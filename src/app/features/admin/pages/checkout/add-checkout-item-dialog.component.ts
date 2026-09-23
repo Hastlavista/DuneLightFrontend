@@ -1,4 +1,4 @@
-import { Component, inject, input, model, output, signal } from '@angular/core';
+import { Component, DestroyRef, inject, input, model, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe, TranslateService } from '@ngx-translate/core';
 import { Button } from 'primeng/button';
@@ -103,6 +103,12 @@ export class AddCheckoutItemDialogComponent {
   readonly packageSearch = signal('');
   readonly addingPackageId = signal<string | null>(null);
   private packageSearchDebounce: ReturnType<typeof setTimeout> | undefined;
+
+  // A pending search must not fire after the dialog is destroyed.
+  private readonly clearDebounces = inject(DestroyRef).onDestroy(() => {
+    clearTimeout(this.productSearchDebounce);
+    clearTimeout(this.packageSearchDebounce);
+  });
 
   onDialogShow(): void {
     this.activeTab.set('booking');
@@ -228,15 +234,23 @@ export class AddCheckoutItemDialogComponent {
       });
   }
 
+  // Debounce alone doesn't stop an older, slower search landing after a newer one.
+  private productSearchToken = 0;
+  private packageSearchToken = 0;
+
   private fetchProducts(): void {
+    const token = ++this.productSearchToken;
     this.productsLoading.set(true);
     this.productsService
       .getPage(
         { page: 1, pageSize: PRODUCT_PACKAGE_PAGE_SIZE, search: this.productSearch() || undefined, isActive: true },
         { suppressErrorToast: true },
       )
-      .pipe(finalize(() => this.productsLoading.set(false)))
+      .pipe(finalize(() => token === this.productSearchToken && this.productsLoading.set(false)))
       .subscribe((result) => {
+        if (token !== this.productSearchToken) {
+          return;
+        }
         this.products.set(result.items);
         this.productQuantities.set(
           result.items.reduce<Record<string, number>>((acc, product) => {
@@ -257,13 +271,18 @@ export class AddCheckoutItemDialogComponent {
   }
 
   private fetchPackages(): void {
+    const token = ++this.packageSearchToken;
     this.packagesLoading.set(true);
     this.packagesService
       .getPage(
         { page: 1, pageSize: PRODUCT_PACKAGE_PAGE_SIZE, search: this.packageSearch() || undefined, isActive: true },
         { suppressErrorToast: true },
       )
-      .pipe(finalize(() => this.packagesLoading.set(false)))
-      .subscribe((result) => this.packages.set(result.items));
+      .pipe(finalize(() => token === this.packageSearchToken && this.packagesLoading.set(false)))
+      .subscribe((result) => {
+        if (token === this.packageSearchToken) {
+          this.packages.set(result.items);
+        }
+      });
   }
 }

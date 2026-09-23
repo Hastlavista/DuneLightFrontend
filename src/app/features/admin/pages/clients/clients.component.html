@@ -1,5 +1,5 @@
 <div class="clients-page">
-<p-tabs [value]="initialTab" styleClass="clients-page__tabs">
+<p-tabs [value]="initialTab" [lazy]="true" styleClass="clients-page__tabs">
   <p-tablist>
     <p-tab value="clients">{{ 'CLIENTS.TAB_LABEL' | translate }}</p-tab>
     <p-tab value="tags">{{ 'CLIENTS.TAGS.TAB_LABEL' | translate }}</p-tab>
@@ -7,13 +7,13 @@
   </p-tablist>
   <p-tabpanels>
     <p-tabpanel value="clients">
-      <app-admin-client-list />
+      <ng-template #content><app-admin-client-list /></ng-template>
     </p-tabpanel>
     <p-tabpanel value="tags">
-      <app-admin-client-tags />
+      <ng-template #content><app-admin-client-tags /></ng-template>
     </p-tabpanel>
     <p-tabpanel value="birthdays">
-      <app-admin-birthdays />
+      <ng-template #content><app-admin-birthdays /></ng-template>
     </p-tabpanel>
   </p-tabpanels>
 </p-tabs>

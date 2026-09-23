@@ -40,7 +40,7 @@
       </ng-template>
 
       <ng-template pTemplate="body" let-client>
-        <tr class="add-group-member-dialog__row" (click)="addClient(client)">
+        <tr class="add-group-member-dialog__row" tabindex="0" (click)="addClient(client)" (keydown.enter)="addClient(client)">
           <td>{{ client.memberNumber }}</td>
           <td>{{ client.firstName }} {{ client.lastName }}</td>
           <td>{{ client.phone }}</td>
