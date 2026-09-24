@@ -1,1 +1,35 @@
-.dashboard-page { display:grid; gap:1.5rem; } .dashboard-page__header,.dashboard-page__filters,.dashboard-page__metrics,.dashboard-page__alerts { display:flex; gap:1rem; flex-wrap:wrap; } .dashboard-page__header { justify-content:space-between; align-items:center; } .dashboard-page__filters { align-items:center; } .dashboard-page__metrics article { min-width:13rem; flex:1; padding:1rem; border-radius:.5rem; background:var(--p-content-hover-background); display:grid; gap:.25rem; } .dashboard-page__metrics strong { font-size:1.4rem; } .dashboard-page__grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(18rem,1fr)); gap:1rem; } section { padding:1rem; border:1px solid var(--p-content-border-color); border-radius:.5rem; } .dashboard-page__row { display:grid; gap:.3rem; padding:.75rem 0; border-bottom:1px solid var(--p-content-border-color); } .dashboard-page__error { color:var(--p-red-500); }
+.dashboard-page { display: flex; flex-direction: column; gap: 1.1rem; }
+.dashboard-page__header { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .85rem 1.5rem; }
+.dashboard-page__header h1 { margin: 0; color: var(--ink); font-family: var(--font-heading); font-size: 1.35rem; font-weight: 600; }
+.dashboard-page__header p { margin: .2rem 0 0; color: var(--ink-muted); font-size: .8rem; }
+.dashboard-page__filters { display: flex; flex-wrap: wrap; align-items: center; gap: .6rem; }
+.dashboard-page__company { min-width: 13rem; }
+.dashboard-page__filters :is(.p-select, .p-inputtext, .p-button) { min-height: 2.5rem; }
+.dashboard-page__filters :is(.p-select, .p-inputtext) { border-color: var(--rose-border-strong); border-radius: 9px; background: var(--surface-warm); }
+.dashboard-page__filters .p-button { border-radius: 9px; }
+
+.dashboard-page__metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: .7rem; }
+.dashboard-page__metrics article { display: flex; flex-direction: column; justify-content: center; gap: .25rem; padding: .85rem 1rem; border: 1px solid var(--rose-border); border-radius: 14px; background: var(--surface-card); box-shadow: var(--shadow-soft); }
+.dashboard-page__metrics span { color: var(--ink-muted); font-size: .67rem; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.dashboard-page__metrics strong { color: var(--ink); font-family: var(--font-heading); font-size: 1.35rem; }
+.dashboard-page__metrics small { color: var(--ink-muted); font-size: .7rem; }
+
+.dashboard-page__grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: .7rem; }
+.dashboard-page section:not(.dashboard-page) { padding: .9rem 1rem; border: 1px solid var(--rose-border); border-radius: 14px; background: var(--surface-card); box-shadow: var(--shadow-soft); }
+.dashboard-page section h2 { margin: 0 0 .4rem; color: var(--ink); font-family: var(--font-heading); font-size: .95rem; font-weight: 600; }
+.dashboard-page__row { display: grid; gap: .3rem; padding: .7rem 0; border-bottom: 1px solid var(--rose-border); }
+.dashboard-page__row:last-child { border-bottom: 0; }
+.dashboard-page__alerts { display: flex; flex-wrap: wrap; gap: .5rem; }
+.dashboard-page__alerts span { padding: .3rem .6rem; border: 1px solid var(--rose-border); border-radius: 8px; color: var(--ink-secondary); font-size: .75rem; }
+.dashboard-page__error { margin: 0; color: var(--red); }
+
+.dashboard-page__empty { display: flex; flex-direction: column; align-items: center; gap: .35rem; max-width: 32rem; margin: 1.5rem auto 0; padding: 1.75rem 1.5rem; border: 1px solid var(--rose-border); border-radius: 14px; background: var(--surface-card); box-shadow: var(--shadow-soft); text-align: center; }
+.dashboard-page__empty i { display: inline-flex; width: 2.5rem; height: 2.5rem; align-items: center; justify-content: center; margin-bottom: .3rem; border-radius: 10px; background: var(--brand-primary-light); color: var(--brand-primary); font-size: 1.1rem; }
+.dashboard-page__empty h2 { margin: 0; color: var(--ink); font-family: var(--font-heading); font-size: 1rem; font-weight: 600; }
+.dashboard-page__empty p { margin: 0; color: var(--ink-muted); font-size: .8rem; }
+
+@media (max-width: 720px) {
+  .dashboard-page__filters { width: 100%; }
+  .dashboard-page__company { flex: 1 1 100%; }
+  .dashboard-page__date { flex: 1 1 8rem; min-width: 0; }
+}

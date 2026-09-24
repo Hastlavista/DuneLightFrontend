@@ -198,10 +198,8 @@
       "SWITCH_USER": "Promijeni korisnika"
     },
     "TOPBAR": {
-      "ALL_COMPANIES": "Sve poslovnice",
       "OPEN_MENU": "Otvori izbornik",
-      "VIEW_ADMIN": "Admin",
-      "COMPANY_SWITCHER": "Odabir poslovnice"
+      "VIEW_ADMIN": "Admin"
     }
   },
   "CATALOG": {
@@ -1004,7 +1002,7 @@
   "DASHBOARD": {
     "OPS": {
       "TITLE": "Operativna nadzorna ploča",
-      "SUBTITLE": "Stanje poslovnice za odabrani dan.",
+      "SUBTITLE": "Pregled poslovnice za odabrani dan.",
       "COMPANY_PLACEHOLDER": "Poslovnica",
       "DATE_LABEL": "Datum",
       "LOAD_FAILED": "Nije moguće učitati nadzornu ploču. Prikaz nije ažuran.",
@@ -1028,7 +1026,8 @@
       "ALERT_CANCELLED": "Otkazane rezervacije: {{count}}",
       "ALERT_OUT_OF_STOCK": "Bez zalihe: {{count}}",
       "OUT_OF_STOCK_PRODUCTS": "Nema zalihe:",
-      "SELECT_COMPANY": "Odaberite poslovnicu za prikaz nadzorne ploče."
+      "SELECT_COMPANY_TITLE": "Odaberite poslovnicu",
+      "SELECT_COMPANY": "Odaberite poslovnicu iz izbornika iznad kako biste prikazali operativne podatke."
     }
   },
   "GROUPS": {

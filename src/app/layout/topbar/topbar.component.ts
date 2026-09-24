@@ -1,17 +1,10 @@
 import { Component, computed, inject, input, output } from '@angular/core';
 import { Router } from '@angular/router';
-import { TranslatePipe, TranslateService } from '@ngx-translate/core';
+import { TranslatePipe } from '@ngx-translate/core';
 import { Popover } from 'primeng/popover';
 import { AuthService } from '../../core/auth/auth.service';
 import { InactivityService } from '../../core/auth/inactivity.service';
-import { CompanyContextService } from '../../core/services/company-context.service';
 import { CurrentEmployeeService } from '../../core/services/current-employee.service';
-import { translationReadySignal } from '../../core/utils/translation-signal.util';
-
-interface CompanyOption {
-  label: string;
-  value: string | null;
-}
 
 @Component({
   selector: 'app-topbar',
@@ -21,12 +14,9 @@ interface CompanyOption {
 })
 export class TopbarComponent {
   private readonly authService = inject(AuthService);
-  private readonly companyContextService = inject(CompanyContextService);
   private readonly currentEmployeeService = inject(CurrentEmployeeService);
   private readonly inactivityService = inject(InactivityService);
   private readonly router = inject(Router);
-  private readonly translate = inject(TranslateService);
-  private readonly translationsReady = translationReadySignal(this.translate);
 
   readonly titleKey = input<string | null>(null);
   readonly menuToggle = output<void>();
@@ -58,24 +48,6 @@ export class TopbarComponent {
   });
 
   readonly avatarColor = computed(() => this.employee()?.colorHex || 'var(--brand-primary)');
-
-  readonly companyOptions = computed<CompanyOption[]>(() => {
-    this.translationsReady();
-    return [
-      ...(this.companyContextService.canSelectAllCompanies()
-        ? [{ label: this.translate.instant('LAYOUT.TOPBAR.ALL_COMPANIES'), value: null }]
-        : []),
-      ...this.companyContextService.companies().map((company) => ({ label: company.name, value: company.id })),
-    ];
-  });
-
-  readonly hasCompanyOptions = computed(() => this.companyOptions().length > 0);
-
-  readonly selectedCompanyId = this.companyContextService.selectedCompanyId;
-
-  onCompanyChange(companyId: string | null): void {
-    this.companyContextService.selectCompany(companyId);
-  }
 
   openProfile(): void {
     this.router.navigate([this.basePath, 'profile']);

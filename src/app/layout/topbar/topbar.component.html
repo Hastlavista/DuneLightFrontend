@@ -10,23 +10,6 @@
   <h1 class="topbar__title">{{ (titleKey() ?? '') | translate }}</h1>
 
   <div class="topbar__actions">
-    @if (hasCompanyOptions()) {
-    <div class="topbar__company-switcher" [attr.aria-label]="'LAYOUT.TOPBAR.COMPANY_SWITCHER' | translate">
-      @for (company of companyOptions(); track company.value ?? 'all') {
-        <button
-          type="button"
-          class="topbar__company-option"
-          [class.topbar__company-option--active]="selectedCompanyId() === company.value"
-          (click)="onCompanyChange(company.value)"
-        >
-          @if (company.value !== null) {
-            <span class="topbar__company-dot"></span>
-          }
-          <span>{{ company.label }}</span>
-        </button>
-      }
-    </div>
-    }
 
     <button type="button" class="topbar__user" (click)="userMenu.toggle($event)">
       <span class="topbar__avatar" [style.background]="avatarColor()">{{ initials() }}</span>
